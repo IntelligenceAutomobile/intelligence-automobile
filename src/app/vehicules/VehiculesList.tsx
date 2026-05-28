@@ -264,16 +264,34 @@ function VehicleCard({
         </div>
       )}
 
-      {/* Badge vendu */}
+      {/* Overlay vendu */}
       {isSold && (
-        <div className="absolute top-5 left-5 z-10">
-          <span
-            className="text-[9px] tracking-[0.3em] uppercase px-3 py-1.5"
-            style={{ backgroundColor: "#070F1E", color: "#8AABD4", border: "1px solid #1B3055" }}
-          >
-            Vendu
-          </span>
-        </div>
+        <>
+          <div
+            className="absolute inset-0 z-10"
+            style={{ background: "linear-gradient(135deg, rgba(7,15,30,0.7) 0%, rgba(7,15,30,0.4) 100%)" }}
+          />
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3">
+            <span
+              className="font-black uppercase tracking-[0.4em]"
+              style={{
+                fontSize: "clamp(2rem, 4vw, 2.8rem)",
+                color: "#F0F5FF",
+                letterSpacing: "0.45em",
+                textShadow: "0 2px 40px rgba(0,0,0,0.8)",
+              }}
+            >
+              Vendu
+            </span>
+            <div style={{ width: "40px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.6 }} />
+            <span
+              className="text-[9px] tracking-[0.35em] uppercase"
+              style={{ color: "#6B9FEE" }}
+            >
+              Trouvé par Intelligence Automobile
+            </span>
+          </div>
+        </>
       )}
 
       {/* Pill "Voir le détail" — apparaît au hover */}
