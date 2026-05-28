@@ -1,0 +1,681 @@
+import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { LogoMark } from "@/components/Header";
+import { prisma } from "@/lib/prisma";
+
+export default async function HomePage() {
+  const vehiculesDisponibles = await prisma.vehicle.count({
+    where: { status: "disponible" },
+  });
+
+  const derniersVehicules = await prisma.vehicle.findMany({
+    where: { status: "disponible" },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+  });
+
+  return (
+    <>
+      <Header />
+      <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
+
+        {/* ── HERO ── */}
+        <section
+          className="relative min-h-screen flex items-center overflow-hidden"
+          style={{ backgroundColor: "#070F1E", paddingTop: "80px" }}
+        >
+          {/* Image voiture droite */}
+          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[62%]">
+            <img
+              src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1600&q=85"
+              alt=""
+              className="w-full h-full object-cover object-right"
+              style={{ opacity: 0.9 }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to right, #070F1E 20%, rgba(7,15,30,0.55) 50%, transparent 75%)",
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(to top, #070F1E 0%, transparent 35%)",
+              }}
+            />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 w-full">
+            <div className="max-w-xl lg:max-w-2xl py-20">
+
+              {/* Logo hero — pleine largeur, format titre */}
+              <div className="flex items-center gap-6 mb-10 w-full pb-10" style={{ borderBottom: "1px solid #1B3055" }}>
+                <LogoMark height={110} />
+                <div className="flex flex-col leading-none flex-1 min-w-0">
+                  <span
+                    className="font-light uppercase"
+                    style={{
+                      color: "#F0F5FF",
+                      fontSize: "clamp(1.8rem, 3.2vw, 2.6rem)",
+                      letterSpacing: "0.24em",
+                    }}
+                  >
+                    Intelligence
+                  </span>
+                  <span
+                    className="font-light uppercase mt-2"
+                    style={{
+                      color: "#6B9FEE",
+                      fontSize: "clamp(1rem, 1.8vw, 1.5rem)",
+                      letterSpacing: "0.18em",
+                    }}
+                  >
+                    Automobile
+                  </span>
+                </div>
+              </div>
+
+              <p
+                className="text-xs tracking-[0.35em] uppercase mb-8"
+                style={{ color: "#6B9FEE" }}
+              >
+                Import premium · Allemagne · Belgique → France
+              </p>
+              <h1
+                className="font-black uppercase leading-[0.92] mb-8"
+                style={{
+                  fontSize: "clamp(3.2rem, 7.5vw, 7rem)",
+                  letterSpacing: "-0.025em",
+                }}
+              >
+                L&apos;import
+                <br />
+                premium,
+                <br />
+                <span style={{ color: "#6B9FEE" }}>autrement.</span>
+              </h1>
+              <p
+                className="text-base md:text-lg leading-relaxed mb-12 max-w-md"
+                style={{ color: "#8AABD4", fontWeight: 300 }}
+              >
+                Sélection rigoureuse de véhicules européens haut de gamme.
+                Transparence totale, de la recherche à l&apos;immatriculation.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/vehicules"
+                  className="px-8 py-4 text-sm font-semibold tracking-widest uppercase rounded-full border-2 transition-all duration-300"
+                  style={{ borderColor: "#F0F5FF", color: "#F0F5FF" }}
+                >
+                  {vehiculesDisponibles > 0
+                    ? `Voir les ${vehiculesDisponibles} véhicule${vehiculesDisponibles > 1 ? "s" : ""}`
+                    : "Voir le stock"}
+                </Link>
+                <Link
+                  href="/contact"
+                  className="px-8 py-4 text-sm font-semibold tracking-widest uppercase rounded-full transition-all duration-300"
+                  style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
+                >
+                  Nous contacter
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-10 left-6 lg:left-12 flex items-center gap-3">
+            <div className="w-8 h-px" style={{ backgroundColor: "#1B3055" }} />
+            <span className="text-[10px] tracking-[0.3em] uppercase" style={{ color: "#1B3055" }}>
+              Défiler
+            </span>
+          </div>
+        </section>
+
+        {/* ── SPLIT : SOURCING EUROPÉEN ── */}
+        <section
+          className="border-t"
+          style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
+        >
+          <div className="max-w-7xl mx-auto px-6 lg:px-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-center">
+
+              {/* Texte + stats */}
+              <div className="py-20 lg:pr-16">
+                <p
+                  className="text-xs tracking-[0.35em] uppercase mb-6"
+                  style={{ color: "#6B9FEE" }}
+                >
+                  Notre sourcing
+                </p>
+                <h2
+                  className="font-black uppercase leading-none mb-12"
+                  style={{
+                    fontSize: "clamp(2rem, 4vw, 3.2rem)",
+                    letterSpacing: "-0.025em",
+                  }}
+                >
+                  Les meilleurs prix
+                  <br />
+                  du marché européen.
+                </h2>
+
+                <div className="space-y-0">
+                  {[
+                    { value: "+2 000", label: "Annonces analysées par mois sur les marchés DE & BE" },
+                    { value: "20–30%", label: "D'économie moyenne constatée vs. marché français" },
+                    { value: "100%", label: "Des coûts détaillés avant tout engagement de votre part" },
+                  ].map((s, i) => (
+                    <div
+                      key={s.value}
+                      className="flex items-start gap-6 py-7"
+                      style={{ borderTop: i === 0 ? "1px solid #1B3055" : "1px solid #1B3055" }}
+                    >
+                      <span
+                        className="font-black leading-none flex-shrink-0"
+                        style={{
+                          fontSize: "clamp(2rem, 3.5vw, 2.8rem)",
+                          color: "#F0F5FF",
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        {s.value}
+                      </span>
+                      <span
+                        className="text-sm leading-relaxed pt-1"
+                        style={{ color: "#8AABD4" }}
+                      >
+                        {s.label}
+                      </span>
+                    </div>
+                  ))}
+                  <div style={{ borderTop: "1px solid #1B3055" }} className="pt-8">
+                    <Link
+                      href="/vehicules"
+                      className="inline-flex items-center gap-3 text-xs tracking-widest uppercase font-semibold group"
+                      style={{ color: "#6B9FEE" }}
+                    >
+                      <span>Parcourir les véhicules</span>
+                      <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Car image */}
+              <div
+                className="relative hidden lg:block"
+                style={{ height: "600px" }}
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=85"
+                  alt="Véhicule premium sélectionné"
+                  className="w-full h-full object-cover object-center"
+                  style={{ opacity: 0.85 }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to left, transparent 40%, #070F1E 100%), linear-gradient(to top, #070F1E 0%, transparent 30%)",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── POURQUOI NOUS — section sombre plein écran ── */}
+        <section
+          className="relative overflow-hidden"
+          style={{ backgroundColor: "#040B16" }}
+        >
+          {/* Top border */}
+          <div className="border-t" style={{ borderColor: "#1B3055" }} />
+
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-24 pb-0">
+            <p
+              className="text-xs tracking-[0.35em] uppercase mb-6"
+              style={{ color: "#6B9FEE" }}
+            >
+              Pourquoi Intelligence Automobile ?
+            </p>
+            <h2
+              className="font-black uppercase leading-[0.9] mb-12"
+              style={{
+                fontSize: "clamp(2.5rem, 6vw, 5.5rem)",
+                letterSpacing: "-0.025em",
+                maxWidth: "950px",
+              }}
+            >
+              Une approche différente,
+              <br />
+              un résultat garanti.
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 max-w-3xl">
+              <div>
+                <p className="text-base leading-relaxed" style={{ color: "#8AABD4" }}>
+                  <strong style={{ color: "#F0F5FF" }}>Intelligence Automobile est un cabinet d&apos;import spécialisé</strong> fondé par des passionnés de l&apos;automobile premium. Nous opérons exclusivement sur les marchés allemand et belge, réputés pour la qualité de leur offre et leurs prix compétitifs.
+                </p>
+              </div>
+              <div>
+                <p className="text-base leading-relaxed" style={{ color: "#8AABD4" }}>
+                  Nous vous offrons une expérience d&apos;achat <strong style={{ color: "#F0F5FF" }}>100% sur-mesure et transparente</strong>. Aucune mauvaise surprise, aucun frais caché. De la première recherche à la remise des clés en France, nous gérons l&apos;intégralité du processus.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/methode"
+              className="inline-flex items-center gap-3 px-8 py-4 text-sm font-semibold tracking-widest uppercase rounded-full mb-20 transition-all duration-300"
+              style={{ backgroundColor: "#6B9FEE", color: "#040B16" }}
+            >
+              Notre méthode
+            </Link>
+          </div>
+
+          {/* Voiture qui émerge du bas dans l'obscurité */}
+          <div className="relative w-full" style={{ height: "50vh", minHeight: "300px" }}>
+            <img
+              src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=1600&q=80"
+              alt=""
+              className="w-full h-full object-cover object-top"
+              style={{ opacity: 0.6 }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to bottom, #040B16 0%, rgba(4,11,22,0.4) 40%, transparent 70%, #070F1E 100%)",
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to top, #070F1E 0%, transparent 50%)",
+              }}
+            />
+          </div>
+        </section>
+
+        {/* ── LIVRAISON SPLIT — voiture gauche, étapes droite ── */}
+        <section
+          className="border-t"
+          style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
+        >
+          <div className="max-w-7xl mx-auto px-6 lg:px-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-center">
+
+              {/* Car image gauche */}
+              <div
+                className="relative hidden lg:block order-last lg:order-first"
+                style={{ height: "580px" }}
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1000&q=85"
+                  alt="Livraison véhicule"
+                  className="w-full h-full object-cover object-center"
+                  style={{ opacity: 0.8 }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to right, transparent 40%, #070F1E 100%), linear-gradient(to top, #070F1E 0%, transparent 30%)",
+                  }}
+                />
+              </div>
+
+              {/* Étapes droite */}
+              <div className="py-20 lg:pl-16">
+                <p
+                  className="text-xs tracking-[0.35em] uppercase mb-6"
+                  style={{ color: "#6B9FEE" }}
+                >
+                  Un processus simple
+                </p>
+                <h2
+                  className="font-black uppercase leading-none mb-12"
+                  style={{
+                    fontSize: "clamp(2rem, 4vw, 3.2rem)",
+                    letterSpacing: "-0.025em",
+                  }}
+                >
+                  Livré chez vous,
+                  <br />
+                  prêt à rouler.
+                </h2>
+
+                <div className="space-y-0">
+                  {[
+                    {
+                      n: "1",
+                      title: "Vous choisissez",
+                      desc: "Parmi notre stock ou via mandat d'import sur-mesure.",
+                    },
+                    {
+                      n: "2",
+                      title: "Nous gérons tout",
+                      desc: "Achat, transport, homologation, immatriculation française.",
+                    },
+                    {
+                      n: "3",
+                      title: "Vous recevez les clés",
+                      desc: "Livraison à domicile sous 2 à 3 semaines, véhicule prêt à conduire.",
+                    },
+                  ].map((step) => (
+                    <div
+                      key={step.n}
+                      className="flex items-start gap-6 py-7"
+                      style={{ borderTop: "1px solid #1B3055" }}
+                    >
+                      <span
+                        className="font-black leading-none flex-shrink-0"
+                        style={{
+                          fontSize: "clamp(2rem, 3.5vw, 2.8rem)",
+                          color: "#1B3055",
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        {step.n}
+                      </span>
+                      <div>
+                        <div
+                          className="text-sm font-bold uppercase tracking-widest mb-1"
+                          style={{ color: "#F0F5FF" }}
+                        >
+                          {step.title}
+                        </div>
+                        <div className="text-sm leading-relaxed" style={{ color: "#8AABD4" }}>
+                          {step.desc}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ borderTop: "1px solid #1B3055" }} className="pt-8">
+                    <Link
+                      href="/methode"
+                      className="inline-flex items-center gap-3 text-xs tracking-widest uppercase font-semibold group"
+                      style={{ color: "#6B9FEE" }}
+                    >
+                      <span>Lire plus</span>
+                      <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* ── SERVICES ── */}
+        <section
+          className="border-t"
+          style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
+        >
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-24 pb-10">
+            <div className="flex items-end justify-between mb-16">
+              <div>
+                <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: "#6B9FEE" }}>
+                  Ce que nous faisons
+                </p>
+                <h2
+                  className="font-black uppercase leading-none"
+                  style={{ fontSize: "clamp(2rem, 4.5vw, 3.8rem)", letterSpacing: "-0.025em" }}
+                >
+                  Nos services
+                </h2>
+              </div>
+              <Link
+                href="/services"
+                className="hidden md:inline-flex items-center gap-2 text-xs tracking-widest uppercase group"
+                style={{ color: "#6B9FEE" }}
+              >
+                <span>Tout voir</span>
+                <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </Link>
+            </div>
+          </div>
+
+          <div
+            className="grid grid-cols-1 md:grid-cols-3 gap-px"
+            style={{ backgroundColor: "#1B3055" }}
+          >
+            {[
+              {
+                num: "01",
+                title: "Achat · Revente",
+                desc: "Véhicules premium sélectionnés sur les marchés allemand et belge, importés et proposés prêts à immatriculer en France.",
+                href: "/services#achat-revente",
+                img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80",
+              },
+              {
+                num: "02",
+                title: "Mandat d'import",
+                desc: "Nous trouvons, vérifions et importons le véhicule de vos rêves. Vous choisissez, nous gérons l'intégralité du dossier.",
+                href: "/services#mandat-import",
+                img: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=900&q=80",
+              },
+              {
+                num: "03",
+                title: "Aide à la vente",
+                desc: "Dossier complet, photos pro, diffusion optimisée et qualification des acheteurs pour vendre au meilleur prix.",
+                href: "/services#aide-vente",
+                img: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=80",
+              },
+            ].map((s) => (
+              <div
+                key={s.num}
+                className="relative overflow-hidden group"
+                style={{ backgroundColor: "#070F1E", minHeight: "420px" }}
+              >
+                <img
+                  src={s.img}
+                  alt={s.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  style={{ opacity: 0.22 }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to top, #070F1E 45%, rgba(7,15,30,0.5) 100%)",
+                  }}
+                />
+                <div
+                  className="relative z-10 p-8 flex flex-col justify-end"
+                  style={{ minHeight: "420px" }}
+                >
+                  <span className="text-xs tracking-widest font-bold mb-5" style={{ color: "#6B9FEE" }}>
+                    {s.num}
+                  </span>
+                  <h3 className="text-xl font-black uppercase mb-3 leading-tight" style={{ color: "#F0F5FF" }}>
+                    {s.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed mb-6" style={{ color: "#8AABD4" }}>
+                    {s.desc}
+                  </p>
+                  <Link
+                    href={s.href}
+                    className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-semibold group/link"
+                    style={{ color: "#6B9FEE" }}
+                  >
+                    <span>En savoir plus</span>
+                    <span className="transition-transform duration-300 group-hover/link:translate-x-1">→</span>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── DERNIERS VÉHICULES ── */}
+        {derniersVehicules.length > 0 && (
+          <section
+            className="border-t"
+            style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
+          >
+            <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-24 pb-10">
+              <div className="flex items-end justify-between mb-16">
+                <div>
+                  <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: "#6B9FEE" }}>
+                    Stock actuel
+                  </p>
+                  <h2
+                    className="font-black uppercase leading-none"
+                    style={{ fontSize: "clamp(2rem, 4.5vw, 3.8rem)", letterSpacing: "-0.025em" }}
+                  >
+                    Derniers arrivages
+                  </h2>
+                </div>
+                <Link
+                  href="/vehicules"
+                  className="hidden md:inline-flex items-center gap-2 text-xs tracking-widest uppercase group"
+                  style={{ color: "#6B9FEE" }}
+                >
+                  <span>Tout le stock</span>
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                </Link>
+              </div>
+            </div>
+
+            <div
+              className="grid grid-cols-1 md:grid-cols-3 gap-px"
+              style={{ backgroundColor: "#1B3055" }}
+            >
+              {derniersVehicules.map((v) => {
+                const images = JSON.parse(v.images) as string[];
+                const img = images[0] ?? null;
+                return (
+                  <Link
+                    href={`/vehicules/${v.id}`}
+                    key={v.id}
+                    className="group block overflow-hidden"
+                    style={{ backgroundColor: "#070F1E" }}
+                  >
+                    <div className="relative overflow-hidden" style={{ height: "260px" }}>
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={`${v.make} ${v.model}`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full flex items-center justify-center text-xs tracking-widest uppercase"
+                          style={{ backgroundColor: "#0D1A2D", color: "#1B3055" }}
+                        >
+                          Photo à venir
+                        </div>
+                      )}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: "linear-gradient(to top, #070F1E 0%, transparent 55%)",
+                        }}
+                      />
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className="text-[10px] tracking-widest uppercase font-bold"
+                          style={{ color: "#6B9FEE" }}
+                        >
+                          {v.make}
+                        </span>
+                        <span className="text-[10px] tracking-wide" style={{ color: "#8AABD4" }}>
+                          {v.year} · {v.mileage.toLocaleString("fr-FR")} km
+                        </span>
+                      </div>
+                      <h3
+                        className="text-xl font-black uppercase mb-4 leading-tight"
+                        style={{ color: "#F0F5FF" }}
+                      >
+                        {v.model}
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-black" style={{ color: "#F0F5FF" }}>
+                          {v.price.toLocaleString("fr-FR")} €
+                        </span>
+                        <span className="text-xs tracking-widest uppercase" style={{ color: "#6B9FEE" }}>
+                          Détail →
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="text-center py-6 md:hidden">
+              <Link
+                href="/vehicules"
+                className="text-sm tracking-widest uppercase"
+                style={{ color: "#6B9FEE" }}
+              >
+                Tout le stock →
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {/* ── CTA FINAL ── */}
+        <section
+          className="relative overflow-hidden border-t"
+          style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
+        >
+          <div className="absolute inset-0">
+            <img
+              src="https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1600&q=70"
+              alt=""
+              className="w-full h-full object-cover object-center"
+              style={{ opacity: 0.07 }}
+            />
+          </div>
+          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-36 text-center">
+            <p
+              className="text-xs tracking-[0.35em] uppercase mb-6"
+              style={{ color: "#6B9FEE" }}
+            >
+              Prêt à commencer ?
+            </p>
+            <h2
+              className="font-black uppercase leading-[0.92] mx-auto mb-12"
+              style={{
+                fontSize: "clamp(2.8rem, 6.5vw, 5.5rem)",
+                letterSpacing: "-0.025em",
+                maxWidth: "900px",
+              }}
+            >
+              Votre prochain véhicule
+              <br />
+              <span style={{ color: "#6B9FEE" }}>nous attend.</span>
+            </h2>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link
+                href="/contact"
+                className="px-10 py-4 text-sm font-semibold tracking-widest uppercase rounded-full border-2 transition-all duration-300"
+                style={{ borderColor: "#F0F5FF", color: "#F0F5FF" }}
+              >
+                Prendre contact
+              </Link>
+              <Link
+                href="/vehicules"
+                className="px-10 py-4 text-sm font-semibold tracking-widest uppercase rounded-full transition-all duration-300"
+                style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
+              >
+                Voir le stock
+              </Link>
+            </div>
+          </div>
+        </section>
+
+      </main>
+      <Footer />
+    </>
+  );
+}
