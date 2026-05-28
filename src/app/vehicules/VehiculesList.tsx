@@ -453,66 +453,40 @@ export default function VehiculesList({
       </div>
 
       {/* ── GRILLE ── */}
-      {vehicules.length === 0 ? (
-        <>
-          <div className="border-b px-6 lg:px-12 py-4" style={{ borderColor: "#1B3055" }}>
-            <div className="max-w-7xl mx-auto">
-              <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#1B3055" }}>
-                Exemples de véhicules — stock à venir
-              </span>
-            </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: "#1B3055" }}>
+        {vehicules.map((v) => {
+          const images = (() => { try { return JSON.parse(v.images) as string[]; } catch { return []; } })();
+          return (
+            <VehicleCard
+              key={v.id}
+              img={images[0] ?? null}
+              make={v.make}
+              year={v.year}
+              model={v.model}
+              mileage={`${v.mileage.toLocaleString("fr-FR")} km`}
+              fuel={v.fuel}
+              price={`${v.price.toLocaleString("fr-FR")} €`}
+              isSold={v.status === "vendu"}
+              onClick={() => setSelected(toModal(v))}
+            />
+          );
+        })}
+        {DEMO_VEHICLES.map((v) => (
+          <div key={v.id} style={{ opacity: 0.7 }}>
+            <VehicleCard
+              img={v.images[0] ?? null}
+              make={v.make}
+              year={v.year}
+              model={v.model}
+              mileage={v.mileage}
+              fuel={v.fuel}
+              price={v.price}
+              isDemo
+              onClick={() => setSelected(v)}
+            />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: "#1B3055" }}>
-            {DEMO_VEHICLES.map((v) => (
-              <div key={v.id} style={{ opacity: 0.7 }}>
-                <VehicleCard
-                  img={v.images[0] ?? null}
-                  make={v.make}
-                  year={v.year}
-                  model={v.model}
-                  mileage={v.mileage}
-                  fuel={v.fuel}
-                  price={v.price}
-                  isDemo
-                  onClick={() => setSelected(v)}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 text-center">
-            <p className="text-sm tracking-[0.35em] uppercase mb-10" style={{ color: "#1B3055" }}>
-              Stock en cours de constitution
-            </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-3 px-8 py-4 text-xs font-semibold tracking-widest uppercase rounded-full"
-              style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
-            >
-              Nous contacter pour un mandat
-            </Link>
-          </div>
-        </>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: "#1B3055" }}>
-          {vehicules.map((v) => {
-            const images = (() => { try { return JSON.parse(v.images) as string[]; } catch { return []; } })();
-            return (
-              <VehicleCard
-                key={v.id}
-                img={images[0] ?? null}
-                make={v.make}
-                year={v.year}
-                model={v.model}
-                mileage={`${v.mileage.toLocaleString("fr-FR")} km`}
-                fuel={v.fuel}
-                price={`${v.price.toLocaleString("fr-FR")} €`}
-                isSold={v.status === "vendu"}
-                onClick={() => setSelected(toModal(v))}
-              />
-            );
-          })}
-        </div>
-      )}
+        ))}
+      </div>
 
       {/* ── CTA MANDAT ── */}
       <div className="border-t" style={{ borderColor: "#1B3055" }}>
