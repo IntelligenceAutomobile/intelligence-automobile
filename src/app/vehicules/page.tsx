@@ -18,7 +18,7 @@ export default async function VehiculesPage({
   const makeFilter = params.make;
   const fuelFilter = params.fuel;
   const maxPrice = params.maxPrice ? parseInt(params.maxPrice) : undefined;
-  const statusFilter = params.status ?? "disponible";
+  const statusFilter = params.status ?? "tous";
 
   const where: Record<string, unknown> = {};
   if (statusFilter !== "tous") where.status = statusFilter;

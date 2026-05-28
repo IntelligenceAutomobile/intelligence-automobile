@@ -375,7 +375,7 @@ export default function VehiculesList({
   );
 
   const fuels = ["Diesel", "Essence", "Hybride", "Électrique"];
-  const currentStatus = filters.status ?? "disponible";
+  const currentStatus = filters.status ?? "tous";
   const hasActiveFilters = filters.make || filters.fuel || filters.maxPrice;
 
   return (
