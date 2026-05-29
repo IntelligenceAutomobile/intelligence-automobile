@@ -23,7 +23,7 @@ export default async function HomePage() {
         {/* ── HERO ── */}
         <section
           className="relative min-h-screen flex items-center overflow-hidden"
-          style={{ backgroundColor: "#070F1E", paddingTop: "80px" }}
+          style={{ backgroundColor: "#070F1E", paddingTop: "88px" }}
         >
           {/* Image voiture droite */}
           <div className="absolute right-0 top-0 bottom-0 w-full md:w-[62%]">

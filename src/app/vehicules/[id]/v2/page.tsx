@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
+import HeroCarousel from "@/components/HeroCarousel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,23 +90,7 @@ export default async function VehiculeDetailV2Page({
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
         {/* ── HERO ── */}
-        <div className="relative w-full" style={{ height: "70vh", minHeight: "420px", paddingTop: "80px" }}>
-          {images[0] ? (
-            <img
-              src={images[0]}
-              alt={name}
-              className="absolute inset-0 w-full h-full object-cover object-center"
-              style={{ opacity: isSold ? 0.45 : 0.82 }}
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "#0D1A2D" }}>
-              <span className="text-[10px] tracking-[0.3em] uppercase" style={{ color: "#1B3055" }}>Photos à venir</span>
-            </div>
-          )}
-
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(7,15,30,0.4) 0%, transparent 40%, #070F1E 100%)" }} />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #070F1E 0%, transparent 28%)" }} />
-
+        <HeroCarousel images={images} alt={name} imgOpacity={isSold ? 0.45 : 0.82}>
           {/* Retour */}
           <div className="absolute top-28 left-6 lg:left-12 z-10">
             <Link href="/vehicules" className="inline-flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors" style={{ color: "#8AABD4" }}>
@@ -126,7 +111,7 @@ export default async function VehiculeDetailV2Page({
               {isAvailable ? "Disponible" : isSold ? "Vendu" : "Réservé"}
             </span>
           </div>
-        </div>
+        </HeroCarousel>
 
         {/* ── CONTENU PRINCIPAL ── */}
         <div className="max-w-7xl mx-auto px-6 lg:px-12">

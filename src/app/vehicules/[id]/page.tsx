@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
+import HeroCarousel from "@/components/HeroCarousel";
 
 export default async function VehiculeDetailPage({
   params,
@@ -32,47 +33,7 @@ export default async function VehiculeDetailPage({
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
         {/* ── IMAGE HERO ── */}
-        <div
-          className="relative w-full"
-          style={{ height: "70vh", minHeight: "420px", paddingTop: "80px" }}
-        >
-          {images[0] ? (
-            <img
-              src={images[0]}
-              alt={`${v.make} ${v.model}`}
-              className="absolute inset-0 w-full h-full object-cover object-center"
-              style={{ opacity: 0.8 }}
-            />
-          ) : (
-            <div
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ backgroundColor: "#0D1A2D" }}
-            >
-              <span
-                className="text-[10px] tracking-[0.3em] uppercase"
-                style={{ color: "#1B3055" }}
-              >
-                Photos à venir
-              </span>
-            </div>
-          )}
-
-          {/* Overlays */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to bottom, rgba(7,15,30,0.35) 0%, transparent 40%, #070F1E 100%)",
-            }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to top, #070F1E 0%, transparent 25%)",
-            }}
-          />
-
+        <HeroCarousel images={images} alt={`${v.make} ${v.model}`} imgOpacity={0.8}>
           {/* Retour */}
           <div className="absolute top-28 left-6 lg:left-12 z-10">
             <Link
@@ -96,7 +57,7 @@ export default async function VehiculeDetailPage({
               {v.status === "disponible" ? "Disponible" : v.status === "vendu" ? "Vendu" : "Réservé"}
             </span>
           </div>
-        </div>
+        </HeroCarousel>
 
         {/* ── CONTENU ── */}
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
