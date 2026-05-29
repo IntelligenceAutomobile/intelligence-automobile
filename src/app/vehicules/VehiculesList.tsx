@@ -371,7 +371,7 @@ export default function VehiculesList({
       if (filters.maxPrice && key !== "maxPrice") params.set("maxPrice", String(filters.maxPrice));
       if (filters.status && key !== "status") params.set("status", filters.status);
       if (value) params.set(key, value);
-      router.push(`${pathname}?${params.toString()}`);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [filters, pathname, router]
   );
@@ -389,7 +389,7 @@ export default function VehiculesList({
         style={{ backgroundColor: "rgba(7,15,30,0.95)", borderColor: "#1B3055" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="flex items-center gap-6 py-4 overflow-x-auto">
+          <div className="flex items-center gap-4 py-5 overflow-x-auto">
 
             <div className="flex gap-2 flex-shrink-0">
               {[
@@ -399,12 +399,12 @@ export default function VehiculesList({
               ].map((s) => (
                 <button
                   key={s.key}
-                  onClick={() => updateFilter("status", s.key === "disponible" ? "" : s.key)}
-                  className="text-[9px] tracking-[0.3em] uppercase px-4 py-2 transition-all duration-200 flex-shrink-0"
+                  onClick={() => updateFilter("status", s.key === "tous" ? "" : s.key)}
+                  className="text-[10px] tracking-[0.3em] uppercase px-5 py-2.5 transition-all duration-200 flex-shrink-0 hover:-translate-y-px hover:opacity-90"
                   style={{
-                    backgroundColor: currentStatus === s.key ? "#6B9FEE" : "transparent",
+                    background: currentStatus === s.key ? "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)" : "rgba(107,159,238,0.04)",
                     color: currentStatus === s.key ? "#070F1E" : "#8AABD4",
-                    border: `1px solid ${currentStatus === s.key ? "#6B9FEE" : "#1B3055"}`,
+                    border: `1px solid ${currentStatus === s.key ? "transparent" : "rgba(107,159,238,0.2)"}`,
                   }}
                 >
                   {s.label}
@@ -417,8 +417,8 @@ export default function VehiculesList({
             <select
               value={filters.make ?? ""}
               onChange={(e) => updateFilter("make", e.target.value)}
-              className="text-[9px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer"
-              style={{ backgroundColor: "transparent", color: filters.make ? "#F0F5FF" : "#8AABD4", border: "none" }}
+              className="text-[10px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-3 py-2"
+              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.make ? "#F0F5FF" : "#8AABD4", border: "1px solid rgba(107,159,238,0.2)" }}
             >
               <option value="" style={{ backgroundColor: "#070F1E" }}>Toutes marques</option>
               {makes.map((m) => (
@@ -426,13 +426,11 @@ export default function VehiculesList({
               ))}
             </select>
 
-            <div className="w-px h-4 flex-shrink-0" style={{ backgroundColor: "#1B3055" }} />
-
             <select
               value={filters.fuel ?? ""}
               onChange={(e) => updateFilter("fuel", e.target.value)}
-              className="text-[9px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer"
-              style={{ backgroundColor: "transparent", color: filters.fuel ? "#F0F5FF" : "#8AABD4", border: "none" }}
+              className="text-[10px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-3 py-2"
+              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.fuel ? "#F0F5FF" : "#8AABD4", border: "1px solid rgba(107,159,238,0.2)" }}
             >
               <option value="" style={{ backgroundColor: "#070F1E" }}>Carburant</option>
               {fuels.map((f) => (
@@ -440,13 +438,11 @@ export default function VehiculesList({
               ))}
             </select>
 
-            <div className="w-px h-4 flex-shrink-0" style={{ backgroundColor: "#1B3055" }} />
-
             <select
               value={filters.maxPrice ?? ""}
               onChange={(e) => updateFilter("maxPrice", e.target.value)}
-              className="text-[9px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer"
-              style={{ backgroundColor: "transparent", color: filters.maxPrice ? "#F0F5FF" : "#8AABD4", border: "none" }}
+              className="text-[10px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-3 py-2"
+              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.maxPrice ? "#F0F5FF" : "#8AABD4", border: "1px solid rgba(107,159,238,0.2)" }}
             >
               <option value="" style={{ backgroundColor: "#070F1E" }}>Budget max</option>
               {[20000, 30000, 40000, 60000, 80000].map((p) => (
