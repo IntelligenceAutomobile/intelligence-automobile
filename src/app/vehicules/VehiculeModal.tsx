@@ -427,47 +427,14 @@ export default function VehiculeModal({
                 style={{ borderTop: "1px solid #1B3055" }}
               >
                 {isAvailable ? (
-                  <>
-                    <Link
-                      href={`/contact?vehicule=${encodeURIComponent(`${vehicle.make} ${vehicle.model} ${vehicle.year}`)}`}
-                      className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-opacity duration-200 hover:opacity-90"
-                      style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
-                      onClick={onClose}
-                    >
-                      Demander des informations
-                    </Link>
-
-                    {vehicle.dossierUrl && (
-                      <a
-                        href={vehicle.dossierUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-80"
-                        style={{
-                          backgroundColor: "rgba(107,159,238,0.08)",
-                          color: "#6B9FEE",
-                          border: "1px solid rgba(107,159,238,0.25)",
-                        }}
-                      >
-                        <span style={{ fontSize: "0.85rem" }}>↓</span>
-                        Télécharger le dossier complet
-                      </a>
-                    )}
-
-                    {!vehicle.isDemo && (
-                      <Link
-                        href={`/vehicules/${vehicle.id}${vehicle.layoutVariant ? `/${vehicle.layoutVariant}` : ""}`}
-                        className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-colors duration-200"
-                        style={{
-                          border: "1px solid #1B3055",
-                          color: "#8AABD4",
-                        }}
-                        onClick={onClose}
-                      >
-                        Voir le dossier complet →
-                      </Link>
-                    )}
-                  </>
+                  <Link
+                    href={`/contact?vehicule=${encodeURIComponent(`${vehicle.make} ${vehicle.model} ${vehicle.year}`)}`}
+                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-opacity duration-200 hover:opacity-90"
+                    style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
+                    onClick={onClose}
+                  >
+                    Demander des informations
+                  </Link>
                 ) : (
                   <Link
                     href="/contact?service=mandat"
@@ -476,6 +443,37 @@ export default function VehiculeModal({
                     onClick={onClose}
                   >
                     Trouver un véhicule similaire
+                  </Link>
+                )}
+
+                {vehicle.dossierUrl && (
+                  <a
+                    href={vehicle.dossierUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-80"
+                    style={{
+                      backgroundColor: "rgba(107,159,238,0.08)",
+                      color: "#6B9FEE",
+                      border: "1px solid rgba(107,159,238,0.25)",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.85rem" }}>↓</span>
+                    Télécharger le dossier complet
+                  </a>
+                )}
+
+                {!vehicle.isDemo && (
+                  <Link
+                    href={`/vehicules/${vehicle.id}${vehicle.layoutVariant ? `/${vehicle.layoutVariant}` : ""}`}
+                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-colors duration-200"
+                    style={{
+                      border: "1px solid #1B3055",
+                      color: "#8AABD4",
+                    }}
+                    onClick={onClose}
+                  >
+                    Voir le dossier complet →
                   </Link>
                 )}
 
