@@ -46,6 +46,7 @@ export default function VehiculeModal({
 }) {
   const [visible, setVisible] = useState(false);
   const [showAllMaintenance, setShowAllMaintenance] = useState(false);
+  const [imgIndex, setImgIndex] = useState(0);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setVisible(true));
@@ -61,8 +62,13 @@ export default function VehiculeModal({
     };
   }, [onClose]);
 
-  const img = vehicle.images[0] ?? null;
+  const images = vehicle.images ?? [];
+  const totalImages = images.length;
+  const img = images[imgIndex] ?? null;
   const isAvailable = vehicle.status !== "vendu";
+
+  const prevImg = () => setImgIndex((i) => (i - 1 + totalImages) % totalImages);
+  const nextImg = () => setImgIndex((i) => (i + 1) % totalImages);
 
   const specs = [
     { label: "Année", value: String(vehicle.year) },
@@ -145,13 +151,14 @@ export default function VehiculeModal({
           {/* Scrollable body */}
           <div className="overflow-y-auto flex-1 overscroll-contain">
 
-            {/* Hero image */}
+            {/* Hero image carousel */}
             <div className="relative flex-shrink-0" style={{ height: "260px" }}>
               {img ? (
                 <img
                   src={img}
-                  alt={`${vehicle.make} ${vehicle.model}`}
+                  alt={`${vehicle.make} ${vehicle.model} ${imgIndex + 1}/${totalImages}`}
                   className="w-full h-full object-cover"
+                  style={{ transition: "opacity 0.2s ease" }}
                 />
               ) : (
                 <div
@@ -167,6 +174,57 @@ export default function VehiculeModal({
                 className="absolute inset-0"
                 style={{ background: "linear-gradient(to top, #0A1628 0%, rgba(10,22,40,0.3) 55%, transparent 100%)" }}
               />
+              {/* Nav arrows — only when multiple images */}
+              {totalImages > 1 && (
+                <>
+                  <button
+                    onClick={prevImg}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center"
+                    style={{
+                      width: "44px", height: "44px", borderRadius: "50%",
+                      backgroundColor: "rgba(7,15,30,0.85)",
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                      border: "1px solid rgba(107,159,238,0.3)",
+                      color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem",
+                    }}
+                    aria-label="Photo précédente"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={nextImg}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center"
+                    style={{
+                      width: "44px", height: "44px", borderRadius: "50%",
+                      backgroundColor: "rgba(7,15,30,0.85)",
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                      border: "1px solid rgba(107,159,238,0.3)",
+                      color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem",
+                    }}
+                    aria-label="Photo suivante"
+                  >
+                    ›
+                  </button>
+                  {/* Counter */}
+                  <div
+                    className="absolute bottom-3 right-4 z-20"
+                    style={{
+                      backgroundColor: "rgba(7,15,30,0.75)",
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                      borderRadius: "20px",
+                      padding: "3px 10px",
+                      color: "#8AABD4",
+                      fontSize: "10px",
+                      letterSpacing: "0.15em",
+                    }}
+                  >
+                    {imgIndex + 1} / {totalImages}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Content */}
