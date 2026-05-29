@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useCallback, useState } from "react";
 import VehiculeModal, { type ModalVehicle } from "./VehiculeModal";
+import VehiculeModalV2 from "./VehiculeModalV2";
 
 // ── Véhicules de démonstration enrichis ──────────────────────────────────────
 const DEMO_VEHICLES: ModalVehicle[] = [
@@ -530,7 +531,9 @@ export default function VehiculesList({
 
       {/* ── MODAL ── */}
       {selected && (
-        <VehiculeModal vehicle={selected} onClose={() => setSelected(null)} />
+        selected.layoutVariant === "v2"
+          ? <VehiculeModalV2 vehicle={selected} onClose={() => setSelected(null)} />
+          : <VehiculeModal vehicle={selected} onClose={() => setSelected(null)} />
       )}
 
     </section>
