@@ -187,6 +187,7 @@ function toModal(v: Vehicle): ModalVehicle {
     description: v.description,
     features,
     status: v.status,
+    layoutVariant: v.id === "cmpqmqrnk0000f4vvwbr2z3dq" ? "v2" : undefined,
   };
 }
 

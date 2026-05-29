@@ -34,6 +34,7 @@ export type ModalVehicle = {
   tires?: string;
   maintenance?: MaintenanceEntry[];
   dossierUrl?: string;
+  layoutVariant?: string;
 };
 
 export default function VehiculeModal({
@@ -397,7 +398,7 @@ export default function VehiculeModal({
 
                     {!vehicle.isDemo && (
                       <Link
-                        href={`/vehicules/${vehicle.id}`}
+                        href={`/vehicules/${vehicle.id}${vehicle.layoutVariant ? `/${vehicle.layoutVariant}` : ""}`}
                         className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-colors duration-200"
                         style={{
                           border: "1px solid #1B3055",
