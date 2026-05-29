@@ -2,7 +2,10 @@ import { PrismaClient } from "../src/generated/prisma/client.ts";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 // @ts-expect-error - adapter-libsql types
-const adapter = new PrismaLibSql({ url: "file:./dev.db" });
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 const prisma = new PrismaClient({ adapter });
 
 const images = [
