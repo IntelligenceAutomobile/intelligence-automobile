@@ -48,12 +48,13 @@ function categorize(features: string[]) {
   return result;
 }
 
-function whyCopy(fuel: string, make: string) {
-  if (fuel === "Hybride")
-    return "Compacte premium à motorisation hybride rechargeable, idéale pour un usage mixte ville/route. Faible consommation, finition sportive S line et polyvalence au quotidien.";
-  if (fuel === "Électrique")
-    return "Véhicule 100 % électrique premium issu du marché européen, avec une configuration rare et un historique transparent. Autonomie élevée, zéro compromis.";
-  return `${make} de référence sur son segment — sélectionnée pour la cohérence de sa configuration et son potentiel de valeur résiduelle. Une acquisition maîtrisée, accompagnée de A à Z.`;
+function renderDesc(text: string) {
+  const parts = text.split(/([\d][\d\s,]*(?:ch système|ch|km\/h|km|L\/100\s*km|%|rapports))/g);
+  return parts.map((part, i) =>
+    /^\d/.test(part)
+      ? <span key={i} style={{ color: "#6B9FEE", fontWeight: 600 }}>{part}</span>
+      : part
+  );
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -68,6 +69,17 @@ export default function VehiculeModalV2({
   const [visible, setVisible] = useState(false);
   const [showAllMaintenance, setShowAllMaintenance] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
+  const [showFullDesc, setShowFullDesc] = useState(false);
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
+
+  const toggleCategory = (label: string) => {
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setVisible(true));
@@ -95,12 +107,28 @@ export default function VehiculeModalV2({
   const pointsForts = features.slice(0, 6);
   const categories = categorize(features);
   const { name, subtitle } = parseTitle(vehicle.make, vehicle.model, vehicle.power);
-  const firstParagraph = vehicle.description?.split("\n\n")[0] ?? null;
+
+  const descriptionParagraphs = (vehicle.description?.split("\n\n") ?? [])
+    .filter(p =>
+      !p.toLowerCase().includes("accident") &&
+      !p.toLowerCase().includes("contrôle technique") &&
+      !p.toLowerCase().includes("intelligence automobile prend en charge") &&
+      !p.toLowerCase().includes("essai disponible")
+    )
+    .slice(0, 2);
+
+  const etatFacts = (vehicle.description?.split("\n\n") ?? [])
+    .find(p => p.toLowerCase().includes("accident") || p.toLowerCase().includes("contrôle technique"))
+    ?.split(/\.\s+/)
+    .map(s => s.replace(/\.$/, "").trim())
+    .filter(Boolean) ?? [];
 
   const maintenanceEntries = vehicle.maintenance ?? [];
   const visibleMaintenance = showAllMaintenance
     ? maintenanceEntries
     : maintenanceEntries.slice(0, 5);
+
+  const descFull = descriptionParagraphs.join("\n\n");
 
   return (
     <div className="fixed inset-0 z-50">
@@ -154,10 +182,10 @@ export default function VehiculeModalV2({
             ×
           </button>
 
-          {/* Scrollable body */}
+          {/* ── SCROLLABLE BODY ── */}
           <div className="overflow-y-auto flex-1 overscroll-contain">
 
-            {/* ── PHOTO CAROUSEL ── */}
+            {/* PHOTO CAROUSEL */}
             <div className="relative flex-shrink-0" style={{ height: "260px" }}>
               {img ? (
                 <img
@@ -177,48 +205,19 @@ export default function VehiculeModalV2({
               />
               {totalImages > 1 && (
                 <>
-                  <button
-                    onClick={prevImg}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center"
-                    style={{
-                      width: "44px", height: "44px", borderRadius: "50%",
-                      backgroundColor: "rgba(7,15,30,0.85)",
-                      backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                      border: "1px solid rgba(107,159,238,0.3)",
-                      color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem",
-                    }}
-                    aria-label="Photo précédente"
-                  >‹</button>
-                  <button
-                    onClick={nextImg}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center"
-                    style={{
-                      width: "44px", height: "44px", borderRadius: "50%",
-                      backgroundColor: "rgba(7,15,30,0.85)",
-                      backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                      border: "1px solid rgba(107,159,238,0.3)",
-                      color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem",
-                    }}
-                    aria-label="Photo suivante"
-                  >›</button>
-                  <div
-                    className="absolute bottom-3 right-4 z-20"
-                    style={{
-                      backgroundColor: "rgba(7,15,30,0.75)", backdropFilter: "blur(8px)",
-                      WebkitBackdropFilter: "blur(8px)", borderRadius: "20px",
-                      padding: "3px 10px", color: "#8AABD4", fontSize: "10px", letterSpacing: "0.15em",
-                    }}
-                  >
+                  <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center" style={{ width: "44px", height: "44px", borderRadius: "50%", backgroundColor: "rgba(7,15,30,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(107,159,238,0.3)", color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem" }} aria-label="Photo précédente">‹</button>
+                  <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center" style={{ width: "44px", height: "44px", borderRadius: "50%", backgroundColor: "rgba(7,15,30,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(107,159,238,0.3)", color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem" }} aria-label="Photo suivante">›</button>
+                  <div className="absolute bottom-3 right-4 z-20" style={{ backgroundColor: "rgba(7,15,30,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: "20px", padding: "3px 10px", color: "#8AABD4", fontSize: "10px", letterSpacing: "0.15em" }}>
                     {imgIndex + 1} / {totalImages}
                   </div>
                 </>
               )}
             </div>
 
-            {/* ── CONTENU ── */}
-            <div className="px-6 pb-8 sm:px-8 pt-5">
+            {/* CONTENU */}
+            <div className="px-6 pb-6 sm:px-8 pt-5">
 
-              {/* 1. Marque · Origine · Statut */}
+              {/* Marque · Origine · Statut */}
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-xs tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
                   {vehicle.make}{vehicle.origin ? ` · ${vehicle.origin}` : ""}
@@ -237,11 +236,8 @@ export default function VehiculeModalV2({
                 )}
               </div>
 
-              {/* 2. Titre hiérarchisé */}
-              <h2
-                className="font-black uppercase leading-[0.88] mb-1"
-                style={{ fontSize: "clamp(1.6rem, 5vw, 2.2rem)", letterSpacing: "-0.025em", color: "#F0F5FF" }}
-              >
+              {/* Titre */}
+              <h2 className="font-black uppercase leading-[0.88] mb-1" style={{ fontSize: "clamp(1.6rem, 5vw, 2.2rem)", letterSpacing: "-0.025em", color: "#F0F5FF" }}>
                 {name}
               </h2>
               {subtitle && (
@@ -250,126 +246,162 @@ export default function VehiculeModalV2({
                 </p>
               )}
 
-              {/* 3. Encart prix */}
-              <div
-                className="mb-5 p-4"
-                style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055" }}
-              >
-                <div className="flex items-baseline justify-between gap-4">
-                  <div
-                    className="font-black leading-none"
-                    style={{ fontSize: "clamp(1.8rem, 5vw, 2.4rem)", color: "#F0F5FF", letterSpacing: "-0.03em" }}
-                  >
-                    {vehicle.price}
-                  </div>
-                  <span
-                    className="text-[9px] tracking-[0.3em] uppercase flex-shrink-0"
-                    style={{ color: "#6B9FEE" }}
-                  >
-                    {vehicle.year}
-                  </span>
+              {/* Bloc prix */}
+              {!vehicle.isDemo && (
+                <div className="flex items-center justify-center gap-2 px-4 py-2" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderBottom: "none" }}>
+                  <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
+                  <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>Garantie 12 mois incluse</span>
                 </div>
-                {!vehicle.isDemo && (
-                  <div className="flex flex-col gap-1 mt-3">
-                    {["Garantie 12 mois incluse", "Financement possible", "Démarches administratives prises en charge"].map((g) => (
-                      <div key={g} className="flex items-center gap-2">
-                        <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
-                        <span className="text-[10px]" style={{ color: "#8AABD4" }}>{g}</span>
+              )}
+              <div style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055" }}>
+                <div className="font-black leading-none text-center py-5 px-4" style={{ fontSize: "clamp(1.8rem, 5vw, 2.4rem)", color: "#F0F5FF", letterSpacing: "-0.03em" }}>
+                  {vehicle.price}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ backgroundColor: "#1B3055", borderTop: "1px solid #1B3055" }}>
+                  {[
+                    { label: "Année", value: String(vehicle.year) },
+                    { label: "Kilométrage", value: vehicle.mileage },
+                    { label: "Carburant", value: vehicle.fuel },
+                    { label: "Boîte", value: vehicle.transmission ?? "—" },
+                  ].map((s) => (
+                    <div key={s.label} className="flex flex-col items-center justify-center py-3 px-2 text-center" style={{ backgroundColor: "#0D1F3A" }}>
+                      <span className="text-[8px] tracking-[0.3em] uppercase mb-1" style={{ color: "#6B9FEE" }}>{s.label}</span>
+                      <span className="font-black text-sm" style={{ color: "#F0F5FF" }}>{s.value}</span>
+                    </div>
+                  ))}
+                </div>
+                {(vehicle.power || vehicle.color || vehicle.origin) && (
+                  <div className="grid gap-px" style={{ backgroundColor: "#1B3055", borderTop: "1px solid #1B3055", gridTemplateColumns: `repeat(${[vehicle.power, vehicle.color, vehicle.origin].filter(Boolean).length}, 1fr)` }}>
+                    {[
+                      vehicle.power ? { label: "Puissance", value: `${vehicle.power} ch` } : null,
+                      vehicle.color ? { label: "Couleur", value: vehicle.color } : null,
+                      vehicle.origin ? { label: "Origine", value: vehicle.origin } : null,
+                    ].filter(Boolean).map((s) => (
+                      <div key={s!.label} className="flex flex-col items-center justify-center py-3 px-2 text-center" style={{ backgroundColor: "#0D1F3A" }}>
+                        <span className="text-[8px] tracking-[0.3em] uppercase mb-1" style={{ color: "#6B9FEE" }}>{s!.label}</span>
+                        <span className="font-black text-sm" style={{ color: "#F0F5FF" }}>{s!.value}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-
-              {/* 4. Badges specs primaires */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-px mb-1" style={{ backgroundColor: "#1B3055" }}>
-                {[
-                  { label: "Année", value: String(vehicle.year) },
-                  { label: "Kilométrage", value: vehicle.mileage },
-                  { label: "Carburant", value: vehicle.fuel },
-                  { label: "Boîte", value: vehicle.transmission ?? "—" },
-                ].map((s) => (
-                  <div key={s.label} className="flex flex-col items-center justify-center py-4 px-2 text-center" style={{ backgroundColor: "#0A1628" }}>
-                    <span className="text-[8px] tracking-[0.3em] uppercase mb-1" style={{ color: "#6B9FEE" }}>{s.label}</span>
-                    <span className="font-black text-sm" style={{ color: "#F0F5FF" }}>{s.value}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Specs secondaires discrètes */}
-              <div className="flex flex-wrap gap-x-4 gap-y-0.5 mb-5 mt-2">
-                {[
-                  vehicle.power ? `${vehicle.power} ch` : null,
-                  vehicle.color ?? null,
-                  vehicle.origin ? `Origine ${vehicle.origin}` : null,
-                  vehicle.finition ?? null,
-                  vehicle.tires ?? null,
-                ].filter(Boolean).map((s) => (
-                  <span key={s} className="text-[9px] tracking-[0.15em]" style={{ color: "#1B3055" }}>{s}</span>
-                ))}
-              </div>
-
-              <div className="mb-5" style={{ borderTop: "1px solid #1B3055" }} />
-
-              {/* 5. Points forts */}
-              {pointsForts.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3" style={{ color: "#8AABD4" }}>
-                    Points forts
-                  </p>
-                  <ul className="flex flex-col gap-2">
-                    {pointsForts.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-xs" style={{ color: "#8AABD4", fontWeight: 300 }}>
-                        <span className="flex-shrink-0 mt-0.5" style={{ color: "#6B9FEE" }}>—</span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+              {!vehicle.isDemo && (
+                <div className="flex flex-col gap-1.5 px-4 py-2.5 mb-6" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderTop: "none" }}>
+                  {["Financement possible", "Démarches administratives prises en charge"].map((g) => (
+                    <div key={g} className="flex items-center gap-2">
+                      <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
+                      <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>{g}</span>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {/* Description courte */}
-              {firstParagraph && (
-                <p className="text-xs leading-relaxed mb-5" style={{ color: "#8AABD4", fontWeight: 300 }}>
-                  {firstParagraph}
-                </p>
+              <div className="mb-6" style={{ borderTop: "1px solid #1B3055" }} />
+
+              {/* Points forts */}
+              {pointsForts.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#8AABD4" }}>Points forts</p>
+                  <div className="grid grid-cols-2 gap-px" style={{ backgroundColor: "#1B3055" }}>
+                    {pointsForts.map((f) => (
+                      <div
+                        key={f}
+                        className="flex items-start gap-2 px-3 py-3 text-[10px]"
+                        style={{ backgroundColor: "#0A1628", color: "#C8D8EE", fontWeight: 300 }}
+                      >
+                        <span className="flex-shrink-0 mt-0.5" style={{ color: "#6B9FEE", fontSize: "6px" }}>●</span>
+                        {f}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
-              <div className="mb-5" style={{ borderTop: "1px solid #1B3055" }} />
-
-              {/* 6. Pourquoi ce véhicule ? */}
-              <div className="mb-5">
-                <p className="text-[9px] tracking-[0.35em] uppercase mb-2" style={{ color: "#8AABD4" }}>
-                  Pourquoi ce véhicule ?
-                </p>
-                <p className="text-xs leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
-                  {whyCopy(vehicle.fuel, vehicle.make)}
-                </p>
-              </div>
-
-              {/* 7. Équipements par catégorie */}
-              {categories.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-4" style={{ color: "#8AABD4" }}>
-                    Équipements
+              {/* Description condensée */}
+              {descriptionParagraphs.length > 0 && (
+                <div className="mb-6 flex flex-col gap-3">
+                  <p className="text-xs leading-loose" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                    {renderDesc(descriptionParagraphs[0])}
                   </p>
-                  <div className="grid grid-cols-2 gap-6">
+                  {descriptionParagraphs.length > 1 && (
+                    <>
+                      {showFullDesc && (
+                        <p className="text-xs leading-loose" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                          {renderDesc(descriptionParagraphs[1])}
+                        </p>
+                      )}
+                      <button
+                        onClick={() => setShowFullDesc((v) => !v)}
+                        className="flex items-center gap-1 text-[10px] tracking-wide transition-opacity hover:opacity-80 self-start"
+                        style={{ color: "#6B9FEE" }}
+                      >
+                        {showFullDesc ? "Réduire ↑" : "Lire plus ↓"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* État & historique — badges */}
+              {etatFacts.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#8AABD4" }}>État &amp; historique</p>
+                  <div className="flex flex-wrap gap-2">
+                    {etatFacts.map((fact, i) => (
+                      <span
+                        key={i}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px]"
+                        style={{ backgroundColor: "rgba(107,159,238,0.07)", border: "1px solid rgba(107,159,238,0.18)", color: "#C8D8EE", borderRadius: "4px", fontWeight: 300 }}
+                      >
+                        <span style={{ color: "#6B9FEE" }}>✓</span>
+                        {fact}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-6" style={{ borderTop: "1px solid #1B3055" }} />
+
+              {/* Équipements — accordéon */}
+              {categories.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#8AABD4" }}>Équipements</p>
+                  <div className="flex flex-col gap-2">
                     {categories.map((cat) => (
                       <div key={cat.label}>
-                        <p
-                          className="text-[8px] tracking-[0.3em] uppercase mb-2 pb-1.5"
-                          style={{ color: "#6B9FEE", borderBottom: "1px solid #1B3055" }}
+                        <button
+                          onClick={() => toggleCategory(cat.label)}
+                          className="w-full flex items-center justify-between px-4 py-3 transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055", borderLeft: "3px solid #6B9FEE" }}
                         >
-                          {cat.label}
-                        </p>
-                        <ul className="flex flex-col gap-1.5">
-                          {cat.items.map((item) => (
-                            <li key={item} className="flex items-start gap-1.5 text-[10px]" style={{ color: "#8AABD4", fontWeight: 300 }}>
-                              <span className="flex-shrink-0 mt-0.5" style={{ color: "#1B3055" }}>—</span>
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
+                          <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
+                            {cat.label}
+                          </span>
+                          <span
+                            className="text-sm transition-transform duration-200"
+                            style={{ color: "#6B9FEE", display: "inline-block", transform: openCategories.has(cat.label) ? "rotate(90deg)" : "rotate(0deg)" }}
+                          >
+                            ›
+                          </span>
+                        </button>
+                        {openCategories.has(cat.label) && (
+                          <div style={{ border: "1px solid #1B3055", borderTop: "none" }}>
+                            {Array.from({ length: Math.ceil(cat.items.length / 2) }, (_, i) => (
+                              <div key={i} className="grid grid-cols-2" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#0A1628" }}>
+                                {[0, 1].map((j) => {
+                                  const item = cat.items[i * 2 + j];
+                                  return (
+                                    <div key={j} className="flex items-start gap-2 px-4 py-3 text-[10px]" style={{ color: item ? "#C8D8EE" : "transparent", fontWeight: 300, borderLeft: j === 1 ? "1px solid #1B3055" : "none" }}>
+                                      <span className="flex-shrink-0 mt-0.5" style={{ color: "#6B9FEE" }}>—</span>
+                                      {item ?? ""}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -378,42 +410,30 @@ export default function VehiculeModalV2({
 
               {/* Historique d'entretien */}
               {maintenanceEntries.length > 0 && (
-                <div className="mb-5">
+                <div className="mb-6">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>Entretien</p>
-                    <span
-                      className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1"
-                      style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "6px" }}
-                    >
-                      {maintenanceEntries.length} factures documentées
+                    <p className="text-[9px] tracking-[0.3em] uppercase text-center" style={{ color: "#8AABD4" }}>Entretien</p>
+                    <span className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1" style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "6px" }}>
+                      {maintenanceEntries.length} factures
                     </span>
                   </div>
                   <div style={{ border: "1px solid #1B3055", backgroundColor: "#070F1E" }}>
                     {visibleMaintenance.map((entry, i) => (
                       <div key={i} className="flex items-start gap-3 px-4 py-3" style={{ borderTop: i > 0 ? "1px solid #1B3055" : "none" }}>
-                        <span className="text-[9px] tracking-wide flex-shrink-0 pt-px" style={{ color: "#6B9FEE", minWidth: "52px" }}>
-                          {entry.date}
-                        </span>
+                        <span className="text-[9px] tracking-wide flex-shrink-0 pt-px" style={{ color: "#6B9FEE", minWidth: "52px" }}>{entry.date}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] leading-snug" style={{ color: "#F0F5FF" }}>{entry.operation}</p>
-                          <p className="text-[9px] mt-0.5" style={{ color: "#1B3055" }}>{entry.km}</p>
+                          <p className="text-[9px] mt-0.5" style={{ color: "#8AABD4" }}>{entry.km}</p>
                         </div>
                         {entry.amount && entry.amount !== "—" && (
-                          <span className="text-[9px] font-bold flex-shrink-0 tabular-nums" style={{ color: "#8AABD4" }}>
-                            {entry.amount}
-                          </span>
+                          <span className="text-[9px] font-bold flex-shrink-0 tabular-nums" style={{ color: "#8AABD4" }}>{entry.amount}</span>
                         )}
                       </div>
                     ))}
                     {maintenanceEntries.length > 5 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAllMaintenance((v) => !v)}
-                        className="w-full px-4 py-3 text-center transition-colors duration-200"
-                        style={{ borderTop: "1px solid #1B3055" }}
-                      >
+                      <button type="button" onClick={() => setShowAllMaintenance((v) => !v)} className="w-full px-4 py-3 text-center" style={{ borderTop: "1px solid #1B3055" }}>
                         <span className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>
-                          {showAllMaintenance ? "Réduire" : `+${maintenanceEntries.length - 5} interventions supplémentaires`}
+                          {showAllMaintenance ? "Réduire" : `+${maintenanceEntries.length - 5} interventions`}
                         </span>
                       </button>
                     )}
@@ -421,77 +441,68 @@ export default function VehiculeModalV2({
                 </div>
               )}
 
-              {/* 9. Branding IA */}
-              <div className="flex items-center gap-3 mb-5">
+              {/* Branding */}
+              <div className="flex items-center justify-center gap-3 py-4">
                 <div style={{ width: "20px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.5 }} />
-                <span className="text-[8px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
+                <span className="text-[10px] font-semibold tracking-[0.4em] uppercase" style={{ color: "#A8C4F0" }}>
                   Sélection premium — Intelligence Automobile
                 </span>
+                <div style={{ width: "20px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.5 }} />
               </div>
 
-              {/* CTAs */}
-              <div className="flex flex-col gap-3 pt-4" style={{ borderTop: "1px solid #1B3055" }}>
-                {isAvailable ? (
-                  <Link
-                    href={`/contact?vehicule=${encodeURIComponent(`${vehicle.make} ${vehicle.model} ${vehicle.year}`)}`}
-                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 transition-opacity duration-200 hover:opacity-90"
-                    style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
-                    onClick={onClose}
-                  >
-                    Demander un essai
-                  </Link>
-                ) : (
-                  <Link
-                    href="/contact?service=mandat"
-                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4"
-                    style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
-                    onClick={onClose}
-                  >
-                    Trouver un véhicule similaire
-                  </Link>
-                )}
+            </div>
+          </div>
 
+          {/* ── CTA STICKY ── */}
+          <div
+            className="flex-shrink-0 px-6 pt-4 pb-5 sm:px-8"
+            style={{ borderTop: "1px solid #1B3055", backgroundColor: "#0A1628" }}
+          >
+            {isAvailable ? (
+              <Link
+                href={`/contact?vehicule=${encodeURIComponent(`${vehicle.make} ${vehicle.model} ${vehicle.year}`)}&sujet=reservation`}
+                className="block w-full text-center text-xs font-bold tracking-[0.2em] uppercase py-4 transition-all duration-300 hover:-translate-y-px hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
+                onClick={onClose}
+              >
+                Réserver ce véhicule
+              </Link>
+            ) : (
+              <Link
+                href="/contact?service=mandat"
+                className="block w-full text-center text-xs font-bold tracking-[0.2em] uppercase py-4"
+                style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
+                onClick={onClose}
+              >
+                Trouver un véhicule similaire
+              </Link>
+            )}
+            {!vehicle.isDemo && (
+              <div className="flex gap-3 mt-3">
                 {vehicle.dossierUrl && (
                   <a
                     href={vehicle.dossierUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-80"
-                    style={{
-                      backgroundColor: "rgba(107,159,238,0.08)",
-                      color: "#6B9FEE",
-                      border: "1px solid rgba(107,159,238,0.25)",
-                    }}
+                    className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 flex items-center justify-center gap-1.5 transition-opacity hover:opacity-80"
+                    style={{ color: "#6B9FEE", border: "1px solid rgba(107,159,238,0.25)" }}
                     onClick={onClose}
                   >
-                    <span style={{ fontSize: "0.85rem" }}>↓</span>
-                    Télécharger le dossier
+                    <span>↓</span> Dossier
                   </a>
                 )}
-
-                {!vehicle.isDemo && (
-                  <Link
-                    href={`/vehicules/${vehicle.id}${vehicle.layoutVariant ? `/${vehicle.layoutVariant}` : ""}`}
-                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 transition-colors duration-200"
-                    style={{ border: "1px solid #1B3055", color: "#8AABD4" }}
-                    onClick={onClose}
-                  >
-                    Voir le dossier complet →
-                  </Link>
-                )}
-
                 <Link
-                  href="/"
-                  className="w-full text-center text-xs tracking-widest uppercase py-3 transition-colors duration-200"
-                  style={{ color: "#1B3055" }}
+                  href={`/vehicules/${vehicle.id}${vehicle.layoutVariant ? `/${vehicle.layoutVariant}` : ""}`}
+                  className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 transition-opacity hover:opacity-80"
+                  style={{ border: "1px solid #1B3055", color: "#8AABD4" }}
                   onClick={onClose}
                 >
-                  ← Accueil
+                  Fiche complète →
                 </Link>
               </div>
-
-            </div>
+            )}
           </div>
+
         </div>
       </div>
     </div>

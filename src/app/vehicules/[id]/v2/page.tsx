@@ -160,10 +160,22 @@ export default async function VehiculeDetailV2Page({
                   v.color,
                   `Origine ${v.origin}`,
                 ].filter(Boolean).map((s) => (
-                  <span key={s} className="text-[10px] tracking-[0.2em]" style={{ color: "#1B3055" }}>
+                  <span key={s} className="text-[10px] tracking-[0.2em]" style={{ color: "#8AABD4" }}>
                     {s}
                   </span>
                 ))}
+              </div>
+
+              <div className="mb-10" style={{ borderTop: "1px solid #1B3055" }} />
+
+              {/* Pourquoi ce véhicule ? */}
+              <div className="mb-10">
+                <p className="text-[9px] tracking-[0.4em] uppercase mb-4" style={{ color: "#8AABD4" }}>
+                  Pourquoi ce véhicule ?
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  {whyCopy(v.fuel, v.make)}
+                </p>
               </div>
 
               <div className="mb-10" style={{ borderTop: "1px solid #1B3055" }} />
@@ -195,18 +207,6 @@ export default async function VehiculeDetailV2Page({
                   </p>
                 </div>
               )}
-
-              <div className="mb-10" style={{ borderTop: "1px solid #1B3055" }} />
-
-              {/* Pourquoi ce véhicule ? */}
-              <div className="mb-10">
-                <p className="text-[9px] tracking-[0.4em] uppercase mb-4" style={{ color: "#8AABD4" }}>
-                  Pourquoi ce véhicule ?
-                </p>
-                <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
-                  {whyCopy(v.fuel, v.make)}
-                </p>
-              </div>
 
               {/* Branding IA */}
               <div className="flex items-center gap-4 mt-12">
@@ -248,17 +248,27 @@ export default async function VehiculeDetailV2Page({
                     <span className="text-[10px] tracking-wide" style={{ color: "#8AABD4" }}>Démarches administratives prises en charge</span>
                   </div>
                 </div>
+                <div className="mt-6 pt-5 grid grid-cols-2 gap-4" style={{ borderTop: "1px solid #1B3055" }}>
+                  <div>
+                    <span className="text-[8px] tracking-[0.3em] uppercase block mb-1" style={{ color: "#6B9FEE" }}>Kilométrage</span>
+                    <span className="text-xs font-bold" style={{ color: "#F0F5FF" }}>{v.mileage.toLocaleString("fr-FR")} km</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] tracking-[0.3em] uppercase block mb-1" style={{ color: "#6B9FEE" }}>Mise en circ.</span>
+                    <span className="text-xs font-bold" style={{ color: "#F0F5FF" }}>{v.year}</span>
+                  </div>
+                </div>
               </div>
 
               {/* CTAs */}
               {isAvailable ? (
                 <div className="flex flex-col gap-3">
                   <Link
-                    href={`/contact?vehicule=${encodeURIComponent(`${v.make} ${v.model} ${v.year}`)}&sujet=essai`}
-                    className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-5 transition-all duration-300"
-                    style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
+                    href={`/contact?vehicule=${encodeURIComponent(`${v.make} ${v.model} ${v.year}`)}&sujet=reservation`}
+                    className="block w-full text-center text-xs font-bold tracking-[0.2em] uppercase py-5 transition-all duration-300 hover:-translate-y-px hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
                   >
-                    Demander un essai
+                    Réserver ce véhicule
                   </Link>
                   <Link
                     href={`/contact?vehicule=${encodeURIComponent(`${v.make} ${v.model} ${v.year}`)}&sujet=dossier`}
@@ -356,11 +366,11 @@ export default async function VehiculeDetailV2Page({
               {isAvailable && (
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
-                    href={`/contact?vehicule=${encodeURIComponent(`${v.make} ${v.model} ${v.year}`)}&sujet=essai`}
-                    className="px-10 py-5 text-xs font-semibold tracking-widest uppercase transition-all duration-300"
-                    style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
+                    href={`/contact?vehicule=${encodeURIComponent(`${v.make} ${v.model} ${v.year}`)}&sujet=reservation`}
+                    className="px-10 py-5 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 hover:-translate-y-px hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
                   >
-                    Demander un essai
+                    Réserver ce véhicule
                   </Link>
                   <Link
                     href={`/contact?vehicule=${encodeURIComponent(`${v.make} ${v.model} ${v.year}`)}&sujet=dossier`}
