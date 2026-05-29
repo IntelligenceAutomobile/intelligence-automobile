@@ -36,22 +36,42 @@ export function LogoFull({
   const intelSize = Math.round(markHeight * (isCol ? 0.14 : 0.22) * textScale);
   const autoSize  = Math.round(markHeight * (isCol ? 0.10 : 0.15) * textScale);
 
+  const lineW = Math.round(intelSize * 1.2);
+
   return (
-    <div className={`flex ${isCol ? "flex-col items-center" : "flex-row items-center"} gap-3`}>
-      <LogoMark height={markHeight} />
-      <div className={`flex flex-col ${isCol ? "items-center" : ""} leading-none`}>
+    <div className={`flex ${isCol ? "flex-col items-center" : "flex-row items-center"}`} style={{ gap: isCol ? "12px" : "0px" }}>
+      <div style={{ marginTop: isCol ? undefined : "6px" }}>
+        <LogoMark height={markHeight} />
+      </div>
+      <div className="flex flex-col items-center leading-none" style={{ marginLeft: isCol ? undefined : "-20px" }}>
         <span
-          className="font-light uppercase"
-          style={{ color: "#F0F5FF", fontSize: `${intelSize}px`, letterSpacing: "0.28em" }}
+          className="font-extralight uppercase"
+          style={{ color: "#F0F5FF", fontSize: `${intelSize}px`, letterSpacing: "0.45em" }}
         >
           Intelligence
         </span>
-        <span
-          className="font-light uppercase mt-1"
-          style={{ color: "#6B9FEE", fontSize: `${autoSize}px`, letterSpacing: "0.22em" }}
-        >
-          Automobile
-        </span>
+        <div className={`flex items-center gap-2 mt-[0.4em] ${isCol ? "justify-center" : ""}`}>
+          <div
+            className="h-px flex-shrink-0"
+            style={{
+              width: `${lineW}px`,
+              background: "linear-gradient(to right, transparent, #6B9FEE)",
+            }}
+          />
+          <span
+            className="font-light uppercase"
+            style={{ color: "#6B9FEE", fontSize: `${autoSize}px`, letterSpacing: "0.38em" }}
+          >
+            Automobile
+          </span>
+          <div
+            className="h-px flex-shrink-0"
+            style={{
+              width: `${lineW}px`,
+              background: "linear-gradient(to left, transparent, #6B9FEE)",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
@@ -91,11 +111,11 @@ export default function Header() {
       />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="flex items-center justify-between" style={{ height: "88px" }}>
+        <div className="flex items-center justify-between" style={{ height: "130px" }}>
 
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0" style={{ marginLeft: "-64px" }}>
-            <LogoFull markHeight={96} layout="row" textScale={0.38} />
+          <Link href="/" className="flex-shrink-0" style={{ marginLeft: "-64px", alignSelf: "flex-end", paddingBottom: "0px" }}>
+            <LogoFull markHeight={96} layout="row" textScale={0.72} />
           </Link>
 
           {/* Nav desktop */}
