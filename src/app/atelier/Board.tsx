@@ -446,7 +446,7 @@ function NoteCard({
             </div>
           </div>
         ) : (
-          <p className="text-sm mb-3 leading-relaxed" style={{ color: "#F0F5FF" }}>{note.content}</p>
+          <p className="text-sm mb-3 leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{note.content}</p>
         )}
 
         {note.imageUrl && !isEditing && (
@@ -557,7 +557,7 @@ function CommentItem({
             <span className="text-xs" style={{ color: "#1B3055" }}>·</span>
             <span className="text-xs" style={{ color: "#1B3055" }}>{fmtDate(comment.createdAt)}</span>
           </div>
-          <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF" }}>{comment.content}</p>
+          <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{comment.content}</p>
         </div>
         <button onClick={() => onDelete(comment.id)} className="shrink-0 text-xs opacity-0 group-hover:opacity-100" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
       </div>
@@ -584,7 +584,7 @@ function CommentItem({
                     <span className="text-xs" style={{ color: "#1B3055" }}>·</span>
                     <span className="text-xs" style={{ color: "#1B3055" }}>{fmtDate(r.createdAt)}</span>
                   </div>
-                  <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF" }}>{r.content}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{r.content}</p>
                 </div>
                 <button onClick={() => deleteReply(r.id)} className="shrink-0 text-xs opacity-0 group-hover:opacity-100" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
               </div>
