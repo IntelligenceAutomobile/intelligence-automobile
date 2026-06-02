@@ -42,3 +42,13 @@ model Session {
   createdAt DateTime @default(now())
   admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
+
+model CollabNote {
+  id        String   @id @default(cuid())
+  content   String
+  status    String   @default("todo")
+  tag       String   @default("général")
+  author    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
