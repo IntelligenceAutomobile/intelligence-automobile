@@ -44,12 +44,22 @@ model Session {
 }
 
 model CollabNote {
-  id        String   @id @default(cuid())
+  id        String          @id @default(cuid())
   content   String
-  status    String   @default("todo")
-  tag       String   @default("général")
+  status    String          @default("todo")
+  tag       String          @default("général")
   author    String
   imageUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  comments  CollabComment[]
+}
+
+model CollabComment {
+  id        String     @id @default(cuid())
+  noteId    String
+  content   String
+  author    String
+  createdAt DateTime   @default(now())
+  note      CollabNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
 }
