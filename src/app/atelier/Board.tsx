@@ -19,6 +19,18 @@ interface Comment {
   replies: Reply[];
 }
 
+interface TrashNote {
+  id: string;
+  content: string;
+  status: Status;
+  tag: string;
+  category: string;
+  author: string;
+  imageUrl: string | null;
+  deletedAt: string;
+  createdAt: string;
+}
+
 interface Note {
   id: string;
   content: string;
@@ -70,6 +82,8 @@ export default function Board({ authorName }: { authorName: string }) {
   const [loading, setLoading]           = useState(true);
   const [selectedCat, setSelectedCat]   = useState("général");
   const [lastSeen, setLastSeen]         = useState<Record<string, string>>({});
+  const [trashNotes, setTrashNotes]     = useState<TrashNote[] | null>(null);
+  const [loadingTrash, setLoadingTrash] = useState(false);
   const [content, setContent]           = useState("");
   const [tag, setTag]                   = useState("général");
   const [imageFile, setImageFile]       = useState<File | null>(null);
@@ -102,8 +116,18 @@ export default function Board({ authorName }: { authorName: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [overlayUrl]);
 
+  useEffect(() => {
+    if (selectedCat !== "__trash__") return;
+    if (trashNotes !== null) return;
+    setLoadingTrash(true);
+    fetch("/api/collab/trash")
+      .then(r => r.json())
+      .then(data => { setTrashNotes(data); setLoadingTrash(false); });
+  }, [selectedCat, trashNotes]);
+
   function selectCategory(catId: string) {
     setSelectedCat(catId);
+    if (catId === "__trash__") return;
     setLastSeen(prev => {
       const updated = { ...prev, [catId]: new Date().toISOString() };
       localStorage.setItem(LS_KEY, JSON.stringify(updated));
@@ -190,7 +214,11 @@ export default function Board({ authorName }: { authorName: string }) {
 
   async function deleteNote(id: string) {
     setNotes(prev => prev.filter(n => n.id !== id));
-    await fetch(`/api/collab/notes/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/collab/notes/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      const deleted: TrashNote = await res.json();
+      setTrashNotes(prev => prev ? [deleted, ...prev] : [deleted]);
+    }
   }
 
   async function logout() {
@@ -252,6 +280,33 @@ export default function Board({ authorName }: { authorName: string }) {
           })}
         </nav>
 
+        {/* Corbeille */}
+        <div style={{ padding: "8px", borderTop: "1px solid #1B3055" }}>
+          <button
+            onClick={() => selectCategory("__trash__")}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "7px 8px",
+              fontSize: "13px",
+              textAlign: "left",
+              backgroundColor: selectedCat === "__trash__" ? "#112240" : "transparent",
+              color: selectedCat === "__trash__" ? "#8AABD4" : "#1B3055",
+              borderLeft: `2px solid ${selectedCat === "__trash__" ? "#1B3055" : "transparent"}`,
+            }}
+            onMouseEnter={e => { if (selectedCat !== "__trash__") e.currentTarget.style.color = "#8AABD4"; }}
+            onMouseLeave={e => { if (selectedCat !== "__trash__") e.currentTarget.style.color = "#1B3055"; }}
+          >
+            <span style={{ fontSize: "11px" }}>🗑</span>
+            <span>Corbeille</span>
+            {trashNotes && trashNotes.length > 0 && (
+              <span style={{ marginLeft: "auto", fontSize: "10px", color: "#1B3055" }}>{trashNotes.length}</span>
+            )}
+          </button>
+        </div>
+
         {/* Utilisateur + déconnexion */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid #1B3055" }}>
           <div style={{ color: "#8AABD4", fontSize: "12px", marginBottom: "6px" }}>{authorName}</div>
@@ -269,17 +324,32 @@ export default function Board({ authorName }: { authorName: string }) {
       {/* ── Contenu principal ───────────────────── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
-        {/* Header catégorie */}
+        {/* Header */}
         <div style={{ borderBottom: "1px solid #1B3055", backgroundColor: "#112240", padding: "14px 24px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ color: activeCat.color, fontSize: "8px" }}>●</span>
-          <span style={{ fontSize: "15px", fontWeight: 300 }}>{activeCat.label}</span>
-          <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
-            {visibleNotes.length > 0 && `${visibleNotes.filter(n => n.status !== "done").length} en cours · ${visibleNotes.filter(n => n.status === "done").length} terminée${visibleNotes.filter(n => n.status === "done").length > 1 ? "s" : ""}`}
-          </span>
+          {selectedCat === "__trash__" ? (
+            <>
+              <span style={{ fontSize: "12px" }}>🗑</span>
+              <span style={{ fontSize: "15px", fontWeight: 300 }}>Corbeille</span>
+              <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
+                {trashNotes ? `${trashNotes.length} note${trashNotes.length > 1 ? "s" : ""}` : ""}
+              </span>
+            </>
+          ) : (
+            <>
+              <span style={{ color: activeCat.color, fontSize: "8px" }}>●</span>
+              <span style={{ fontSize: "15px", fontWeight: 300 }}>{activeCat.label}</span>
+              <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
+                {visibleNotes.length > 0 && `${visibleNotes.filter(n => n.status !== "done").length} en cours · ${visibleNotes.filter(n => n.status === "done").length} terminée${visibleNotes.filter(n => n.status === "done").length > 1 ? "s" : ""}`}
+              </span>
+            </>
+          )}
         </div>
 
         <div style={{ flex: 1, padding: "28px 24px", overflowY: "auto" }}>
-
+          {selectedCat === "__trash__" && (
+            <TrashView notes={trashNotes ?? []} loading={loadingTrash} />
+          )}
+          {selectedCat !== "__trash__" && <>
           {/* Formulaire */}
           <form onSubmit={addNote} className="mb-8 border" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
             <div className="p-4">
@@ -356,6 +426,7 @@ export default function Board({ authorName }: { authorName: string }) {
               })}
             </div>
           )}
+          </>}
         </div>
       </div>
 
@@ -385,6 +456,7 @@ function NoteCard({
 }) {
   const [isEditing, setIsEditing]         = useState(false);
   const [editContent, setEditContent]     = useState(note.content);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [showComments, setShowComments]   = useState(false);
   const [comments, setComments]           = useState<Comment[]>(note.comments);
   const [newComment, setNewComment]       = useState("");
@@ -465,12 +537,24 @@ function NoteCard({
             <span className="text-xs" style={{ color: "#1B3055" }}>{fmtDate(note.createdAt)}</span>
           </div>
           <div className="flex items-center gap-1 shrink-0 ml-2">
-            {!isEditing && (
-              <button onClick={() => { setEditContent(note.content); setIsEditing(true); }} title="Modifier" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✎</button>
+            {confirmDelete ? (
+              <>
+                <span className="text-xs mr-1" style={{ color: "#8AABD4" }}>Supprimer ?</span>
+                <button onClick={() => setConfirmDelete(false)} className="text-xs px-2 py-0.5 border" style={{ color: "#8AABD4", borderColor: "#1B3055" }}>Non</button>
+                <button onClick={() => { setConfirmDelete(false); onDelete(note.id); }} className="text-xs px-2 py-0.5 border" style={{ color: "#E5635A", borderColor: "#3A1B1B" }}>Oui</button>
+              </>
+            ) : (
+              <>
+                {!isEditing && (
+                  <button onClick={() => { setEditContent(note.content); setIsEditing(true); }} title="Modifier" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✎</button>
+                )}
+                {prev && <button onClick={() => onMove(note.id, prev)} title="Reculer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#8AABD4" }}>←</button>}
+                {next && <button onClick={() => onMove(note.id, next)} title="Avancer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#6B9FEE" }}>→</button>}
+                {note.author === authorName && (
+                  <button onClick={() => setConfirmDelete(true)} title="Supprimer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
+                )}
+              </>
             )}
-            {prev && <button onClick={() => onMove(note.id, prev)} title="Reculer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#8AABD4" }}>←</button>}
-            {next && <button onClick={() => onMove(note.id, next)} title="Avancer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#6B9FEE" }}>→</button>}
-            <button onClick={() => onDelete(note.id)} title="Supprimer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
           </div>
         </div>
       </div>
@@ -603,6 +687,50 @@ function CommentItem({
             </form>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── TrashView ────────────────────────────────────────── */
+
+function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean }) {
+  if (loading) {
+    return <div className="text-sm text-center py-16" style={{ color: "#1B3055" }}>Chargement...</div>;
+  }
+  if (notes.length === 0) {
+    return <div className="text-sm text-center py-16" style={{ color: "#1B3055" }}>La corbeille est vide.</div>;
+  }
+
+  const getCatColor = (catId: string) =>
+    CATEGORIES.find(c => c.id === catId)?.color ?? "#1B3055";
+
+  return (
+    <div style={{ maxWidth: "720px" }}>
+      <div className="space-y-3">
+        {notes.map(note => (
+          <div
+            key={note.id}
+            style={{
+              backgroundColor: "#112240",
+              border: "1px solid #1B3055",
+              borderLeft: `3px solid ${getCatColor(note.category)}`,
+              padding: "14px 16px",
+              opacity: 0.7,
+            }}
+          >
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#8AABD4", whiteSpace: "pre-wrap" }}>
+              {note.content}
+            </p>
+            <div className="flex items-center gap-2 flex-wrap text-xs" style={{ color: "#1B3055" }}>
+              <span style={{ color: getCatColor(note.category) }}>{note.category}</span>
+              <span>·</span>
+              <span>{note.author}</span>
+              <span>·</span>
+              <span>Supprimé le {fmtDate(note.deletedAt)}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

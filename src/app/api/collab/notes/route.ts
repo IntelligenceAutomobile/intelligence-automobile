@@ -7,6 +7,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const notes = await prisma.collabNote.findMany({
+    where: { deletedAt: null },
     orderBy: { updatedAt: "desc" },
     include: {
       comments: {

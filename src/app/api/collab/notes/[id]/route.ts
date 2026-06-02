@@ -30,6 +30,17 @@ export async function DELETE(
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const { id } = await params;
-  await prisma.collabNote.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+
+  const note = await prisma.collabNote.findUnique({ where: { id } });
+  if (!note) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (note.author !== session.name) {
+    return NextResponse.json({ error: "Seul l'auteur peut supprimer cette note" }, { status: 403 });
+  }
+
+  const deleted = await prisma.collabNote.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+
+  return NextResponse.json(deleted);
 }
