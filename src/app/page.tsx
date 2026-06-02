@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { LogoMark } from "@/components/Header";
 import { prisma } from "@/lib/prisma";
 
 export default async function HomePage() {
@@ -23,7 +22,7 @@ export default async function HomePage() {
         {/* ── HERO ── */}
         <section
           className="relative min-h-screen flex items-center overflow-hidden"
-          style={{ backgroundColor: "#070F1E", paddingTop: "130px" }}
+          style={{ backgroundColor: "#070F1E", paddingTop: "200px" }}
         >
           {/* Image voiture droite */}
           <div className="absolute right-0 top-0 bottom-0 w-full md:w-[62%]">
@@ -51,68 +50,26 @@ export default async function HomePage() {
           <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 w-full">
             <div className="max-w-xl lg:max-w-2xl py-20">
 
-              {/* Logo hero — pleine largeur, format titre */}
-              <div className="flex items-center gap-6 mb-10 w-full pb-10" style={{ borderBottom: "1px solid #1B3055" }}>
-                <LogoMark height={110} />
-                <div className="flex flex-col leading-none flex-1 min-w-0">
-                  <span
-                    className="font-light uppercase"
-                    style={{
-                      color: "#F0F5FF",
-                      fontSize: "clamp(1.8rem, 3.2vw, 2.6rem)",
-                      letterSpacing: "0.24em",
-                    }}
-                  >
-                    Intelligence
-                  </span>
-                  <span
-                    className="font-light uppercase mt-2"
-                    style={{
-                      color: "#6B9FEE",
-                      fontSize: "clamp(1rem, 1.8vw, 1.5rem)",
-                      letterSpacing: "0.18em",
-                    }}
-                  >
-                    Automobile
-                  </span>
-                </div>
-              </div>
-
-              <p
-                className="text-xs tracking-[0.35em] uppercase mb-8"
-                style={{ color: "#6B9FEE" }}
-              >
-                Import premium · Allemagne · Belgique → France
-              </p>
               <h1
-                className="font-black uppercase leading-[0.92] mb-8"
+                className="font-black leading-[0.9] mb-10"
                 style={{
-                  fontSize: "clamp(3.2rem, 7.5vw, 7rem)",
-                  letterSpacing: "-0.025em",
+                  fontSize: "clamp(3rem, 7vw, 6.5rem)",
+                  letterSpacing: "-0.03em",
                 }}
               >
-                L&apos;import
+                L&apos;importation
                 <br />
-                premium,
+                automobile,
                 <br />
-                <span style={{ color: "#6B9FEE" }}>autrement.</span>
+                <span style={{ color: "#6B9FEE" }}>pensée autrement.</span>
               </h1>
-              <p
-                className="text-base md:text-lg leading-relaxed mb-12 max-w-md"
-                style={{ color: "#8AABD4", fontWeight: 300 }}
-              >
-                Sélection rigoureuse de véhicules européens haut de gamme.
-                Transparence totale, de la recherche à l&apos;immatriculation.
-              </p>
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/vehicules"
                   className="px-8 py-4 text-sm font-semibold tracking-widest uppercase rounded-full border-2 transition-all duration-300"
                   style={{ borderColor: "#F0F5FF", color: "#F0F5FF" }}
                 >
-                  {vehiculesDisponibles > 0
-                    ? `Voir les ${vehiculesDisponibles} véhicule${vehiculesDisponibles > 1 ? "s" : ""}`
-                    : "Voir le stock"}
+                  Voir les véhicules
                 </Link>
                 <Link
                   href="/contact"
@@ -653,7 +610,7 @@ export default async function HomePage() {
             >
               Votre prochain véhicule
               <br />
-              <span style={{ color: "#6B9FEE" }}>nous attend.</span>
+              <span style={{ color: "#6B9FEE" }}>Vous Attend.</span>
             </h2>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link

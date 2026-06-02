@@ -128,8 +128,6 @@ export default function VehiculeModalV2({
     ? maintenanceEntries
     : maintenanceEntries.slice(0, 5);
 
-  const descFull = descriptionParagraphs.join("\n\n");
-
   return (
     <div className="fixed inset-0 z-50">
 
@@ -154,7 +152,7 @@ export default function VehiculeModalV2({
         <div
           className="relative w-full sm:max-w-[640px] rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col"
           style={{
-            backgroundColor: "#0A1628",
+            backgroundColor: "#0D1E35",
             maxHeight: "92svh",
             opacity: visible ? 1 : 0,
             transform: visible ? "translateY(0)" : "translateY(48px)",
@@ -241,7 +239,7 @@ export default function VehiculeModalV2({
                 {name}
               </h2>
               {subtitle && (
-                <p className="mb-5 font-light" style={{ color: "#8AABD4", fontSize: "0.8rem", letterSpacing: "0.03em" }}>
+                <p className="mb-5 font-light" style={{ color: "#A8C4F0", fontSize: "0.8rem", letterSpacing: "0.03em" }}>
                   {subtitle}
                 </p>
               )}
@@ -306,8 +304,8 @@ export default function VehiculeModalV2({
                     {pointsForts.map((f) => (
                       <div
                         key={f}
-                        className="flex items-start gap-2 px-3 py-3 text-[10px]"
-                        style={{ backgroundColor: "#0A1628", color: "#C8D8EE", fontWeight: 300 }}
+                        className="flex items-start gap-2 px-3 py-3.5 text-[11px]"
+                        style={{ backgroundColor: "#0A1628", color: "#D4E2F4", fontWeight: 400 }}
                       >
                         <span className="flex-shrink-0 mt-0.5" style={{ color: "#6B9FEE", fontSize: "6px" }}>●</span>
                         {f}
@@ -320,13 +318,13 @@ export default function VehiculeModalV2({
               {/* Description condensée */}
               {descriptionParagraphs.length > 0 && (
                 <div className="mb-6 flex flex-col gap-3">
-                  <p className="text-xs leading-loose" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-xs leading-loose" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     {renderDesc(descriptionParagraphs[0])}
                   </p>
                   {descriptionParagraphs.length > 1 && (
                     <>
                       {showFullDesc && (
-                        <p className="text-xs leading-loose" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                        <p className="text-xs leading-loose" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                           {renderDesc(descriptionParagraphs[1])}
                         </p>
                       )}
@@ -392,7 +390,7 @@ export default function VehiculeModalV2({
                                 {[0, 1].map((j) => {
                                   const item = cat.items[i * 2 + j];
                                   return (
-                                    <div key={j} className="flex items-start gap-2 px-4 py-3 text-[10px]" style={{ color: item ? "#C8D8EE" : "transparent", fontWeight: 300, borderLeft: j === 1 ? "1px solid #1B3055" : "none" }}>
+                                    <div key={j} className="flex items-start gap-2 px-4 py-3.5 text-[11px]" style={{ color: item ? "#D4E2F4" : "transparent", fontWeight: 400, borderLeft: j === 1 ? "1px solid #1B3055" : "none" }}>
                                       <span className="flex-shrink-0 mt-0.5" style={{ color: "#6B9FEE" }}>—</span>
                                       {item ?? ""}
                                     </div>
@@ -414,7 +412,7 @@ export default function VehiculeModalV2({
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[9px] tracking-[0.3em] uppercase text-center" style={{ color: "#8AABD4" }}>Entretien</p>
                     <span className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1" style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "6px" }}>
-                      {maintenanceEntries.length} factures
+                      {maintenanceEntries.length} interventions
                     </span>
                   </div>
                   <div style={{ border: "1px solid #1B3055", backgroundColor: "#070F1E" }}>
@@ -426,7 +424,7 @@ export default function VehiculeModalV2({
                           <p className="text-[9px] mt-0.5" style={{ color: "#8AABD4" }}>{entry.km}</p>
                         </div>
                         {entry.amount && entry.amount !== "—" && (
-                          <span className="text-[9px] font-bold flex-shrink-0 tabular-nums" style={{ color: "#8AABD4" }}>{entry.amount}</span>
+                          <span className="text-[9px] font-bold flex-shrink-0 tabular-nums" style={{ color: "#6B9FEE" }}>{entry.amount}</span>
                         )}
                       </div>
                     ))}
@@ -456,7 +454,7 @@ export default function VehiculeModalV2({
           {/* ── CTA STICKY ── */}
           <div
             className="flex-shrink-0 px-6 pt-4 pb-5 sm:px-8"
-            style={{ borderTop: "1px solid #1B3055", backgroundColor: "#0A1628" }}
+            style={{ borderTop: "1px solid #1B3055", backgroundColor: "#0D1E35" }}
           >
             {isAvailable ? (
               <Link
