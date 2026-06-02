@@ -56,10 +56,13 @@ model CollabNote {
 }
 
 model CollabComment {
-  id        String     @id @default(cuid())
+  id        String          @id @default(cuid())
   noteId    String
+  parentId  String?
   content   String
   author    String
-  createdAt DateTime   @default(now())
-  note      CollabNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  note      CollabNote      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  parent    CollabComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   CollabComment[] @relation("CommentReplies")
 }

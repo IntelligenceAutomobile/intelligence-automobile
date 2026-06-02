@@ -8,7 +8,13 @@ export async function GET() {
 
   const notes = await prisma.collabNote.findMany({
     orderBy: { updatedAt: "desc" },
-    include: { comments: { orderBy: { createdAt: "asc" } } },
+    include: {
+      comments: {
+        where: { parentId: null },
+        orderBy: { createdAt: "asc" },
+        include: { replies: { orderBy: { createdAt: "asc" } } },
+      },
+    },
   });
 
   return NextResponse.json(notes);

@@ -10,7 +10,7 @@ export async function POST(
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const { id: noteId } = await params;
-  const { content } = await req.json();
+  const { content, parentId } = await req.json();
 
   if (!content?.trim()) {
     return NextResponse.json({ error: "Contenu requis" }, { status: 400 });
@@ -21,6 +21,7 @@ export async function POST(
       noteId,
       content: content.trim(),
       author: session.name,
+      parentId: parentId ?? null,
     },
   });
 
