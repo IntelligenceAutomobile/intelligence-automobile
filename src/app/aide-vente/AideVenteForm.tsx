@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { upload } from "@vercel/blob/client";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -49,9 +50,9 @@ export default function AideVenteForm() {
 
   function handleFiles(files: FileList | null) {
     if (!files) return;
-    const incoming = Array.from(files).slice(0, 5 - photos.length);
-    const newPhotos   = [...photos,   ...incoming].slice(0, 5);
-    const newPreviews = [...previews, ...incoming.map((f) => URL.createObjectURL(f))].slice(0, 5);
+    const incoming = Array.from(files).slice(0, 10 - photos.length);
+    const newPhotos   = [...photos,   ...incoming].slice(0, 10);
+    const newPreviews = [...previews, ...incoming.map((f) => URL.createObjectURL(f))].slice(0, 10);
     setPhotos(newPhotos);
     setPreviews(newPreviews);
   }
@@ -67,9 +68,19 @@ export default function AideVenteForm() {
     setStatus("sending");
     const form = e.currentTarget;
     const data = new FormData(form);
-    photos.forEach((p) => data.append("photos", p));
 
     try {
+      // Upload photos vers Vercel Blob (parallèle)
+      const blobUrls = await Promise.all(
+        photos.map((file) =>
+          upload(file.name, file, {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+          }).then((b) => b.url)
+        )
+      );
+      blobUrls.forEach((url) => data.append("photoUrls", url));
+
       const res = await fetch("/api/aide-vente", { method: "POST", body: data });
       if (!res.ok) throw new Error();
       setStatus("success");
@@ -205,7 +216,7 @@ export default function AideVenteForm() {
       </SectionCard>
 
       {/* ── Photos ── */}
-      <SectionCard title={`Photos ${photos.length > 0 ? `(${photos.length}/5)` : "(5 max)"}`}>
+      <SectionCard title={`Photos ${photos.length > 0 ? `(${photos.length}/10)` : "(10 max)"}`}>
         <input
           ref={fileInputRef}
           type="file"
@@ -215,7 +226,7 @@ export default function AideVenteForm() {
           onChange={(e) => handleFiles(e.target.files)}
         />
 
-        {photos.length < 5 && (
+        {photos.length < 10 && (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}

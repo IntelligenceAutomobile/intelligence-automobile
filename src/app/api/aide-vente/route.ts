@@ -29,20 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
     }
 
-    // Conversion des photos en pièces jointes base64
-    const fichiers = data.getAll("photos") as File[];
-    const attachments = await Promise.all(
-      fichiers
-        .filter((f) => f.size > 0)
-        .slice(0, 5)
-        .map(async (file) => {
-          const buffer = Buffer.from(await file.arrayBuffer());
-          return {
-            filename: file.name,
-            content: buffer.toString("base64"),
-          };
-        })
-    );
+    const photoUrls = (data.getAll("photoUrls") as string[]).filter(Boolean);
 
     const row = (label: string, value: string) =>
       `<tr>
@@ -91,11 +78,17 @@ export async function POST(req: NextRequest) {
     </table>
 
     ${
-      attachments.length > 0
-        ? `<p style="color:#8AABD4;font-size:12px;margin:0;">
-            <span style="color:#6B9FEE;">✓</span>
-            ${attachments.length} photo${attachments.length > 1 ? "s" : ""} en pièce${attachments.length > 1 ? "s" : ""} jointe${attachments.length > 1 ? "s" : ""}
-          </p>`
+      photoUrls.length > 0
+        ? `<div style="margin-top:8px;">
+            <p style="color:#6B9FEE;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;margin:0 0 12px;padding-bottom:12px;border-bottom:1px solid #1B3055;">
+              Photos (${photoUrls.length})
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+              ${photoUrls.map((url, i) => `<a href="${url}" target="_blank" style="display:block;aspect-ratio:1;overflow:hidden;border:1px solid #1B3055;">
+                <img src="${url}" alt="Photo ${i + 1}" style="width:100%;height:100%;object-fit:cover;" />
+              </a>`).join("")}
+            </div>
+          </div>`
         : `<p style="color:#8AABD4;font-size:12px;margin:0;">Aucune photo jointe.</p>`
     }
 
@@ -111,7 +104,6 @@ export async function POST(req: NextRequest) {
         replyTo: email,
         subject: `Aide à la vente — ${marque} ${modele} (${annee}) — ${prenom} ${nom}`,
         html,
-        attachments,
       });
     } else {
       // Fallback dev : log console
