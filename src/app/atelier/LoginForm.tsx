@@ -59,17 +59,19 @@ export default function LoginForm() {
           className="block text-xs tracking-widest uppercase mb-2"
           style={{ color: "#8AABD4" }}
         >
-          Votre prénom
+          Qui êtes-vous ?
         </label>
-        <input
+        <select
           name="name"
-          type="text"
           required
-          placeholder="Fabrice"
-          autoComplete="off"
+          defaultValue=""
           className="w-full px-4 py-3 border text-sm outline-none"
           style={inputStyle}
-        />
+        >
+          <option value="" disabled>—</option>
+          <option value="César">César</option>
+          <option value="Fab">Fab</option>
+        </select>
       </div>
 
       <div>
