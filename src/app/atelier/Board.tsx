@@ -24,12 +24,21 @@ interface Note {
   content: string;
   status: Status;
   tag: string;
+  category: string;
   author: string;
   imageUrl: string | null;
   comments: Comment[];
   createdAt: string;
   updatedAt: string;
 }
+
+const CATEGORIES = [
+  { id: "général",       label: "Général",       color: "#8AABD4" },
+  { id: "véhicules",     label: "Véhicules",     color: "#4EB87B" },
+  { id: "administratif", label: "Administratif", color: "#F0A55A" },
+  { id: "site web",      label: "Site web",      color: "#A78BFA" },
+  { id: "commercial",    label: "Commercial",    color: "#6B9FEE" },
+] as const;
 
 const COLUMNS: { status: Status; label: string }[] = [
   { status: "todo",  label: "À faire"  },
@@ -54,9 +63,13 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
+const LS_KEY = "ia_collab_seen";
+
 export default function Board({ authorName }: { authorName: string }) {
   const [notes, setNotes]               = useState<Note[]>([]);
   const [loading, setLoading]           = useState(true);
+  const [selectedCat, setSelectedCat]   = useState("général");
+  const [lastSeen, setLastSeen]         = useState<Record<string, string>>({});
   const [content, setContent]           = useState("");
   const [tag, setTag]                   = useState("général");
   const [imageFile, setImageFile]       = useState<File | null>(null);
@@ -64,6 +77,15 @@ export default function Board({ authorName }: { authorName: string }) {
   const [adding, setAdding]             = useState(false);
   const [overlayUrl, setOverlayUrl]     = useState<string | null>(null);
   const fileInputRef                    = useRef<HTMLInputElement>(null);
+
+  // Load lastSeen from localStorage and mark initial category seen
+  useEffect(() => {
+    let stored: Record<string, string> = {};
+    try { stored = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch {}
+    const initial = { ...stored, général: new Date().toISOString() };
+    setLastSeen(initial);
+    localStorage.setItem(LS_KEY, JSON.stringify(initial));
+  }, []);
 
   const fetchNotes = useCallback(async () => {
     const res = await fetch("/api/collab/notes");
@@ -79,6 +101,29 @@ export default function Board({ authorName }: { authorName: string }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [overlayUrl]);
+
+  function selectCategory(catId: string) {
+    setSelectedCat(catId);
+    setLastSeen(prev => {
+      const updated = { ...prev, [catId]: new Date().toISOString() };
+      localStorage.setItem(LS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  function hasUnread(catId: string): boolean {
+    if (loading) return false;
+    const lastVisit = lastSeen[catId] ? new Date(lastSeen[catId]) : new Date(0);
+    return notes
+      .filter(n => n.category === catId)
+      .some(n => {
+        if (n.author !== authorName && new Date(n.createdAt) > lastVisit) return true;
+        return n.comments.some(c => {
+          if (c.author !== authorName && new Date(c.createdAt) > lastVisit) return true;
+          return c.replies.some(r => r.author !== authorName && new Date(r.createdAt) > lastVisit);
+        });
+      });
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -111,7 +156,7 @@ export default function Board({ authorName }: { authorName: string }) {
     const res = await fetch("/api/collab/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, tag, imageUrl }),
+      body: JSON.stringify({ content, tag, imageUrl, category: selectedCat }),
     });
 
     if (res.ok) {
@@ -153,22 +198,66 @@ export default function Board({ authorName }: { authorName: string }) {
     window.location.href = "/atelier";
   }
 
-  return (
-    <div className="min-h-screen" style={{ backgroundColor: "#0B1930", color: "#F0F5FF" }}>
+  const activeCat = CATEGORIES.find(c => c.id === selectedCat)!;
+  const visibleNotes = notes.filter(n => n.category === selectedCat);
 
-      {/* Header */}
-      <div className="border-b px-6 py-4 flex items-center justify-between" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#6B9FEE" }}>IA</span>
-          <div className="h-4 w-px" style={{ backgroundColor: "#1B3055" }} />
-          <span className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>Espace équipe</span>
+  return (
+    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0B1930", color: "#F0F5FF" }}>
+
+      {/* ── Sidebar ─────────────────────────────── */}
+      <div style={{ width: "210px", flexShrink: 0, backgroundColor: "#071422", borderRight: "1px solid #1B3055", display: "flex", flexDirection: "column" }}>
+
+        {/* Logo */}
+        <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid #1B3055" }}>
+          <span style={{ color: "#6B9FEE", fontSize: "12px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>IA</span>
+          <div style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.1em", marginTop: "2px" }}>Espace équipe</div>
         </div>
-        <div className="flex items-center gap-5">
-          <span className="text-xs" style={{ color: "#8AABD4" }}>{authorName}</span>
+
+        {/* Catégories */}
+        <nav style={{ padding: "12px 8px", flex: 1 }}>
+          <div style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 8px", marginBottom: "8px" }}>
+            Espaces
+          </div>
+          {CATEGORIES.map(cat => {
+            const selected = selectedCat === cat.id;
+            const unread   = hasUnread(cat.id);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => selectCategory(cat.id)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "7px 8px",
+                  marginBottom: "1px",
+                  fontSize: "13px",
+                  textAlign: "left",
+                  backgroundColor: selected ? "#112240" : "transparent",
+                  color: selected ? "#F0F5FF" : "#8AABD4",
+                  borderLeft: `2px solid ${selected ? "#6B9FEE" : "transparent"}`,
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={e => { if (!selected) e.currentTarget.style.backgroundColor = "#0D1E38"; }}
+                onMouseLeave={e => { if (!selected) e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                <span style={{ color: cat.color, fontSize: "7px", lineHeight: 1, flexShrink: 0 }}>●</span>
+                <span style={{ flex: 1 }}>{cat.label}</span>
+                {unread && (
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#6B9FEE", flexShrink: 0 }} />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Utilisateur + déconnexion */}
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #1B3055" }}>
+          <div style={{ color: "#8AABD4", fontSize: "12px", marginBottom: "6px" }}>{authorName}</div>
           <button
             onClick={logout}
-            className="text-xs tracking-widest uppercase"
-            style={{ color: "#1B3055" }}
+            style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase" }}
             onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")}
             onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}
           >
@@ -177,83 +266,96 @@ export default function Board({ authorName }: { authorName: string }) {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* ── Contenu principal ───────────────────── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
-        {/* Formulaire */}
-        <form onSubmit={addNote} className="mb-8 border" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
-          <div className="p-4">
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder="Nouvelle note..."
-              rows={2}
-              className="w-full px-4 py-3 border text-sm outline-none resize-none"
-              style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
-              onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) addNote(e as unknown as React.FormEvent); }}
-            />
-            {imagePreview && (
-              <div className="mt-2 flex items-start gap-2">
-                <img src={imagePreview} alt="aperçu" className="h-24 object-contain border" style={{ borderColor: "#1B3055" }} />
-                <button type="button" onClick={removeImage} className="text-xs px-1" style={{ color: "#8AABD4" }}>✕</button>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3 px-4 pb-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xs"
-              style={{ color: imageFile ? "#6B9FEE" : "#1B3055" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")}
-              onMouseLeave={e => (e.currentTarget.style.color = imageFile ? "#6B9FEE" : "#1B3055")}
-            >
-              {imageFile ? `📎 ${imageFile.name}` : "+ Joindre"}
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-            <div className="flex-1" />
-            <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#8AABD4" }}>
-              {TAGS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <button type="submit" disabled={adding || !content.trim()} className="px-6 py-2 text-xs font-semibold tracking-widest uppercase disabled:opacity-40" style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}>
-              {adding ? "..." : "Ajouter"}
-            </button>
-          </div>
-        </form>
+        {/* Header catégorie */}
+        <div style={{ borderBottom: "1px solid #1B3055", backgroundColor: "#112240", padding: "14px 24px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ color: activeCat.color, fontSize: "8px" }}>●</span>
+          <span style={{ fontSize: "15px", fontWeight: 300 }}>{activeCat.label}</span>
+          <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
+            {visibleNotes.length > 0 && `${visibleNotes.filter(n => n.status !== "done").length} en cours · ${visibleNotes.filter(n => n.status === "done").length} terminée${visibleNotes.filter(n => n.status === "done").length > 1 ? "s" : ""}`}
+          </span>
+        </div>
 
-        {/* Kanban */}
-        {loading ? (
-          <div className="text-sm text-center py-16" style={{ color: "#1B3055" }}>Chargement...</div>
-        ) : (
-          <div className="grid grid-cols-3 gap-6">
-            {COLUMNS.map(col => {
-              const colNotes = notes.filter(n => n.status === col.status);
-              return (
-                <div key={col.status}>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>{col.label}</span>
-                    <span className="text-xs px-2 py-0.5" style={{ backgroundColor: "#1B3055", color: "#8AABD4" }}>{colNotes.length}</span>
-                  </div>
-                  <div className="space-y-3">
-                    {colNotes.length === 0 && (
-                      <div className="py-8 text-center text-xs border border-dashed" style={{ borderColor: "#1B3055", color: "#1B3055" }}>—</div>
-                    )}
-                    {colNotes.map(note => (
-                      <NoteCard
-                        key={note.id}
-                        note={note}
-                        authorName={authorName}
-                        onMove={moveNote}
-                        onEdit={editNote}
-                        onDelete={deleteNote}
-                        onOpenImage={setOverlayUrl}
-                      />
-                    ))}
-                  </div>
+        <div style={{ flex: 1, padding: "28px 24px", overflowY: "auto" }}>
+
+          {/* Formulaire */}
+          <form onSubmit={addNote} className="mb-8 border" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
+            <div className="p-4">
+              <textarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                placeholder={`Nouvelle note dans ${activeCat.label}...`}
+                rows={2}
+                className="w-full px-4 py-3 border text-sm outline-none resize-none"
+                style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
+                onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) addNote(e as unknown as React.FormEvent); }}
+              />
+              {imagePreview && (
+                <div className="mt-2 flex items-start gap-2">
+                  <img src={imagePreview} alt="aperçu" className="h-24 object-contain border" style={{ borderColor: "#1B3055" }} />
+                  <button type="button" onClick={removeImage} className="text-xs px-1" style={{ color: "#8AABD4" }}>✕</button>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              )}
+            </div>
+            <div className="flex items-center gap-3 px-4 pb-4">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-xs"
+                style={{ color: imageFile ? "#6B9FEE" : "#1B3055" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")}
+                onMouseLeave={e => (e.currentTarget.style.color = imageFile ? "#6B9FEE" : "#1B3055")}
+              >
+                {imageFile ? `📎 ${imageFile.name}` : "+ Joindre"}
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+              <div className="flex-1" />
+              <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#8AABD4" }}>
+                {TAGS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <button type="submit" disabled={adding || !content.trim()} className="px-6 py-2 text-xs font-semibold tracking-widest uppercase disabled:opacity-40" style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}>
+                {adding ? "..." : "Ajouter"}
+              </button>
+            </div>
+          </form>
+
+          {/* Kanban */}
+          {loading ? (
+            <div className="text-sm text-center py-16" style={{ color: "#1B3055" }}>Chargement...</div>
+          ) : (
+            <div className="grid grid-cols-3 gap-6">
+              {COLUMNS.map(col => {
+                const colNotes = visibleNotes.filter(n => n.status === col.status);
+                return (
+                  <div key={col.status}>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>{col.label}</span>
+                      <span className="text-xs px-2 py-0.5" style={{ backgroundColor: "#1B3055", color: "#8AABD4" }}>{colNotes.length}</span>
+                    </div>
+                    <div className="space-y-3">
+                      {colNotes.length === 0 && (
+                        <div className="py-8 text-center text-xs border border-dashed" style={{ borderColor: "#1B3055", color: "#1B3055" }}>—</div>
+                      )}
+                      {colNotes.map(note => (
+                        <NoteCard
+                          key={note.id}
+                          note={note}
+                          authorName={authorName}
+                          onMove={moveNote}
+                          onEdit={editNote}
+                          onDelete={deleteNote}
+                          onOpenImage={setOverlayUrl}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Overlay image */}
@@ -279,11 +381,11 @@ function NoteCard({
   onDelete: (id: string) => void;
   onOpenImage: (url: string) => void;
 }) {
-  const [isEditing, setIsEditing]     = useState(false);
-  const [editContent, setEditContent] = useState(note.content);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments]       = useState<Comment[]>(note.comments);
-  const [newComment, setNewComment]   = useState("");
+  const [isEditing, setIsEditing]         = useState(false);
+  const [editContent, setEditContent]     = useState(note.content);
+  const [showComments, setShowComments]   = useState(false);
+  const [comments, setComments]           = useState<Comment[]>(note.comments);
+  const [newComment, setNewComment]       = useState("");
   const [addingComment, setAddingComment] = useState(false);
 
   const tagStyle = TAG_STYLES[note.tag] ?? TAG_STYLES["général"];
@@ -324,8 +426,6 @@ function NoteCard({
 
   return (
     <div className="border" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
-
-      {/* Corps */}
       <div className="p-4">
         {isEditing ? (
           <div className="mb-3">
@@ -355,7 +455,6 @@ function NoteCard({
           </button>
         )}
 
-        {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs px-2 py-0.5" style={tagStyle}>{note.tag}</span>
@@ -374,7 +473,7 @@ function NoteCard({
         </div>
       </div>
 
-      {/* Section commentaires */}
+      {/* Commentaires */}
       <div className="border-t" style={{ borderColor: "#1B3055" }}>
         <button
           onClick={() => setShowComments(v => !v)}
@@ -390,13 +489,7 @@ function NoteCard({
         {showComments && (
           <div className="px-4 pb-4 space-y-3">
             {comments.map(c => (
-              <CommentItem
-                key={c.id}
-                comment={c}
-                noteId={note.id}
-                authorName={authorName}
-                onDelete={deleteComment}
-              />
+              <CommentItem key={c.id} comment={c} noteId={note.id} authorName={authorName} onDelete={deleteComment} />
             ))}
             <form onSubmit={addComment} className="flex gap-2">
               <input
@@ -425,10 +518,10 @@ function CommentItem({
   authorName: string;
   onDelete: (id: string) => void;
 }) {
-  const [showReplies, setShowReplies]   = useState(false);
-  const [replies, setReplies]           = useState<Reply[]>(comment.replies);
-  const [newReply, setNewReply]         = useState("");
-  const [addingReply, setAddingReply]   = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [replies, setReplies]         = useState<Reply[]>(comment.replies);
+  const [newReply, setNewReply]       = useState("");
+  const [addingReply, setAddingReply] = useState(false);
 
   const replyCount = replies.length;
   const replyLabel = replyCount === 0 ? "Répondre" : `${replyCount} réponse${replyCount > 1 ? "s" : ""}`;
@@ -457,7 +550,6 @@ function CommentItem({
 
   return (
     <div>
-      {/* Commentaire */}
       <div className="flex items-start gap-2 group">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
@@ -467,16 +559,9 @@ function CommentItem({
           </div>
           <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF" }}>{comment.content}</p>
         </div>
-        <button
-          onClick={() => onDelete(comment.id)}
-          className="shrink-0 text-xs opacity-0 group-hover:opacity-100"
-          style={{ color: "#1B3055" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")}
-          onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}
-        >✕</button>
+        <button onClick={() => onDelete(comment.id)} className="shrink-0 text-xs opacity-0 group-hover:opacity-100" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
       </div>
 
-      {/* Réponses */}
       <div className="ml-3 mt-1 border-l pl-3" style={{ borderColor: "#1B3055" }}>
         <button
           onClick={() => setShowReplies(v => !v)}
@@ -501,16 +586,9 @@ function CommentItem({
                   </div>
                   <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF" }}>{r.content}</p>
                 </div>
-                <button
-                  onClick={() => deleteReply(r.id)}
-                  className="shrink-0 text-xs opacity-0 group-hover:opacity-100"
-                  style={{ color: "#1B3055" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}
-                >✕</button>
+                <button onClick={() => deleteReply(r.id)} className="shrink-0 text-xs opacity-0 group-hover:opacity-100" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
               </div>
             ))}
-
             <form onSubmit={addReply} className="flex gap-2 mt-1">
               <input
                 value={newReply}

@@ -49,6 +49,7 @@ model CollabNote {
   status    String          @default("todo")
   tag       String          @default("général")
   author    String
+  category  String          @default("général")
   imageUrl  String?
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
