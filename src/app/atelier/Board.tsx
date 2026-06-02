@@ -235,8 +235,8 @@ export default function Board({ authorName }: { authorName: string }) {
                   fontSize: "13px",
                   textAlign: "left",
                   backgroundColor: selected ? "#112240" : "transparent",
-                  color: selected ? "#F0F5FF" : "#8AABD4",
-                  borderLeft: `2px solid ${selected ? "#6B9FEE" : "transparent"}`,
+                  color: selected ? cat.color : "#8AABD4",
+                  borderLeft: `2px solid ${selected ? cat.color : "transparent"}`,
                   transition: "background 0.1s",
                 }}
                 onMouseEnter={e => { if (!selected) e.currentTarget.style.backgroundColor = "#0D1E38"; }}
@@ -315,7 +315,7 @@ export default function Board({ authorName }: { authorName: string }) {
               <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#8AABD4" }}>
                 {TAGS.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <button type="submit" disabled={adding || !content.trim()} className="px-6 py-2 text-xs font-semibold tracking-widest uppercase disabled:opacity-40" style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}>
+              <button type="submit" disabled={adding || !content.trim()} className="px-6 py-2 text-xs font-semibold tracking-widest uppercase disabled:opacity-40" style={{ backgroundColor: activeCat.color, color: "#0B1930" }}>
                 {adding ? "..." : "Ajouter"}
               </button>
             </div>
@@ -332,7 +332,7 @@ export default function Board({ authorName }: { authorName: string }) {
                   <div key={col.status}>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>{col.label}</span>
-                      <span className="text-xs px-2 py-0.5" style={{ backgroundColor: "#1B3055", color: "#8AABD4" }}>{colNotes.length}</span>
+                      <span className="text-xs px-2 py-0.5" style={{ backgroundColor: "#1B3055", color: activeCat.color }}>{colNotes.length}</span>
                     </div>
                     <div className="space-y-3">
                       {colNotes.length === 0 && (
@@ -342,6 +342,7 @@ export default function Board({ authorName }: { authorName: string }) {
                         <NoteCard
                           key={note.id}
                           note={note}
+                          catColor={activeCat.color}
                           authorName={authorName}
                           onMove={moveNote}
                           onEdit={editNote}
@@ -372,9 +373,10 @@ export default function Board({ authorName }: { authorName: string }) {
 /* ─── NoteCard ─────────────────────────────────────────── */
 
 function NoteCard({
-  note, authorName, onMove, onEdit, onDelete, onOpenImage,
+  note, catColor, authorName, onMove, onEdit, onDelete, onOpenImage,
 }: {
   note: Note;
+  catColor: string;
   authorName: string;
   onMove: (id: string, status: Status) => void;
   onEdit: (id: string, content: string) => void;
@@ -425,7 +427,7 @@ function NoteCard({
   const commentLabel = commentCount === 0 ? "Commenter" : `${commentCount} commentaire${commentCount > 1 ? "s" : ""}`;
 
   return (
-    <div className="border" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
+    <div style={{ backgroundColor: "#112240", border: "1px solid #1B3055", borderLeft: `3px solid ${catColor}` }}>
       <div className="p-4">
         {isEditing ? (
           <div className="mb-3">
