@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const session = await getCollabSession();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const { content, tag } = await req.json();
+  const { content, tag, imageUrl } = await req.json();
   if (!content?.trim()) {
     return NextResponse.json({ error: "Contenu requis" }, { status: 400 });
   }
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       content: content.trim(),
       tag: tag ?? "général",
       author: session.name,
+      imageUrl: imageUrl ?? null,
     },
   });
 
