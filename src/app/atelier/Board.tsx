@@ -58,7 +58,8 @@ export default function Board({ authorName }: { authorName: string }) {
       body: JSON.stringify({ content, tag }),
     });
     if (res.ok) {
-      setNotes(prev => [await res.json(), ...prev]);
+      const note = await res.json();
+      setNotes(prev => [note, ...prev]);
       setContent("");
     }
     setAdding(false);
