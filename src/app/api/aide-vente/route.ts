@@ -98,15 +98,17 @@ export async function POST(req: NextRequest) {
 
     // Envoi email via Resend
     if (process.env.RESEND_API_KEY) {
-      await resend.emails.send({
+      console.log(`[Resend] FROM=${FROM} TO=${TO}`);
+      const { data, error } = await resend.emails.send({
         from: FROM,
         to: TO,
         replyTo: email,
         subject: `Aide à la vente — ${marque} ${modele} (${annee}) — ${prenom} ${nom}`,
         html,
       });
+      if (error) console.error("[Resend] Erreur:", JSON.stringify(error));
+      else console.log("[Resend] Envoyé, id:", data?.id);
     } else {
-      // Fallback dev : log console
       console.log("=== Aide à la vente (RESEND_API_KEY manquant) ===");
       console.log({ prenom, nom, email, telephone, marque, modele, annee, kilometrage, etat, prix });
     }
