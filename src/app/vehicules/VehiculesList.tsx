@@ -194,6 +194,7 @@ type Vehicle = {
   origin: string;
   power?: number | null;
   description?: string;
+  isPublished: boolean;
 };
 
 type Filters = {
@@ -202,6 +203,7 @@ type Filters = {
   maxPrice?: number;
   status?: string;
 };
+
 
 // Convertit un véhicule DB → format modal
 function toModal(v: Vehicle): ModalVehicle {
@@ -239,6 +241,7 @@ function VehicleCard({
   fuel,
   price,
   isSold,
+  isHidden,
   isDemo,
   onClick,
 }: {
@@ -250,6 +253,7 @@ function VehicleCard({
   fuel: string;
   price: string;
   isSold?: boolean;
+  isHidden?: boolean;
   isDemo?: boolean;
   onClick: () => void;
 }) {
@@ -299,6 +303,18 @@ function VehicleCard({
             style={{ backgroundColor: "rgba(7,15,30,0.8)", color: "#1B3055", border: "1px solid #1B3055" }}
           >
             Exemple
+          </span>
+        </div>
+      )}
+
+      {/* Badge masqué (admin only) */}
+      {isHidden && (
+        <div className="absolute top-5 right-5 z-30">
+          <span
+            className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5"
+            style={{ backgroundColor: "#FF6B35", color: "#070F1E" }}
+          >
+            Masqué
           </span>
         </div>
       )}
@@ -391,10 +407,12 @@ export default function VehiculesList({
   vehicules,
   makes,
   filters,
+  isAdmin = false,
 }: {
   vehicules: Vehicle[];
   makes: string[];
   filters: Filters;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -520,6 +538,7 @@ export default function VehiculesList({
               fuel={v.fuel}
               price={`${v.price.toLocaleString("fr-FR")} €`}
               isSold={v.status === "vendu"}
+              isHidden={isAdmin && !v.isPublished}
               onClick={() => setSelected(toModal(v))}
             />
           );

@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
+import { getAdminSession } from "@/lib/auth";
 import HeroCarousel from "@/components/HeroCarousel";
 
 export default async function VehiculeDetailPage({
@@ -11,8 +12,12 @@ export default async function VehiculeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const v = await prisma.vehicle.findUnique({ where: { id } });
+  const [v, session] = await Promise.all([
+    prisma.vehicle.findUnique({ where: { id } }),
+    getAdminSession(),
+  ]);
   if (!v) notFound();
+  if (!v.isPublished && !session) notFound();
 
   const images = JSON.parse(v.images) as string[];
   const features = JSON.parse(v.features) as string[];
@@ -46,7 +51,15 @@ export default async function VehiculeDetailPage({
           </div>
 
           {/* Badge statut */}
-          <div className="absolute top-28 right-6 lg:right-12 z-10">
+          <div className="absolute top-28 right-6 lg:right-12 z-10 flex gap-2">
+            {session && !v.isPublished && (
+              <span
+                className="text-[9px] tracking-[0.3em] uppercase px-3 py-2"
+                style={{ backgroundColor: "#FF6B35", color: "#070F1E" }}
+              >
+                Masqué
+              </span>
+            )}
             <span
               className="text-[9px] tracking-[0.3em] uppercase px-3 py-2"
               style={{

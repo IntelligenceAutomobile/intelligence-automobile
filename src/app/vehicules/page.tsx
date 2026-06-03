@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
+import { getAdminSession } from "@/lib/auth";
 import VehiculesList from "./VehiculesList";
 
 export const metadata = {
@@ -14,13 +15,16 @@ export default async function VehiculesPage({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  const params = await searchParams;
+  const [params, session] = await Promise.all([searchParams, getAdminSession()]);
+  const isAdmin = !!session;
+
   const makeFilter = params.make;
   const fuelFilter = params.fuel;
   const maxPrice = params.maxPrice ? parseInt(params.maxPrice) : undefined;
   const statusFilter = params.status ?? "tous";
 
   const where: Record<string, unknown> = {};
+  if (!isAdmin) where.isPublished = true;
   if (statusFilter !== "tous") where.status = statusFilter;
   if (makeFilter) where.make = makeFilter;
   if (fuelFilter) where.fuel = fuelFilter;
@@ -81,6 +85,7 @@ export default async function VehiculesPage({
           vehicules={vehicules}
           makes={makes.map((m) => m.make)}
           filters={{ make: makeFilter, fuel: fuelFilter, maxPrice, status: statusFilter }}
+          isAdmin={isAdmin}
         />
 
       </main>

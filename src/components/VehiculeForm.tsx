@@ -19,6 +19,7 @@ type VehiculeData = {
   features?: string[];
   images?: string[];
   status?: string;
+  isPublished?: boolean;
 };
 
 export default function VehiculeForm({ data }: { data?: VehiculeData }) {
@@ -29,6 +30,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
   const [newFeature, setNewFeature] = useState("");
   const [images, setImages] = useState<string[]>(data?.images ?? []);
   const [newImage, setNewImage] = useState("");
+  const [isPublished, setIsPublished] = useState(data?.isPublished !== false);
 
   const isEdit = !!data?.id;
 
@@ -53,6 +55,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       origin: fd.get("origin"),
       description: fd.get("description"),
       status: fd.get("status"),
+      isPublished,
       features,
       images,
     };
@@ -146,6 +149,26 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
             <option value="reserve">Réservé</option>
             <option value="vendu">Vendu</option>
           </select>
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelClass} style={{ color: "#8AABD4" }}>Visibilité publique</label>
+          <button
+            type="button"
+            onClick={() => setIsPublished(!isPublished)}
+            className="flex items-center gap-3 px-4 py-3 border text-sm w-full"
+            style={{ ...inputStyle, borderColor: isPublished ? "#6B9FEE" : "#FF6B35" }}
+          >
+            <span
+              className="w-4 h-4 flex-shrink-0 border"
+              style={{
+                backgroundColor: isPublished ? "#6B9FEE" : "transparent",
+                borderColor: isPublished ? "#6B9FEE" : "#FF6B35",
+              }}
+            />
+            <span style={{ color: isPublished ? "#F0F5FF" : "#FF6B35" }}>
+              {isPublished ? "Visible publiquement" : "Masqué du public (visible admin seulement)"}
+            </span>
+          </button>
         </div>
       </div>
 

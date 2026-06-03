@@ -29,6 +29,7 @@ export async function PUT(
         features: JSON.stringify(body.features ?? []),
         images: JSON.stringify(body.images ?? []),
         status: body.status,
+        isPublished: body.isPublished !== undefined ? Boolean(body.isPublished) : undefined,
       },
     });
     return NextResponse.json(vehicle);
