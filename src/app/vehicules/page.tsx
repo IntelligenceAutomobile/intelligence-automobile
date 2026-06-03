@@ -53,12 +53,6 @@ export default async function VehiculesPage({
           style={{ borderColor: "#1B3055", paddingTop: "80px" }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 lg:py-28">
-            <p
-              className="text-xs tracking-[0.35em] uppercase mb-6"
-              style={{ color: "#6B9FEE" }}
-            >
-              Sélection en cours
-            </p>
             <h1
               className="font-black uppercase leading-[0.9] mb-8"
               style={{
@@ -74,9 +68,10 @@ export default async function VehiculesPage({
               className="text-base leading-relaxed max-w-lg"
               style={{ color: "#8AABD4", fontWeight: 300 }}
             >
-              Chaque véhicule est sourcé sur les marchés allemand et belge selon
-              des critères stricts d&apos;historique, de configuration et de
-              potentiel de revente.
+              Chaque véhicule est soigneusement sélectionné auprès de partenaires
+              européens de confiance, rigoureusement contrôlé et documenté, pour
+              vous garantir une transparence totale et une expérience d&apos;achat
+              sereine.
             </p>
           </div>
         </section>
