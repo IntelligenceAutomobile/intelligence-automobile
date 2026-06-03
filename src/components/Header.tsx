@@ -6,9 +6,9 @@ import { useState, useEffect } from "react";
 
 const NAV_LINKS = [
   { href: "/vehicules",  label: "Nos Véhicules" },
-  { href: "/recherche",  label: "Recherche Spécifique" },
-  { href: "/aide-vente", label: "Aide à la Vente" },
-  { href: "/convoyage",  label: "Convoyage" },
+  { href: "/recherche",  label: "Recherche personnalisée" },
+  { href: "/aide-vente", label: "Revente sur mesure" },
+  { href: "/convoyage",  label: "Transport & Livraison" },
   { href: "/methode",    label: "Notre Méthode" },
   { href: "/contact",    label: "Contact" },
 ];
@@ -41,7 +41,7 @@ export function LogoFull({
 
   return (
     <div className={`flex ${isCol ? "flex-col items-center" : "flex-row items-center"}`} style={{ gap: isCol ? "12px" : "0px" }}>
-      <div style={{ marginTop: isCol ? undefined : "6px" }}>
+      <div style={{ marginTop: isCol ? undefined : "22px", position: isCol ? undefined : "relative", left: isCol ? undefined : "23px" }}>
         <LogoMark height={markHeight} />
       </div>
       <div className="flex flex-col items-center leading-none" style={{ marginLeft: isCol ? undefined : "-20px" }}>
@@ -94,7 +94,7 @@ export default function Header() {
         <div className="relative flex items-center justify-between" style={{ paddingTop: "18px", paddingBottom: "18px" }}>
 
           {/* Logo — centré absolument */}
-          <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex-shrink-0">
+          <Link href="/" className="absolute left-1/2 flex-shrink-0" style={{ transform: "translateX(calc(-50% - 30px))" }}>
             <LogoFull markHeight={110} layout="row" textScale={0.82} />
           </Link>
 

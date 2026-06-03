@@ -61,7 +61,7 @@ export default async function HomePage() {
                 <br />
                 automobile,
                 <br />
-                <span style={{ color: "#6B9FEE" }}>pensée autrement.</span>
+                <span style={{ color: "#6B9FEE" }}>autrement.</span>
               </h1>
               <div className="flex flex-wrap gap-4">
                 <Link

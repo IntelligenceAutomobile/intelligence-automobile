@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-collab-notes 2>&1)",
+      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-collab-note-image 2>&1)",
+      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-collab-comments 2>&1)",
+      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-comment-replies 2>&1)",
+      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-note-category 2>&1)",
+      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-note-soft-delete 2>&1)"
+    ]
+  }
+}
