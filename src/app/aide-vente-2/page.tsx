@@ -91,7 +91,7 @@ export default function AideVenteV2Page() {
           {/* Image plein écran */}
           <div className="absolute inset-0">
             <img
-              src="/Photo du Site/New Photo HD/laurent-perren-MXCZtETxTpo-unsplash.jpg"
+              src="/Photo du Site/New Photo HD/robin-le-mee-yvKr1_36NQo-unsplash.jpg"
               alt=""
               className="w-full h-full object-cover object-center"
               style={{ opacity: 0.82 }}

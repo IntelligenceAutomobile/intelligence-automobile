@@ -97,10 +97,10 @@ export default function Methode2Page() {
             position: "absolute",
             inset: 0,
             backgroundImage:
-              "url('/Photo du Site/New Photo HD/moritz-karst-opK7XLRXdLE-unsplash.jpg')",
+              "url('/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg')",
             backgroundSize: "cover",
-            backgroundPosition: "center 30%",
-            opacity: 0.35,
+            backgroundPosition: "center 40%",
+            opacity: 0.88,
           }}
         />
         {/* Dark gradient overlay — renforce lisibilité texte bas */}
