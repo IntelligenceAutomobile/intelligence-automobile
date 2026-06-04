@@ -62,7 +62,7 @@ export default async function AccueilV2Page() {
               <h1
                 className="font-black leading-[0.9] mb-10"
                 style={{
-                  fontSize: "clamp(3rem, 7vw, 6.5rem)",
+                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
                   letterSpacing: "-0.03em",
                 }}
               >

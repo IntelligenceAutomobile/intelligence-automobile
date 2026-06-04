@@ -56,7 +56,7 @@ export default async function VehiculesPage({
             <h1
               className="font-black uppercase leading-[0.9] mb-8"
               style={{
-                fontSize: "clamp(3.2rem, 7.5vw, 7rem)",
+                fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
                 letterSpacing: "-0.025em",
               }}
             >

@@ -130,7 +130,7 @@ export default function AideVenteV2Page() {
                 <h1
                   className="font-black"
                   style={{
-                    fontSize: "clamp(3.8rem, 8vw, 10rem)",
+                    fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
                     lineHeight: 0.88,
                     letterSpacing: "-0.04em",
                     marginBottom: "clamp(1.5rem, 3vh, 2.5rem)",

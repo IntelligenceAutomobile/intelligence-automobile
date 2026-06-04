@@ -116,7 +116,7 @@ export default async function VehiculesV2Page({
             <h1
               style={{
                 fontWeight: 900,
-                fontSize: "clamp(3.8rem, 10vw, 10rem)",
+                fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
                 letterSpacing: "-0.04em",
                 lineHeight: 0.88,
                 color: "#F0F5FF",

@@ -79,7 +79,7 @@ export default function RecherchePage() {
               </p>
               <h1
                 className="font-black leading-[0.9] mb-8"
-                style={{ fontSize: "clamp(2.8rem, 6.5vw, 6rem)", letterSpacing: "-0.03em" }}
+                style={{ fontSize: "clamp(3rem, 5.5vw, 5.5rem)", letterSpacing: "-0.03em" }}
               >
                 Décrivez-le.
                 <br />

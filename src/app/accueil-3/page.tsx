@@ -69,7 +69,7 @@ export default async function AccueilV3Page() {
               fontWeight: 900,
               lineHeight: 0.88,
               letterSpacing: "-0.04em",
-              fontSize: "clamp(3.8rem, 10vw, 10.5rem)",
+              fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
               color: "#F0F5FF",
               marginBottom: "3rem",
               maxWidth: "700px",

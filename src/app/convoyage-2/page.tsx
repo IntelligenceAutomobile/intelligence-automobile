@@ -90,7 +90,7 @@ export default function ConvoyagePage2() {
 
               <h1
                 style={{
-                  fontSize: "clamp(3.8rem, 10vw, 10rem)",
+                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
                   fontWeight: 900,
                   lineHeight: 0.88,
                   letterSpacing: "-0.03em",
