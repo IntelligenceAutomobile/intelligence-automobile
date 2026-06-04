@@ -65,9 +65,6 @@ export default async function AccueilV3Page() {
 
           {/* Texte ancré bas-gauche */}
           <div style={{ position: "absolute", bottom: "8vh", left: "6vw", right: "6vw" }}>
-            <p style={{ fontSize: "11px", letterSpacing: "0.42em", textTransform: "uppercase", color: "#6B9FEE", marginBottom: "1.6rem", opacity: 0.9 }}>
-              Intelligence Automobile
-            </p>
             <h1 style={{
               fontWeight: 900,
               lineHeight: 0.88,
@@ -131,40 +128,46 @@ export default async function AccueilV3Page() {
         </div>
 
         {/* ────────────────────────────────────────────
-            3. CHIFFRES — 3 statistiques géantes
+            3. CHIFFRES — liste horizontale éditoriale
         ──────────────────────────────────────────── */}
-        <section style={{ backgroundColor: "#040B16", padding: "10vh 0" }}>
-          <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 5vw" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)" }}>
-              {[
-                { val: "+2 000", label: "Annonces analysées\npar mois en Europe" },
-                { val: "20–30%", label: "D'économie vs.\nle marché français" },
-                { val: "100%", label: "Transparence avant\ntout engagement" },
-              ].map((s, i) => (
-                <div
-                  key={s.val}
-                  style={{
-                    padding: "5vh 4vw",
-                    borderLeft: i > 0 ? "1px solid #1B3055" : "none",
-                  }}
-                >
-                  <div style={{
-                    fontWeight: 900,
-                    fontSize: "clamp(3rem, 7.5vw, 7rem)",
-                    letterSpacing: "-0.04em",
-                    color: "#F0F5FF",
-                    lineHeight: 1,
-                    marginBottom: "1.2rem",
-                  }}>
-                    {s.val}
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#4A6A9A", lineHeight: 1.7, letterSpacing: "0.04em", whiteSpace: "pre-line" }}>
-                    {s.label}
-                  </div>
+        <section style={{ backgroundColor: "#040B16" }}>
+          {[
+            { val: "+2 000", label: "Annonces analysées par mois sur les marchés européens" },
+            { val: "20–30%", label: "D'économie constatée vs. le marché français" },
+            { val: "100%",   label: "Transparence — tous les coûts détaillés avant tout engagement" },
+          ].map((s) => (
+            <div key={s.val}>
+              <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%)" }} />
+              <div style={{
+                maxWidth: "1100px",
+                margin: "0 auto",
+                padding: "4.5vh 6vw",
+                display: "flex",
+                alignItems: "center",
+                gap: "5vw",
+              }}>
+                {/* Nombre avec filet bleu à gauche */}
+                <div style={{
+                  fontWeight: 900,
+                  fontSize: "clamp(2.8rem, 5.5vw, 5rem)",
+                  letterSpacing: "-0.04em",
+                  color: "#F0F5FF",
+                  lineHeight: 1,
+                  flexShrink: 0,
+                  minWidth: "200px",
+                  borderLeft: "2px solid #6B9FEE",
+                  paddingLeft: "1.6rem",
+                }}>
+                  {s.val}
                 </div>
-              ))}
+                {/* Label */}
+                <div style={{ fontSize: "13px", lineHeight: 1.8, color: "#8AABD4", letterSpacing: "0.03em" }}>
+                  {s.label}
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
+          <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%)" }} />
         </section>
 
 
@@ -195,7 +198,7 @@ export default async function AccueilV3Page() {
                 <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   Recherche<br />personnalisée
                 </h3>
-                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#8AABD4", maxWidth: "340px", marginBottom: "2.4rem" }}>
+                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
                   Vous décrivez. On trouve. Au meilleur prix européen.
                 </p>
                 <span style={{ fontSize: "10px", letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", display: "inline-flex", alignItems: "center", gap: "10px" }}>
@@ -223,7 +226,7 @@ export default async function AccueilV3Page() {
                 <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   Revente<br />sur mesure
                 </h3>
-                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#8AABD4", maxWidth: "340px", marginBottom: "2.4rem" }}>
+                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
                   Photo pro, acheteurs qualifiés. Vendez vite, vendez bien.
                 </p>
                 <span style={{ fontSize: "10px", letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", display: "inline-flex", alignItems: "center", gap: "10px" }}>
@@ -271,7 +274,7 @@ export default async function AccueilV3Page() {
                 <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   Transport<br />&amp; Livraison
                 </h3>
-                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#8AABD4", maxWidth: "340px", marginBottom: "2.4rem" }}>
+                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
                   D&apos;Europe à votre porte. Clé en main.
                 </p>
                 <span style={{ fontSize: "10px", letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", display: "inline-flex", alignItems: "center", gap: "10px" }}>
