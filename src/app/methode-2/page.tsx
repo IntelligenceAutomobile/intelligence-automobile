@@ -109,7 +109,7 @@ export default function Methode2Page() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(to top, #070F1E 15%, rgba(7,15,30,0.25) 55%, rgba(7,15,30,0.05) 100%)",
+              "linear-gradient(to top, #070F1E 18%, rgba(7,15,30,0.40) 60%, rgba(7,15,30,0.15) 100%)",
           }}
         />
 
