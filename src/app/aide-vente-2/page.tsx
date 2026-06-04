@@ -94,7 +94,7 @@ export default function AideVenteV2Page() {
               src="/Photo du Site/New Photo HD/robin-le-mee-yvKr1_36NQo-unsplash.jpg"
               alt=""
               className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.80 }}
+              style={{ opacity: 0.45 }}
             />
             {/* Dégradé bas → fond principal */}
             <div
