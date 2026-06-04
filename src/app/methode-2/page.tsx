@@ -99,8 +99,8 @@ export default function Methode2Page() {
             backgroundImage:
               "url('/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg')",
             backgroundSize: "cover",
-            backgroundPosition: "center 15%",
-            opacity: 0.88,
+            backgroundPosition: "center 55%",
+            opacity: 1,
           }}
         />
         {/* Dark gradient overlay — renforce lisibilité texte bas */}
