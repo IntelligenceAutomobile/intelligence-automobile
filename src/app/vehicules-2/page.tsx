@@ -63,7 +63,7 @@ export default async function VehiculesV2Page({
             priority
             style={{
               objectFit: "cover",
-              opacity: 0.95,
+              opacity: 0.45,
             }}
           />
 
