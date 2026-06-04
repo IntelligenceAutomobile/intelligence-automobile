@@ -54,6 +54,7 @@ export default function ConvoyagePage2() {
             src="/Photo du Site/New Photo HD/luke-schobert-niST2P59VWs-unsplash.jpg"
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: 0.80 }}
           />
 
           {/* Overlay directionnel */}
