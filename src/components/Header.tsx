@@ -13,6 +13,15 @@ const NAV_LINKS = [
   { href: "/contact",    label: "Contact" },
 ];
 
+const NAV_LINKS_V2 = [
+  { href: "/vehicules-2",  label: "Nos Véhicules 2" },
+  { href: "/recherche-2",  label: "Recherche personnalisée 2" },
+  { href: "/aide-vente-2", label: "Revente sur mesure 2" },
+  { href: "/convoyage-2",  label: "Transport & Livraison 2" },
+  { href: "/methode-2",    label: "Notre Méthode 2" },
+  { href: "/contact-2",    label: "Contact 2" },
+];
+
 const MARK_SRC = "/Logo/v9%20Logo%20Sans%20texte.png";
 
 export function LogoMark({ height = 48 }: { height?: number }) {
@@ -193,6 +202,45 @@ export default function Header() {
                       transition: "transform 0.3s ease",
                     }}
                   />
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Séparateur inter-rangées */}
+      <div style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent)" }} />
+
+      {/* ── Rangée 3 : Navigation V2 ── */}
+      <div
+        className="hidden md:block"
+        style={{ background: "rgba(107,159,238,0.03)" }}
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <nav className="flex items-center justify-evenly" style={{ height: "40px" }}>
+            {NAV_LINKS_V2.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="relative flex items-center h-full whitespace-nowrap transition-all duration-200"
+                  style={{
+                    color: isActive ? "#6B9FEE" : "rgba(107,159,238,0.45)",
+                    fontSize: "10px",
+                    fontWeight: isActive ? 600 : 400,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(107,159,238,0.75)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(107,159,238,0.45)";
+                  }}
+                >
+                  {link.label}
                 </Link>
               );
             })}
