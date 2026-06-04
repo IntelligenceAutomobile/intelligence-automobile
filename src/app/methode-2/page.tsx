@@ -99,17 +99,17 @@ export default function Methode2Page() {
             backgroundImage:
               "url('/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg')",
             backgroundSize: "cover",
-            backgroundPosition: "center 55%",
+            backgroundPosition: "center 68%",
             opacity: 1,
           }}
         />
-        {/* Dark gradient overlay — renforce lisibilité texte bas */}
+        {/* Dark gradient overlay */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(to top, #070F1E 30%, rgba(7,15,30,0.5) 70%, rgba(7,15,30,0.2) 100%)",
+              "linear-gradient(to top, #070F1E 15%, rgba(7,15,30,0.25) 55%, rgba(7,15,30,0.05) 100%)",
           }}
         />
 
