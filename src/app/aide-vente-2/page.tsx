@@ -158,7 +158,7 @@ export default function AideVenteV2Page() {
                   href="#formulaire"
                   style={{
                     display: "inline-block",
-                    backgroundColor: "#6B9FEE",
+                    backgroundColor: "#F0F5FF",
                     color: "#070F1E",
                     fontWeight: 700,
                     fontSize: "0.78rem",
@@ -167,14 +167,7 @@ export default function AideVenteV2Page() {
                     padding: "14px 28px",
                     borderRadius: 0,
                     textDecoration: "none",
-                    transition: "background-color 0.2s",
                   }}
-                  onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#5A8FDD")
-                  }
-                  onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#6B9FEE")
-                  }
                 >
                   Estimation gratuite →
                 </a>
