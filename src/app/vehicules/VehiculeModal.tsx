@@ -35,6 +35,7 @@ export type ModalVehicle = {
   maintenance?: MaintenanceEntry[];
   dossierUrl?: string;
   layoutVariant?: string;
+  factures?: string[];
 };
 
 export default function VehiculeModal({

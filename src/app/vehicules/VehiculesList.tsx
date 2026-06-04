@@ -9,6 +9,22 @@ import VehiculeModalV2 from "./VehiculeModalV2";
 // ── Enrichissements pour véhicules réels (maintenance, dossierUrl) ───────────
 // Keyed par vehicle.id — appliqués dans toModal()
 const VEHICLE_ENRICHMENTS: Record<string, Partial<ModalVehicle>> = {
+  "audi-tt-mk3-sline-2014": {
+    factures: [
+      "/audi-tt-mk3-sline-2014/factures/batterie-invoice-1.jpg",
+      "/audi-tt-mk3-sline-2014/factures/batterie-invoice-2.jpg",
+      "/audi-tt-mk3-sline-2014/factures/ct-belge.jpg",
+      "/audi-tt-mk3-sline-2014/factures/carnet-entretien.jpg",
+      "/audi-tt-mk3-sline-2014/factures/car-pass.jpg",
+      "/audi-tt-mk3-sline-2014/factures/carte-grise-belge.jpg",
+      "/audi-tt-mk3-sline-2014/factures/demande-immat.jpg",
+      "/audi-tt-mk3-sline-2014/factures/coc-audi.jpg",
+    ],
+    maintenance: [
+      { date: "Fév. 2026", km: "~147 000 km", operation: "Bougies neuves, service Haldex quattro, remplacement pneus Michelin" },
+      { date: "Mars 2025", km: "—", operation: "Batterie VARTA A6 AGM neuve + montage en atelier", amount: "301,89 €" },
+    ],
+  },
   "audi-tt-mk2-sline-2010": {
     dossierUrl: "/Audi%20TT%203/Dossier_Audi_TT_Intelligence_Automobile.pdf",
     maintenance: [
@@ -39,6 +55,7 @@ const V2_IDS = new Set([
   "cmpqmqrnk0000f4vvwbr2z3dq",
   "cmppfcv2u00002cvvmr6dkxaw",
   "audi-tt-mk2-sline-2010",
+  "audi-tt-mk3-sline-2014",
 ]);
 
 // ── Véhicules de démonstration enrichis ──────────────────────────────────────

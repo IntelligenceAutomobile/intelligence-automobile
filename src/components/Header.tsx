@@ -37,7 +37,6 @@ export function LogoFull({
   const isCol = layout === "col";
   const intelSize = Math.round(markHeight * (isCol ? 0.14 : 0.22) * textScale);
   const autoSize  = Math.round(markHeight * (isCol ? 0.10 : 0.15) * textScale);
-  const lineW = Math.round(intelSize * 1.2);
 
   return (
     <div className={`flex ${isCol ? "flex-col items-center" : "flex-row items-center"}`} style={{ gap: isCol ? "12px" : "0px" }}>
@@ -51,12 +50,10 @@ export function LogoFull({
         >
           Intelligence
         </span>
-        <div className={`flex items-center gap-2 mt-[0.4em] ${isCol ? "justify-center" : ""}`}>
-          <div className="h-px flex-shrink-0" style={{ width: `${lineW}px`, background: "linear-gradient(to right, transparent, #6B9FEE)" }} />
+        <div className={`flex items-center mt-[0.4em] ${isCol ? "justify-center" : ""}`}>
           <span className="font-normal uppercase" style={{ color: "#6B9FEE", fontSize: `${autoSize}px`, letterSpacing: "0.38em" }}>
             Automobile
           </span>
-          <div className="h-px flex-shrink-0" style={{ width: `${lineW}px`, background: "linear-gradient(to left, transparent, #6B9FEE)" }} />
         </div>
       </div>
     </div>

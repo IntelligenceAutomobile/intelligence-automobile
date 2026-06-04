@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import PorscheViewer from "@/components/PorscheViewer";
 import { prisma } from "@/lib/prisma";
 
 export default async function AccueilV2Page() {
@@ -607,9 +606,6 @@ export default async function AccueilV2Page() {
             </div>
           </section>
         )}
-
-        {/* ── PORSCHE 3D ── */}
-        <PorscheViewer />
 
         {/* ── CTA FINAL ── */}
         <section

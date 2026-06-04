@@ -27,9 +27,9 @@ export default async function HomePage() {
           {/* Image voiture droite */}
           <div className="absolute right-0 top-0 bottom-0 w-full md:w-[62%]">
             <img
-              src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1600&q=85"
-              alt=""
-              className="w-full h-full object-cover object-right"
+              src="/Photo du Site/V2 Porshe Accueil.png"
+              alt="Porsche 911 GT3 en montagne"
+              className="w-full h-full object-cover object-center"
               style={{ opacity: 0.9 }}
             />
             <div
@@ -100,12 +100,6 @@ export default async function HomePage() {
 
               {/* Texte + stats */}
               <div className="py-20 lg:pr-16">
-                <p
-                  className="text-xs tracking-[0.35em] uppercase mb-6"
-                  style={{ color: "#6B9FEE" }}
-                >
-                  Notre sourcing
-                </p>
                 <h2
                   className="font-black uppercase leading-none mb-12"
                   style={{
@@ -120,7 +114,7 @@ export default async function HomePage() {
 
                 <div className="space-y-0">
                   {[
-                    { value: "+2 000", label: "Annonces analysées par mois sur les marchés DE & BE" },
+                    { value: "+2 000", label: "Annonces analysées par mois sur les marchés européens" },
                     { value: "20–30%", label: "D'économie moyenne constatée vs. marché français" },
                     { value: "100%", label: "Des coûts détaillés avant tout engagement de votre part" },
                   ].map((s, i) => (
@@ -211,15 +205,20 @@ export default async function HomePage() {
               un résultat garanti.
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 max-w-3xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-16 max-w-3xl">
               <div>
-                <p className="text-base leading-relaxed" style={{ color: "#8AABD4" }}>
-                  <strong style={{ color: "#F0F5FF" }}>Intelligence Automobile est un cabinet d&apos;import spécialisé</strong> fondé par des passionnés de l&apos;automobile premium. Nous opérons exclusivement sur les marchés allemand et belge, réputés pour la qualité de leur offre et leurs prix compétitifs.
+                <p className="text-base leading-[1.8]" style={{ color: "#8AABD4" }}>
+                  Cabinet d&apos;import automobile premium fondé par des passionnés du secteur.
+                  Nous sourçons sur les{" "}
+                  <span style={{ color: "#F0F5FF" }}>marchés européens les plus attractifs</span>
+                  {" "}— des prix introuvables en France.
                 </p>
               </div>
               <div>
-                <p className="text-base leading-relaxed" style={{ color: "#8AABD4" }}>
-                  Nous vous offrons une expérience d&apos;achat <strong style={{ color: "#F0F5FF" }}>100% sur-mesure et transparente</strong>. Aucune mauvaise surprise, aucun frais caché. De la première recherche à la remise des clés en France, nous gérons l&apos;intégralité du processus.
+                <p className="text-base leading-[1.8]" style={{ color: "#8AABD4" }}>
+                  Une expérience d&apos;achat{" "}
+                  <span style={{ color: "#F0F5FF" }}>100% transparente et sur-mesure</span>.
+                  Aucune surprise, aucun frais caché. De la recherche au volant, nous gérons tout.
                 </p>
               </div>
             </div>

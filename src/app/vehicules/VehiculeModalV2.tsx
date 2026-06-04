@@ -71,6 +71,8 @@ export default function VehiculeModalV2({
   const [imgIndex, setImgIndex] = useState(0);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
+  const [facturesOpen, setFacturesOpen] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   const toggleCategory = (label: string) => {
     setOpenCategories((prev) => {
@@ -439,6 +441,64 @@ export default function VehiculeModalV2({
                 </div>
               )}
 
+              {/* Factures & Documents */}
+              {vehicle.factures && vehicle.factures.length > 0 && (
+                <div className="mb-6">
+                  <button
+                    onClick={() => setFacturesOpen((v) => !v)}
+                    className="w-full flex items-center justify-between px-4 py-3 transition-opacity hover:opacity-80"
+                    style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055", borderLeft: "3px solid #6B9FEE" }}
+                  >
+                    <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
+                      Factures &amp; Documents
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[8px] tracking-[0.2em] uppercase font-semibold px-2 py-0.5"
+                        style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "4px" }}
+                      >
+                        {vehicle.factures.length}
+                      </span>
+                      <span
+                        className="text-sm transition-transform duration-200"
+                        style={{ color: "#6B9FEE", display: "inline-block", transform: facturesOpen ? "rotate(90deg)" : "rotate(0deg)" }}
+                      >
+                        ›
+                      </span>
+                    </div>
+                  </button>
+                  {facturesOpen && (
+                    <div
+                      className="grid grid-cols-2 gap-px"
+                      style={{ border: "1px solid #1B3055", borderTop: "none", backgroundColor: "#1B3055" }}
+                    >
+                      {vehicle.factures.map((src, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setLightboxImg(src)}
+                          className="relative overflow-hidden group"
+                          style={{ aspectRatio: "4/3", backgroundColor: "#070F1E" }}
+                        >
+                          <img
+                            src={src}
+                            alt={`Document ${i + 1}`}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            style={{ opacity: 0.85 }}
+                          />
+                          <div
+                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center"
+                            style={{ backgroundColor: "rgba(107,159,238,0.12)" }}
+                          >
+                            <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#F0F5FF" }}>Agrandir</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Branding */}
               <div className="flex items-center justify-center gap-3 py-4">
                 <div style={{ width: "20px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.5 }} />
@@ -503,6 +563,30 @@ export default function VehiculeModalV2({
 
         </div>
       </div>
+
+      {/* ── LIGHTBOX FACTURES ── */}
+      {lightboxImg && (
+        <div
+          className="absolute inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(2,8,18,0.97)" }}
+          onClick={() => setLightboxImg(null)}
+        >
+          <button
+            className="absolute top-4 right-4 flex items-center justify-center"
+            style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "rgba(10,22,40,0.9)", border: "1px solid #1B3055", color: "#F0F5FF", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1 }}
+            onClick={() => setLightboxImg(null)}
+          >
+            ×
+          </button>
+          <img
+            src={lightboxImg}
+            alt="Document"
+            className="object-contain"
+            style={{ maxHeight: "88vh", maxWidth: "88vw" }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
