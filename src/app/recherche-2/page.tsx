@@ -98,18 +98,17 @@ export default function RecherchePage2() {
 
               <h1
                 style={{
-                  fontSize: "clamp(3.8rem, 10vw, 10rem)",
+                  fontSize: "clamp(2.8rem, 5vw, 5rem)",
                   fontWeight: 900,
-                  lineHeight: 0.88,
-                  letterSpacing: "-0.04em",
+                  lineHeight: 0.95,
+                  letterSpacing: "-0.03em",
                   marginBottom: "2rem",
                   color: "#F0F5FF",
                 }}
               >
                 Décrivez-le.
                 <br />
-                Nous allons
-                <br />
+                Nous allons{" "}
                 <span style={{ color: "#6B9FEE" }}>le trouver.</span>
               </h1>
 
