@@ -30,7 +30,7 @@ export default async function AccueilV2Page() {
               src="/Photo du Site/V2 Porshe Accueil.png"
               alt="Porsche 911 GT3 en montagne"
               className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.95 }}
+              style={{ opacity: 0.80 }}
             />
             {/* Dégradé gauche — plus doux pour laisser la voiture respirer */}
             <div

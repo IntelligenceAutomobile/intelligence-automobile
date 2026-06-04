@@ -30,7 +30,7 @@ export default async function HomePage() {
               src="/Photo du Site/V2 Porshe Accueil.png"
               alt="Porsche 911 GT3 en montagne"
               className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.9 }}
+              style={{ opacity: 0.80 }}
             />
             <div
               className="absolute inset-0"

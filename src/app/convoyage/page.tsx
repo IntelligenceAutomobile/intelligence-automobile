@@ -56,7 +56,7 @@ export default function ConvoyagePage() {
               src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1600&q=85"
               alt=""
               className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.7 }}
+              style={{ opacity: 0.80 }}
             />
             <div
               className="absolute inset-0"
