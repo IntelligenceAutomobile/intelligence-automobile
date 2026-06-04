@@ -56,7 +56,7 @@ export default function RecherchePage2() {
             src="/Photo du Site/New Photo HD/kalden-swart-5jegJRzcrfg-unsplash.jpg"
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{ opacity: 0.68 }}
+            style={{ opacity: 0.58 }}
           />
 
           {/* Overlay directionnel gauche */}
