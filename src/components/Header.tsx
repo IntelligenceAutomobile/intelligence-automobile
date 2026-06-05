@@ -14,7 +14,7 @@ const NAV_LINKS = [
 ];
 
 const NAV_LINKS_V2 = [
-  { href: "/accueil-3",    label: "Accueil" },
+  { href: "/",             label: "Accueil" },
   { href: "/vehicules-2",  label: "Nos Véhicules" },
   { href: "/recherche-2",  label: "Recherche personnalisée" },
   { href: "/aide-vente-2", label: "Revente sur mesure" },
@@ -117,7 +117,7 @@ export default function Header() {
 
           {/* CTA desktop — outlined discret */}
           <Link
-            href="/contact"
+            href="/contact-2"
             className="hidden md:inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] uppercase px-5 py-2.5 flex-shrink-0 transition-all duration-250"
             style={{
               color: "#A8C4F0",
@@ -151,10 +151,10 @@ export default function Header() {
       {/* Séparateur */}
       <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.07)", transition: "opacity 0.4s ease" }} />
 
-      {/* ── Rangée 2 : Navigation (admin uniquement) ── */}
+      {/* ── Rangée 2 : Navigation V1 (cachée) ── */}
       <div
         className="hidden md:block"
-        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)", display: isAdmin ? undefined : "none" }}
+        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)", display: "none" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <nav className="flex items-center justify-evenly" style={{ height: "50px" }}>
@@ -215,8 +215,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Séparateur inter-rangées (admin uniquement) */}
-      {isAdmin && <div style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent)" }} />}
 
       {/* ── Rangée 3 : Navigation V2 ── */}
       <div
@@ -291,7 +289,7 @@ export default function Header() {
         }}
       >
         <nav className="flex flex-col px-6 pt-8 pb-10">
-          {NAV_LINKS.map((link, i) => {
+          {NAV_LINKS_V2.map((link, i) => {
             const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
             return (
               <Link
@@ -321,7 +319,7 @@ export default function Header() {
           })}
           <div className="pt-6 mt-2" style={{ borderTop: "1px solid rgba(27,48,85,0.7)" }}>
             <Link
-              href="/contact"
+              href="/contact-2"
               onClick={() => setMenuOpen(false)}
               className="flex items-center justify-center text-[11px] font-bold tracking-[0.22em] uppercase py-4 transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
