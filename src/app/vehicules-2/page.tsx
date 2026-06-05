@@ -93,25 +93,11 @@ export default async function VehiculesV2Page({
           <div
             style={{
               position: "absolute",
-              bottom: "8vh",
+              bottom: "2vh",
               left: "6vw",
-              maxWidth: "700px",
+              right: "6vw",
             }}
           >
-            {/* Label */}
-            <p
-              style={{
-                color: "#8AABD4",
-                fontSize: "0.8rem",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                fontWeight: 500,
-                marginBottom: "1.2rem",
-              }}
-            >
-              Stock actuel · Coupés sport
-            </p>
-
             {/* H1 */}
             <h1
               style={{
@@ -120,28 +106,32 @@ export default async function VehiculesV2Page({
                 letterSpacing: "-0.04em",
                 lineHeight: 0.88,
                 color: "#F0F5FF",
-                marginBottom: "1.5rem",
-                whiteSpace: "pre-line",
+                marginBottom: "1rem",
+                maxWidth: "700px",
               }}
             >
-              {"Nos\n"}
+              Nos
+              <br />
               <span style={{ color: "#6B9FEE" }}>véhicules.</span>
             </h1>
 
             {/* Sous-titre */}
-            <p
-              style={{
-                color: "#8AABD4",
-                fontSize: "clamp(0.9rem, 1.4vw, 1.05rem)",
-                lineHeight: 1.65,
-                fontWeight: 300,
-                maxWidth: "480px",
-                marginBottom: "2.4rem",
-              }}
-            >
-              Chaque véhicule est soigneusement sélectionné auprès de partenaires
-              européens de confiance, rigoureusement contrôlé et documenté.
-            </p>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+              <p
+                style={{
+                  color: "rgba(168,196,240,0.68)",
+                  fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                  lineHeight: 1.8,
+                  fontWeight: 300,
+                  maxWidth: "440px",
+                  fontStyle: "italic",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                Chaque véhicule soigneusement sélectionné auprès de partenaires européens — contrôlé, documenté, prêt à livrer.
+              </p>
+            </div>
 
             {/* Bouton primaire — scroll vers la liste */}
             <HeroCta />

@@ -11,11 +11,11 @@ export default function HeroCta() {
       style={{
         backgroundColor: "#F0F5FF",
         color: "#070F1E",
-        padding: "14px 32px",
+        padding: "11px 26px",
         border: "none",
         borderRadius: 0,
         fontWeight: 700,
-        fontSize: "0.9rem",
+        fontSize: "0.8rem",
         letterSpacing: "0.04em",
         cursor: "pointer",
       }}

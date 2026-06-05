@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import VehiculeModal, { type ModalVehicle } from "./VehiculeModal";
 import VehiculeModalV2 from "./VehiculeModalV2";
 
@@ -250,169 +250,217 @@ function toModal(v: Vehicle): ModalVehicle {
 
 // ── Composant carte ──────────────────────────────────────────────────────────
 function VehicleCard({
-  img,
+  images,
   make,
   year,
   model,
   mileage,
   fuel,
+  transmission,
+  power,
+  color,
+  origin,
   price,
   isSold,
   isHidden,
   isDemo,
   onClick,
 }: {
-  img: string | null;
+  images: string[];
   make: string;
   year: number;
   model: string;
   mileage: string;
   fuel: string;
+  transmission?: string | null;
+  power?: number | null;
+  color?: string | null;
+  origin?: string | null;
   price: string;
   isSold?: boolean;
   isHidden?: boolean;
   isDemo?: boolean;
   onClick: () => void;
 }) {
+  const [imgIdx, setImgIdx] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const total = images.length;
+  const img = images[imgIdx] ?? null;
+
+  const prevImg = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImgIdx((i) => (i - 1 + total) % total);
+  };
+  const nextImg = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImgIdx((i) => (i + 1) % total);
+  };
+  const toggleInfo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded((v) => !v);
+  };
+
+  const specs = [
+    { label: "Modèle", value: model },
+    { label: "Année", value: String(year) },
+    { label: "Kilométrage", value: mileage },
+    { label: "Carburant", value: fuel },
+    transmission ? { label: "Boîte", value: transmission } : null,
+    power ? { label: "Puissance", value: `${power} ch` } : null,
+    color ? { label: "Couleur", value: color } : null,
+    origin ? { label: "Origine", value: origin } : null,
+  ].filter((s): s is { label: string; value: string } => s !== null);
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative overflow-hidden block w-full text-left cursor-pointer"
-      style={{ backgroundColor: "#070F1E", minHeight: "420px" }}
+      className="group block w-full text-left cursor-pointer"
+      style={{ backgroundColor: "#070F1E" }}
     >
-      {/* Image */}
-      {img ? (
-        <img
-          src={img}
-          alt={`${make} ${model}`}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          style={{ opacity: isSold ? 0.35 : 0.72 }}
-        />
-      ) : (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ backgroundColor: "#0D1A2D" }}
-        >
-          <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#1B3055" }}>
-            Photo à venir
-          </span>
-        </div>
-      )}
-
-      {/* Gradient */}
-      <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(to top, #070F1E 28%, rgba(7,15,30,0.35) 60%, transparent 100%)" }}
-      />
-
-      {/* Overlay hover : éclaircit légèrement l'image */}
-      <div
-        className="absolute inset-0 transition-opacity duration-400 opacity-0 group-hover:opacity-100"
-        style={{ background: "linear-gradient(to top, rgba(7,15,30,0.1) 0%, rgba(107,159,238,0.04) 100%)" }}
-      />
-
-      {/* Badge démo */}
-      {isDemo && (
-        <div className="absolute top-5 left-5 z-10">
-          <span
-            className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5"
-            style={{ backgroundColor: "rgba(7,15,30,0.8)", color: "#1B3055", border: "1px solid #1B3055" }}
-          >
-            Exemple
-          </span>
-        </div>
-      )}
-
-      {/* Badge masqué (admin only) */}
-      {isHidden && (
-        <div className="absolute top-5 right-5 z-30">
-          <span
-            className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5"
-            style={{ backgroundColor: "#FF6B35", color: "#070F1E" }}
-          >
-            Masqué
-          </span>
-        </div>
-      )}
-
-      {/* Overlay vendu */}
-      {isSold && (
-        <>
-          <div
-            className="absolute inset-0 z-10"
-            style={{ background: "linear-gradient(135deg, rgba(7,15,30,0.7) 0%, rgba(7,15,30,0.4) 100%)" }}
+      {/* ── IMAGE ── */}
+      <div className="relative overflow-hidden" style={{ height: "420px" }}>
+        {img ? (
+          <img
+            src={img}
+            alt={`${make} ${model}`}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            style={{ opacity: isSold ? 0.35 : 0.72 }}
           />
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3">
-            <span
-              className="font-black uppercase tracking-[0.4em]"
-              style={{
-                fontSize: "clamp(2rem, 4vw, 2.8rem)",
-                color: "#F0F5FF",
-                letterSpacing: "0.45em",
-                textShadow: "0 2px 40px rgba(0,0,0,0.8)",
-              }}
-            >
-              Vendu
-            </span>
-            <div style={{ width: "40px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.6 }} />
-            <span
-              className="text-[9px] tracking-[0.35em] uppercase"
-              style={{ color: "#6B9FEE" }}
-            >
-              Trouvé par Intelligence Automobile
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "#0D1A2D" }}>
+            <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#1B3055" }}>Photo à venir</span>
+          </div>
+        )}
+
+        {/* Gradient léger au repos, disparaît au hover */}
+        <div
+          className="absolute inset-0 transition-opacity duration-400 group-hover:opacity-0"
+          style={{ background: "linear-gradient(to top, rgba(7,15,30,0.45) 0%, rgba(7,15,30,0.15) 40%, transparent 70%)" }}
+        />
+
+        {/* Badge démo */}
+        {isDemo && (
+          <div className="absolute top-5 left-5 z-10">
+            <span className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5" style={{ backgroundColor: "rgba(7,15,30,0.8)", color: "#1B3055", border: "1px solid #1B3055" }}>
+              Exemple
             </span>
           </div>
-        </>
-      )}
+        )}
 
-      {/* Pill "Voir le détail" — apparaît au hover */}
-      <div
-        className="absolute inset-x-0 flex justify-center z-20 pointer-events-none opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-350"
-        style={{ bottom: "6rem" }}
-      >
+        {/* Badge masqué (admin only) */}
+        {isHidden && (
+          <div className="absolute top-5 right-5 z-30">
+            <span className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5" style={{ backgroundColor: "#FF6B35", color: "#070F1E" }}>Masqué</span>
+          </div>
+        )}
+
+        {/* Overlay vendu */}
+        {isSold && (
+          <>
+            <div className="absolute inset-0 z-10" style={{ background: "linear-gradient(135deg, rgba(7,15,30,0.7) 0%, rgba(7,15,30,0.4) 100%)" }} />
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3">
+              <span className="font-black uppercase" style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#F0F5FF", letterSpacing: "0.45em", textShadow: "0 2px 40px rgba(0,0,0,0.8)" }}>
+                Vendu
+              </span>
+              <div style={{ width: "40px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.6 }} />
+              <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
+                Trouvé par Intelligence Automobile
+              </span>
+            </div>
+          </>
+        )}
+
+        {/* Carousel */}
+        {total > 1 && (
+          <>
+            <button
+              onClick={prevImg}
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              style={{ width: "34px", height: "34px", borderRadius: "50%", backgroundColor: "rgba(7,15,30,0.82)", border: "1px solid rgba(107,159,238,0.3)", color: "#F0F5FF", fontSize: "1.15rem", lineHeight: 1 }}
+              aria-label="Photo précédente"
+            >‹</button>
+            <button
+              onClick={nextImg}
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              style={{ width: "34px", height: "34px", borderRadius: "50%", backgroundColor: "rgba(7,15,30,0.82)", border: "1px solid rgba(107,159,238,0.3)", color: "#F0F5FF", fontSize: "1.15rem", lineHeight: 1 }}
+              aria-label="Photo suivante"
+            >›</button>
+            <div className="absolute bottom-3 right-4 z-20" style={{ backgroundColor: "rgba(7,15,30,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: "20px", padding: "2px 9px", color: "#8AABD4", fontSize: "9px", letterSpacing: "0.15em" }}>
+              {imgIdx + 1}/{total}
+            </div>
+          </>
+        )}
+
+        {/* Pill "Voir le détail" — toujours visible */}
         <div
-          style={{
-            backgroundColor: "rgba(240,245,255,0.1)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            borderRadius: "100px",
-            padding: "10px 22px",
-            border: "1px solid rgba(240,245,255,0.12)",
-          }}
+          className="absolute inset-x-0 flex justify-center z-20 pointer-events-none"
+          style={{ bottom: "1.5rem" }}
         >
-          <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: "#F0F5FF" }}>
-            Voir le détail
-          </span>
+          <div style={{ backgroundColor: "rgba(240,245,255,0.1)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRadius: "100px", padding: "10px 22px", border: "1px solid rgba(240,245,255,0.12)" }}>
+            <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: "#F0F5FF" }}>Voir le détail</span>
+          </div>
         </div>
       </div>
 
-      {/* Infos bas de carte */}
-      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[9px] tracking-[0.35em] uppercase font-bold" style={{ color: "#6B9FEE" }}>
-            {make}
-          </span>
-          <span className="text-[9px] tracking-[0.2em]" style={{ color: "#8AABD4" }}>
-            {year}
-          </span>
+      {/* ── BARRE MARQUE · STATUT · PRIX (toujours visible) ── */}
+      <div className="flex items-center justify-between px-5 py-3 gap-3" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#070F1E" }}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
+          {!isDemo && (
+            <span
+              className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
+              style={{
+                color: isSold ? "#8AABD4" : "#6B9FEE",
+                border: `1px solid ${isSold ? "#1B3055" : "rgba(107,159,238,0.3)"}`,
+                backgroundColor: isSold ? "transparent" : "rgba(107,159,238,0.08)",
+              }}
+            >
+              {isSold ? "Vendu" : "Disponible"}
+            </span>
+          )}
         </div>
-        <h3
-          className="font-black uppercase leading-tight mb-5"
-          style={{ fontSize: "clamp(1.4rem, 2.5vw, 1.9rem)", color: "#F0F5FF", letterSpacing: "-0.02em" }}
+        <span className="font-black text-base flex-shrink-0" style={{ color: "#F0F5FF" }}>{price}</span>
+      </div>
+
+      {/* ── CHEVRON ── */}
+      <button
+        type="button"
+        onClick={toggleInfo}
+        className="w-full flex items-center justify-center gap-3 py-3 transition-all duration-200 hover:opacity-80"
+        style={{ backgroundColor: "#0D1E35", borderTop: "1px solid #1B3055", borderBottom: "1px solid #1B3055" }}
+      >
+        <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
+          Caractéristiques
+        </span>
+        <svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none"
+          className="transition-transform duration-300 flex-shrink-0"
+          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", color: "#6B9FEE" }}
         >
-          {model}
-        </h3>
-        <div
-          className="flex items-center justify-between pt-4"
-          style={{ borderTop: "1px solid rgba(27,48,85,0.6)" }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-[10px]" style={{ color: "#8AABD4" }}>{mileage}</span>
-            <span style={{ color: "#1B3055" }}>·</span>
-            <span className="text-[10px]" style={{ color: "#8AABD4" }}>{fuel}</span>
-          </div>
-          <span className="font-black text-base" style={{ color: "#F0F5FF" }}>{price}</span>
+          <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {/* ── GRILLE DÉROULANTE ── */}
+      <div
+        style={{
+          overflow: "hidden",
+          maxHeight: expanded ? "400px" : "0",
+          transition: "max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <div className="grid grid-cols-4 gap-px" style={{ backgroundColor: "#1B3055" }}>
+          {specs.map((s) => (
+            <div
+              key={s.label}
+              className="flex flex-col px-3 py-2.5"
+              style={{ backgroundColor: "#0A1628" }}
+            >
+              <span className="text-[7px] tracking-[0.2em] uppercase mb-1" style={{ color: "#6B9FEE" }}>{s.label}</span>
+              <span className="font-bold text-[11px] leading-tight" style={{ color: "#F0F5FF" }}>{s.value}</span>
+            </div>
+          ))}
         </div>
       </div>
     </button>
@@ -547,13 +595,17 @@ export default function VehiculesList({
           return (
             <VehicleCard
               key={v.id}
-              img={images[0] ?? null}
+              images={images}
               make={v.make}
               year={v.year}
               model={v.model}
               mileage={`${v.mileage.toLocaleString("fr-FR")} km`}
               fuel={v.fuel}
-              price={`${v.price.toLocaleString("fr-FR")} €`}
+              transmission={v.transmission}
+              power={v.power}
+              color={v.color}
+              origin={v.origin}
+              price={v.price > 0 ? `${v.price.toLocaleString("fr-FR")} €` : "Prix sur demande"}
               isSold={v.status === "vendu"}
               isHidden={isAdmin && !v.isPublished}
               onClick={() => setSelected(toModal(v))}
@@ -563,12 +615,16 @@ export default function VehiculesList({
         {DEMO_VEHICLES.map((v) => (
           <div key={v.id} style={{ opacity: 0.7 }}>
             <VehicleCard
-              img={v.images[0] ?? null}
+              images={v.images}
               make={v.make}
               year={v.year}
               model={v.model}
               mileage={v.mileage}
               fuel={v.fuel}
+              transmission={v.transmission}
+              power={v.power}
+              color={v.color}
+              origin={v.origin}
               price={v.price}
               isDemo
               onClick={() => setSelected(v)}

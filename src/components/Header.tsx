@@ -184,24 +184,12 @@ export default function Header() {
                   }}
                 >
                   {link.label}
-                  {/* Point actif en haut */}
-                  <span
-                    className="absolute top-2.5 left-1/2 -translate-x-1/2"
-                    style={{
-                      width: "3px",
-                      height: "3px",
-                      borderRadius: "50%",
-                      backgroundColor: "#6B9FEE",
-                      opacity: isActive ? 1 : 0,
-                      transition: "opacity 0.25s ease",
-                    }}
-                  />
                   {/* Underline bas */}
                   <span
                     className="absolute bottom-0 left-0 right-0"
                     style={{
-                      height: "1.5px",
-                      background: "linear-gradient(to right, transparent, #6B9FEE, transparent)",
+                      height: "2px",
+                      background: "linear-gradient(to right, transparent, #8BB8F5, transparent)",
                       borderRadius: "2px",
                       transformOrigin: "center",
                       transform: isActive ? "scaleX(1)" : "scaleX(0)",
@@ -222,7 +210,7 @@ export default function Header() {
         style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <nav className="flex items-center justify-evenly" style={{ height: "50px" }}>
+          <nav className="flex items-center justify-evenly" style={{ height: "60px" }}>
             {NAV_LINKS_V2.map((link) => {
               const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
               return (
@@ -232,9 +220,9 @@ export default function Header() {
                   className="relative flex items-center h-full whitespace-nowrap transition-all duration-200"
                   style={{
                     color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.52)",
-                    fontSize: "11px",
+                    fontSize: "13px",
                     fontWeight: isActive ? 600 : 400,
-                    letterSpacing: "0.2em",
+                    letterSpacing: "0.14em",
                     textTransform: "uppercase",
                   }}
                   onMouseEnter={(e) => {
@@ -245,24 +233,12 @@ export default function Header() {
                   }}
                 >
                   {link.label}
-                  {/* Point actif en haut */}
-                  <span
-                    className="absolute top-2.5 left-1/2 -translate-x-1/2"
-                    style={{
-                      width: "3px",
-                      height: "3px",
-                      borderRadius: "50%",
-                      backgroundColor: "#6B9FEE",
-                      opacity: isActive ? 1 : 0,
-                      transition: "opacity 0.25s ease",
-                    }}
-                  />
                   {/* Underline bas */}
                   <span
                     className="absolute bottom-0 left-0 right-0"
                     style={{
-                      height: "1.5px",
-                      background: "linear-gradient(to right, transparent, #6B9FEE, transparent)",
+                      height: "2px",
+                      background: "linear-gradient(to right, transparent, #8BB8F5, transparent)",
                       borderRadius: "2px",
                       transformOrigin: "center",
                       transform: isActive ? "scaleX(1)" : "scaleX(0)",
