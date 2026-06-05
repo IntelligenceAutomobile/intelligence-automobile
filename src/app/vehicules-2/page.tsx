@@ -57,13 +57,13 @@ export default async function VehiculesV2Page({
         >
           {/* Image plein écran */}
           <Image
-            src="/Photo du Site/New Photo HD/d-panyukov-76Y_UEcLFoE-unsplash.jpg"
+            src="/Photo du Site/Photo IA/Image Nos véhicules.png"
             alt="Nos véhicules"
             fill
             priority
             style={{
               objectFit: "cover",
-              opacity: 0.45,
+              opacity: 1.0,
             }}
           />
 

@@ -46,13 +46,13 @@ export default async function AccueilV3Page() {
         <section style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
 
           <img
-            src="/Photo du Site/V2 Porshe Accueil.png"
+            src="/Photo du Site/Photo IA/ChatGPT Image 5 juin 2026, 09_00_29.png"
             alt=""
             style={{
               position: "absolute", inset: 0,
               width: "100%", height: "100%",
               objectFit: "cover", objectPosition: "center",
-              opacity: 0.80,
+              opacity: 1.0,
             }}
           />
 

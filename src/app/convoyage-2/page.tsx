@@ -51,10 +51,10 @@ export default function ConvoyagePage2() {
         >
           {/* Photo de fond */}
           <img
-            src="/Photo du Site/New Photo HD/luke-schobert-niST2P59VWs-unsplash.jpg"
+            src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png"
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{ opacity: 0.80 }}
+            style={{ opacity: 0.92 }}
           />
 
           {/* Overlay directionnel */}

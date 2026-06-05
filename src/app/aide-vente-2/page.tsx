@@ -91,10 +91,10 @@ export default function AideVenteV2Page() {
           {/* Image plein écran */}
           <div className="absolute inset-0">
             <img
-              src="/Photo du Site/New Photo HD/robin-le-mee-yvKr1_36NQo-unsplash.jpg"
+              src="/Photo du Site/Photo IA/Revente sur mesure 4.png"
               alt=""
               className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.62 }}
+              style={{ opacity: 0.92 }}
             />
             {/* Dégradé bas → fond principal */}
             <div

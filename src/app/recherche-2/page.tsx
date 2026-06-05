@@ -53,10 +53,10 @@ export default function RecherchePage2() {
         >
           {/* Image plein écran */}
           <img
-            src="/Photo du Site/New Photo HD/kalden-swart-5jegJRzcrfg-unsplash.jpg"
+            src="/Photo du Site/Photo IA/Recherche personnalisé.png"
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{ opacity: 0.45 }}
+            style={{ opacity: 0.85 }}
           />
 
           {/* Overlay directionnel gauche */}
