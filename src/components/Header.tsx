@@ -14,12 +14,13 @@ const NAV_LINKS = [
 ];
 
 const NAV_LINKS_V2 = [
-  { href: "/vehicules-2",  label: "Nos Véhicules 2" },
-  { href: "/recherche-2",  label: "Recherche personnalisée 2" },
-  { href: "/aide-vente-2", label: "Revente sur mesure 2" },
-  { href: "/convoyage-2",  label: "Transport & Livraison 2" },
-  { href: "/methode-2",    label: "Notre Méthode 2" },
-  { href: "/contact-2",    label: "Contact 2" },
+  { href: "/accueil-3",    label: "Accueil" },
+  { href: "/vehicules-2",  label: "Nos Véhicules" },
+  { href: "/recherche-2",  label: "Recherche personnalisée" },
+  { href: "/aide-vente-2", label: "Revente sur mesure" },
+  { href: "/convoyage-2",  label: "Transport & Livraison" },
+  { href: "/methode-2",    label: "Notre Méthode" },
+  { href: "/contact-2",    label: "Contact" },
 ];
 
 const MARK_SRC = "/Logo/v9%20Logo%20Sans%20texte.png";
@@ -73,12 +74,17 @@ export default function Header() {
   const pathname  = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/me").then(r => r.json()).then(d => setIsAdmin(d.isAdmin));
   }, []);
 
   return (
@@ -145,10 +151,10 @@ export default function Header() {
       {/* Séparateur */}
       <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.07)", transition: "opacity 0.4s ease" }} />
 
-      {/* ── Rangée 2 : Navigation ── */}
+      {/* ── Rangée 2 : Navigation (admin uniquement) ── */}
       <div
         className="hidden md:block"
-        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
+        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)", display: isAdmin ? undefined : "none" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <nav className="flex items-center justify-evenly" style={{ height: "50px" }}>
@@ -209,8 +215,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Séparateur inter-rangées */}
-      <div style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent)" }} />
+      {/* Séparateur inter-rangées (admin uniquement) */}
+      {isAdmin && <div style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent)" }} />}
 
       {/* ── Rangée 3 : Navigation V2 ── */}
       <div
