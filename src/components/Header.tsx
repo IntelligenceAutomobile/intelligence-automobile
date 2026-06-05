@@ -221,32 +221,56 @@ export default function Header() {
       {/* ── Rangée 3 : Navigation V2 ── */}
       <div
         className="hidden md:block"
-        style={{ background: "rgba(107,159,238,0.03)" }}
+        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <nav className="flex items-center justify-evenly" style={{ height: "40px" }}>
+          <nav className="flex items-center justify-evenly" style={{ height: "50px" }}>
             {NAV_LINKS_V2.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className="relative flex items-center h-full whitespace-nowrap transition-all duration-200"
                   style={{
-                    color: isActive ? "#6B9FEE" : "rgba(107,159,238,0.45)",
-                    fontSize: "10px",
+                    color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.52)",
+                    fontSize: "11px",
                     fontWeight: isActive ? 600 : 400,
-                    letterSpacing: "0.18em",
+                    letterSpacing: "0.2em",
                     textTransform: "uppercase",
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(107,159,238,0.75)";
+                    if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.88)";
                   }}
                   onMouseLeave={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(107,159,238,0.45)";
+                    if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.52)";
                   }}
                 >
                   {link.label}
+                  {/* Point actif en haut */}
+                  <span
+                    className="absolute top-2.5 left-1/2 -translate-x-1/2"
+                    style={{
+                      width: "3px",
+                      height: "3px",
+                      borderRadius: "50%",
+                      backgroundColor: "#6B9FEE",
+                      opacity: isActive ? 1 : 0,
+                      transition: "opacity 0.25s ease",
+                    }}
+                  />
+                  {/* Underline bas */}
+                  <span
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{
+                      height: "1.5px",
+                      background: "linear-gradient(to right, transparent, #6B9FEE, transparent)",
+                      borderRadius: "2px",
+                      transformOrigin: "center",
+                      transform: isActive ? "scaleX(1)" : "scaleX(0)",
+                      transition: "transform 0.3s ease",
+                    }}
+                  />
                 </Link>
               );
             })}
