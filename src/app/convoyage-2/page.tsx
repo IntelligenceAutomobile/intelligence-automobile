@@ -139,84 +139,43 @@ export default function ConvoyagePage2() {
         </section>
 
         {/* ── ÉTAPES ── */}
-        <section style={{ backgroundColor: "#040B16" }}>
-          <div
-            className="max-w-7xl mx-auto px-6 lg:px-12"
-            style={{ paddingTop: "6rem", paddingBottom: "6rem" }}
-          >
+        <section
+          className="border-t border-b"
+          style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
+        >
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
             <p
-              className="uppercase tracking-[0.35em] mb-16"
-              style={{ fontSize: "0.7rem", color: "#8AABD4" }}
+              className="text-xs tracking-[0.35em] uppercase mb-16 text-center"
+              style={{ color: "#8AABD4" }}
             >
               Comment ça marche
             </p>
-
-            <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
               {steps.map((step, i) => (
-                <div key={step.num}>
-                  {/* Séparateur gradient entre les étapes */}
-                  {i > 0 && (
-                    <div
-                      style={{
-                        height: "1px",
-                        background:
-                          "linear-gradient(to right, transparent, #1B3055, transparent)",
-                        margin: "0",
-                      }}
-                    />
-                  )}
-
-                  <div
-                    className="grid"
+                <div
+                  key={step.num}
+                  className="px-8 py-6"
+                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055" }}
+                >
+                  <span
+                    className="block font-black leading-none mb-6"
                     style={{
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "clamp(2rem, 5vw, 5rem)",
-                      alignItems: "start",
-                      padding: "clamp(2rem, 4vw, 3.5rem) 0",
+                      fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
+                      color: "#6B9FEE",
+                      letterSpacing: "-0.04em",
                     }}
                   >
-                    {/* Numéro */}
-                    <div
-                      style={{
-                        fontWeight: 900,
-                        fontSize: "clamp(2.8rem, 5.5vw, 5rem)",
-                        lineHeight: 1,
-                        letterSpacing: "-0.04em",
-                        color: "#F0F5FF",
-                        borderLeft: "2px solid #6B9FEE",
-                        paddingLeft: "1.6rem",
-                      }}
-                    >
-                      {step.num}
-                    </div>
-
-                    {/* Titre + description */}
-                    <div style={{ paddingTop: "0.3rem" }}>
-                      <h3
-                        style={{
-                          fontWeight: 700,
-                          fontSize: "clamp(1rem, 1.8vw, 1.25rem)",
-                          letterSpacing: "0.02em",
-                          marginBottom: "0.9rem",
-                          color: "#F0F5FF",
-                        }}
-                      >
-                        {step.title}
-                      </h3>
-                      <p
-                        style={{
-                          fontSize: "0.9rem",
-                          color: "#C4D8EE",
-                          fontWeight: 300,
-                          lineHeight: 1.7,
-                          borderTop: "1px solid rgba(107,159,238,0.35)",
-                          paddingTop: "0.8rem",
-                        }}
-                      >
-                        {step.desc}
-                      </p>
-                    </div>
-                  </div>
+                    {step.num}
+                  </span>
+                  <h3
+                    className="font-black uppercase mb-4"
+                    style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                    {step.desc}
+                  </p>
                 </div>
               ))}
             </div>
