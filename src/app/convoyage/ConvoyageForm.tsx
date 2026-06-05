@@ -7,34 +7,34 @@ type Status = "idle" | "sending" | "success" | "error";
 const ANNEES = Array.from({ length: 25 }, (_, i) => 2025 - i);
 
 const fieldStyle: React.CSSProperties = {
-  backgroundColor: "#040B16",
-  border: "1px solid #1B3055",
+  backgroundColor: "#071428",
+  border: "1px solid #2A4878",
   color: "#F0F5FF",
   outline: "none",
   width: "100%",
   padding: "14px 16px",
-  fontSize: "0.875rem",
+  fontSize: "1rem",
   transition: "border-color 0.2s",
 };
 
 const labelStyle: React.CSSProperties = {
   display: "block",
-  fontSize: "9px",
-  letterSpacing: "0.35em",
+  fontSize: "11px",
+  letterSpacing: "0.2em",
   textTransform: "uppercase" as const,
   marginBottom: "12px",
-  color: "#8AABD4",
+  color: "#AABFDA",
 };
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div
       className="p-5 space-y-5"
-      style={{ backgroundColor: "#0A1628", border: "1px solid #1B3055" }}
+      style={{ backgroundColor: "#0A1628", border: "1px solid #2A4878" }}
     >
       <p
-        className="text-[9px] tracking-[0.35em] uppercase pb-4"
-        style={{ color: "#6B9FEE", borderBottom: "1px solid #1B3055" }}
+        className="text-[11px] tracking-[0.2em] uppercase pb-4"
+        style={{ color: "#6B9FEE", borderBottom: "1px solid #2A4878" }}
       >
         {title}
       </p>
@@ -90,7 +90,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
     return (
       <div
         className="p-12 flex flex-col items-center text-center"
-        style={{ backgroundColor: "#0A1628", border: "1px solid #1B3055" }}
+        style={{ backgroundColor: "#0A1628", border: "1px solid #2A4878" }}
       >
         <div
           className="w-14 h-14 flex items-center justify-center mb-6"
@@ -107,7 +107,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
         >
           Demande reçue
         </h3>
-        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#8AABD4" }}>
+        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#AABFDA" }}>
           Nous revenons vers vous sous 24h ouvrées avec un devis fixe et les détails de la prise en charge.
         </p>
       </div>
@@ -115,7 +115,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
       <SectionCard title="Le trajet">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
@@ -124,7 +124,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="depart" required type="text" placeholder="Ville ou code postal"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -133,7 +133,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="arrivee" required type="text" placeholder="Ville ou code postal"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
@@ -144,7 +144,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
             name="date" type="text" placeholder="Ex : à partir du 15 juin, semaine du 23..."
             style={fieldStyle}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
           />
         </div>
       </SectionCard>
@@ -157,7 +157,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="marque" required type="text" placeholder="BMW, Audi, Mercedes..."
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -166,7 +166,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="modele" required type="text" placeholder="Série 5, A6, Classe E..."
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
@@ -177,7 +177,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
             name="annee"
             style={{ ...fieldStyle, cursor: "pointer" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
           >
             <option value="">Non précisée</option>
             {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -191,7 +191,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
             placeholder="Particularité du véhicule, accès difficile, clés à récupérer auprès d'un tiers..."
             style={{ ...fieldStyle, resize: "none" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
           />
         </div>
       </SectionCard>
@@ -204,7 +204,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="prenom" required type="text" placeholder="Votre prénom"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -213,7 +213,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="nom" required type="text" placeholder="Votre nom"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
@@ -225,7 +225,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="email" required type="email" placeholder="votre@email.fr"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -234,7 +234,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
               name="telephone" type="tel" placeholder="+33 6 00 00 00 00"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
@@ -249,14 +249,14 @@ Notes : ${d.get("notes") || "Aucune"}`;
         {status === "sending" ? "Envoi en cours..." : "Demander un devis"}
       </button>
 
-      <p className="text-center text-[11px]" style={{ color: "#8AABD4" }}>
+      <p className="text-center text-[11px]" style={{ color: "#AABFDA" }}>
         Devis gratuit sous 24h · Tarif fixe, sans surprise
       </p>
 
       {status === "error" && (
         <div
           className="p-5 text-sm"
-          style={{ borderLeft: "2px solid #8AABD4", backgroundColor: "#040B16", color: "#8AABD4" }}
+          style={{ borderLeft: "2px solid #AABFDA", backgroundColor: "#071428", color: "#AABFDA" }}
         >
           Une erreur s&apos;est produite. Contactez-nous à contact@intelligenceautomobile.com
         </div>

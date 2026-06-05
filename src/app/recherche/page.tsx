@@ -160,7 +160,7 @@ export default function RecherchePage() {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
 
               {/* Colonne gauche — garanties */}
-              <div className="lg:col-span-2 space-y-10">
+              <div className="lg:col-span-2 space-y-10" style={{ fontFamily: "var(--font-inter)" }}>
                 <p className="text-base leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
                   Nous opérons exclusivement sur les marchés{" "}
                   <strong style={{ color: "#F0F5FF" }}>allemand et belge</strong>, réputés pour la

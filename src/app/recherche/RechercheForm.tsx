@@ -9,34 +9,34 @@ const CARBURANTS = ["Peu importe", "Essence", "Diesel", "Hybride", "Électrique"
 const BOITES = ["Peu importe", "Automatique", "Manuelle"];
 
 const fieldStyle: React.CSSProperties = {
-  backgroundColor: "#040B16",
-  border: "1px solid #1B3055",
+  backgroundColor: "#071428",
+  border: "1px solid #2A4878",
   color: "#F0F5FF",
   outline: "none",
   width: "100%",
   padding: "14px 16px",
-  fontSize: "0.875rem",
+  fontSize: "1rem",
   transition: "border-color 0.2s",
 };
 
 const labelStyle: React.CSSProperties = {
   display: "block",
-  fontSize: "9px",
-  letterSpacing: "0.35em",
+  fontSize: "11px",
+  letterSpacing: "0.2em",
   textTransform: "uppercase" as const,
   marginBottom: "12px",
-  color: "#8AABD4",
+  color: "#AABFDA",
 };
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div
       className="p-5 space-y-5"
-      style={{ backgroundColor: "#0A1628", border: "1px solid #1B3055" }}
+      style={{ backgroundColor: "#0A1628", border: "1px solid #2A4878" }}
     >
       <p
-        className="text-[9px] tracking-[0.35em] uppercase pb-4"
-        style={{ color: "#6B9FEE", borderBottom: "1px solid #1B3055" }}
+        className="text-[11px] tracking-[0.2em] uppercase pb-4"
+        style={{ color: "#6B9FEE", borderBottom: "1px solid #2A4878" }}
       >
         {title}
       </p>
@@ -92,7 +92,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
     return (
       <div
         className="p-12 flex flex-col items-center text-center"
-        style={{ backgroundColor: "#0A1628", border: "1px solid #1B3055" }}
+        style={{ backgroundColor: "#0A1628", border: "1px solid #2A4878" }}
       >
         <div
           className="w-14 h-14 flex items-center justify-center mb-6"
@@ -109,7 +109,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
         >
           Recherche reçue
         </h3>
-        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#8AABD4" }}>
+        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#AABFDA" }}>
           Nous analysons votre demande et revenons vers vous sous 24h ouvrées avec une première sélection.
         </p>
       </div>
@@ -117,7 +117,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
       <SectionCard title="Le véhicule">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
@@ -126,7 +126,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="marque" required type="text" placeholder="BMW, Audi, Mercedes..."
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -135,7 +135,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="modele" required type="text" placeholder="Série 3, A4, Classe C..."
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
@@ -147,7 +147,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="budget" required type="text" placeholder="Ex : 35 000 €"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -156,7 +156,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="kilometrage" type="text" placeholder="Ex : 80 000 km"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -165,7 +165,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="annee"
               style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
               <option value="">Peu importe</option>
               {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -180,7 +180,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="carburant"
               style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
               {CARBURANTS.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -191,7 +191,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="boite"
               style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
               {BOITES.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
@@ -205,7 +205,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
             placeholder="Pack Sport, Toit ouvrant, LED, Carplay..."
             style={{ ...fieldStyle, resize: "none" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
           />
         </div>
       </SectionCard>
@@ -218,7 +218,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="prenom" required type="text" placeholder="Votre prénom"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -227,7 +227,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="nom" required type="text" placeholder="Votre nom"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
@@ -239,7 +239,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="email" required type="email" placeholder="votre@email.fr"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
@@ -248,7 +248,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
               name="telephone" type="tel" placeholder="+33 6 00 00 00 00"
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
@@ -260,7 +260,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
             placeholder="Tout élément qui nous aiderait à mieux cibler votre recherche..."
             style={{ ...fieldStyle, resize: "none" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
           />
         </div>
       </SectionCard>
@@ -274,14 +274,14 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
         {status === "sending" ? "Envoi en cours..." : "Soumettre ma recherche"}
       </button>
 
-      <p className="text-center text-[11px]" style={{ color: "#8AABD4" }}>
+      <p className="text-center text-[11px]" style={{ color: "#AABFDA" }}>
         Commission fixe annoncée avant tout engagement · Aucun frais si nous ne trouvons pas
       </p>
 
       {status === "error" && (
         <div
           className="p-5 text-sm"
-          style={{ borderLeft: "2px solid #8AABD4", backgroundColor: "#040B16", color: "#8AABD4" }}
+          style={{ borderLeft: "2px solid #AABFDA", backgroundColor: "#071428", color: "#AABFDA" }}
         >
           Une erreur s&apos;est produite. Contactez-nous à contact@intelligenceautomobile.com
         </div>

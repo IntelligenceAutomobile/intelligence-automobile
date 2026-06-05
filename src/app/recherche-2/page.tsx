@@ -266,7 +266,7 @@ export default function RecherchePage2() {
               style={{ gap: "clamp(3rem, 6vw, 6rem)", alignItems: "start" }}
             >
               {/* Colonne gauche — garanties (2fr) */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2" style={{ fontFamily: "var(--font-inter)" }}>
                 {/* Liste garanties */}
                 <div style={{ borderTop: "1px solid #1B3055", marginBottom: "2.5rem" }}>
                   {garanties.map((g) => (
@@ -313,8 +313,8 @@ export default function RecherchePage2() {
                 >
                   <p
                     style={{
-                      fontSize: "9px",
-                      letterSpacing: "0.35em",
+                      fontSize: "11px",
+                      letterSpacing: "0.2em",
                       textTransform: "uppercase",
                       color: "#6B9FEE",
                       marginBottom: "10px",
@@ -344,8 +344,8 @@ export default function RecherchePage2() {
 
                   <p
                     style={{
-                      fontSize: "9px",
-                      letterSpacing: "0.35em",
+                      fontSize: "11px",
+                      letterSpacing: "0.2em",
                       textTransform: "uppercase",
                       color: "#6B9FEE",
                       marginBottom: "10px",
