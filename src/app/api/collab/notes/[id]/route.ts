@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCollabSession } from "@/lib/collab-auth";
 import { prisma } from "@/lib/prisma";
 
-const ALLOWED_FIELDS = ["status", "content", "tag"];
+const ALLOWED_FIELDS = ["status", "content", "tag", "urgency"];
 
 export async function PATCH(
   req: NextRequest,

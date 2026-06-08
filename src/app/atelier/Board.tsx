@@ -24,6 +24,7 @@ interface TrashNote {
   content: string;
   status: Status;
   tag: string;
+  urgency: string;
   category: string;
   author: string;
   imageUrl: string | null;
@@ -36,6 +37,7 @@ interface Note {
   content: string;
   status: Status;
   tag: string;
+  urgency: string;
   category: string;
   author: string;
   imageUrl: string | null;
@@ -45,7 +47,7 @@ interface Note {
 }
 
 const CATEGORIES = [
-  { id: "général",       label: "Général",       color: "#8AABD4" },
+  { id: "général",       label: "Général",       color: "#C8D8EE" },
   { id: "véhicules",     label: "Véhicules",     color: "#4EB87B" },
   { id: "administratif", label: "Administratif", color: "#F0A55A" },
   { id: "site web",      label: "Site web",      color: "#A78BFA" },
@@ -61,11 +63,23 @@ const COLUMNS: { status: Status; label: string }[] = [
 const TAGS = ["général", "UI", "DB", "config", "bug"];
 
 const TAG_STYLES: Record<string, { backgroundColor: string; color: string }> = {
-  général: { backgroundColor: "#1B3055", color: "#8AABD4" },
+  général: { backgroundColor: "#1B3055", color: "#C8D8EE" },
   UI:      { backgroundColor: "#1B3A6B", color: "#6B9FEE" },
   DB:      { backgroundColor: "#1B3A2C", color: "#4EB87B" },
   config:  { backgroundColor: "#3A2F1B", color: "#F0A55A" },
   bug:     { backgroundColor: "#3A1B1B", color: "#E5635A" },
+};
+
+const URGENCY_LEVELS = [
+  { id: "faible",  label: "Faible"  },
+  { id: "normale", label: "Normale" },
+  { id: "urgente", label: "Urgente" },
+] as const;
+
+const URGENCY_STYLES: Record<string, { backgroundColor: string; color: string }> = {
+  faible:  { backgroundColor: "#1B2840", color: "#7E96BD" },
+  normale: { backgroundColor: "#1B3A6B", color: "#6B9FEE" },
+  urgente: { backgroundColor: "#3A1B1B", color: "#E5635A" },
 };
 
 const NEXT: Record<Status, Status | null> = { todo: "doing", doing: "done", done: null };
@@ -86,6 +100,7 @@ export default function Board({ authorName }: { authorName: string }) {
   const [loadingTrash, setLoadingTrash] = useState(false);
   const [content, setContent]           = useState("");
   const [tag, setTag]                   = useState("général");
+  const [urgency, setUrgency]           = useState("normale");
   const [imageFile, setImageFile]       = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [adding, setAdding]             = useState(false);
@@ -135,6 +150,10 @@ export default function Board({ authorName }: { authorName: string }) {
     });
   }
 
+  function todoCount(catId: string): number {
+    return notes.filter(n => n.category === catId && n.status === "todo").length;
+  }
+
   function hasUnread(catId: string): boolean {
     if (loading) return false;
     const lastVisit = lastSeen[catId] ? new Date(lastSeen[catId]) : new Date(0);
@@ -180,13 +199,14 @@ export default function Board({ authorName }: { authorName: string }) {
     const res = await fetch("/api/collab/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, tag, imageUrl, category: selectedCat }),
+      body: JSON.stringify({ content, tag, urgency, imageUrl, category: selectedCat }),
     });
 
     if (res.ok) {
       const note = await res.json();
       setNotes(prev => [{ ...note, comments: [] }, ...prev]);
       setContent("");
+      setUrgency("normale");
       removeImage();
     }
     setAdding(false);
@@ -209,6 +229,15 @@ export default function Board({ authorName }: { authorName: string }) {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: newContent }),
+    });
+  }
+
+  async function editUrgency(id: string, newUrgency: string) {
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, urgency: newUrgency } : n));
+    await fetch(`/api/collab/notes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urgency: newUrgency }),
     });
   }
 
@@ -249,6 +278,7 @@ export default function Board({ authorName }: { authorName: string }) {
           {CATEGORIES.map(cat => {
             const selected = selectedCat === cat.id;
             const unread   = hasUnread(cat.id);
+            const todo     = todoCount(cat.id);
             return (
               <button
                 key={cat.id}
@@ -263,7 +293,7 @@ export default function Board({ authorName }: { authorName: string }) {
                   fontSize: "13px",
                   textAlign: "left",
                   backgroundColor: selected ? "#112240" : "transparent",
-                  color: selected ? cat.color : "#8AABD4",
+                  color: selected ? cat.color : "#C8D8EE",
                   borderLeft: `2px solid ${selected ? cat.color : "transparent"}`,
                   transition: "background 0.1s",
                 }}
@@ -272,6 +302,22 @@ export default function Board({ authorName }: { authorName: string }) {
               >
                 <span style={{ color: cat.color, fontSize: "7px", lineHeight: 1, flexShrink: 0 }}>●</span>
                 <span style={{ flex: 1 }}>{cat.label}</span>
+                {todo > 0 && (
+                  <span
+                    title={`${todo} tâche${todo > 1 ? "s" : ""} à faire`}
+                    style={{
+                      fontSize: "10px",
+                      lineHeight: 1,
+                      padding: "2px 6px",
+                      borderRadius: "9px",
+                      backgroundColor: selected ? cat.color : "#1B3055",
+                      color: selected ? "#0B1930" : "#C8D8EE",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {todo}
+                  </span>
+                )}
                 {unread && (
                   <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#6B9FEE", flexShrink: 0 }} />
                 )}
@@ -293,10 +339,10 @@ export default function Board({ authorName }: { authorName: string }) {
               fontSize: "13px",
               textAlign: "left",
               backgroundColor: selectedCat === "__trash__" ? "#112240" : "transparent",
-              color: selectedCat === "__trash__" ? "#8AABD4" : "#1B3055",
+              color: selectedCat === "__trash__" ? "#C8D8EE" : "#1B3055",
               borderLeft: `2px solid ${selectedCat === "__trash__" ? "#1B3055" : "transparent"}`,
             }}
-            onMouseEnter={e => { if (selectedCat !== "__trash__") e.currentTarget.style.color = "#8AABD4"; }}
+            onMouseEnter={e => { if (selectedCat !== "__trash__") e.currentTarget.style.color = "#C8D8EE"; }}
             onMouseLeave={e => { if (selectedCat !== "__trash__") e.currentTarget.style.color = "#1B3055"; }}
           >
             <span style={{ fontSize: "11px" }}>🗑</span>
@@ -309,11 +355,11 @@ export default function Board({ authorName }: { authorName: string }) {
 
         {/* Utilisateur + déconnexion */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid #1B3055" }}>
-          <div style={{ color: "#8AABD4", fontSize: "12px", marginBottom: "6px" }}>{authorName}</div>
+          <div style={{ color: "#C8D8EE", fontSize: "12px", marginBottom: "6px" }}>{authorName}</div>
           <button
             onClick={logout}
             style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")}
+            onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")}
             onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}
           >
             Quitter
@@ -329,7 +375,7 @@ export default function Board({ authorName }: { authorName: string }) {
           {selectedCat === "__trash__" ? (
             <>
               <span style={{ fontSize: "12px" }}>🗑</span>
-              <span style={{ fontSize: "15px", fontWeight: 300 }}>Corbeille</span>
+              <span style={{ fontSize: "15px", fontWeight: 400 }}>Corbeille</span>
               <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
                 {trashNotes ? `${trashNotes.length} note${trashNotes.length > 1 ? "s" : ""}` : ""}
               </span>
@@ -337,7 +383,7 @@ export default function Board({ authorName }: { authorName: string }) {
           ) : (
             <>
               <span style={{ color: activeCat.color, fontSize: "8px" }}>●</span>
-              <span style={{ fontSize: "15px", fontWeight: 300 }}>{activeCat.label}</span>
+              <span style={{ fontSize: "15px", fontWeight: 400 }}>{activeCat.label}</span>
               <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
                 {visibleNotes.length > 0 && `${visibleNotes.filter(n => n.status !== "done").length} en cours · ${visibleNotes.filter(n => n.status === "done").length} terminée${visibleNotes.filter(n => n.status === "done").length > 1 ? "s" : ""}`}
               </span>
@@ -365,7 +411,7 @@ export default function Board({ authorName }: { authorName: string }) {
               {imagePreview && (
                 <div className="mt-2 flex items-start gap-2">
                   <img src={imagePreview} alt="aperçu" className="h-24 object-contain border" style={{ borderColor: "#1B3055" }} />
-                  <button type="button" onClick={removeImage} className="text-xs px-1" style={{ color: "#8AABD4" }}>✕</button>
+                  <button type="button" onClick={removeImage} className="text-xs px-1" style={{ color: "#C8D8EE" }}>✕</button>
                 </div>
               )}
             </div>
@@ -375,15 +421,18 @@ export default function Board({ authorName }: { authorName: string }) {
                 onClick={() => fileInputRef.current?.click()}
                 className="text-xs"
                 style={{ color: imageFile ? "#6B9FEE" : "#1B3055" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")}
+                onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")}
                 onMouseLeave={e => (e.currentTarget.style.color = imageFile ? "#6B9FEE" : "#1B3055")}
               >
                 {imageFile ? `📎 ${imageFile.name}` : "+ Joindre"}
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               <div className="flex-1" />
-              <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#8AABD4" }}>
+              <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#C8D8EE" }}>
                 {TAGS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select value={urgency} onChange={e => setUrgency(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: URGENCY_STYLES[urgency]?.color ?? "#C8D8EE" }}>
+                {URGENCY_LEVELS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
               </select>
               <button type="submit" disabled={adding || !content.trim()} className="px-6 py-2 text-xs font-semibold tracking-widest uppercase disabled:opacity-40" style={{ backgroundColor: activeCat.color, color: "#0B1930" }}>
                 {adding ? "..." : "Ajouter"}
@@ -401,7 +450,7 @@ export default function Board({ authorName }: { authorName: string }) {
                 return (
                   <div key={col.status}>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>{col.label}</span>
+                      <span className="text-xs tracking-widest uppercase" style={{ color: "#C8D8EE" }}>{col.label}</span>
                       <span className="text-xs px-2 py-0.5" style={{ backgroundColor: "#1B3055", color: activeCat.color }}>{colNotes.length}</span>
                     </div>
                     <div className="space-y-3">
@@ -416,6 +465,7 @@ export default function Board({ authorName }: { authorName: string }) {
                           authorName={authorName}
                           onMove={moveNote}
                           onEdit={editNote}
+                          onEditUrgency={editUrgency}
                           onDelete={deleteNote}
                           onOpenImage={setOverlayUrl}
                         />
@@ -434,7 +484,7 @@ export default function Board({ authorName }: { authorName: string }) {
       {overlayUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(11,25,48,0.96)" }} onClick={() => setOverlayUrl(null)}>
           <img src={overlayUrl} alt="screenshot" className="max-w-4xl max-h-screen p-8 object-contain" onClick={e => e.stopPropagation()} />
-          <button className="absolute top-6 right-6 text-sm tracking-widest uppercase" style={{ color: "#8AABD4" }} onClick={() => setOverlayUrl(null)}>Fermer</button>
+          <button className="absolute top-6 right-6 text-sm tracking-widest uppercase" style={{ color: "#C8D8EE" }} onClick={() => setOverlayUrl(null)}>Fermer</button>
         </div>
       )}
     </div>
@@ -444,13 +494,14 @@ export default function Board({ authorName }: { authorName: string }) {
 /* ─── NoteCard ─────────────────────────────────────────── */
 
 function NoteCard({
-  note, catColor, authorName, onMove, onEdit, onDelete, onOpenImage,
+  note, catColor, authorName, onMove, onEdit, onEditUrgency, onDelete, onOpenImage,
 }: {
   note: Note;
   catColor: string;
   authorName: string;
   onMove: (id: string, status: Status) => void;
   onEdit: (id: string, content: string) => void;
+  onEditUrgency: (id: string, urgency: string) => void;
   onDelete: (id: string) => void;
   onOpenImage: (url: string) => void;
 }) {
@@ -463,6 +514,7 @@ function NoteCard({
   const [addingComment, setAddingComment] = useState(false);
 
   const tagStyle = TAG_STYLES[note.tag] ?? TAG_STYLES["général"];
+  const urgencyStyle = URGENCY_STYLES[note.urgency] ?? URGENCY_STYLES["normale"];
   const prev = PREV[note.status];
   const next = NEXT[note.status];
 
@@ -516,7 +568,7 @@ function NoteCard({
             />
             <div className="flex gap-2 mt-2">
               <button onClick={saveEdit} className="text-xs px-3 py-1 font-semibold tracking-widest uppercase" style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}>Sauvegarder</button>
-              <button onClick={cancelEdit} className="text-xs px-3 py-1" style={{ color: "#8AABD4" }}>Annuler</button>
+              <button onClick={cancelEdit} className="text-xs px-3 py-1" style={{ color: "#C8D8EE" }}>Annuler</button>
             </div>
           </div>
         ) : (
@@ -532,23 +584,32 @@ function NoteCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs px-2 py-0.5" style={tagStyle}>{note.tag}</span>
-            <span className="text-xs" style={{ color: "#8AABD4" }}>{note.author}</span>
+            <select
+              value={note.urgency}
+              onChange={e => onEditUrgency(note.id, e.target.value)}
+              title="Niveau d'urgence"
+              className="text-xs px-2 py-0.5 border-0 outline-none cursor-pointer"
+              style={{ ...urgencyStyle, appearance: "none" as const }}
+            >
+              {URGENCY_LEVELS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
+            </select>
+            <span className="text-xs" style={{ color: "#C8D8EE" }}>{note.author}</span>
             <span className="text-xs" style={{ color: "#1B3055" }}>·</span>
             <span className="text-xs" style={{ color: "#1B3055" }}>{fmtDate(note.createdAt)}</span>
           </div>
           <div className="flex items-center gap-1 shrink-0 ml-2">
             {confirmDelete ? (
               <>
-                <span className="text-xs mr-1" style={{ color: "#8AABD4" }}>Supprimer ?</span>
-                <button onClick={() => setConfirmDelete(false)} className="text-xs px-2 py-0.5 border" style={{ color: "#8AABD4", borderColor: "#1B3055" }}>Non</button>
+                <span className="text-xs mr-1" style={{ color: "#C8D8EE" }}>Supprimer ?</span>
+                <button onClick={() => setConfirmDelete(false)} className="text-xs px-2 py-0.5 border" style={{ color: "#C8D8EE", borderColor: "#1B3055" }}>Non</button>
                 <button onClick={() => { setConfirmDelete(false); onDelete(note.id); }} className="text-xs px-2 py-0.5 border" style={{ color: "#E5635A", borderColor: "#3A1B1B" }}>Oui</button>
               </>
             ) : (
               <>
                 {!isEditing && (
-                  <button onClick={() => { setEditContent(note.content); setIsEditing(true); }} title="Modifier" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✎</button>
+                  <button onClick={() => { setEditContent(note.content); setIsEditing(true); }} title="Modifier" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✎</button>
                 )}
-                {prev && <button onClick={() => onMove(note.id, prev)} title="Reculer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#8AABD4" }}>←</button>}
+                {prev && <button onClick={() => onMove(note.id, prev)} title="Reculer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#C8D8EE" }}>←</button>}
                 {next && <button onClick={() => onMove(note.id, next)} title="Avancer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#6B9FEE" }}>→</button>}
                 {note.author === authorName && (
                   <button onClick={() => setConfirmDelete(true)} title="Supprimer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
@@ -564,9 +625,9 @@ function NoteCard({
         <button
           onClick={() => setShowComments(v => !v)}
           className="w-full flex items-center gap-2 px-4 py-2 text-xs text-left"
-          style={{ color: commentCount > 0 ? "#8AABD4" : "#1B3055" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")}
-          onMouseLeave={e => (e.currentTarget.style.color = commentCount > 0 ? "#8AABD4" : "#1B3055")}
+          style={{ color: commentCount > 0 ? "#C8D8EE" : "#1B3055" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")}
+          onMouseLeave={e => (e.currentTarget.style.color = commentCount > 0 ? "#C8D8EE" : "#1B3055")}
         >
           <span style={{ fontSize: "9px" }}>{showComments ? "▾" : "▸"}</span>
           <span>{commentLabel}</span>
@@ -585,7 +646,7 @@ function NoteCard({
                 className="flex-1 px-3 py-1.5 border text-xs outline-none"
                 style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
               />
-              <button type="submit" disabled={addingComment || !newComment.trim()} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#8AABD4" }}>→</button>
+              <button type="submit" disabled={addingComment || !newComment.trim()} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#C8D8EE" }}>→</button>
             </form>
           </div>
         )}
@@ -652,9 +713,9 @@ function CommentItem({
         <button
           onClick={() => setShowReplies(v => !v)}
           className="flex items-center gap-1.5 text-xs py-0.5"
-          style={{ color: replyCount > 0 ? "#8AABD4" : "#1B3055" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#8AABD4")}
-          onMouseLeave={e => (e.currentTarget.style.color = replyCount > 0 ? "#8AABD4" : "#1B3055")}
+          style={{ color: replyCount > 0 ? "#C8D8EE" : "#1B3055" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")}
+          onMouseLeave={e => (e.currentTarget.style.color = replyCount > 0 ? "#C8D8EE" : "#1B3055")}
         >
           <span style={{ fontSize: "9px" }}>{showReplies ? "▾" : "▸"}</span>
           <span>{replyLabel}</span>
@@ -683,7 +744,7 @@ function CommentItem({
                 className="flex-1 px-3 py-1.5 border text-xs outline-none"
                 style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
               />
-              <button type="submit" disabled={addingReply || !newReply.trim()} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#8AABD4" }}>→</button>
+              <button type="submit" disabled={addingReply || !newReply.trim()} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#C8D8EE" }}>→</button>
             </form>
           </div>
         )}
@@ -719,7 +780,7 @@ function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean })
               opacity: 0.7,
             }}
           >
-            <p className="text-sm leading-relaxed mb-3" style={{ color: "#8AABD4", whiteSpace: "pre-wrap" }}>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#C8D8EE", whiteSpace: "pre-wrap" }}>
               {note.content}
             </p>
             <div className="flex items-center gap-2 flex-wrap text-xs" style={{ color: "#1B3055" }}>
