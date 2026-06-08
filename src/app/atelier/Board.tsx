@@ -42,6 +42,7 @@ interface Note {
   category: string;
   author: string;
   imageUrl: string | null;
+  images: string;
   comments: Comment[];
   createdAt: string;
   updatedAt: string;
@@ -102,10 +103,10 @@ export default function Board({ authorName }: { authorName: string }) {
   const [content, setContent]           = useState("");
   const [tag, setTag]                   = useState("général");
   const [urgency, setUrgency]           = useState("normale");
-  const [imageFile, setImageFile]       = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles]     = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [adding, setAdding]             = useState(false);
-  const [overlayUrl, setOverlayUrl]     = useState<string | null>(null);
+  const [overlay, setOverlay]           = useState<{ urls: string[]; index: number } | null>(null);
   const fileInputRef                    = useRef<HTMLInputElement>(null);
 
   // Load lastSeen from localStorage and mark initial category seen
@@ -126,11 +127,15 @@ export default function Board({ authorName }: { authorName: string }) {
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
 
   useEffect(() => {
-    if (!overlayUrl) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOverlayUrl(null); };
+    if (!overlay) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOverlay(null);
+      if (e.key === "ArrowRight") setOverlay(o => o && { ...o, index: (o.index + 1) % o.urls.length });
+      if (e.key === "ArrowLeft") setOverlay(o => o && { ...o, index: (o.index - 1 + o.urls.length) % o.urls.length });
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [overlayUrl]);
+  }, [overlay]);
 
   useEffect(() => {
     if (selectedCat !== "__trash__") return;
@@ -170,12 +175,15 @@ export default function Board({ authorName }: { authorName: string }) {
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = ev => setImagePreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setImageFiles(prev => [...prev, ...files]);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => setImagePreviews(prev => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(file);
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function downloadImage(url: string) {
@@ -193,9 +201,21 @@ export default function Board({ authorName }: { authorName: string }) {
     }
   }
 
-  function removeImage() {
-    setImageFile(null);
-    setImagePreview(null);
+  async function downloadAllImages(urls: string[]) {
+    for (const url of urls) {
+      await downloadImage(url);
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }
+
+  function removeImage(index: number) {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function removeAllImages() {
+    setImageFiles([]);
+    setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -204,23 +224,24 @@ export default function Board({ authorName }: { authorName: string }) {
     if (!content.trim()) return;
     setAdding(true);
 
-    let imageUrl: string | null = null;
-    if (imageFile) {
-      try {
-        const blob = await upload(imageFile.name, imageFile, {
-          access: "public",
-          handleUploadUrl: "/api/collab/upload",
-        });
-        imageUrl = blob.url;
-      } catch {
-        // upload échoué : la note sera ajoutée sans image
-      }
-    }
+    const images = (await Promise.all(
+      imageFiles.map(async file => {
+        try {
+          const blob = await upload(file.name, file, {
+            access: "public",
+            handleUploadUrl: "/api/collab/upload",
+          });
+          return blob.url;
+        } catch {
+          return null;
+        }
+      })
+    )).filter((u): u is string => u !== null);
 
     const res = await fetch("/api/collab/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, tag, urgency, imageUrl, category: selectedCat }),
+      body: JSON.stringify({ content, tag, urgency, images, category: selectedCat }),
     });
 
     if (res.ok) {
@@ -228,7 +249,7 @@ export default function Board({ authorName }: { authorName: string }) {
       setNotes(prev => [{ ...note, comments: [] }, ...prev]);
       setContent("");
       setUrgency("normale");
-      removeImage();
+      removeAllImages();
     }
     setAdding(false);
   }
@@ -429,10 +450,21 @@ export default function Board({ authorName }: { authorName: string }) {
                 style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
                 onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) addNote(e as unknown as React.FormEvent); }}
               />
-              {imagePreview && (
-                <div className="mt-2 flex items-start gap-2">
-                  <img src={imagePreview} alt="aperçu" className="h-24 object-contain border" style={{ borderColor: "#1B3055" }} />
-                  <button type="button" onClick={removeImage} className="text-xs px-1" style={{ color: "#C8D8EE" }}>✕</button>
+              {imagePreviews.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-start gap-2">
+                  {imagePreviews.map((src, i) => (
+                    <div key={i} className="relative">
+                      <img src={src} alt="aperçu" className="h-24 w-24 object-cover border" style={{ borderColor: "#1B3055" }} />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-xs"
+                        style={{ backgroundColor: "#0B1930", color: "#C8D8EE", border: "1px solid #1B3055" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -441,13 +473,13 @@ export default function Board({ authorName }: { authorName: string }) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="text-xs"
-                style={{ color: imageFile ? "#6B9FEE" : "#1B3055" }}
+                style={{ color: imageFiles.length > 0 ? "#6B9FEE" : "#1B3055" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")}
-                onMouseLeave={e => (e.currentTarget.style.color = imageFile ? "#6B9FEE" : "#1B3055")}
+                onMouseLeave={e => (e.currentTarget.style.color = imageFiles.length > 0 ? "#6B9FEE" : "#1B3055")}
               >
-                {imageFile ? `📎 ${imageFile.name}` : "+ Joindre"}
+                {imageFiles.length > 0 ? `📎 ${imageFiles.length} photo${imageFiles.length > 1 ? "s" : ""}` : "+ Joindre des photos"}
               </button>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+              <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
               <div className="flex-1" />
               <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#C8D8EE" }}>
                 {TAGS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -488,7 +520,7 @@ export default function Board({ authorName }: { authorName: string }) {
                           onEdit={editNote}
                           onEditUrgency={editUrgency}
                           onDelete={deleteNote}
-                          onOpenImage={setOverlayUrl}
+                          onOpenImage={(urls, index) => setOverlay({ urls, index })}
                         />
                       ))}
                     </div>
@@ -502,20 +534,61 @@ export default function Board({ authorName }: { authorName: string }) {
       </div>
 
       {/* Overlay image */}
-      {overlayUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(11,25,48,0.96)" }} onClick={() => setOverlayUrl(null)}>
-          <img src={overlayUrl} alt="screenshot" className="max-w-4xl max-h-screen p-8 object-contain" onClick={e => e.stopPropagation()} />
-          <button
-            type="button"
-            onClick={e => { e.stopPropagation(); downloadImage(overlayUrl); }}
-            className="absolute top-6 right-32 text-sm tracking-widest uppercase"
-            style={{ color: "#C8D8EE" }}
-          >
-            Télécharger
-          </button>
-          <button className="absolute top-6 right-6 text-sm tracking-widest uppercase" style={{ color: "#C8D8EE" }} onClick={() => setOverlayUrl(null)}>Fermer</button>
-        </div>
-      )}
+      {overlay && (() => {
+        const url = overlay.urls[overlay.index];
+        const multi = overlay.urls.length > 1;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(11,25,48,0.96)" }} onClick={() => setOverlay(null)}>
+            {multi && (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); setOverlay(o => o && { ...o, index: (o.index - 1 + o.urls.length) % o.urls.length }); }}
+                className="absolute left-4 text-2xl px-3 py-2"
+                style={{ color: "#C8D8EE" }}
+              >
+                ‹
+              </button>
+            )}
+            <img src={url} alt="screenshot" className="max-w-4xl max-h-screen p-8 object-contain" onClick={e => e.stopPropagation()} />
+            {multi && (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); setOverlay(o => o && { ...o, index: (o.index + 1) % o.urls.length }); }}
+                className="absolute right-4 text-2xl px-3 py-2"
+                style={{ color: "#C8D8EE" }}
+              >
+                ›
+              </button>
+            )}
+            {multi && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-xs tracking-widest" style={{ color: "#C8D8EE" }}>
+                {overlay.index + 1} / {overlay.urls.length}
+              </div>
+            )}
+            <div className="absolute top-6 right-6 flex items-center gap-4">
+              {multi && (
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); downloadAllImages(overlay.urls); }}
+                  className="text-sm tracking-widest uppercase"
+                  style={{ color: "#C8D8EE" }}
+                >
+                  Tout télécharger
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); downloadImage(url); }}
+                className="text-sm tracking-widest uppercase"
+                style={{ color: "#C8D8EE" }}
+              >
+                Télécharger
+              </button>
+              <button type="button" className="text-sm tracking-widest uppercase" style={{ color: "#C8D8EE" }} onClick={() => setOverlay(null)}>Fermer</button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -532,8 +605,16 @@ function NoteCard({
   onEdit: (id: string, content: string) => void;
   onEditUrgency: (id: string, urgency: string) => void;
   onDelete: (id: string) => void;
-  onOpenImage: (url: string) => void;
+  onOpenImage: (urls: string[], index: number) => void;
 }) {
+  const images: string[] = (() => {
+    try {
+      const parsed = JSON.parse(note.images);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+    return note.imageUrl ? [note.imageUrl] : [];
+  })();
+
   const [isEditing, setIsEditing]         = useState(false);
   const [editContent, setEditContent]     = useState(note.content);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -604,10 +685,31 @@ function NoteCard({
           <p className="text-sm mb-3 leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{note.content}</p>
         )}
 
-        {note.imageUrl && !isEditing && (
-          <button type="button" onClick={() => onOpenImage(note.imageUrl!)} className="block w-full mb-3 overflow-hidden border" style={{ borderColor: "#1B3055" }}>
-            <img src={note.imageUrl} alt="screenshot" className="w-full object-cover" style={{ maxHeight: "120px", objectPosition: "top" }} />
-          </button>
+        {images.length > 0 && !isEditing && (
+          images.length === 1 ? (
+            <button type="button" onClick={() => onOpenImage(images, 0)} className="block w-full mb-3 overflow-hidden border" style={{ borderColor: "#1B3055" }}>
+              <img src={images[0]} alt="photo" className="w-full object-cover" style={{ maxHeight: "120px", objectPosition: "top" }} />
+            </button>
+          ) : (
+            <div className="grid grid-cols-3 gap-1 mb-3">
+              {images.slice(0, 6).map((url, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => onOpenImage(images, i)}
+                  className="relative overflow-hidden border"
+                  style={{ borderColor: "#1B3055", aspectRatio: "1 / 1" }}
+                >
+                  <img src={url} alt="photo" className="w-full h-full object-cover" />
+                  {i === 5 && images.length > 6 && (
+                    <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold" style={{ backgroundColor: "rgba(11,25,48,0.75)", color: "#F0F5FF" }}>
+                      +{images.length - 6}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )
         )}
 
         <div className="flex items-center justify-between">

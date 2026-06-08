@@ -53,6 +53,7 @@ model CollabNote {
   author    String
   category  String          @default("général")
   imageUrl  String?
+  images    String          @default("[]")
   deletedAt DateTime?
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
