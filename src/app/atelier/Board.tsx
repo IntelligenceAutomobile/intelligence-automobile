@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { upload } from "@vercel/blob/client";
 
 type Status = "todo" | "doing" | "done";
 
@@ -177,6 +178,21 @@ export default function Board({ authorName }: { authorName: string }) {
     reader.readAsDataURL(file);
   }
 
+  async function downloadImage(url: string) {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = url.split("/").pop() || "photo";
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, "_blank");
+    }
+  }
+
   function removeImage() {
     setImageFile(null);
     setImagePreview(null);
@@ -190,10 +206,15 @@ export default function Board({ authorName }: { authorName: string }) {
 
     let imageUrl: string | null = null;
     if (imageFile) {
-      const fd = new FormData();
-      fd.append("file", imageFile);
-      const up = await fetch("/api/collab/upload", { method: "POST", body: fd });
-      if (up.ok) ({ url: imageUrl } = await up.json());
+      try {
+        const blob = await upload(imageFile.name, imageFile, {
+          access: "public",
+          handleUploadUrl: "/api/collab/upload",
+        });
+        imageUrl = blob.url;
+      } catch {
+        // upload échoué : la note sera ajoutée sans image
+      }
     }
 
     const res = await fetch("/api/collab/notes", {
@@ -484,6 +505,14 @@ export default function Board({ authorName }: { authorName: string }) {
       {overlayUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(11,25,48,0.96)" }} onClick={() => setOverlayUrl(null)}>
           <img src={overlayUrl} alt="screenshot" className="max-w-4xl max-h-screen p-8 object-contain" onClick={e => e.stopPropagation()} />
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); downloadImage(overlayUrl); }}
+            className="absolute top-6 right-32 text-sm tracking-widest uppercase"
+            style={{ color: "#C8D8EE" }}
+          >
+            Télécharger
+          </button>
           <button className="absolute top-6 right-6 text-sm tracking-widest uppercase" style={{ color: "#C8D8EE" }} onClick={() => setOverlayUrl(null)}>Fermer</button>
         </div>
       )}
