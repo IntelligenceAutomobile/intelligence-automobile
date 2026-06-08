@@ -71,22 +71,11 @@ export default async function ContactV2Page({
             style={{
               position: "absolute",
               bottom: "8vh",
-              left: "clamp(1.5rem, 4vw, 5rem)",
+              left: "6vw",
+              right: "6vw",
               maxWidth: "660px",
             }}
           >
-            <p
-              style={{
-                fontSize: "10px",
-                letterSpacing: "0.35em",
-                textTransform: "uppercase",
-                color: "#6B9FEE",
-                marginBottom: "1.2rem",
-              }}
-            >
-              Parlons de votre projet
-            </p>
-
             <h1
               style={{
                 fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
@@ -102,18 +91,22 @@ export default async function ContactV2Page({
               <span style={{ color: "#6B9FEE" }}>nous.</span>
             </h1>
 
-            <p
-              style={{
-                fontSize: "1rem",
-                lineHeight: 1.65,
-                color: "#C4D8EE",
-                fontWeight: 300,
-                maxWidth: "480px",
-              }}
-            >
-              Décrivez-nous votre projet en quelques mots. Nous vous répondons
-              sous 24h et vous orientons vers la solution la plus adaptée.
-            </p>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+              <p
+                style={{
+                  color: "rgba(168,196,240,0.68)",
+                  fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                  lineHeight: 1.8,
+                  fontWeight: 300,
+                  maxWidth: "440px",
+                  fontStyle: "italic",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                Décrivez-nous votre projet en quelques mots. Nous vous répondons sous 24h et vous orientons vers la solution la plus adaptée.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -211,7 +204,7 @@ export default async function ContactV2Page({
                     style={{
                       fontSize: "0.875rem",
                       lineHeight: 1.65,
-                      color: "#8AABD4",
+                      color: "#C8D8EE",
                     }}
                   >
                     Pas besoin de préparer un dossier complet. Un message suffit :
@@ -258,7 +251,7 @@ export default async function ContactV2Page({
                             fontWeight: 600,
                             textTransform: "uppercase",
                             letterSpacing: "0.08em",
-                            color: "#8AABD4",
+                            color: "#C8D8EE",
                           }}
                         >
                           {s.label}

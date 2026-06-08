@@ -79,7 +79,7 @@ export default async function HomePage() {
               <br /><span style={{ color: "#6B9FEE" }}>autrement.</span>
             </h1>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "2.5rem" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
               <Link
                 href="/vehicules-2"
                 style={{
@@ -92,17 +92,6 @@ export default async function HomePage() {
                 }}
               >
                 Voir les véhicules
-              </Link>
-              <Link
-                href="/contact-2"
-                style={{
-                  fontSize: "11px", fontWeight: 500, letterSpacing: "0.28em",
-                  textTransform: "uppercase", color: "rgba(240,245,255,0.55)",
-                  borderBottom: "1px solid rgba(240,245,255,0.2)",
-                  paddingBottom: "2px",
-                }}
-              >
-                Nous contacter →
               </Link>
             </div>
           </div>
@@ -159,7 +148,7 @@ export default async function HomePage() {
                 }}>
                   {s.val}
                 </div>
-                <div style={{ fontSize: "13px", lineHeight: 1.8, color: "#8AABD4", letterSpacing: "0.03em" }}>
+                <div style={{ fontSize: "13px", lineHeight: 1.8, color: "#C8D8EE", letterSpacing: "0.03em" }}>
                   {s.label}
                 </div>
               </div>
@@ -199,9 +188,6 @@ export default async function HomePage() {
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
                   Vous décrivez. On trouve. Au meilleur prix européen.
                 </p>
-                <span style={{ fontSize: "10px", letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", display: "inline-flex", alignItems: "center", gap: "10px" }}>
-                  En savoir plus <span style={{ fontSize: "14px" }}>→</span>
-                </span>
               </div>
             </div>
           </Link>
@@ -227,9 +213,6 @@ export default async function HomePage() {
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
                   Photo pro, acheteurs qualifiés. Vendez vite, vendez bien.
                 </p>
-                <span style={{ fontSize: "10px", letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", display: "inline-flex", alignItems: "center", gap: "10px" }}>
-                  En savoir plus <span style={{ fontSize: "14px" }}>→</span>
-                </span>
               </div>
             </div>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", minHeight: "380px", overflow: "hidden" }}>
@@ -275,9 +258,6 @@ export default async function HomePage() {
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
                   D&apos;Europe à votre porte. Clé en main.
                 </p>
-                <span style={{ fontSize: "10px", letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", display: "inline-flex", alignItems: "center", gap: "10px" }}>
-                  En savoir plus <span style={{ fontSize: "14px" }}>→</span>
-                </span>
               </div>
             </div>
           </Link>

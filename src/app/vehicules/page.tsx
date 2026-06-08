@@ -50,7 +50,13 @@ export default async function VehiculesPage({
         {/* ── HERO ── */}
         <section
           className="border-b"
-          style={{ borderColor: "#1B3055", paddingTop: "80px" }}
+          style={{
+            borderColor: "#1B3055",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+          }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 lg:py-28">
             <h1
@@ -66,7 +72,7 @@ export default async function VehiculesPage({
             </h1>
             <p
               className="text-base leading-relaxed max-w-lg"
-              style={{ color: "#8AABD4", fontWeight: 300 }}
+              style={{ color: "#C8D8EE", fontWeight: 400 }}
             >
               Chaque véhicule est soigneusement sélectionné auprès de partenaires
               européens de confiance, rigoureusement contrôlé et documenté, pour

@@ -155,7 +155,7 @@ export default function ServicesPage() {
             </h1>
             <p
               className="text-base leading-relaxed max-w-lg mb-16"
-              style={{ color: "#8AABD4", fontWeight: 300 }}
+              style={{ color: "#C8D8EE", fontWeight: 400 }}
             >
               Trois activités complémentaires pour vous accompagner dans tous
               vos projets automobiles, de l&apos;achat à la vente.
@@ -183,7 +183,7 @@ export default function ServicesPage() {
                     </span>
                     <span
                       className="text-xs font-semibold uppercase tracking-widest"
-                      style={{ color: "#8AABD4" }}
+                      style={{ color: "#C8D8EE" }}
                     >
                       {s.title}
                     </span>
@@ -248,7 +248,7 @@ export default function ServicesPage() {
                           <p
                             key={j}
                             className="text-sm leading-relaxed"
-                            style={{ color: "#8AABD4" }}
+                            style={{ color: "#C8D8EE" }}
                           >
                             {para}
                           </p>
@@ -263,7 +263,7 @@ export default function ServicesPage() {
                         </span>
                         <span
                           className="text-xs tracking-widest uppercase"
-                          style={{ color: "#8AABD4" }}
+                          style={{ color: "#C8D8EE" }}
                         >
                           {service.priceNote}
                         </span>
@@ -357,7 +357,7 @@ export default function ServicesPage() {
                           <p
                             key={j}
                             className="text-sm leading-relaxed"
-                            style={{ color: "#8AABD4" }}
+                            style={{ color: "#C8D8EE" }}
                           >
                             {para}
                           </p>
@@ -372,7 +372,7 @@ export default function ServicesPage() {
                         </span>
                         <span
                           className="text-xs tracking-widest uppercase"
-                          style={{ color: "#8AABD4" }}
+                          style={{ color: "#C8D8EE" }}
                         >
                           {service.priceNote}
                         </span>
@@ -418,7 +418,7 @@ export default function ServicesPage() {
                       </span>
                       <span
                         className="text-sm leading-relaxed"
-                        style={{ color: "#8AABD4" }}
+                        style={{ color: "#C8D8EE" }}
                       >
                         {point}
                       </span>
@@ -481,7 +481,7 @@ export default function ServicesPage() {
                   style={{
                     fontSize: "1rem",
                     letterSpacing: "0.04em",
-                    color: col.highlight ? "#F0F5FF" : "#8AABD4",
+                    color: col.highlight ? "#F0F5FF" : "#C8D8EE",
                   }}
                 >
                   {col.label}
@@ -492,7 +492,7 @@ export default function ServicesPage() {
                       <span style={{ color: "#6B9FEE", flexShrink: 0 }}>+</span>
                       <span
                         className="text-sm leading-snug"
-                        style={{ color: col.highlight ? "#8AABD4" : "#8AABD4" }}
+                        style={{ color: col.highlight ? "#C8D8EE" : "#C8D8EE" }}
                       >
                         {p}
                       </span>

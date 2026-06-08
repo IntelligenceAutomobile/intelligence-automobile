@@ -144,7 +144,7 @@ export default async function AccueilV2Page() {
                       </span>
                       <span
                         className="text-sm leading-relaxed pt-1"
-                        style={{ color: "#8AABD4" }}
+                        style={{ color: "#C8D8EE" }}
                       >
                         {s.label}
                       </span>
@@ -234,7 +234,7 @@ export default async function AccueilV2Page() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-16 max-w-3xl">
               <div>
-                <p className="text-base leading-[1.8]" style={{ color: "#8AABD4" }}>
+                <p className="text-base leading-[1.8]" style={{ color: "#C8D8EE" }}>
                   Cabinet d&apos;import automobile premium fondé par des passionnés du secteur.
                   Nous sourçons sur les{" "}
                   <span style={{ color: "#F0F5FF" }}>marchés européens les plus attractifs</span>
@@ -242,7 +242,7 @@ export default async function AccueilV2Page() {
                 </p>
               </div>
               <div>
-                <p className="text-base leading-[1.8]" style={{ color: "#8AABD4" }}>
+                <p className="text-base leading-[1.8]" style={{ color: "#C8D8EE" }}>
                   Une expérience d&apos;achat{" "}
                   <span style={{ color: "#F0F5FF" }}>100% transparente et sur-mesure</span>.
                   Aucune surprise, aucun frais caché. De la recherche au volant, nous gérons tout.
@@ -371,7 +371,7 @@ export default async function AccueilV2Page() {
                         >
                           {step.title}
                         </div>
-                        <div className="text-sm leading-relaxed" style={{ color: "#8AABD4" }}>
+                        <div className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
                           {step.desc}
                         </div>
                       </div>
@@ -479,7 +479,7 @@ export default async function AccueilV2Page() {
                   <h3 className="text-xl font-black uppercase mb-3 leading-tight" style={{ color: "#F0F5FF" }}>
                     {s.title}
                   </h3>
-                  <p className="text-sm leading-relaxed mb-6" style={{ color: "#8AABD4" }}>
+                  <p className="text-sm leading-relaxed mb-6" style={{ color: "#C8D8EE" }}>
                     {s.desc}
                   </p>
                   <Link
@@ -571,7 +571,7 @@ export default async function AccueilV2Page() {
                         >
                           {v.make}
                         </span>
-                        <span className="text-[10px] tracking-wide" style={{ color: "#8AABD4" }}>
+                        <span className="text-[10px] tracking-wide" style={{ color: "#C8D8EE" }}>
                           {v.year} · {v.mileage.toLocaleString("fr-FR")} km
                         </span>
                       </div>

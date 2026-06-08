@@ -47,7 +47,7 @@ export default async function ContactPage({
             </h1>
             <p
               className="text-base leading-relaxed max-w-lg"
-              style={{ color: "#8AABD4", fontWeight: 300 }}
+              style={{ color: "#C8D8EE", fontWeight: 400 }}
             >
               Décrivez-nous votre projet en quelques mots. Nous vous répondons
               sous 24h et vous orientons vers la solution la plus adaptée à votre
@@ -141,7 +141,7 @@ export default async function ContactPage({
                   >
                     Première prise de contact
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4" }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
                     Pas besoin de préparer un dossier complet. Un message suffit :
                     dites-nous ce que vous cherchez — acheter, importer ou vendre —
                     et nous prendrons le temps de vous orienter.
@@ -170,7 +170,7 @@ export default async function ContactPage({
                       >
                         <span
                           className="text-sm font-semibold uppercase tracking-wider"
-                          style={{ color: "#8AABD4" }}
+                          style={{ color: "#C8D8EE" }}
                         >
                           {s.label}
                         </span>

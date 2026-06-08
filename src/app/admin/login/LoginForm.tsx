@@ -44,7 +44,7 @@ export default function LoginForm() {
       <div>
         <label
           className="block text-xs tracking-widest uppercase mb-2"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Email
         </label>
@@ -61,7 +61,7 @@ export default function LoginForm() {
       <div>
         <label
           className="block text-xs tracking-widest uppercase mb-2"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Mot de passe
         </label>
@@ -76,7 +76,7 @@ export default function LoginForm() {
       </div>
 
       {error && (
-        <p className="text-xs" style={{ color: "#8AABD4" }}>
+        <p className="text-xs" style={{ color: "#C8D8EE" }}>
           {error}
         </p>
       )}

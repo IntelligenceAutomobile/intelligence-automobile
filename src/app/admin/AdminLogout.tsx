@@ -14,7 +14,7 @@ export default function AdminLogout() {
     <button
       onClick={handleLogout}
       className="text-xs tracking-widest uppercase transition-colors"
-      style={{ color: "#8AABD4" }}
+      style={{ color: "#C8D8EE" }}
     >
       Déconnexion
     </button>

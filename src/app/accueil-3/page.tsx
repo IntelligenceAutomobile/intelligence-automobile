@@ -135,7 +135,7 @@ export default async function AccueilV1Page() {
                       </span>
                       <span
                         className="text-sm leading-relaxed pt-1"
-                        style={{ color: "#8AABD4" }}
+                        style={{ color: "#C8D8EE" }}
                       >
                         {s.label}
                       </span>
@@ -206,7 +206,7 @@ export default async function AccueilV1Page() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-16 max-w-3xl">
               <div>
-                <p className="text-base leading-[1.8]" style={{ color: "#8AABD4" }}>
+                <p className="text-base leading-[1.8]" style={{ color: "#C8D8EE" }}>
                   Cabinet d&apos;import automobile premium fondé par des passionnés du secteur.
                   Nous sourçons sur les{" "}
                   <span style={{ color: "#F0F5FF" }}>marchés européens les plus attractifs</span>
@@ -214,7 +214,7 @@ export default async function AccueilV1Page() {
                 </p>
               </div>
               <div>
-                <p className="text-base leading-[1.8]" style={{ color: "#8AABD4" }}>
+                <p className="text-base leading-[1.8]" style={{ color: "#C8D8EE" }}>
                   Une expérience d&apos;achat{" "}
                   <span style={{ color: "#F0F5FF" }}>100% transparente et sur-mesure</span>.
                   Aucune surprise, aucun frais caché. De la recherche au volant, nous gérons tout.
@@ -326,7 +326,7 @@ export default async function AccueilV1Page() {
                         <div className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: "#F0F5FF" }}>
                           {step.title}
                         </div>
-                        <div className="text-sm leading-relaxed" style={{ color: "#8AABD4" }}>
+                        <div className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
                           {step.desc}
                         </div>
                       </div>
@@ -412,7 +412,7 @@ export default async function AccueilV1Page() {
                 <div className="relative z-10 p-8 flex flex-col justify-end" style={{ minHeight: "420px" }}>
                   <span className="text-xs tracking-widest font-bold mb-5" style={{ color: "#6B9FEE" }}>{s.num}</span>
                   <h3 className="text-xl font-black uppercase mb-3 leading-tight" style={{ color: "#F0F5FF" }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed mb-6" style={{ color: "#8AABD4" }}>{s.desc}</p>
+                  <p className="text-sm leading-relaxed mb-6" style={{ color: "#C8D8EE" }}>{s.desc}</p>
                   <Link href={s.href} className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-semibold group/link" style={{ color: "#6B9FEE" }}>
                     <span>En savoir plus</span>
                     <span className="transition-transform duration-300 group-hover/link:translate-x-1">→</span>
@@ -463,7 +463,7 @@ export default async function AccueilV1Page() {
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] tracking-widest uppercase font-bold" style={{ color: "#6B9FEE" }}>{v.make}</span>
-                        <span className="text-[10px] tracking-wide" style={{ color: "#8AABD4" }}>{v.year} · {v.mileage.toLocaleString("fr-FR")} km</span>
+                        <span className="text-[10px] tracking-wide" style={{ color: "#C8D8EE" }}>{v.year} · {v.mileage.toLocaleString("fr-FR")} km</span>
                       </div>
                       <h3 className="text-xl font-black uppercase mb-4 leading-tight" style={{ color: "#F0F5FF" }}>{v.model}</h3>
                       <div className="flex items-center justify-between">

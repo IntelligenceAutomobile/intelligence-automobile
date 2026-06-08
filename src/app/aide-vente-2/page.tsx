@@ -116,17 +116,10 @@ export default function AideVenteV2Page() {
 
           {/* Texte positionné en bas-gauche */}
           <div
-            className="absolute z-10 w-full"
-            style={{ bottom: "clamp(3rem, 8vh, 6rem)", left: 0 }}
+            className="absolute z-10"
+            style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
           >
-            <div className="max-w-7xl mx-auto px-6 lg:px-12">
-              <div style={{ maxWidth: "680px" }}>
-                <p
-                  className="text-[10px] tracking-[0.38em] uppercase mb-6"
-                  style={{ color: "#6B9FEE" }}
-                >
-                  Aide à la vente · Véhicules premium
-                </p>
+            <div style={{ maxWidth: "680px" }}>
                 <h1
                   className="font-black"
                   style={{
@@ -142,18 +135,22 @@ export default function AideVenteV2Page() {
                   <br />
                   <span style={{ color: "#6B9FEE" }}>ce qu&apos;on propose.</span>
                 </h1>
-                <p
-                  className="text-base md:text-lg leading-relaxed"
-                  style={{
-                    color: "#8AABD4",
-                    fontWeight: 300,
-                    maxWidth: "520px",
-                    marginBottom: "clamp(1.8rem, 4vh, 3rem)",
-                  }}
-                >
-                  Estimation au prix du marché réel, diffusion ciblée, transaction sécurisée.
-                  Vous vendez mieux — sans vous en occuper.
-                </p>
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+                  <p
+                    style={{
+                      color: "rgba(168,196,240,0.68)",
+                      fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                      lineHeight: 1.8,
+                      fontWeight: 300,
+                      maxWidth: "440px",
+                      fontStyle: "italic",
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    Estimation au prix du marché réel, diffusion ciblée, transaction sécurisée. Vous vendez mieux — sans vous en occuper.
+                  </p>
+                </div>
                 <a
                   href="#formulaire"
                   style={{
@@ -171,7 +168,6 @@ export default function AideVenteV2Page() {
                 >
                   Estimation gratuite →
                 </a>
-              </div>
             </div>
           </div>
         </section>
@@ -184,7 +180,7 @@ export default function AideVenteV2Page() {
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
             <p
               className="text-[10px] tracking-[0.38em] uppercase mb-4 text-center"
-              style={{ color: "#8AABD4" }}
+              style={{ color: "#C8D8EE" }}
             >
               Pourquoi pas la reprise concessionnaire ?
             </p>
@@ -222,7 +218,7 @@ export default function AideVenteV2Page() {
                     >
                       <span
                         className="text-[9px] tracking-[0.32em] uppercase font-semibold"
-                        style={{ color: i === 2 ? "#6B9FEE" : "#8AABD4" }}
+                        style={{ color: i === 2 ? "#6B9FEE" : "#C8D8EE" }}
                       >
                         {col}
                       </span>
@@ -243,18 +239,18 @@ export default function AideVenteV2Page() {
                   <div className="px-6 py-5">
                     <span
                       className="text-[10px] tracking-[0.25em] uppercase"
-                      style={{ color: "#8AABD4" }}
+                      style={{ color: "#C8D8EE" }}
                     >
                       {row.critere}
                     </span>
                   </div>
                   <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 300 }}>
+                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 400 }}>
                       {row.dealer}
                     </span>
                   </div>
                   <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 300 }}>
+                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 400 }}>
                       {row.seul}
                     </span>
                   </div>
@@ -286,7 +282,7 @@ export default function AideVenteV2Page() {
                   >
                     <span
                       className="text-[9px] tracking-[0.3em] uppercase"
-                      style={{ color: "#8AABD4" }}
+                      style={{ color: "#C8D8EE" }}
                     >
                       {row.critere}
                     </span>
@@ -312,7 +308,7 @@ export default function AideVenteV2Page() {
                       >
                         <span
                           className="text-[10px]"
-                          style={{ color: item.highlight ? "#6B9FEE" : "#8AABD4" }}
+                          style={{ color: item.highlight ? "#6B9FEE" : "#C8D8EE" }}
                         >
                           {item.label}
                         </span>
@@ -343,7 +339,7 @@ export default function AideVenteV2Page() {
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
             <p
               className="text-[10px] tracking-[0.38em] uppercase mb-20"
-              style={{ color: "#8AABD4" }}
+              style={{ color: "#C8D8EE" }}
             >
               Comment ça marche
             </p>
@@ -397,7 +393,7 @@ export default function AideVenteV2Page() {
                     </h3>
                     <p
                       className="text-sm leading-relaxed"
-                      style={{ color: "#8AABD4", fontWeight: 300 }}
+                      style={{ color: "#C8D8EE", fontWeight: 400 }}
                     >
                       {step.desc}
                     </p>
@@ -456,7 +452,7 @@ export default function AideVenteV2Page() {
                       </span>
                       <span
                         className="text-sm"
-                        style={{ color: "#C4D8EE", fontWeight: 300 }}
+                        style={{ color: "#C4D8EE", fontWeight: 400 }}
                       >
                         {g}
                       </span>
@@ -507,7 +503,7 @@ export default function AideVenteV2Page() {
                       </p>
                       <p
                         className="text-sm leading-relaxed"
-                        style={{ color: "#8AABD4", fontWeight: 300 }}
+                        style={{ color: "#C8D8EE", fontWeight: 400 }}
                       >
                         {block.values.join(block.separator)}
                       </p>

@@ -16,7 +16,7 @@ export default async function NouveauVehiculePage() {
         className="border-b px-6 py-4 flex items-center gap-4"
         style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}
       >
-        <Link href="/admin/vehicules" className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>
+        <Link href="/admin/vehicules" className="text-xs tracking-widest uppercase" style={{ color: "#C8D8EE" }}>
           ← Stock
         </Link>
         <span className="text-sm font-semibold" style={{ color: "#F0F5FF" }}>

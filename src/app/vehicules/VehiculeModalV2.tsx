@@ -72,7 +72,10 @@ export default function VehiculeModalV2({
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
   const [facturesOpen, setFacturesOpen] = useState(false);
-  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [facturesUnlocked, setFacturesUnlocked] = useState(false);
+  const [facturesPassword, setFacturesPassword] = useState("");
+  const [facturesError, setFacturesError] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const toggleCategory = (label: string) => {
     setOpenCategories((prev) => {
@@ -96,6 +99,19 @@ export default function VehiculeModalV2({
       window.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
+
+  const factures = vehicle.factures ?? [];
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft")  { e.stopPropagation(); setLightboxIndex((i) => i !== null ? (i - 1 + factures.length) % factures.length : null); }
+      if (e.key === "ArrowRight") { e.stopPropagation(); setLightboxIndex((i) => i !== null ? (i + 1) % factures.length : null); }
+      if (e.key === "Escape")     { e.stopPropagation(); setLightboxIndex(null); }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [lightboxIndex, factures.length]);
 
   const images = vehicle.images ?? [];
   const totalImages = images.length;
@@ -176,7 +192,7 @@ export default function VehiculeModalV2({
               backgroundColor: "rgba(10, 22, 40, 0.85)",
               backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
               border: "1px solid rgba(27,48,85,0.7)",
-              color: "#8AABD4", fontSize: "1rem", cursor: "pointer", lineHeight: 1,
+              color: "#C8D8EE", fontSize: "1rem", cursor: "pointer", lineHeight: 1,
             }}
           >
             ×
@@ -207,7 +223,7 @@ export default function VehiculeModalV2({
                 <>
                   <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center" style={{ width: "44px", height: "44px", borderRadius: "50%", backgroundColor: "rgba(7,15,30,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(107,159,238,0.3)", color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem" }} aria-label="Photo précédente">‹</button>
                   <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center" style={{ width: "44px", height: "44px", borderRadius: "50%", backgroundColor: "rgba(7,15,30,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(107,159,238,0.3)", color: "#F0F5FF", cursor: "pointer", fontSize: "1.3rem" }} aria-label="Photo suivante">›</button>
-                  <div className="absolute bottom-3 right-4 z-20" style={{ backgroundColor: "rgba(7,15,30,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: "20px", padding: "3px 10px", color: "#8AABD4", fontSize: "10px", letterSpacing: "0.15em" }}>
+                  <div className="absolute bottom-3 right-4 z-20" style={{ backgroundColor: "rgba(7,15,30,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: "20px", padding: "3px 10px", color: "#C8D8EE", fontSize: "10px", letterSpacing: "0.15em" }}>
                     {imgIndex + 1} / {totalImages}
                   </div>
                 </>
@@ -227,7 +243,7 @@ export default function VehiculeModalV2({
                     className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1"
                     style={{
                       backgroundColor: isAvailable ? "rgba(107,159,238,0.1)" : "rgba(27,48,85,0.4)",
-                      color: isAvailable ? "#6B9FEE" : "#8AABD4",
+                      color: isAvailable ? "#6B9FEE" : "#C8D8EE",
                       borderRadius: "6px",
                     }}
                   >
@@ -301,7 +317,7 @@ export default function VehiculeModalV2({
               {/* Points forts */}
               {pointsForts.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#8AABD4" }}>Points forts</p>
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>Points forts</p>
                   <div className="grid grid-cols-2 gap-px" style={{ backgroundColor: "#1B3055" }}>
                     {pointsForts.map((f) => (
                       <div
@@ -345,13 +361,13 @@ export default function VehiculeModalV2({
               {/* État & historique — badges */}
               {etatFacts.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#8AABD4" }}>État &amp; historique</p>
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>État &amp; historique</p>
                   <div className="flex flex-wrap gap-2">
                     {etatFacts.map((fact, i) => (
                       <span
                         key={i}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-[10px]"
-                        style={{ backgroundColor: "rgba(107,159,238,0.07)", border: "1px solid rgba(107,159,238,0.18)", color: "#C8D8EE", borderRadius: "4px", fontWeight: 300 }}
+                        style={{ backgroundColor: "rgba(107,159,238,0.07)", border: "1px solid rgba(107,159,238,0.18)", color: "#C8D8EE", borderRadius: "4px", fontWeight: 400 }}
                       >
                         <span style={{ color: "#6B9FEE" }}>✓</span>
                         {fact}
@@ -366,7 +382,7 @@ export default function VehiculeModalV2({
               {/* Équipements — accordéon */}
               {categories.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#8AABD4" }}>Équipements</p>
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>Équipements</p>
                   <div className="flex flex-col gap-2">
                     {categories.map((cat) => (
                       <div key={cat.label}>
@@ -412,7 +428,7 @@ export default function VehiculeModalV2({
               {maintenanceEntries.length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[9px] tracking-[0.3em] uppercase text-center" style={{ color: "#8AABD4" }}>Entretien</p>
+                    <p className="text-[9px] tracking-[0.3em] uppercase text-center" style={{ color: "#C8D8EE" }}>Entretien</p>
                     <span className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1" style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "6px" }}>
                       {maintenanceEntries.length} interventions
                     </span>
@@ -423,7 +439,7 @@ export default function VehiculeModalV2({
                         <span className="text-[9px] tracking-wide flex-shrink-0 pt-px" style={{ color: "#6B9FEE", minWidth: "52px" }}>{entry.date}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] leading-snug" style={{ color: "#F0F5FF" }}>{entry.operation}</p>
-                          <p className="text-[9px] mt-0.5" style={{ color: "#8AABD4" }}>{entry.km}</p>
+                          <p className="text-[9px] mt-0.5" style={{ color: "#C8D8EE" }}>{entry.km}</p>
                         </div>
                         {entry.amount && entry.amount !== "—" && (
                           <span className="text-[9px] font-bold flex-shrink-0 tabular-nums" style={{ color: "#6B9FEE" }}>{entry.amount}</span>
@@ -442,7 +458,7 @@ export default function VehiculeModalV2({
               )}
 
               {/* Factures & Documents */}
-              {vehicle.factures && vehicle.factures.length > 0 && (
+              {factures.length > 0 && (
                 <div className="mb-6">
                   <button
                     onClick={() => setFacturesOpen((v) => !v)}
@@ -457,7 +473,7 @@ export default function VehiculeModalV2({
                         className="text-[8px] tracking-[0.2em] uppercase font-semibold px-2 py-0.5"
                         style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "4px" }}
                       >
-                        {vehicle.factures.length}
+                        {factures.length}
                       </span>
                       <span
                         className="text-sm transition-transform duration-200"
@@ -468,32 +484,80 @@ export default function VehiculeModalV2({
                     </div>
                   </button>
                   {facturesOpen && (
-                    <div
-                      className="grid grid-cols-2 gap-px"
-                      style={{ border: "1px solid #1B3055", borderTop: "none", backgroundColor: "#1B3055" }}
-                    >
-                      {vehicle.factures.map((src, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setLightboxImg(src)}
-                          className="relative overflow-hidden group"
-                          style={{ aspectRatio: "4/3", backgroundColor: "#070F1E" }}
-                        >
-                          <img
-                            src={src}
-                            alt={`Document ${i + 1}`}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            style={{ opacity: 0.85 }}
-                          />
-                          <div
-                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center"
-                            style={{ backgroundColor: "rgba(107,159,238,0.12)" }}
+                    <div style={{ border: "1px solid #1B3055", borderTop: "none" }}>
+                      {!facturesUnlocked ? (
+                        <div className="px-5 py-5" style={{ backgroundColor: "#070F1E" }}>
+                          <p className="text-xs mb-4" style={{ color: "#C8D8EE" }}>
+                            Contactez-nous pour obtenir le code d&apos;accès aux documents.
+                          </p>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (facturesPassword === "Password123!") {
+                                setFacturesUnlocked(true);
+                                setFacturesError(false);
+                              } else {
+                                setFacturesError(true);
+                                setFacturesPassword("");
+                              }
+                            }}
+                            className="flex gap-2"
                           >
-                            <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#F0F5FF" }}>Agrandir</span>
-                          </div>
-                        </button>
-                      ))}
+                            <input
+                              type="password"
+                              value={facturesPassword}
+                              onChange={(e) => { setFacturesPassword(e.target.value); setFacturesError(false); }}
+                              placeholder="Mot de passe"
+                              className="flex-1 px-3 py-2.5 border text-xs outline-none"
+                              style={{
+                                backgroundColor: "#112240",
+                                borderColor: facturesError ? "#FF6B35" : "#1B3055",
+                                color: "#F0F5FF",
+                              }}
+                            />
+                            <button
+                              type="submit"
+                              className="px-4 py-2.5 text-[9px] font-semibold tracking-widest uppercase"
+                              style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
+                            >
+                              Accéder
+                            </button>
+                          </form>
+                          {facturesError && (
+                            <p className="text-[10px] mt-2" style={{ color: "#FF6B35" }}>
+                              Mot de passe incorrect
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="grid grid-cols-2 gap-px"
+                          style={{ backgroundColor: "#1B3055" }}
+                        >
+                          {factures.map((src, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setLightboxIndex(i)}
+                              className="relative overflow-hidden group"
+                              style={{ aspectRatio: "4/3", backgroundColor: "#070F1E" }}
+                            >
+                              <img
+                                src={src}
+                                alt={`Document ${i + 1}`}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                style={{ opacity: 0.85 }}
+                              />
+                              <div
+                                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center"
+                                style={{ backgroundColor: "rgba(107,159,238,0.12)" }}
+                              >
+                                <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#F0F5FF" }}>Agrandir</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -552,7 +616,7 @@ export default function VehiculeModalV2({
                 <Link
                   href={`/vehicules/${vehicle.id}${vehicle.layoutVariant ? `/${vehicle.layoutVariant}` : ""}`}
                   className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 transition-opacity hover:opacity-80"
-                  style={{ border: "1px solid #1B3055", color: "#8AABD4" }}
+                  style={{ border: "1px solid #1B3055", color: "#C8D8EE" }}
                   onClick={onClose}
                 >
                   Fiche complète →
@@ -565,26 +629,58 @@ export default function VehiculeModalV2({
       </div>
 
       {/* ── LIGHTBOX FACTURES ── */}
-      {lightboxImg && (
+      {lightboxIndex !== null && factures.length > 0 && (
         <div
           className="absolute inset-0 z-[60] flex items-center justify-center p-4"
           style={{ backgroundColor: "rgba(2,8,18,0.97)" }}
-          onClick={() => setLightboxImg(null)}
+          onClick={() => setLightboxIndex(null)}
         >
+          {/* Fermer */}
           <button
             className="absolute top-4 right-4 flex items-center justify-center"
             style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "rgba(10,22,40,0.9)", border: "1px solid #1B3055", color: "#F0F5FF", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1 }}
-            onClick={() => setLightboxImg(null)}
+            onClick={() => setLightboxIndex(null)}
           >
             ×
           </button>
-          <img
-            src={lightboxImg}
-            alt="Document"
-            className="object-contain"
-            style={{ maxHeight: "88vh", maxWidth: "88vw" }}
-            onClick={(e) => e.stopPropagation()}
-          />
+
+          {/* Compteur */}
+          <div
+            className="absolute top-4 left-1/2 -translate-x-1/2 text-[9px] tracking-[0.3em] uppercase"
+            style={{ color: "#C8D8EE" }}
+          >
+            {lightboxIndex + 1} / {factures.length}
+          </div>
+
+          {/* Image + flèches collées */}
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {factures.length > 1 && (
+              <button
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ width: "44px", height: "44px", borderRadius: "50%", backgroundColor: "rgba(10,22,40,0.85)", border: "1px solid #1B3055", color: "#F0F5FF", fontSize: "1.5rem", cursor: "pointer", lineHeight: 1 }}
+                onClick={() => setLightboxIndex((i) => i !== null ? (i - 1 + factures.length) % factures.length : null)}
+                aria-label="Précédent"
+              >
+                ‹
+              </button>
+            )}
+            <img
+              src={factures[lightboxIndex]}
+              alt={`Document ${lightboxIndex + 1}`}
+              className="object-contain"
+              style={{ maxHeight: "82vh", maxWidth: "calc(80vw - 112px)" }}
+            />
+            {factures.length > 1 && (
+              <button
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ width: "44px", height: "44px", borderRadius: "50%", backgroundColor: "rgba(10,22,40,0.85)", border: "1px solid #1B3055", color: "#F0F5FF", fontSize: "1.5rem", cursor: "pointer", lineHeight: 1 }}
+                onClick={() => setLightboxIndex((i) => i !== null ? (i + 1) % factures.length : null)}
+                aria-label="Suivant"
+              >
+                ›
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

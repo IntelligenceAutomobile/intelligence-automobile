@@ -45,7 +45,7 @@ export default function LoginForm() {
       <div className="mb-6">
         <div
           className="text-xs tracking-widest uppercase mb-1"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Intelligence Automobile
         </div>
@@ -57,7 +57,7 @@ export default function LoginForm() {
       <div>
         <label
           className="block text-xs tracking-widest uppercase mb-2"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Qui êtes-vous ?
         </label>
@@ -77,7 +77,7 @@ export default function LoginForm() {
       <div>
         <label
           className="block text-xs tracking-widest uppercase mb-2"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Mot de passe
         </label>

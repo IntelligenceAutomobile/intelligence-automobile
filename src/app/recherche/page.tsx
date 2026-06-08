@@ -89,7 +89,7 @@ export default function RecherchePage() {
               </h1>
               <p
                 className="text-base md:text-lg leading-relaxed max-w-md"
-                style={{ color: "#8AABD4", fontWeight: 300 }}
+                style={{ color: "#C8D8EE", fontWeight: 400 }}
               >
                 Vous avez un modèle en tête, un budget, des exigences. Nous activons notre réseau
                 européen et vous soumettons une sélection validée — sans engagement de votre part.
@@ -104,7 +104,7 @@ export default function RecherchePage() {
           style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
-            <p className="text-xs tracking-[0.35em] uppercase mb-16 text-center" style={{ color: "#8AABD4" }}>
+            <p className="text-xs tracking-[0.35em] uppercase mb-16 text-center" style={{ color: "#C8D8EE" }}>
               Comment ça marche
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
@@ -130,7 +130,7 @@ export default function RecherchePage() {
                   >
                     {step.title}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     {step.desc}
                   </p>
                 </div>
@@ -161,7 +161,7 @@ export default function RecherchePage() {
 
               {/* Colonne gauche — garanties */}
               <div className="lg:col-span-2 space-y-10" style={{ fontFamily: "var(--font-inter)" }}>
-                <p className="text-base leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                <p className="text-base leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                   Nous opérons exclusivement sur les marchés{" "}
                   <strong style={{ color: "#F0F5FF" }}>allemand et belge</strong>, réputés pour la
                   qualité de leur offre et leurs prix compétitifs. Chaque véhicule est vérifié avant
@@ -179,7 +179,7 @@ export default function RecherchePage() {
                       style={{ borderBottom: "1px solid #1B3055" }}
                     >
                       <span style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}>✓</span>
-                      <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 300 }}>
+                      <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                         {g.text}
                       </span>
                     </div>
@@ -196,7 +196,7 @@ export default function RecherchePage() {
                   <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
                     Marchés couverts
                   </p>
-                  <p className="text-sm" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     Allemagne · Belgique · Pays-Bas
                   </p>
                   <div
@@ -206,7 +206,7 @@ export default function RecherchePage() {
                   <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
                     Marques traitées
                   </p>
-                  <p className="text-sm" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     Audi · BMW · Mercedes · Porsche · Volkswagen · Lexus · Volvo · et plus
                   </p>
                 </div>

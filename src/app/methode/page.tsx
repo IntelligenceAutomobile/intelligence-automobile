@@ -97,7 +97,7 @@ export default function MethodePage() {
             </h1>
             <p
               className="text-base leading-relaxed max-w-lg"
-              style={{ color: "#8AABD4", fontWeight: 300 }}
+              style={{ color: "#C8D8EE", fontWeight: 400 }}
             >
               L&apos;import automobile peut être très rentable — ou très risqué.
               Notre méthode transforme cette complexité en un processus structuré,
@@ -133,7 +133,7 @@ export default function MethodePage() {
                 >
                   {stat.value}
                 </span>
-                <span className="text-xs leading-snug" style={{ color: "#8AABD4" }}>
+                <span className="text-xs leading-snug" style={{ color: "#C8D8EE" }}>
                   {stat.label}
                 </span>
               </div>
@@ -198,7 +198,7 @@ export default function MethodePage() {
                   </h3>
                   <p
                     className="text-sm leading-relaxed"
-                    style={{ color: "#8AABD4", maxWidth: "680px" }}
+                    style={{ color: "#C8D8EE", maxWidth: "680px" }}
                   >
                     {step.description}
                   </p>
@@ -237,7 +237,7 @@ export default function MethodePage() {
                   et bien entretenus.
                 </h2>
                 <div className="space-y-5">
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4" }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
                     L&apos;Allemagne est le premier marché automobile d&apos;Europe.
                     Les véhicules y sont souvent issus de flottes professionnelles
                     ou de leasing, avec des carnets d&apos;entretien complets réalisés
@@ -245,7 +245,7 @@ export default function MethodePage() {
                     ce qui crée régulièrement des opportunités à des prix inférieurs
                     au marché français.
                   </p>
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4" }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
                     La Belgique offre également un marché bien fourni en véhicules
                     premium, avec une culture d&apos;entretien rigoureuse et des prix
                     souvent compétitifs. Les démarches d&apos;import depuis ces deux pays
@@ -279,7 +279,7 @@ export default function MethodePage() {
                     </span>
                     <span
                       className="text-sm leading-relaxed pt-1"
-                      style={{ color: "#8AABD4" }}
+                      style={{ color: "#C8D8EE" }}
                     >
                       {s.label}
                     </span>
@@ -342,7 +342,7 @@ export default function MethodePage() {
                   >
                     {p.title}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4" }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
                     {p.desc}
                   </p>
                 </div>

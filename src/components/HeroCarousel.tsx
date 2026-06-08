@@ -50,7 +50,7 @@ export default function HeroCarousel({ images, alt, imgOpacity = 0.8, children }
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
               border: "1px solid rgba(27,48,85,0.7)",
-              color: "#8AABD4", cursor: "pointer", fontSize: "1.25rem",
+              color: "#C8D8EE", cursor: "pointer", fontSize: "1.25rem",
             }}
             aria-label="Photo précédente"
           >
@@ -65,7 +65,7 @@ export default function HeroCarousel({ images, alt, imgOpacity = 0.8, children }
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
               border: "1px solid rgba(27,48,85,0.7)",
-              color: "#8AABD4", cursor: "pointer", fontSize: "1.25rem",
+              color: "#C8D8EE", cursor: "pointer", fontSize: "1.25rem",
             }}
             aria-label="Photo suivante"
           >

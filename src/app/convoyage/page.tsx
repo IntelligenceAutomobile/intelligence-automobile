@@ -88,7 +88,7 @@ export default function ConvoyagePage() {
               </h1>
               <p
                 className="text-base md:text-lg leading-relaxed max-w-md"
-                style={{ color: "#8AABD4", fontWeight: 300 }}
+                style={{ color: "#C8D8EE", fontWeight: 400 }}
               >
                 Conducteur professionnel, couverture assurance complète, photos avant et après.
                 Nous acheminons votre véhicule en toute sécurité — où que vous en ayez besoin.
@@ -103,15 +103,15 @@ export default function ConvoyagePage() {
           style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
-            <p className="text-xs tracking-[0.35em] uppercase mb-16 text-center" style={{ color: "#8AABD4" }}>
+            <p className="text-xs tracking-[0.35em] uppercase mb-16 text-center" style={{ color: "#C8D8EE" }}>
               Comment ça marche
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
               {steps.map((step, i) => (
                 <div
                   key={step.num}
-                  className="px-8 py-6"
-                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055" }}
+                  className="pr-8 py-6"
+                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055", paddingLeft: i === 0 ? 0 : "2rem" }}
                 >
                   <span
                     className="block font-black leading-none mb-6"
@@ -129,7 +129,7 @@ export default function ConvoyagePage() {
                   >
                     {step.title}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     {step.desc}
                   </p>
                 </div>
@@ -160,7 +160,7 @@ export default function ConvoyagePage() {
 
               {/* Colonne gauche — garanties */}
               <div className="lg:col-span-2 space-y-10">
-                <p className="text-base leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                <p className="text-base leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                   Que vous ayez acheté un véhicule à distance, récupéré un achat à l'étranger ou ayez
                   simplement besoin d'acheminer une voiture d'un point A à un point B —{" "}
                   <strong style={{ color: "#F0F5FF" }}>nous nous en chargeons.</strong>
@@ -174,7 +174,7 @@ export default function ConvoyagePage() {
                       style={{ borderBottom: "1px solid #1B3055" }}
                     >
                       <span style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}>✓</span>
-                      <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 300 }}>{g.text}</span>
+                      <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>{g.text}</span>
                     </div>
                   ))}
                 </div>
@@ -189,7 +189,7 @@ export default function ConvoyagePage() {
                   <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
                     Zones couvertes
                   </p>
-                  <p className="text-sm" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     France entière · Belgique · Allemagne · Pays-Bas
                   </p>
                   <div
@@ -199,12 +199,12 @@ export default function ConvoyagePage() {
                   <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
                     Délai de livraison
                   </p>
-                  <p className="text-sm" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     J+1 à J+3 selon la distance · Sur rendez-vous
                   </p>
                 </div>
 
-                <p className="text-xs leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                <p className="text-xs leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                   Besoin d&apos;un convoyage récurrent ou d&apos;un trajet hors zone ?
                   Décrivez votre besoin — nous étudions toutes les demandes.
                 </p>

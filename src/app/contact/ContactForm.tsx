@@ -71,7 +71,7 @@ export default function ContactForm({
         <div>
           <label
             className="block text-xs tracking-widest uppercase mb-3"
-            style={{ color: "#8AABD4" }}
+            style={{ color: "#C8D8EE" }}
           >
             Nom *
           </label>
@@ -88,7 +88,7 @@ export default function ContactForm({
         <div>
           <label
             className="block text-xs tracking-widest uppercase mb-3"
-            style={{ color: "#8AABD4" }}
+            style={{ color: "#C8D8EE" }}
           >
             Email *
           </label>
@@ -107,7 +107,7 @@ export default function ContactForm({
       <div>
         <label
           className="block text-xs tracking-widest uppercase mb-3"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Téléphone
         </label>
@@ -124,7 +124,7 @@ export default function ContactForm({
       <div>
         <label
           className="block text-xs tracking-widest uppercase mb-3"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Sujet *
         </label>
@@ -146,7 +146,7 @@ export default function ContactForm({
       <div>
         <label
           className="block text-xs tracking-widest uppercase mb-3"
-          style={{ color: "#8AABD4" }}
+          style={{ color: "#C8D8EE" }}
         >
           Message *
         </label>
@@ -187,9 +187,9 @@ export default function ContactForm({
         <div
           className="p-5 text-sm"
           style={{
-            borderLeft: "2px solid #8AABD4",
+            borderLeft: "2px solid #C8D8EE",
             backgroundColor: "#040B16",
-            color: "#8AABD4",
+            color: "#C8D8EE",
           }}
         >
           Une erreur s&apos;est produite. Contactez-nous directement par email.

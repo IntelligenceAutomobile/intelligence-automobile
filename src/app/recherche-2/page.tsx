@@ -79,23 +79,10 @@ export default function RecherchePage2() {
 
           {/* Contenu bas-gauche */}
           <div
-            className="absolute bottom-0 left-0 right-0 z-10"
-            style={{ padding: "clamp(2.5rem, 6vw, 5rem) clamp(1.5rem, 6vw, 5rem)" }}
+            className="absolute z-10"
+            style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
           >
             <div style={{ maxWidth: "760px" }}>
-              <p
-                style={{
-                  fontSize: "10px",
-                  letterSpacing: "0.35em",
-                  textTransform: "uppercase",
-                  color: "#6B9FEE",
-                  marginBottom: "1.6rem",
-                  fontWeight: 500,
-                }}
-              >
-                Recherche personnalisée · Mandat d&apos;import
-              </p>
-
               <h1
                 style={{
                   fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
@@ -112,19 +99,22 @@ export default function RecherchePage2() {
                 <span style={{ color: "#6B9FEE" }}>le trouver.</span>
               </h1>
 
-              <p
-                style={{
-                  fontSize: "clamp(0.95rem, 1.5vw, 1.1rem)",
-                  color: "#8AABD4",
-                  fontWeight: 300,
-                  lineHeight: 1.7,
-                  maxWidth: "520px",
-                  marginBottom: "2.4rem",
-                }}
-              >
-                Vous avez un modèle en tête, un budget, des exigences. Nous activons notre réseau
-                européen et vous soumettons une sélection validée — sans engagement.
-              </p>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+                <p
+                  style={{
+                    color: "rgba(168,196,240,0.68)",
+                    fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                    lineHeight: 1.8,
+                    fontWeight: 400,
+                    maxWidth: "440px",
+                    fontStyle: "italic",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  Dites-nous ce que vous recherchez. Nous vous soumettons une sélection validée — sans engagement.
+                </p>
+              </div>
 
               <a
                 href="#formulaire"
@@ -219,7 +209,7 @@ export default function RecherchePage2() {
                         fontSize: "13px",
                         color: "#C4D8EE",
                         lineHeight: 1.8,
-                        fontWeight: 300,
+                        fontWeight: 400,
                         borderTop: "1px solid rgba(107,159,238,0.35)",
                         paddingTop: "0.8rem",
                         maxWidth: "520px",
@@ -294,7 +284,7 @@ export default function RecherchePage2() {
                         style={{
                           fontSize: "0.875rem",
                           color: "#C4D8EE",
-                          fontWeight: 300,
+                          fontWeight: 400,
                         }}
                       >
                         {g}
@@ -326,8 +316,8 @@ export default function RecherchePage2() {
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "#8AABD4",
-                      fontWeight: 300,
+                      color: "#C8D8EE",
+                      fontWeight: 400,
                       marginBottom: "16px",
                     }}
                   >
@@ -357,8 +347,8 @@ export default function RecherchePage2() {
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "#8AABD4",
-                      fontWeight: 300,
+                      color: "#C8D8EE",
+                      fontWeight: 400,
                       lineHeight: 1.7,
                     }}
                   >

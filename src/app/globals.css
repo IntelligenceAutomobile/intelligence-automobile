@@ -5,7 +5,7 @@
   --color-noir-surface: #112240;
   --color-noir-border: #1B3055;
   --color-blanc: #F0F5FF;
-  --color-gris: #8AABD4;
+  --color-gris: #C8D8EE;
   --color-or: #6B9FEE;
   --color-or-dark: #4B7FD8;
   --font-sans: var(--font-geist-sans);
@@ -22,7 +22,8 @@ html {
 body {
   background-color: #070F1E;
   color: #F0F5FF;
-  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
 }
 

@@ -77,17 +77,10 @@ export default function ConvoyagePage2() {
 
           {/* Texte bas-gauche */}
           <div
-            className="absolute left-0 right-0 bottom-0 z-10"
-            style={{ padding: "clamp(2rem, 5vw, 4rem)" }}
+            className="absolute z-10"
+            style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
           >
             <div style={{ maxWidth: "680px" }}>
-              <p
-                className="uppercase tracking-[0.35em] mb-6"
-                style={{ fontSize: "0.7rem", color: "#6B9FEE" }}
-              >
-                Convoyage · Livraison de véhicule
-              </p>
-
               <h1
                 style={{
                   fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
@@ -104,25 +97,28 @@ export default function ConvoyagePage2() {
                 <span style={{ color: "#6B9FEE" }}>vous déplacer.</span>
               </h1>
 
-              <p
-                style={{
-                  fontSize: "clamp(0.95rem, 1.5vw, 1.1rem)",
-                  color: "#8AABD4",
-                  fontWeight: 300,
-                  lineHeight: 1.65,
-                  maxWidth: "480px",
-                  marginBottom: "2.4rem",
-                }}
-              >
-                Conducteur professionnel, couverture assurance complète, photos avant et après.
-                Nous acheminons votre véhicule en toute sécurité.
-              </p>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+                <p
+                  style={{
+                    color: "rgba(168,196,240,0.68)",
+                    fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                    lineHeight: 1.8,
+                    fontWeight: 300,
+                    maxWidth: "440px",
+                    fontStyle: "italic",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  Conducteur professionnel, couverture assurance complète, photos avant et après. Nous acheminons votre véhicule en toute sécurité.
+                </p>
+              </div>
 
               <a
                 href="#formulaire"
                 style={{
                   display: "inline-block",
-                  backgroundColor: "#6B9FEE",
+                  backgroundColor: "#F0F5FF",
                   color: "#070F1E",
                   fontWeight: 700,
                   fontSize: "0.85rem",
@@ -146,7 +142,7 @@ export default function ConvoyagePage2() {
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
             <p
               className="text-xs tracking-[0.35em] uppercase mb-16 text-center"
-              style={{ color: "#8AABD4" }}
+              style={{ color: "#C8D8EE" }}
             >
               Comment ça marche
             </p>
@@ -173,7 +169,7 @@ export default function ConvoyagePage2() {
                   >
                     {step.title}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     {step.desc}
                   </p>
                 </div>
@@ -229,7 +225,7 @@ export default function ConvoyagePage2() {
                         style={{
                           fontSize: "0.85rem",
                           color: "#C4D8EE",
-                          fontWeight: 300,
+                          fontWeight: 400,
                         }}
                       >
                         {g}
@@ -252,7 +248,7 @@ export default function ConvoyagePage2() {
                   >
                     Zones couvertes
                   </p>
-                  <p style={{ fontSize: "0.85rem", color: "#8AABD4", fontWeight: 300 }}>
+                  <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
                     France entière · Belgique · Allemagne · Pays-Bas
                   </p>
 
@@ -270,7 +266,7 @@ export default function ConvoyagePage2() {
                   >
                     Délai de livraison
                   </p>
-                  <p style={{ fontSize: "0.85rem", color: "#8AABD4", fontWeight: 300 }}>
+                  <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
                     J+1 à J+3 selon la distance · Sur rendez-vous
                   </p>
                 </div>

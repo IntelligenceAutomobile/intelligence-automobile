@@ -115,19 +115,6 @@ export default function Methode2Page() {
 
         {/* Content */}
         <div style={{ position: "relative", maxWidth: "820px" }}>
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "#6B9FEE",
-              marginBottom: "1.2rem",
-            }}
-          >
-            Comment nous travaillons
-          </p>
-
           <h1
             style={{
               fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
@@ -144,19 +131,22 @@ export default function Methode2Page() {
             <span style={{ color: "#6B9FEE" }}>méthode.</span>
           </h1>
 
-          <p
-            style={{
-              fontSize: "clamp(0.95rem, 1.4vw, 1.15rem)",
-              color: "#8AABD4",
-              lineHeight: 1.7,
-              maxWidth: "560px",
-              marginBottom: "2.5rem",
-            }}
-          >
-            L&apos;import automobile peut être très rentable — ou très risqué.
-            Notre méthode transforme cette complexité en un processus structuré
-            et reproductible.
-          </p>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+            <p
+              style={{
+                color: "rgba(168,196,240,0.68)",
+                fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                lineHeight: 1.8,
+                fontWeight: 300,
+                maxWidth: "440px",
+                fontStyle: "italic",
+                letterSpacing: "0.01em",
+              }}
+            >
+              L&apos;import automobile peut être très rentable — ou très risqué. Notre méthode transforme cette complexité en un processus structuré et reproductible.
+            </p>
+          </div>
 
           <a
             href="#processus"
@@ -419,7 +409,7 @@ export default function Methode2Page() {
                 <p
                   style={{
                     fontSize: "13px",
-                    color: "#8AABD4",
+                    color: "#C8D8EE",
                     lineHeight: 1.7,
                     margin: 0,
                   }}

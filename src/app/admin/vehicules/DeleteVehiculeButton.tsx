@@ -15,7 +15,7 @@ export default function DeleteVehiculeButton({ id }: { id: string }) {
     <button
       onClick={handleDelete}
       className="text-xs tracking-widest uppercase"
-      style={{ color: "#8AABD4" }}
+      style={{ color: "#C8D8EE" }}
     >
       Supprimer
     </button>

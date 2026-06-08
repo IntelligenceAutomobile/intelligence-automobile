@@ -312,14 +312,12 @@ function VehicleCard({
   ].filter((s): s is { label: string; value: string } => s !== null);
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group block w-full text-left cursor-pointer"
+    <div
+      className="group block w-full text-left"
       style={{ backgroundColor: "#070F1E" }}
     >
       {/* ── IMAGE ── */}
-      <div className="relative overflow-hidden" style={{ height: "420px" }}>
+      <div className="relative overflow-hidden cursor-pointer" style={{ height: "420px" }} onClick={onClick}>
         {img ? (
           <img
             src={img}
@@ -386,7 +384,7 @@ function VehicleCard({
               style={{ width: "34px", height: "34px", borderRadius: "50%", backgroundColor: "rgba(7,15,30,0.82)", border: "1px solid rgba(107,159,238,0.3)", color: "#F0F5FF", fontSize: "1.15rem", lineHeight: 1 }}
               aria-label="Photo suivante"
             >›</button>
-            <div className="absolute bottom-3 right-4 z-20" style={{ backgroundColor: "rgba(7,15,30,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: "20px", padding: "2px 9px", color: "#8AABD4", fontSize: "9px", letterSpacing: "0.15em" }}>
+            <div className="absolute bottom-3 right-4 z-20" style={{ backgroundColor: "rgba(7,15,30,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: "20px", padding: "2px 9px", color: "#C8D8EE", fontSize: "9px", letterSpacing: "0.15em" }}>
               {imgIdx + 1}/{total}
             </div>
           </>
@@ -403,15 +401,20 @@ function VehicleCard({
         </div>
       </div>
 
-      {/* ── BARRE MARQUE · STATUT · PRIX (toujours visible) ── */}
-      <div className="flex items-center justify-between px-5 py-3 gap-3" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#070F1E" }}>
+      {/* ── BARRE UNIFIÉE : MARQUE · STATUT · CARACTÉRISTIQUES · PRIX ── */}
+      <button
+        type="button"
+        onClick={toggleInfo}
+        className="w-full flex items-center justify-between px-5 py-3 gap-3 transition-opacity duration-200 hover:opacity-80"
+        style={{ borderTop: "1px solid #1B3055", borderBottom: "1px solid #1B3055", backgroundColor: "#070F1E" }}
+      >
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
           {!isDemo && (
             <span
               className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
               style={{
-                color: isSold ? "#8AABD4" : "#6B9FEE",
+                color: isSold ? "#C8D8EE" : "#6B9FEE",
                 border: `1px solid ${isSold ? "#1B3055" : "rgba(107,159,238,0.3)"}`,
                 backgroundColor: isSold ? "transparent" : "rgba(107,159,238,0.08)",
               }}
@@ -420,26 +423,19 @@ function VehicleCard({
             </span>
           )}
         </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
+            Caractéristiques
+          </span>
+          <svg
+            width="14" height="14" viewBox="0 0 14 14" fill="none"
+            className="transition-transform duration-300 flex-shrink-0"
+            style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", color: "#6B9FEE" }}
+          >
+            <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
         <span className="font-black text-base flex-shrink-0" style={{ color: "#F0F5FF" }}>{price}</span>
-      </div>
-
-      {/* ── CHEVRON ── */}
-      <button
-        type="button"
-        onClick={toggleInfo}
-        className="w-full flex items-center justify-center gap-3 py-3 transition-all duration-200 hover:opacity-80"
-        style={{ backgroundColor: "#0D1E35", borderTop: "1px solid #1B3055", borderBottom: "1px solid #1B3055" }}
-      >
-        <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
-          Caractéristiques
-        </span>
-        <svg
-          width="14" height="14" viewBox="0 0 14 14" fill="none"
-          className="transition-transform duration-300 flex-shrink-0"
-          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", color: "#6B9FEE" }}
-        >
-          <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
       </button>
 
       {/* ── GRILLE DÉROULANTE ── */}
@@ -454,18 +450,39 @@ function VehicleCard({
           {specs.map((s) => (
             <div
               key={s.label}
-              className="flex flex-col px-3 py-2.5"
+              className="flex flex-col px-4 py-4"
               style={{ backgroundColor: "#0A1628" }}
             >
-              <span className="text-[7px] tracking-[0.2em] uppercase mb-1" style={{ color: "#6B9FEE" }}>{s.label}</span>
-              <span className="font-bold text-[11px] leading-tight" style={{ color: "#F0F5FF" }}>{s.value}</span>
+              <span className="text-[8px] tracking-[0.2em] uppercase mb-2" style={{ color: "#6B9FEE" }}>{s.label}</span>
+              <span className="font-bold text-[13px] leading-tight" style={{ color: "#F0F5FF" }}>{s.value}</span>
             </div>
           ))}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
+
+// ── Marques sport/luxe pré-chargées ─────────────────────────────────────────
+const SPORT_MAKES = [
+  "Alfa Romeo",
+  "Alpine",
+  "Aston Martin",
+  "Audi",
+  "BMW",
+  "Ferrari",
+  "Honda",
+  "Jaguar",
+  "Lamborghini",
+  "Lotus",
+  "Maserati",
+  "McLaren",
+  "Mercedes-AMG",
+  "Nissan",
+  "Porsche",
+  "Renault",
+  "Toyota",
+];
 
 // ── Composant principal ──────────────────────────────────────────────────────
 export default function VehiculesList({
@@ -500,6 +517,9 @@ export default function VehiculesList({
   const currentStatus = filters.status ?? "tous";
   const hasActiveFilters = filters.make || filters.fuel || filters.maxPrice;
 
+  const dbMakesSet = new Set(makes);
+  const extraMakes = SPORT_MAKES.filter((m) => !dbMakesSet.has(m)).sort((a, b) => a.localeCompare(b));
+
   return (
     <section style={{ backgroundColor: "#070F1E" }}>
 
@@ -520,10 +540,10 @@ export default function VehiculesList({
                 <button
                   key={s.key}
                   onClick={() => updateFilter("status", s.key === "tous" ? "" : s.key)}
-                  className="text-[10px] tracking-[0.3em] uppercase px-5 py-2.5 transition-all duration-200 flex-shrink-0 hover:-translate-y-px hover:opacity-90"
+                  className="text-[11px] tracking-[0.3em] uppercase px-7 py-3.5 transition-all duration-200 flex-shrink-0 hover:-translate-y-px hover:opacity-90"
                   style={{
                     background: currentStatus === s.key ? "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)" : "rgba(107,159,238,0.04)",
-                    color: currentStatus === s.key ? "#070F1E" : "#8AABD4",
+                    color: currentStatus === s.key ? "#070F1E" : "#C8D8EE",
                     border: `1px solid ${currentStatus === s.key ? "transparent" : "rgba(107,159,238,0.2)"}`,
                   }}
                 >
@@ -537,20 +557,31 @@ export default function VehiculesList({
             <select
               value={filters.make ?? ""}
               onChange={(e) => updateFilter("make", e.target.value)}
-              className="text-[10px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-3 py-2"
-              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.make ? "#F0F5FF" : "#8AABD4", border: "1px solid rgba(107,159,238,0.2)" }}
+              className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.make ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
             >
               <option value="" style={{ backgroundColor: "#070F1E" }}>Toutes marques</option>
-              {makes.map((m) => (
-                <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
-              ))}
+              {makes.length > 0 && (
+                <optgroup label="En stock" style={{ backgroundColor: "#070F1E" }}>
+                  {makes.map((m) => (
+                    <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
+                  ))}
+                </optgroup>
+              )}
+              {extraMakes.length > 0 && (
+                <optgroup label="Autres marques" style={{ backgroundColor: "#070F1E" }}>
+                  {extraMakes.map((m) => (
+                    <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
 
             <select
               value={filters.fuel ?? ""}
               onChange={(e) => updateFilter("fuel", e.target.value)}
-              className="text-[10px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-3 py-2"
-              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.fuel ? "#F0F5FF" : "#8AABD4", border: "1px solid rgba(107,159,238,0.2)" }}
+              className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.fuel ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
             >
               <option value="" style={{ backgroundColor: "#070F1E" }}>Carburant</option>
               {fuels.map((f) => (
@@ -561,11 +592,11 @@ export default function VehiculesList({
             <select
               value={filters.maxPrice ?? ""}
               onChange={(e) => updateFilter("maxPrice", e.target.value)}
-              className="text-[10px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-3 py-2"
-              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.maxPrice ? "#F0F5FF" : "#8AABD4", border: "1px solid rgba(107,159,238,0.2)" }}
+              className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.maxPrice ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
             >
               <option value="" style={{ backgroundColor: "#070F1E" }}>Budget max</option>
-              {[20000, 30000, 40000, 60000, 80000].map((p) => (
+              {[15000, 20000, 30000, 40000, 50000, 60000, 70000, 80000].map((p) => (
                 <option key={p} value={p} style={{ backgroundColor: "#070F1E" }}>
                   {p.toLocaleString("fr-FR")} €
                 </option>
@@ -580,10 +611,6 @@ export default function VehiculesList({
                 </Link>
               </>
             )}
-
-            <span className="ml-auto text-[9px] tracking-[0.3em] uppercase flex-shrink-0" style={{ color: "#1B3055" }}>
-              {vehicules.length} véhicule{vehicules.length !== 1 ? "s" : ""}
-            </span>
           </div>
         </div>
       </div>
@@ -633,23 +660,23 @@ export default function VehiculesList({
         ))}
       </div>
 
-      {/* ── CTA MANDAT ── */}
+      {/* ── CTA RECHERCHE PERSONNALISÉE ── */}
       <div className="border-t" style={{ borderColor: "#1B3055" }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 flex flex-col items-center text-center gap-6">
           <div>
-            <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: "#6B9FEE" }}>
-              Vous ne trouvez pas votre véhicule ?
+            <p className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
+              Vous ne trouvez pas votre véhicule idéal ?
             </p>
-            <p className="text-sm" style={{ color: "#8AABD4", fontWeight: 300 }}>
-              Confiez-nous un mandat d&apos;import sur-mesure depuis l&apos;Allemagne ou la Belgique.
+            <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
+              Décrivez votre véhicule. Notre réseau s&apos;active pour vous.
             </p>
           </div>
           <Link
-            href="/contact"
-            className="flex-shrink-0 px-8 py-4 text-xs font-semibold tracking-widest uppercase rounded-full border-2 transition-all duration-300"
-            style={{ borderColor: "#6B9FEE", color: "#6B9FEE" }}
+            href="/recherche"
+            className="flex-shrink-0 px-8 py-4 text-xs font-semibold tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
+            style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
           >
-            Nous contacter
+            Recherche personnalisée
           </Link>
         </div>
       </div>

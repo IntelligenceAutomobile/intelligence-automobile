@@ -33,7 +33,7 @@ export default async function AdminDashboard() {
         <div className="flex items-center gap-5">
           <LogoFull markHeight={44} layout="row" />
           <div className="h-5 w-px" style={{ backgroundColor: "#1B3055" }} />
-          <span className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>
+          <span className="text-xs tracking-widest uppercase" style={{ color: "#C8D8EE" }}>
             Administration
           </span>
         </div>
@@ -41,7 +41,7 @@ export default async function AdminDashboard() {
           <Link
             href="/"
             className="text-xs tracking-widest uppercase"
-            style={{ color: "#8AABD4" }}
+            style={{ color: "#C8D8EE" }}
           >
             Voir le site →
           </Link>
@@ -68,7 +68,7 @@ export default async function AdminDashboard() {
               >
                 {s.value}
               </div>
-              <div className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>
+              <div className="text-xs tracking-widest uppercase" style={{ color: "#C8D8EE" }}>
                 {s.label}
               </div>
             </div>
@@ -87,7 +87,7 @@ export default async function AdminDashboard() {
           <Link
             href="/admin/vehicules"
             className="text-sm font-semibold tracking-widest uppercase px-6 py-3 border"
-            style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+            style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
           >
             Gérer le stock
           </Link>
@@ -103,7 +103,7 @@ export default async function AdminDashboard() {
           </h2>
           <div className="border" style={{ borderColor: "#1B3055" }}>
             {recentVehicules.length === 0 ? (
-              <div className="p-8 text-center text-sm" style={{ color: "#8AABD4" }}>
+              <div className="p-8 text-center text-sm" style={{ color: "#C8D8EE" }}>
                 Aucun véhicule pour l&apos;instant.{" "}
                 <Link href="/admin/vehicules/nouveau" style={{ color: "#6B9FEE" }}>
                   Ajouter le premier.
@@ -128,7 +128,7 @@ export default async function AdminDashboard() {
                     <span className="text-sm" style={{ color: "#F0F5FF" }}>
                       {v.model}
                     </span>
-                    <span className="text-xs" style={{ color: "#8AABD4" }}>
+                    <span className="text-xs" style={{ color: "#C8D8EE" }}>
                       {v.year} · {v.mileage.toLocaleString("fr-FR")} km
                     </span>
                   </div>
@@ -143,7 +143,7 @@ export default async function AdminDashboard() {
                       className="text-xs px-2 py-0.5"
                       style={{
                         backgroundColor: v.status === "disponible" ? "#6B9FEE" : "#1B3055",
-                        color: v.status === "disponible" ? "#0B1930" : "#8AABD4",
+                        color: v.status === "disponible" ? "#0B1930" : "#C8D8EE",
                       }}
                     >
                       {v.status}

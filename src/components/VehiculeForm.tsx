@@ -91,31 +91,31 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Marque *</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Marque *</label>
           <input name="make" required defaultValue={data?.make} placeholder="BMW" className={inputClass} style={inputStyle} />
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Modèle *</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Modèle *</label>
           <input name="model" required defaultValue={data?.model} placeholder="Série 5 520d" className={inputClass} style={inputStyle} />
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Année *</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Année *</label>
           <input name="year" required type="number" defaultValue={data?.year} placeholder="2021" className={inputClass} style={inputStyle} />
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Kilométrage *</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Kilométrage *</label>
           <input name="mileage" required type="number" defaultValue={data?.mileage} placeholder="45000" className={inputClass} style={inputStyle} />
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Prix (€) *</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Prix (€) *</label>
           <input name="price" required type="number" defaultValue={data?.price} placeholder="28000" className={inputClass} style={inputStyle} />
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Couleur</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Couleur</label>
           <input name="color" defaultValue={data?.color} placeholder="Noir métallisé" className={inputClass} style={inputStyle} />
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Carburant</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Carburant</label>
           <select name="fuel" defaultValue={data?.fuel ?? "Diesel"} className={inputClass} style={inputStyle}>
             <option>Diesel</option>
             <option>Essence</option>
@@ -124,18 +124,18 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
           </select>
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Boîte de vitesses</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Boîte de vitesses</label>
           <select name="transmission" defaultValue={data?.transmission ?? "Automatique"} className={inputClass} style={inputStyle}>
             <option>Automatique</option>
             <option>Manuelle</option>
           </select>
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Puissance (ch)</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Puissance (ch)</label>
           <input name="power" type="number" defaultValue={data?.power ?? ""} placeholder="190" className={inputClass} style={inputStyle} />
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Origine</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Origine</label>
           <select name="origin" defaultValue={data?.origin ?? "Allemagne"} className={inputClass} style={inputStyle}>
             <option>Allemagne</option>
             <option>Belgique</option>
@@ -143,7 +143,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
           </select>
         </div>
         <div>
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Statut</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Statut</label>
           <select name="status" defaultValue={data?.status ?? "disponible"} className={inputClass} style={inputStyle}>
             <option value="disponible">Disponible</option>
             <option value="reserve">Réservé</option>
@@ -151,7 +151,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className={labelClass} style={{ color: "#8AABD4" }}>Visibilité publique</label>
+          <label className={labelClass} style={{ color: "#C8D8EE" }}>Visibilité publique</label>
           <button
             type="button"
             onClick={() => setIsPublished(!isPublished)}
@@ -173,13 +173,13 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       </div>
 
       <div>
-        <label className={labelClass} style={{ color: "#8AABD4" }}>Description</label>
+        <label className={labelClass} style={{ color: "#C8D8EE" }}>Description</label>
         <textarea name="description" rows={4} defaultValue={data?.description} placeholder="Décrivez le véhicule..." className={inputClass + " resize-none"} style={inputStyle} />
       </div>
 
       {/* URLs des images */}
       <div>
-        <label className={labelClass} style={{ color: "#8AABD4" }}>Images (URLs)</label>
+        <label className={labelClass} style={{ color: "#C8D8EE" }}>Images (URLs)</label>
         <div className="space-y-2 mb-2">
           {images.map((img, i) => (
             <div key={i} className="flex gap-2">
@@ -188,7 +188,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
                 type="button"
                 onClick={() => setImages(images.filter((_, j) => j !== i))}
                 className="px-3 py-2 text-xs border"
-                style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+                style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
               >
                 ✕
               </button>
@@ -221,20 +221,20 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
 
       {/* Équipements */}
       <div>
-        <label className={labelClass} style={{ color: "#8AABD4" }}>Équipements</label>
+        <label className={labelClass} style={{ color: "#C8D8EE" }}>Équipements</label>
         <div className="flex flex-wrap gap-2 mb-2">
           {features.map((f) => (
             <span
               key={f}
               className="flex items-center gap-1 text-xs px-2 py-1 border"
-              style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+              style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
             >
               {f}
               <button
                 type="button"
                 onClick={() => setFeatures(features.filter((x) => x !== f))}
                 className="ml-1"
-                style={{ color: "#8AABD4" }}
+                style={{ color: "#C8D8EE" }}
               >
                 ✕
               </button>
@@ -267,14 +267,14 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
               }
             }}
             className="px-4 py-2 text-xs font-semibold tracking-widest uppercase"
-            style={{ backgroundColor: "#112240", borderColor: "#1B3055", color: "#8AABD4", border: "1px solid #1B3055" }}
+            style={{ backgroundColor: "#112240", borderColor: "#1B3055", color: "#C8D8EE", border: "1px solid #1B3055" }}
           >
             Ajouter
           </button>
         </div>
       </div>
 
-      {error && <p className="text-xs" style={{ color: "#8AABD4" }}>{error}</p>}
+      {error && <p className="text-xs" style={{ color: "#C8D8EE" }}>{error}</p>}
 
       <div className="flex gap-4">
         <button
@@ -289,7 +289,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
           type="button"
           onClick={() => router.push("/admin/vehicules")}
           className="text-sm font-semibold tracking-widest uppercase px-8 py-4 border"
-          style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+          style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
         >
           Annuler
         </button>

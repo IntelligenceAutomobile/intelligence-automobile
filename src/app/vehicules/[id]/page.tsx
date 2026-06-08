@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { existsSync, readdirSync } from "fs";
+import { join } from "path";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
 import HeroCarousel from "@/components/HeroCarousel";
+import DocumentsSection from "./DocumentsSection";
+import GalleryLightbox from "./GalleryLightbox";
 
 export default async function VehiculeDetailPage({
   params,
@@ -22,6 +26,14 @@ export default async function VehiculeDetailPage({
   const images = JSON.parse(v.images) as string[];
   const features = JSON.parse(v.features) as string[];
 
+  const facturesPath = join(process.cwd(), "public", id, "factures");
+  const documents = existsSync(facturesPath)
+    ? readdirSync(facturesPath)
+        .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+        .sort()
+        .map((f) => `/${id}/factures/${f}`)
+    : [];
+
   const specs = [
     { label: "Année", value: String(v.year) },
     { label: "Kilométrage", value: `${v.mileage.toLocaleString("fr-FR")} km` },
@@ -38,13 +50,13 @@ export default async function VehiculeDetailPage({
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
         {/* ── IMAGE HERO ── */}
-        <HeroCarousel images={images} alt={`${v.make} ${v.model}`} imgOpacity={0.8}>
+        <HeroCarousel images={images} alt={`${v.make} ${v.model}`} imgOpacity={1}>
           {/* Retour */}
           <div className="absolute top-28 left-6 lg:left-12 z-10">
             <Link
               href="/vehicules"
               className="inline-flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors"
-              style={{ color: "#8AABD4" }}
+              style={{ color: "#C8D8EE" }}
             >
               ← Nos véhicules
             </Link>
@@ -64,7 +76,7 @@ export default async function VehiculeDetailPage({
               className="text-[9px] tracking-[0.3em] uppercase px-3 py-2"
               style={{
                 backgroundColor: v.status === "disponible" ? "#6B9FEE" : "#1B3055",
-                color: v.status === "disponible" ? "#070F1E" : "#8AABD4",
+                color: v.status === "disponible" ? "#070F1E" : "#C8D8EE",
               }}
             >
               {v.status === "disponible" ? "Disponible" : v.status === "vendu" ? "Vendu" : "Réservé"}
@@ -107,7 +119,7 @@ export default async function VehiculeDetailPage({
                   >
                     <div
                       className="text-[9px] tracking-[0.3em] uppercase mb-2"
-                      style={{ color: "#8AABD4" }}
+                      style={{ color: "#C8D8EE" }}
                     >
                       {item.label}
                     </div>
@@ -125,7 +137,7 @@ export default async function VehiculeDetailPage({
               {v.description && (
                 <p
                   className="text-sm leading-relaxed"
-                  style={{ color: "#8AABD4", fontWeight: 300 }}
+                  style={{ color: "#C8D8EE", fontWeight: 400 }}
                 >
                   {v.description}
                 </p>
@@ -140,7 +152,7 @@ export default async function VehiculeDetailPage({
               >
                 <p
                   className="text-[9px] tracking-[0.3em] uppercase mb-4"
-                  style={{ color: "#8AABD4" }}
+                  style={{ color: "#C8D8EE" }}
                 >
                   Prix
                 </p>
@@ -168,14 +180,14 @@ export default async function VehiculeDetailPage({
                   <Link
                     href="/contact"
                     className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-5 border transition-all duration-300"
-                    style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+                    style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
                   >
                     Nous contacter
                   </Link>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <p className="text-sm mb-4" style={{ color: "#8AABD4" }}>
+                  <p className="text-sm mb-4" style={{ color: "#C8D8EE" }}>
                     Ce véhicule n&apos;est plus disponible. Découvrez notre stock actuel ou confiez-nous un mandat d&apos;import.
                   </p>
                   <Link
@@ -188,7 +200,7 @@ export default async function VehiculeDetailPage({
                   <Link
                     href="/contact"
                     className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-5 border"
-                    style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+                    style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
                   >
                     Mandat d&apos;import
                   </Link>
@@ -205,29 +217,17 @@ export default async function VehiculeDetailPage({
             >
               <p
                 className="text-[9px] tracking-[0.35em] uppercase mb-8"
-                style={{ color: "#8AABD4" }}
+                style={{ color: "#C8D8EE" }}
               >
                 Photos
               </p>
-              <div
-                className="grid grid-cols-2 md:grid-cols-3 gap-px"
-                style={{ backgroundColor: "#1B3055" }}
-              >
-                {images.map((img, i) => (
-                  <div
-                    key={i}
-                    className="overflow-hidden"
-                    style={{ aspectRatio: "16/10", backgroundColor: "#070F1E" }}
-                  >
-                    <img
-                      src={img}
-                      alt={`${v.make} ${v.model} — photo ${i + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                  </div>
-                ))}
-              </div>
+              <GalleryLightbox images={images} alt={`${v.make} ${v.model}`} />
             </div>
+          )}
+
+          {/* ── DOCUMENTS ── */}
+          {documents.length > 0 && (
+            <DocumentsSection documents={documents} />
           )}
 
           {/* ── ÉQUIPEMENTS ── */}
@@ -238,7 +238,7 @@ export default async function VehiculeDetailPage({
             >
               <p
                 className="text-[9px] tracking-[0.35em] uppercase mb-8"
-                style={{ color: "#8AABD4" }}
+                style={{ color: "#C8D8EE" }}
               >
                 Équipements
               </p>
@@ -247,7 +247,7 @@ export default async function VehiculeDetailPage({
                   <div
                     key={f}
                     className="flex items-center gap-3 text-sm"
-                    style={{ color: "#8AABD4" }}
+                    style={{ color: "#C8D8EE" }}
                   >
                     <span style={{ color: "#6B9FEE" }}>—</span>
                     {f}
@@ -268,7 +268,7 @@ export default async function VehiculeDetailPage({
               >
                 Votre prochain véhicule
               </p>
-              <p className="text-sm" style={{ color: "#8AABD4", fontWeight: 300 }}>
+              <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                 Vous ne trouvez pas votre bonheur ? Confiez-nous un mandat d&apos;import sur-mesure.
               </p>
             </div>

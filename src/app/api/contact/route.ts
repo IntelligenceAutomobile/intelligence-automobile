@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     const row = (label: string, value: string) =>
       `<tr>
-        <td style="padding:8px 16px;color:#8AABD4;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #1B3055;">${label}</td>
+        <td style="padding:8px 16px;color:#C8D8EE;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #1B3055;">${label}</td>
         <td style="padding:8px 16px;color:#F0F5FF;font-size:13px;border-bottom:1px solid #1B3055;">${value || "—"}</td>
       </tr>`;
 

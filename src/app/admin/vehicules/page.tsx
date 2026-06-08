@@ -23,7 +23,7 @@ export default async function AdminVehiculesList() {
         style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}
       >
         <div className="flex items-center gap-4">
-          <Link href="/admin" className="text-xs tracking-widest uppercase" style={{ color: "#8AABD4" }}>
+          <Link href="/admin" className="text-xs tracking-widest uppercase" style={{ color: "#C8D8EE" }}>
             ← Dashboard
           </Link>
           <span className="text-sm font-semibold" style={{ color: "#F0F5FF" }}>
@@ -42,7 +42,7 @@ export default async function AdminVehiculesList() {
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="border" style={{ borderColor: "#1B3055" }}>
           {vehicules.length === 0 ? (
-            <div className="p-10 text-center text-sm" style={{ color: "#8AABD4" }}>
+            <div className="p-10 text-center text-sm" style={{ color: "#C8D8EE" }}>
               Aucun véhicule.{" "}
               <Link href="/admin/vehicules/nouveau" style={{ color: "#6B9FEE" }}>
                 Ajouter le premier.
@@ -69,7 +69,7 @@ export default async function AdminVehiculesList() {
                       {v.model}
                     </span>
                   </div>
-                  <span className="text-xs" style={{ color: "#8AABD4" }}>
+                  <span className="text-xs" style={{ color: "#C8D8EE" }}>
                     {v.year} · {v.mileage.toLocaleString("fr-FR")} km · {v.fuel} · {v.origin}
                   </span>
                 </div>
@@ -85,7 +85,7 @@ export default async function AdminVehiculesList() {
                     className="text-xs px-2 py-0.5"
                     style={{
                       backgroundColor: v.status === "disponible" ? "#6B9FEE" : "#1B3055",
-                      color: v.status === "disponible" ? "#0B1930" : "#8AABD4",
+                      color: v.status === "disponible" ? "#0B1930" : "#C8D8EE",
                     }}
                   >
                     {v.status}
@@ -93,7 +93,7 @@ export default async function AdminVehiculesList() {
                   <Link
                     href={`/vehicules/${v.id}`}
                     className="text-xs tracking-widest uppercase"
-                    style={{ color: "#8AABD4" }}
+                    style={{ color: "#C8D8EE" }}
                     target="_blank"
                   >
                     Voir

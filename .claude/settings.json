@@ -6,7 +6,9 @@
       "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-collab-comments 2>&1)",
       "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-comment-replies 2>&1)",
       "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-note-category 2>&1)",
-      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-note-soft-delete 2>&1)"
+      "PowerShell($env:DATABASE_URL=\"file:./dev.db\"; cd \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\"; npx prisma migrate dev --name add-note-soft-delete 2>&1)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\\\\public\\\\Audi TT 3\\\\Audi TT 2.0 TFSI 200 S-Line GV-059-QZ\" | Where-Object { $_.Extension -match \"\\\\.\\(jpg|jpeg|png|webp\\)$\" } | Select-Object Name | Sort-Object Name)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\User\\\\Documents\\\\Intelligence automobile\\\\public\\\\Audi TT 3\" -Recurse | Where-Object { $_.Extension -match \"\\\\.\\(jpg|jpeg|png|webp\\)$\" } | Select-Object Name, DirectoryName | Sort-Object Name)"
     ]
   }
 }

@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { existsSync, readdirSync } from "fs";
+import { join } from "path";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
 import HeroCarousel from "@/components/HeroCarousel";
+import DocumentsSection from "../DocumentsSection";
+import GalleryLightbox from "../GalleryLightbox";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +82,14 @@ export default async function VehiculeDetailV2Page({
 
   const images = JSON.parse(v.images) as string[];
   const features = JSON.parse(v.features) as string[];
+
+  const facturesPath = join(process.cwd(), "public", id, "factures");
+  const documents = existsSync(facturesPath)
+    ? readdirSync(facturesPath)
+        .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+        .sort()
+        .map((f) => `/${id}/factures/${f}`)
+    : [];
   const { name, subtitle } = parseTitle(v.make, v.model, v.power);
   const categories = categorize(features);
   const pointsForts = features.slice(0, 6);
@@ -90,10 +102,10 @@ export default async function VehiculeDetailV2Page({
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
         {/* ── HERO ── */}
-        <HeroCarousel images={images} alt={name} imgOpacity={isSold ? 0.45 : 0.82}>
+        <HeroCarousel images={images} alt={name} imgOpacity={isSold ? 0.45 : 1}>
           {/* Retour */}
           <div className="absolute top-28 left-6 lg:left-12 z-10">
-            <Link href="/vehicules" className="inline-flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors" style={{ color: "#8AABD4" }}>
+            <Link href="/vehicules" className="inline-flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors" style={{ color: "#C8D8EE" }}>
               ← Nos véhicules
             </Link>
           </div>
@@ -104,7 +116,7 @@ export default async function VehiculeDetailV2Page({
               className="text-[9px] tracking-[0.3em] uppercase px-4 py-2"
               style={{
                 backgroundColor: isAvailable ? "#6B9FEE" : "transparent",
-                color: isAvailable ? "#070F1E" : "#8AABD4",
+                color: isAvailable ? "#070F1E" : "#C8D8EE",
                 border: isAvailable ? "none" : "1px solid #1B3055",
               }}
             >
@@ -133,7 +145,7 @@ export default async function VehiculeDetailV2Page({
                 {name}
               </h1>
               {subtitle && (
-                <p className="mb-10 font-light tracking-wide" style={{ color: "#8AABD4", fontSize: "clamp(0.85rem, 1.5vw, 1.05rem)" }}>
+                <p className="mb-10 font-light tracking-wide" style={{ color: "#C8D8EE", fontSize: "clamp(0.85rem, 1.5vw, 1.05rem)" }}>
                   {subtitle}
                 </p>
               )}
@@ -160,7 +172,7 @@ export default async function VehiculeDetailV2Page({
                   v.color,
                   `Origine ${v.origin}`,
                 ].filter(Boolean).map((s) => (
-                  <span key={s} className="text-[10px] tracking-[0.2em]" style={{ color: "#8AABD4" }}>
+                  <span key={s} className="text-[10px] tracking-[0.2em]" style={{ color: "#C8D8EE" }}>
                     {s}
                   </span>
                 ))}
@@ -170,10 +182,10 @@ export default async function VehiculeDetailV2Page({
 
               {/* Pourquoi ce véhicule ? */}
               <div className="mb-10">
-                <p className="text-[9px] tracking-[0.4em] uppercase mb-4" style={{ color: "#8AABD4" }}>
+                <p className="text-[9px] tracking-[0.4em] uppercase mb-4" style={{ color: "#C8D8EE" }}>
                   Pourquoi ce véhicule ?
                 </p>
-                <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                   {whyCopy(v.fuel, v.make)}
                 </p>
               </div>
@@ -183,12 +195,12 @@ export default async function VehiculeDetailV2Page({
               {/* Points forts */}
               {pointsForts.length > 0 && (
                 <div className="mb-10">
-                  <p className="text-[9px] tracking-[0.4em] uppercase mb-5" style={{ color: "#8AABD4" }}>
+                  <p className="text-[9px] tracking-[0.4em] uppercase mb-5" style={{ color: "#C8D8EE" }}>
                     Points forts
                   </p>
                   <ul className="flex flex-col gap-3">
                     {pointsForts.map((f) => (
-                      <li key={f} className="flex items-start gap-3 text-sm" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                      <li key={f} className="flex items-start gap-3 text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                         <span className="mt-0.5 flex-shrink-0" style={{ color: "#6B9FEE" }}>—</span>
                         {f}
                       </li>
@@ -202,7 +214,7 @@ export default async function VehiculeDetailV2Page({
               {/* Description courte */}
               {v.description && (
                 <div className="mb-10">
-                  <p className="text-sm leading-relaxed" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                     {v.description.split("\n\n")[0]}
                   </p>
                 </div>
@@ -237,15 +249,15 @@ export default async function VehiculeDetailV2Page({
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
                     <span style={{ color: "#6B9FEE", fontSize: "10px" }}>✓</span>
-                    <span className="text-[10px] tracking-wide" style={{ color: "#8AABD4" }}>Garantie 12 mois incluse</span>
+                    <span className="text-[10px] tracking-wide" style={{ color: "#C8D8EE" }}>Garantie 12 mois incluse</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span style={{ color: "#6B9FEE", fontSize: "10px" }}>✓</span>
-                    <span className="text-[10px] tracking-wide" style={{ color: "#8AABD4" }}>Financement possible</span>
+                    <span className="text-[10px] tracking-wide" style={{ color: "#C8D8EE" }}>Financement possible</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span style={{ color: "#6B9FEE", fontSize: "10px" }}>✓</span>
-                    <span className="text-[10px] tracking-wide" style={{ color: "#8AABD4" }}>Démarches administratives prises en charge</span>
+                    <span className="text-[10px] tracking-wide" style={{ color: "#C8D8EE" }}>Démarches administratives prises en charge</span>
                   </div>
                 </div>
                 <div className="mt-6 pt-5 grid grid-cols-2 gap-4" style={{ borderTop: "1px solid #1B3055" }}>
@@ -273,7 +285,7 @@ export default async function VehiculeDetailV2Page({
                   <Link
                     href={`/contact?vehicule=${encodeURIComponent(`${v.make} ${v.model} ${v.year}`)}&sujet=dossier`}
                     className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-5 border transition-all duration-300"
-                    style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+                    style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
                   >
                     Recevoir le dossier complet
                   </Link>
@@ -293,7 +305,7 @@ export default async function VehiculeDetailV2Page({
                   <Link
                     href="/contact"
                     className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-5 border"
-                    style={{ borderColor: "#1B3055", color: "#8AABD4" }}
+                    style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
                   >
                     Mandat d&apos;import sur-mesure
                   </Link>
@@ -305,27 +317,22 @@ export default async function VehiculeDetailV2Page({
           {/* ── GALERIE ── */}
           {images.length > 1 && (
             <div className="border-t pb-20" style={{ borderColor: "#1B3055", paddingTop: "3rem" }}>
-              <p className="text-[9px] tracking-[0.4em] uppercase mb-8" style={{ color: "#8AABD4" }}>
+              <p className="text-[9px] tracking-[0.4em] uppercase mb-8" style={{ color: "#C8D8EE" }}>
                 Galerie — {images.length} photos
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-px" style={{ backgroundColor: "#1B3055" }}>
-                {images.map((img, i) => (
-                  <div key={i} className="overflow-hidden" style={{ aspectRatio: "16/10", backgroundColor: "#070F1E" }}>
-                    <img
-                      src={img}
-                      alt={`${name} — photo ${i + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                  </div>
-                ))}
-              </div>
+              <GalleryLightbox images={images} alt={name} />
             </div>
+          )}
+
+          {/* ── DOCUMENTS ── */}
+          {documents.length > 0 && (
+            <DocumentsSection documents={documents} />
           )}
 
           {/* ── ÉQUIPEMENTS PAR CATÉGORIE ── */}
           {categories.length > 0 && (
             <div className="border-t pb-20" style={{ borderColor: "#1B3055", paddingTop: "3rem" }}>
-              <p className="text-[9px] tracking-[0.4em] uppercase mb-10" style={{ color: "#8AABD4" }}>
+              <p className="text-[9px] tracking-[0.4em] uppercase mb-10" style={{ color: "#C8D8EE" }}>
                 Équipements
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -336,7 +343,7 @@ export default async function VehiculeDetailV2Page({
                     </p>
                     <ul className="flex flex-col gap-3">
                       {cat.items.map((item) => (
-                        <li key={item} className="flex items-start gap-2 text-xs" style={{ color: "#8AABD4", fontWeight: 300 }}>
+                        <li key={item} className="flex items-start gap-2 text-xs" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                           <span className="flex-shrink-0 mt-0.5" style={{ color: "#1B3055" }}>—</span>
                           {item}
                         </li>
@@ -360,7 +367,7 @@ export default async function VehiculeDetailV2Page({
               >
                 Contactez Intelligence Automobile pour une présentation complète.
               </h2>
-              <p className="text-sm mb-10" style={{ color: "#8AABD4", fontWeight: 300 }}>
+              <p className="text-sm mb-10" style={{ color: "#C8D8EE", fontWeight: 400 }}>
                 Inspection, financement, immatriculation — nous gérons tout.
               </p>
               {isAvailable && (

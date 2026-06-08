@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+﻿import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
@@ -51,7 +51,7 @@ export default async function VehiculesV2Page({
         <section
           style={{
             position: "relative",
-            height: "80vh",
+            height: "100vh",
             overflow: "hidden",
           }}
         >
@@ -93,7 +93,7 @@ export default async function VehiculesV2Page({
           <div
             style={{
               position: "absolute",
-              bottom: "2vh",
+              bottom: "8vh",
               left: "6vw",
               right: "6vw",
             }}
@@ -123,7 +123,7 @@ export default async function VehiculesV2Page({
                   color: "rgba(168,196,240,0.68)",
                   fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
                   lineHeight: 1.8,
-                  fontWeight: 300,
+                  fontWeight: 400,
                   maxWidth: "440px",
                   fontStyle: "italic",
                   letterSpacing: "0.01em",

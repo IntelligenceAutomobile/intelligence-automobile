@@ -140,7 +140,7 @@ export default function VehiculeModal({
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
               border: "1px solid rgba(27,48,85,0.7)",
-              color: "#8AABD4",
+              color: "#C8D8EE",
               fontSize: "1rem",
               cursor: "pointer",
               lineHeight: 1,
@@ -217,7 +217,7 @@ export default function VehiculeModal({
                       WebkitBackdropFilter: "blur(8px)",
                       borderRadius: "20px",
                       padding: "3px 10px",
-                      color: "#8AABD4",
+                      color: "#C8D8EE",
                       fontSize: "10px",
                       letterSpacing: "0.15em",
                     }}
@@ -244,7 +244,7 @@ export default function VehiculeModal({
                     className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1"
                     style={{
                       backgroundColor: isAvailable ? "rgba(107,159,238,0.1)" : "rgba(27,48,85,0.4)",
-                      color: isAvailable ? "#6B9FEE" : "#8AABD4",
+                      color: isAvailable ? "#6B9FEE" : "#C8D8EE",
                       borderRadius: "6px",
                     }}
                   >
@@ -278,7 +278,7 @@ export default function VehiculeModal({
                   </div>
                   <div
                     className="text-[9px] tracking-widest uppercase mt-1"
-                    style={{ color: "#8AABD4" }}
+                    style={{ color: "#C8D8EE" }}
                   >
                     {vehicle.year}
                   </div>
@@ -317,7 +317,7 @@ export default function VehiculeModal({
               {vehicle.description && (
                 <p
                   className="text-sm leading-relaxed mb-6"
-                  style={{ color: "#8AABD4", fontWeight: 300 }}
+                  style={{ color: "#C8D8EE", fontWeight: 400 }}
                 >
                   {vehicle.description}
                 </p>
@@ -340,7 +340,7 @@ export default function VehiculeModal({
                       <div
                         key={f}
                         className="flex items-center gap-2 px-3 py-2.5 text-xs"
-                        style={{ backgroundColor: "#070F1E", color: "#8AABD4" }}
+                        style={{ backgroundColor: "#070F1E", color: "#C8D8EE" }}
                       >
                         <span style={{ color: "#6B9FEE", flexShrink: 0 }}>—</span>
                         {f}
@@ -396,7 +396,7 @@ export default function VehiculeModal({
                         {entry.amount && entry.amount !== "—" && (
                           <span
                             className="text-[9px] font-bold flex-shrink-0 tabular-nums"
-                            style={{ color: "#8AABD4" }}
+                            style={{ color: "#C8D8EE" }}
                           >
                             {entry.amount}
                           </span>
@@ -470,7 +470,7 @@ export default function VehiculeModal({
                     className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-colors duration-200"
                     style={{
                       border: "1px solid #1B3055",
-                      color: "#8AABD4",
+                      color: "#C8D8EE",
                     }}
                     onClick={onClose}
                   >

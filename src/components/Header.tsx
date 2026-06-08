@@ -53,7 +53,7 @@ export function LogoFull({
       <div style={{ marginTop: isCol ? undefined : "22px", position: isCol ? undefined : "relative", left: isCol ? undefined : "23px" }}>
         <LogoMark height={markHeight} />
       </div>
-      <div className="flex flex-col items-center leading-none" style={{ marginLeft: isCol ? undefined : "-20px" }}>
+      <div className="flex flex-col items-start leading-none" style={{ marginLeft: isCol ? undefined : "-20px" }}>
         <span
           className="font-light uppercase"
           style={{ color: "#F0F5FF", fontSize: `${intelSize}px`, letterSpacing: "0.45em" }}
