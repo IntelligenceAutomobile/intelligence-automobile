@@ -1,44 +1,16 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ConvoyageForm from "@/app/convoyage/ConvoyageForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Transport & Livraison V2 — Intelligence Automobile",
 };
 
-const steps = [
-  {
-    num: "01",
-    title: "Votre demande",
-    desc: "Indiquez le point de départ, la destination, le véhicule et la date souhaitée. Nous revenons sous 24h avec un devis clair.",
-  },
-  {
-    num: "02",
-    title: "Accord & préparation",
-    desc: "Vous validez le devis. Nous coordonnons la prise en charge et documentons l'état du véhicule avant départ.",
-  },
-  {
-    num: "03",
-    title: "Prise en charge",
-    desc: "Un conducteur professionnel et assuré récupère le véhicule. État des lieux contradictoire, signature, départ.",
-  },
-  {
-    num: "04",
-    title: "Livraison",
-    desc: "Le véhicule vous est remis à destination dans l'état convenu. Photos de livraison transmises. Tarif inchangé.",
-  },
-];
+export default async function ConvoyagePage2() {
+  const { t } = await getTranslations();
+  const s = t.transport;
 
-const garanties = [
-  "Conducteurs professionnels assurés RC",
-  "Photos d'état avant départ et à la livraison",
-  "Couverture RC pendant tout le transport",
-  "Tarif fixe annoncé avant accord, sans supplément",
-  "France entière + Belgique, Allemagne, Pays-Bas",
-  "Interlocuteur direct tout au long de la mission",
-];
-
-export default function ConvoyagePage2() {
   return (
     <>
       <Header />
@@ -49,7 +21,6 @@ export default function ConvoyagePage2() {
           className="relative overflow-hidden"
           style={{ height: "100vh", minHeight: "600px" }}
         >
-          {/* Photo de fond */}
           <img
             src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png"
             alt=""
@@ -57,7 +28,6 @@ export default function ConvoyagePage2() {
             style={{ opacity: 0.92 }}
           />
 
-          {/* Overlay directionnel */}
           <div
             className="absolute inset-0"
             style={{
@@ -66,7 +36,6 @@ export default function ConvoyagePage2() {
             }}
           />
 
-          {/* Fondu bas */}
           <div
             className="absolute left-0 right-0 bottom-0"
             style={{
@@ -75,7 +44,6 @@ export default function ConvoyagePage2() {
             }}
           />
 
-          {/* Texte bas-gauche */}
           <div
             className="absolute z-10"
             style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
@@ -90,11 +58,11 @@ export default function ConvoyagePage2() {
                   marginBottom: "1.8rem",
                 }}
               >
-                Votre véhicule
+                {s.heroTitle[0]}
                 <br />
-                livré, sans
+                {s.heroTitle[1]}
                 <br />
-                <span style={{ color: "#6B9FEE" }}>vous déplacer.</span>
+                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
               </h1>
 
               <div style={{ marginBottom: "1.5rem" }}>
@@ -110,7 +78,7 @@ export default function ConvoyagePage2() {
                     letterSpacing: "0.01em",
                   }}
                 >
-                  Conducteur professionnel, couverture assurance complète, photos avant et après. Nous acheminons votre véhicule en toute sécurité.
+                  {s.heroSubtitle}
                 </p>
               </div>
 
@@ -128,7 +96,7 @@ export default function ConvoyagePage2() {
                   textDecoration: "none",
                 }}
               >
-                Demander un devis →
+                {s.heroCta}
               </a>
             </div>
           </div>
@@ -144,10 +112,10 @@ export default function ConvoyagePage2() {
               className="text-xs tracking-[0.35em] uppercase mb-16 text-center"
               style={{ color: "#C8D8EE" }}
             >
-              Comment ça marche
+              {s.stepsLabel}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-              {steps.map((step, i) => (
+              {s.steps.map((step, i) => (
                 <div
                   key={step.num}
                   className="px-8 py-6"
@@ -184,7 +152,6 @@ export default function ConvoyagePage2() {
             className="max-w-7xl mx-auto px-6 lg:px-12"
             style={{ paddingTop: "6rem", paddingBottom: "6rem" }}
           >
-            {/* Titre section */}
             <div style={{ marginBottom: "4rem" }}>
               <h2
                 style={{
@@ -194,9 +161,9 @@ export default function ConvoyagePage2() {
                   letterSpacing: "-0.03em",
                 }}
               >
-                Dites-nous
+                {s.formTitle[0]}
                 <br />
-                <span style={{ color: "#6B9FEE" }}>où livrer.</span>
+                <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
             </div>
 
@@ -204,12 +171,10 @@ export default function ConvoyagePage2() {
               className="grid grid-cols-1 lg:grid-cols-5"
               style={{ gap: "clamp(2.5rem, 5vw, 5rem)", alignItems: "start" }}
             >
-              {/* Col gauche 2/5 — garanties */}
               <div className="lg:col-span-2">
 
-                {/* Liste garanties */}
                 <div style={{ borderTop: "1px solid #1B3055", marginBottom: "2rem" }}>
-                  {garanties.map((g) => (
+                  {s.guarantees.map((g) => (
                     <div
                       key={g}
                       className="flex items-center gap-4"
@@ -234,7 +199,6 @@ export default function ConvoyagePage2() {
                   ))}
                 </div>
 
-                {/* Encadré zones / délais */}
                 <div
                   style={{
                     backgroundColor: "rgba(107,159,238,0.06)",
@@ -246,10 +210,10 @@ export default function ConvoyagePage2() {
                     className="uppercase tracking-[0.3em]"
                     style={{ fontSize: "0.65rem", color: "#6B9FEE", marginBottom: "0.5rem" }}
                   >
-                    Zones couvertes
+                    {s.zonesLabel}
                   </p>
                   <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
-                    France entière · Belgique · Allemagne · Pays-Bas
+                    {s.zones}
                   </p>
 
                   <div
@@ -264,15 +228,14 @@ export default function ConvoyagePage2() {
                     className="uppercase tracking-[0.3em]"
                     style={{ fontSize: "0.65rem", color: "#6B9FEE", marginBottom: "0.5rem" }}
                   >
-                    Délai de livraison
+                    {s.delayLabel}
                   </p>
                   <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
-                    J+1 à J+3 selon la distance · Sur rendez-vous
+                    {s.delay}
                   </p>
                 </div>
               </div>
 
-              {/* Col droite 3/5 — formulaire */}
               <div className="lg:col-span-3">
                 <ConvoyageForm />
               </div>

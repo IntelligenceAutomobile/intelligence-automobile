@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useCallback, useState } from "react";
+import { useLocale } from "@/i18n/context";
 import VehiculeModal, { type ModalVehicle } from "./VehiculeModal";
 import VehiculeModalV2 from "./VehiculeModalV2";
 
@@ -207,25 +208,32 @@ type Vehicle = {
   color: string;
   images: string;
   features: string;
+  featuresEn: string;
   status: string;
   origin: string;
   power?: number | null;
   description?: string;
+  descriptionEn?: string;
   isPublished: boolean;
 };
 
 type Filters = {
   make?: string;
+  model?: string;
   fuel?: string;
+  transmission?: string;
   maxPrice?: number;
+  maxMileage?: number;
+  minYear?: number;
   status?: string;
 };
 
 
-// Convertit un véhicule DB → format modal
-function toModal(v: Vehicle): ModalVehicle {
+// Convertit un véhicule DB → format modal (priceOnRequest vient de t, passé en param)
+function toModal(v: Vehicle, priceOnRequest: string): ModalVehicle {
   const images = (() => { try { return JSON.parse(v.images) as string[]; } catch { return []; } })();
   const features = (() => { try { return JSON.parse(v.features) as string[]; } catch { return []; } })();
+  const featuresEn = (() => { try { return JSON.parse(v.featuresEn) as string[]; } catch { return []; } })();
   const enrichment = VEHICLE_ENRICHMENTS[v.id] ?? {};
   return {
     id: v.id,
@@ -234,14 +242,16 @@ function toModal(v: Vehicle): ModalVehicle {
     year: v.year,
     mileage: `${v.mileage.toLocaleString("fr-FR")} km`,
     fuel: v.fuel,
-    price: v.price > 0 ? `${v.price.toLocaleString("fr-FR")} €` : "Prix sur demande",
+    price: v.price > 0 ? `${v.price.toLocaleString("fr-FR")} €` : priceOnRequest,
     images,
     transmission: v.transmission,
     color: v.color,
     origin: v.origin,
     power: v.power ?? undefined,
     description: v.description,
+    descriptionEn: v.descriptionEn,
     features,
+    featuresEn,
     status: v.status,
     layoutVariant: V2_IDS.has(v.id) ? "v2" : undefined,
     ...enrichment,
@@ -282,10 +292,15 @@ function VehicleCard({
   isDemo?: boolean;
   onClick: () => void;
 }) {
+  const { t } = useLocale();
+  const tv = t.vehicles;
   const [imgIdx, setImgIdx] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const total = images.length;
   const img = images[imgIdx] ?? null;
+
+  const fuelLabel = tv.fuelOptions.find((o) => o.value === fuel)?.label ?? fuel;
+  const transLabel = transmission ? (tv.transmissionOptions.find((o) => o.value === transmission)?.label ?? transmission) : null;
 
   const prevImg = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -301,14 +316,14 @@ function VehicleCard({
   };
 
   const specs = [
-    { label: "Modèle", value: model },
-    { label: "Année", value: String(year) },
-    { label: "Kilométrage", value: mileage },
-    { label: "Carburant", value: fuel },
-    transmission ? { label: "Boîte", value: transmission } : null,
-    power ? { label: "Puissance", value: `${power} ch` } : null,
-    color ? { label: "Couleur", value: color } : null,
-    origin ? { label: "Origine", value: origin } : null,
+    { label: tv.specModel, value: model },
+    { label: tv.specYear, value: String(year) },
+    { label: tv.specMileage, value: mileage },
+    { label: tv.specFuel, value: fuelLabel },
+    transLabel ? { label: tv.specGearbox, value: transLabel } : null,
+    power ? { label: tv.specPower, value: `${power} ch` } : null,
+    color ? { label: tv.specColor, value: color } : null,
+    origin ? { label: tv.specOrigin, value: origin } : null,
   ].filter((s): s is { label: string; value: string } => s !== null);
 
   return (
@@ -327,7 +342,7 @@ function VehicleCard({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "#0D1A2D" }}>
-            <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#1B3055" }}>Photo à venir</span>
+            <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#1B3055" }}>{tv.photoComingSoon}</span>
           </div>
         )}
 
@@ -341,7 +356,7 @@ function VehicleCard({
         {isDemo && (
           <div className="absolute top-5 left-5 z-10">
             <span className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5" style={{ backgroundColor: "rgba(7,15,30,0.8)", color: "#1B3055", border: "1px solid #1B3055" }}>
-              Exemple
+              {tv.example}
             </span>
           </div>
         )}
@@ -349,7 +364,7 @@ function VehicleCard({
         {/* Badge masqué (admin only) */}
         {isHidden && (
           <div className="absolute top-5 right-5 z-30">
-            <span className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5" style={{ backgroundColor: "#FF6B35", color: "#070F1E" }}>Masqué</span>
+            <span className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5" style={{ backgroundColor: "#FF6B35", color: "#070F1E" }}>{tv.hidden}</span>
           </div>
         )}
 
@@ -359,11 +374,11 @@ function VehicleCard({
             <div className="absolute inset-0 z-10" style={{ background: "linear-gradient(135deg, rgba(7,15,30,0.7) 0%, rgba(7,15,30,0.4) 100%)" }} />
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3">
               <span className="font-black uppercase" style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#F0F5FF", letterSpacing: "0.45em", textShadow: "0 2px 40px rgba(0,0,0,0.8)" }}>
-                Vendu
+                {tv.soldBadge}
               </span>
               <div style={{ width: "40px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.6 }} />
               <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
-                Trouvé par Intelligence Automobile
+                {tv.soldBy}
               </span>
             </div>
           </>
@@ -396,7 +411,7 @@ function VehicleCard({
           style={{ bottom: "1.5rem" }}
         >
           <div style={{ backgroundColor: "rgba(240,245,255,0.1)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRadius: "100px", padding: "10px 22px", border: "1px solid rgba(240,245,255,0.12)" }}>
-            <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: "#F0F5FF" }}>Voir le détail</span>
+            <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: "#F0F5FF" }}>{tv.viewDetail}</span>
           </div>
         </div>
       </div>
@@ -419,13 +434,13 @@ function VehicleCard({
                 backgroundColor: isSold ? "transparent" : "rgba(107,159,238,0.08)",
               }}
             >
-              {isSold ? "Vendu" : "Disponible"}
+              {isSold ? tv.soldBadge : tv.availableBadge}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
-            Caractéristiques
+            {tv.specs}
           </span>
           <svg
             width="14" height="14" viewBox="0 0 14 14" fill="none"
@@ -463,6 +478,24 @@ function VehicleCard({
   );
 }
 
+// ── Modèles par marque (pour le filtre secondaire "Modèle") ──────────────────
+const AUDI_MODELS = [
+  "A1", "A3", "A4", "A5", "A6", "A7", "A8",
+  "S3", "S4", "S5", "S6", "S7", "S8",
+  "RS3", "RS4", "RS5", "RS6", "RS7",
+  "Q2", "Q3", "Q4 e-tron", "Q5", "Q6 e-tron", "Q7", "Q8", "Q8 e-tron",
+  "SQ2", "SQ5", "SQ7", "SQ8",
+  "RS Q3", "RS Q8",
+  "TT", "TTS", "TT RS",
+  "R8",
+  "e-tron GT", "RS e-tron GT",
+  "80", "90", "100", "200", "Coupé", "Cabriolet", "Allroad", "V8",
+];
+
+const MODELS_BY_MAKE: Record<string, string[]> = {
+  Audi: AUDI_MODELS,
+};
+
 // ── Marques sport/luxe pré-chargées ─────────────────────────────────────────
 const SPORT_MAKES = [
   "Alfa Romeo",
@@ -488,24 +521,33 @@ const SPORT_MAKES = [
 export default function VehiculesList({
   vehicules,
   makes,
+  modelsByMake = {},
   filters,
   isAdmin = false,
 }: {
   vehicules: Vehicle[];
   makes: string[];
+  modelsByMake?: Record<string, string[]>;
   filters: Filters;
   isAdmin?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useLocale();
+  const tv = t.vehicles;
   const [selected, setSelected] = useState<ModalVehicle | null>(null);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams();
       if (filters.make && key !== "make") params.set("make", filters.make);
+      if (filters.model && key !== "model" && key !== "make") params.set("model", filters.model);
       if (filters.fuel && key !== "fuel") params.set("fuel", filters.fuel);
+      if (filters.transmission && key !== "transmission") params.set("transmission", filters.transmission);
       if (filters.maxPrice && key !== "maxPrice") params.set("maxPrice", String(filters.maxPrice));
+      if (filters.maxMileage && key !== "maxMileage") params.set("maxMileage", String(filters.maxMileage));
+      if (filters.minYear && key !== "minYear") params.set("minYear", String(filters.minYear));
       if (filters.status && key !== "status") params.set("status", filters.status);
       if (value) params.set(key, value);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -513,12 +555,20 @@ export default function VehiculesList({
     [filters, pathname, router]
   );
 
-  const fuels = ["Diesel", "Essence", "Hybride", "Électrique"];
+  const fuelOpts = tv.fuelOptions;
+  const transOpts = tv.transmissionOptions;
   const currentStatus = filters.status ?? "tous";
-  const hasActiveFilters = filters.make || filters.fuel || filters.maxPrice;
+  const hasActiveFilters =
+    filters.make || filters.model || filters.fuel || filters.transmission ||
+    filters.maxPrice || filters.maxMileage || filters.minYear;
+  const hasMoreFiltersActive = filters.fuel || filters.transmission || filters.maxMileage || filters.minYear;
 
   const dbMakesSet = new Set(makes);
   const extraMakes = SPORT_MAKES.filter((m) => !dbMakesSet.has(m)).sort((a, b) => a.localeCompare(b));
+
+  const availableModels = filters.make
+    ? Array.from(new Set([...(MODELS_BY_MAKE[filters.make] ?? []), ...(modelsByMake[filters.make] ?? [])])).sort((a, b) => a.localeCompare(b))
+    : [];
 
   return (
     <section style={{ backgroundColor: "#070F1E" }}>
@@ -529,13 +579,13 @@ export default function VehiculesList({
         style={{ backgroundColor: "rgba(7,15,30,0.95)", borderColor: "#1B3055" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="flex items-center gap-4 py-5 overflow-x-auto">
+          <div className="flex items-center gap-4 pt-5 pb-3 overflow-x-auto">
 
             <div className="flex gap-2 flex-shrink-0">
               {[
-                { key: "disponible", label: "Disponibles" },
-                { key: "vendu", label: "Vendus" },
-                { key: "tous", label: "Tous" },
+                { key: "disponible", label: tv.available },
+                { key: "vendu", label: tv.sold },
+                { key: "tous", label: tv.all },
               ].map((s) => (
                 <button
                   key={s.key}
@@ -560,16 +610,16 @@ export default function VehiculesList({
               className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
               style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.make ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
             >
-              <option value="" style={{ backgroundColor: "#070F1E" }}>Toutes marques</option>
+              <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allMakes}</option>
               {makes.length > 0 && (
-                <optgroup label="En stock" style={{ backgroundColor: "#070F1E" }}>
+                <optgroup label={tv.inStock} style={{ backgroundColor: "#070F1E" }}>
                   {makes.map((m) => (
                     <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
                   ))}
                 </optgroup>
               )}
               {extraMakes.length > 0 && (
-                <optgroup label="Autres marques" style={{ backgroundColor: "#070F1E" }}>
+                <optgroup label={tv.otherMakes} style={{ backgroundColor: "#070F1E" }}>
                   {extraMakes.map((m) => (
                     <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
                   ))}
@@ -577,17 +627,19 @@ export default function VehiculesList({
               )}
             </select>
 
-            <select
-              value={filters.fuel ?? ""}
-              onChange={(e) => updateFilter("fuel", e.target.value)}
-              className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
-              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.fuel ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
-            >
-              <option value="" style={{ backgroundColor: "#070F1E" }}>Carburant</option>
-              {fuels.map((f) => (
-                <option key={f} value={f} style={{ backgroundColor: "#070F1E" }}>{f}</option>
-              ))}
-            </select>
+            {filters.make && availableModels.length > 0 && (
+              <select
+                value={filters.model ?? ""}
+                onChange={(e) => updateFilter("model", e.target.value)}
+                className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+                style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.model ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
+              >
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allModels} {filters.make}</option>
+                {availableModels.map((m) => (
+                  <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
+                ))}
+              </select>
+            )}
 
             <select
               value={filters.maxPrice ?? ""}
@@ -595,7 +647,7 @@ export default function VehiculesList({
               className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
               style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.maxPrice ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
             >
-              <option value="" style={{ backgroundColor: "#070F1E" }}>Budget max</option>
+              <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.maxBudget}</option>
               {[15000, 20000, 30000, 40000, 50000, 60000, 70000, 80000].map((p) => (
                 <option key={p} value={p} style={{ backgroundColor: "#070F1E" }}>
                   {p.toLocaleString("fr-FR")} €
@@ -607,10 +659,94 @@ export default function VehiculesList({
               <>
                 <div className="w-px h-4 flex-shrink-0" style={{ backgroundColor: "#1B3055" }} />
                 <Link href="/vehicules" className="text-[9px] tracking-[0.25em] uppercase flex-shrink-0" style={{ color: "#6B9FEE" }}>
-                  Effacer ×
+                  {tv.clearFilters}
                 </Link>
               </>
             )}
+          </div>
+
+          {/* ── LIGNE 2 : FILTRES SUPPLÉMENTAIRES ── */}
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowMoreFilters((v) => !v)}
+              className="flex items-center gap-2 text-[11px] tracking-[0.25em] uppercase transition-all duration-200 hover:opacity-70 py-1.5"
+              style={{ color: hasMoreFiltersActive || showMoreFilters ? "#F0F5FF" : "#6B9FEE" }}
+            >
+              <svg
+                width="11" height="11" viewBox="0 0 14 14" fill="none"
+                className="transition-transform duration-300 flex-shrink-0"
+                style={{ transform: showMoreFilters ? "rotate(180deg)" : "rotate(0deg)" }}
+              >
+                <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {showMoreFilters ? tv.lessFilters : tv.moreFilters}
+              {hasMoreFiltersActive && (
+                <span className="text-[8px] px-1.5 py-0.5 ml-1" style={{ backgroundColor: "rgba(107,159,238,0.15)", color: "#6B9FEE" }}>
+                  {[filters.fuel, filters.transmission, filters.maxMileage, filters.minYear].filter(Boolean).length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* ── FILTRES SECONDAIRES ── */}
+          <div
+            style={{
+              overflow: "hidden",
+              maxHeight: showMoreFilters ? "120px" : "0",
+              transition: "max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          >
+            <div className="flex items-center gap-4 pb-5 overflow-x-auto">
+              <select
+                value={filters.fuel ?? ""}
+                onChange={(e) => updateFilter("fuel", e.target.value)}
+                className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+                style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.fuel ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
+              >
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.fuelFilter}</option>
+                {fuelOpts.map((o) => (
+                  <option key={o.value} value={o.value} style={{ backgroundColor: "#070F1E" }}>{o.label}</option>
+                ))}
+              </select>
+
+              <select
+                value={filters.transmission ?? ""}
+                onChange={(e) => updateFilter("transmission", e.target.value)}
+                className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+                style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.transmission ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
+              >
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.transmissionFilter}</option>
+                {transOpts.map((o) => (
+                  <option key={o.value} value={o.value} style={{ backgroundColor: "#070F1E" }}>{o.label}</option>
+                ))}
+              </select>
+
+              <select
+                value={filters.maxMileage ?? ""}
+                onChange={(e) => updateFilter("maxMileage", e.target.value)}
+                className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+                style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.maxMileage ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
+              >
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.maxMileage}</option>
+                {[50000, 100000, 150000, 200000, 250000].map((k) => (
+                  <option key={k} value={k} style={{ backgroundColor: "#070F1E" }}>
+                    {k.toLocaleString("fr-FR")} km
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filters.minYear ?? ""}
+                onChange={(e) => updateFilter("minYear", e.target.value)}
+                className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
+                style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.minYear ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
+              >
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.minYear}</option>
+                {[2024, 2022, 2020, 2018, 2015, 2010, 2005, 2000].map((y) => (
+                  <option key={y} value={y} style={{ backgroundColor: "#070F1E" }}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -632,14 +768,14 @@ export default function VehiculesList({
               power={v.power}
               color={v.color}
               origin={v.origin}
-              price={v.price > 0 ? `${v.price.toLocaleString("fr-FR")} €` : "Prix sur demande"}
+              price={v.price > 0 ? `${v.price.toLocaleString("fr-FR")} €` : tv.priceOnRequest}
               isSold={v.status === "vendu"}
               isHidden={isAdmin && !v.isPublished}
-              onClick={() => setSelected(toModal(v))}
+              onClick={() => setSelected(toModal(v, tv.priceOnRequest))}
             />
           );
         })}
-        {DEMO_VEHICLES.map((v) => (
+        {!hasActiveFilters && DEMO_VEHICLES.map((v) => (
           <div key={v.id} style={{ opacity: 0.7 }}>
             <VehicleCard
               images={v.images}
@@ -665,10 +801,10 @@ export default function VehiculesList({
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 flex flex-col items-center text-center gap-6">
           <div>
             <p className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
-              Vous ne trouvez pas votre véhicule idéal ?
+              {tv.notFoundLabel}
             </p>
             <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-              Décrivez votre véhicule. Notre réseau s&apos;active pour vous.
+              {tv.notFoundDesc}
             </p>
           </div>
           <Link
@@ -676,7 +812,7 @@ export default function VehiculesList({
             className="flex-shrink-0 px-8 py-4 text-xs font-semibold tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
             style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
           >
-            Recherche personnalisée
+            {tv.customSearchCta}
           </Link>
         </div>
       </div>

@@ -2,14 +2,11 @@
 
 import { useState, useRef } from "react";
 import { upload } from "@vercel/blob/client";
+import { useLocale } from "@/i18n/context";
 
 type Status = "idle" | "sending" | "success" | "error";
 
-const ANNEES     = Array.from({ length: 13 }, (_, i) => 2025 - i);
-const CARBURANTS = ["Peu importe", "Essence", "Diesel", "Hybride", "Électrique"];
-const BOITES     = ["Peu importe", "Automatique", "Manuelle"];
-const ETATS      = ["Excellent", "Très bon", "Bon", "Quelques défauts"];
-const ENTRETIENS = ["Carnet complet", "Partiel", "Non documenté"];
+const ANNEES = Array.from({ length: 13 }, (_, i) => 2025 - i);
 
 const fieldStyle: React.CSSProperties = {
   backgroundColor: "#071428",
@@ -43,6 +40,8 @@ function SectionCard({ title, children }: { title: string; children: React.React
 }
 
 export default function AideVenteForm() {
+  const { t } = useLocale();
+  const f = t.resale.form;
   const [status, setStatus]   = useState<Status>("idle");
   const [photos, setPhotos]   = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -52,7 +51,7 @@ export default function AideVenteForm() {
     if (!files) return;
     const incoming = Array.from(files).slice(0, 10 - photos.length);
     const newPhotos   = [...photos,   ...incoming].slice(0, 10);
-    const newPreviews = [...previews, ...incoming.map((f) => URL.createObjectURL(f))].slice(0, 10);
+    const newPreviews = [...previews, ...incoming.map((file) => URL.createObjectURL(file))].slice(0, 10);
     setPhotos(newPhotos);
     setPreviews(newPreviews);
   }
@@ -70,7 +69,6 @@ export default function AideVenteForm() {
     const data = new FormData(form);
 
     try {
-      // Upload photos vers Vercel Blob (parallèle)
       const blobUrls = await Promise.all(
         photos.map((file) =>
           upload(file.name, file, {
@@ -103,10 +101,10 @@ export default function AideVenteForm() {
           <span style={{ color: "#6B9FEE", fontSize: "22px" }}>✓</span>
         </div>
         <h3 className="font-black uppercase mb-4" style={{ fontSize: "1.4rem", letterSpacing: "-0.02em" }}>
-          Demande reçue
+          {f.successTitle}
         </h3>
         <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#AABFDA" }}>
-          Nous analysons votre véhicule et vous envoyons une estimation argumentée sous 24h ouvrées.
+          {f.successMsg}
         </p>
       </div>
     );
@@ -115,19 +113,19 @@ export default function AideVenteForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
 
-      <SectionCard title="Votre véhicule">
+      <SectionCard title={f.vehicleSection}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div>
-            <label style={labelStyle}>Marque *</label>
-            <input name="marque" required type="text" placeholder="BMW, Audi, Mercedes..."
+            <label style={labelStyle}>{f.makeLabel}</label>
+            <input name="marque" required type="text" placeholder={f.makePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div className="sm:col-span-2">
-            <label style={labelStyle}>Modèle / Version *</label>
-            <input name="modele" required type="text" placeholder="Série 5 530d xDrive M Sport..."
+            <label style={labelStyle}>{f.modelLabel}</label>
+            <input name="modele" required type="text" placeholder={f.modelPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -137,7 +135,7 @@ export default function AideVenteForm() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
           <div>
-            <label style={labelStyle}>Année *</label>
+            <label style={labelStyle}>{f.yearLabel}</label>
             <select name="annee" required style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -147,56 +145,56 @@ export default function AideVenteForm() {
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Kilométrage *</label>
-            <input name="kilometrage" required type="text" placeholder="Ex : 68 000"
+            <label style={labelStyle}>{f.mileageLabel}</label>
+            <input name="kilometrage" required type="text" placeholder={f.mileagePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Carburant</label>
+            <label style={labelStyle}>{f.fuelLabel}</label>
             <select name="carburant" style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
-              {CARBURANTS.map((c) => <option key={c} value={c}>{c}</option>)}
+              {f.fuels.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Boîte</label>
+            <label style={labelStyle}>{f.gearboxLabel}</label>
             <select name="boite" style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
-              {BOITES.map((b) => <option key={b} value={b}>{b}</option>)}
+              {f.gearboxes.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div>
-            <label style={labelStyle}>État général *</label>
+            <label style={labelStyle}>{f.conditionLabel}</label>
             <select name="etat" required style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
               <option value="">—</option>
-              {ETATS.map((e) => <option key={e} value={e}>{e}</option>)}
+              {f.conditions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Entretien</label>
+            <label style={labelStyle}>{f.maintenanceLabel}</label>
             <select name="entretien" style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
-              {ENTRETIENS.map((e) => <option key={e} value={e}>{e}</option>)}
+              {f.maintenances.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Prix espéré (optionnel)</label>
-            <input name="prix" type="text" placeholder="Ex : 28 000 €"
+            <label style={labelStyle}>{f.priceLabel}</label>
+            <input name="prix" type="text" placeholder={f.pricePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -205,9 +203,9 @@ export default function AideVenteForm() {
         </div>
 
         <div>
-          <label style={labelStyle}>Précisions</label>
+          <label style={labelStyle}>{f.detailsLabel}</label>
           <textarea name="precisions" rows={2}
-            placeholder="Seconde main, options, historique, raison de la vente..."
+            placeholder={f.detailsPlaceholder}
             style={{ ...fieldStyle, resize: "none" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -216,7 +214,7 @@ export default function AideVenteForm() {
       </SectionCard>
 
       {/* ── Photos ── */}
-      <SectionCard title={`Photos ${photos.length > 0 ? `(${photos.length}/10)` : "(10 max)"}`}>
+      <SectionCard title={`${f.photosSection} ${photos.length > 0 ? `(${photos.length}/10)` : "(10 max)"}`}>
         <input
           ref={fileInputRef}
           type="file"
@@ -237,10 +235,10 @@ export default function AideVenteForm() {
           >
             <span style={{ color: "#6B9FEE", fontSize: "20px", lineHeight: 1 }}>↑</span>
             <span className="text-xs font-medium" style={{ color: "#C8D8EE" }}>
-              Cliquez pour ajouter des photos
+              {f.addPhotos}
             </span>
             <span className="text-[10px]" style={{ color: "#AABFDA" }}>
-              Extérieur · Intérieur · Compteur · Carnet d&apos;entretien
+              {f.photoHint}
             </span>
           </button>
         )}
@@ -269,19 +267,19 @@ export default function AideVenteForm() {
         )}
       </SectionCard>
 
-      <SectionCard title="Vos coordonnées">
+      <SectionCard title={f.coordsSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Prénom *</label>
-            <input name="prenom" required type="text" placeholder="Votre prénom"
+            <label style={labelStyle}>{f.firstNameLabel}</label>
+            <input name="prenom" required type="text" placeholder={f.firstNamePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Nom *</label>
-            <input name="nom" required type="text" placeholder="Votre nom"
+            <label style={labelStyle}>{f.lastNameLabel}</label>
+            <input name="nom" required type="text" placeholder={f.lastNamePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -290,16 +288,16 @@ export default function AideVenteForm() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Email *</label>
-            <input name="email" required type="email" placeholder="votre@email.fr"
+            <label style={labelStyle}>{f.emailLabel}</label>
+            <input name="email" required type="email" placeholder={f.emailPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Téléphone</label>
-            <input name="telephone" type="tel" placeholder="+33 6 00 00 00 00"
+            <label style={labelStyle}>{f.phoneLabel}</label>
+            <input name="telephone" type="tel" placeholder={f.phonePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -314,16 +312,16 @@ export default function AideVenteForm() {
         className="w-full text-sm font-bold tracking-[0.2em] uppercase py-5 transition-all duration-300 hover:-translate-y-px disabled:opacity-60"
         style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
       >
-        {status === "sending" ? "Envoi en cours..." : "Demander mon estimation gratuite"}
+        {status === "sending" ? f.submittingBtn : f.submitBtn}
       </button>
 
       <p className="text-center text-[11px]" style={{ color: "#AABFDA" }}>
-        Estimation gratuite et sans engagement · Honoraires annoncés avant tout accord
+        {f.footer}
       </p>
 
       {status === "error" && (
         <div className="p-5 text-sm" style={{ borderLeft: "2px solid #AABFDA", backgroundColor: "#071428", color: "#AABFDA" }}>
-          Une erreur s&apos;est produite. Contactez-nous à contact@intelligenceautomobile.com
+          {f.errorMsg}
         </div>
       )}
     </form>

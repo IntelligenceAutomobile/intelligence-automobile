@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/i18n/context";
 
 type Status = "idle" | "sending" | "success" | "error";
 
 const ANNEES = Array.from({ length: 10 }, (_, i) => 2025 - i);
-const CARBURANTS = ["Peu importe", "Essence", "Diesel", "Hybride", "Électrique"];
-const BOITES = ["Peu importe", "Automatique", "Manuelle"];
 
 const fieldStyle: React.CSSProperties = {
   backgroundColor: "#071428",
@@ -46,6 +45,8 @@ function SectionCard({ title, children }: { title: string; children: React.React
 }
 
 export default function RechercheForm() {
+  const { t } = useLocale();
+  const f = t.search.form;
   const [status, setStatus] = useState<Status>("idle");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -107,10 +108,10 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
           className="font-black uppercase mb-4"
           style={{ fontSize: "1.4rem", letterSpacing: "-0.02em" }}
         >
-          Recherche reçue
+          {f.successTitle}
         </h3>
         <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#AABFDA" }}>
-          Nous analysons votre demande et revenons vers vous sous 24h ouvrées avec une première sélection.
+          {f.successMsg}
         </p>
       </div>
     );
@@ -118,21 +119,21 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
-      <SectionCard title="Le véhicule">
+      <SectionCard title={f.vehicleSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Marque *</label>
+            <label style={labelStyle}>{f.makeLabel}</label>
             <input
-              name="marque" required type="text" placeholder="BMW, Audi, Mercedes..."
+              name="marque" required type="text" placeholder={f.makePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Modèle / Version *</label>
+            <label style={labelStyle}>{f.modelLabel}</label>
             <input
-              name="modele" required type="text" placeholder="Série 3, A4, Classe C..."
+              name="modele" required type="text" placeholder={f.modelPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -142,32 +143,32 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div>
-            <label style={labelStyle}>Budget maximum *</label>
+            <label style={labelStyle}>{f.budgetLabel}</label>
             <input
-              name="budget" required type="text" placeholder="Ex : 35 000 €"
+              name="budget" required type="text" placeholder={f.budgetPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Kilométrage max</label>
+            <label style={labelStyle}>{f.mileageLabel}</label>
             <input
-              name="kilometrage" type="text" placeholder="Ex : 80 000 km"
+              name="kilometrage" type="text" placeholder={f.mileagePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Année minimum</label>
+            <label style={labelStyle}>{f.yearLabel}</label>
             <select
               name="annee"
               style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
-              <option value="">Peu importe</option>
+              <option value="">{f.yearAny}</option>
               {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
@@ -175,34 +176,34 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Carburant</label>
+            <label style={labelStyle}>{f.fuelLabel}</label>
             <select
               name="carburant"
               style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
-              {CARBURANTS.map((c) => <option key={c} value={c}>{c}</option>)}
+              {f.fuels.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Boîte de vitesses</label>
+            <label style={labelStyle}>{f.gearboxLabel}</label>
             <select
               name="boite"
               style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
-              {BOITES.map((b) => <option key={b} value={b}>{b}</option>)}
+              {f.gearboxes.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
         </div>
 
         <div>
-          <label style={labelStyle}>Options souhaitées</label>
+          <label style={labelStyle}>{f.optionsLabel}</label>
           <textarea
             name="options" rows={2}
-            placeholder="Pack Sport, Toit ouvrant, LED, Carplay..."
+            placeholder={f.optionsPlaceholder}
             style={{ ...fieldStyle, resize: "none" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -210,21 +211,21 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
         </div>
       </SectionCard>
 
-      <SectionCard title="Vos coordonnées">
+      <SectionCard title={f.coordsSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Prénom *</label>
+            <label style={labelStyle}>{f.firstNameLabel}</label>
             <input
-              name="prenom" required type="text" placeholder="Votre prénom"
+              name="prenom" required type="text" placeholder={f.firstNamePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Nom *</label>
+            <label style={labelStyle}>{f.lastNameLabel}</label>
             <input
-              name="nom" required type="text" placeholder="Votre nom"
+              name="nom" required type="text" placeholder={f.lastNamePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -234,18 +235,18 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Email *</label>
+            <label style={labelStyle}>{f.emailLabel}</label>
             <input
-              name="email" required type="email" placeholder="votre@email.fr"
+              name="email" required type="email" placeholder={f.emailPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Téléphone</label>
+            <label style={labelStyle}>{f.phoneLabel}</label>
             <input
-              name="telephone" type="tel" placeholder="+33 6 00 00 00 00"
+              name="telephone" type="tel" placeholder={f.phonePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -254,10 +255,10 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
         </div>
 
         <div>
-          <label style={labelStyle}>Précisions supplémentaires</label>
+          <label style={labelStyle}>{f.detailsLabel}</label>
           <textarea
             name="precisions" rows={3}
-            placeholder="Tout élément qui nous aiderait à mieux cibler votre recherche..."
+            placeholder={f.detailsPlaceholder}
             style={{ ...fieldStyle, resize: "none" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -271,11 +272,11 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
         className="w-full text-sm font-bold tracking-[0.2em] uppercase py-5 transition-all duration-300 hover:-translate-y-px disabled:opacity-60"
         style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
       >
-        {status === "sending" ? "Envoi en cours..." : "Soumettre ma recherche"}
+        {status === "sending" ? f.submittingBtn : f.submitBtn}
       </button>
 
       <p className="text-center text-[11px]" style={{ color: "#AABFDA" }}>
-        Commission fixe annoncée avant tout engagement · Aucun frais si nous ne trouvons pas
+        {f.footer}
       </p>
 
       {status === "error" && (
@@ -283,7 +284,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
           className="p-5 text-sm"
           style={{ borderLeft: "2px solid #AABFDA", backgroundColor: "#071428", color: "#AABFDA" }}
         >
-          Une erreur s&apos;est produite. Contactez-nous à contact@intelligenceautomobile.com
+          {f.errorMsg}
         </div>
       )}
     </form>

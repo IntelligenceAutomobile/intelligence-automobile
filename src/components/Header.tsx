@@ -3,25 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-
-const NAV_LINKS = [
-  { href: "/vehicules",  label: "Nos Véhicules" },
-  { href: "/recherche",  label: "Recherche personnalisée" },
-  { href: "/aide-vente", label: "Revente sur mesure" },
-  { href: "/convoyage",  label: "Transport & Livraison" },
-  { href: "/methode",    label: "Notre Méthode" },
-  { href: "/contact",    label: "Contact" },
-];
-
-const NAV_LINKS_V2 = [
-  { href: "/",             label: "Accueil" },
-  { href: "/vehicules-2",  label: "Nos Véhicules" },
-  { href: "/recherche-2",  label: "Recherche personnalisée" },
-  { href: "/aide-vente-2", label: "Revente sur mesure" },
-  { href: "/convoyage-2",  label: "Transport & Livraison" },
-  { href: "/methode-2",    label: "Notre Méthode" },
-  { href: "/contact-2",    label: "Contact" },
-];
+import { useLocale, LanguageSwitcher } from "@/i18n/context";
 
 const MARK_SRC = "/Logo/v9%20Logo%20Sans%20texte.png";
 
@@ -72,9 +54,20 @@ export function LogoFull({
 
 export default function Header() {
   const pathname  = usePathname();
+  const { t }     = useLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin]   = useState(false);
+
+  const NAV_LINKS_V2 = [
+    { href: "/",             label: t.nav.home },
+    { href: "/vehicules-2",  label: t.nav.vehicles },
+    { href: "/recherche-2",  label: t.nav.search },
+    { href: "/aide-vente-2", label: t.nav.resale },
+    { href: "/convoyage-2",  label: t.nav.transport },
+    { href: "/methode-2",    label: t.nav.method },
+    { href: "/contact-2",    label: t.nav.contact },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -101,7 +94,7 @@ export default function Header() {
       {/* Filet accent top */}
       <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #6B9FEE 30%, #6B9FEE 70%, transparent 100%)", opacity: 0.45 }} />
 
-      {/* ── Rangée 1 : Logo centré + CTA ── */}
+      {/* ── Rangée 1 : Logo centré + CTA + LanguageSwitcher ── */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="relative flex items-center justify-between" style={{ paddingTop: "18px", paddingBottom: "18px" }}>
 
@@ -112,34 +105,37 @@ export default function Header() {
 
           {/* Spacer gauche */}
           <div className="hidden md:block" style={{ visibility: "hidden", pointerEvents: "none" }}>
-            <span className="text-[10px] tracking-[0.2em] px-5 py-2.5">Nous contacter</span>
+            <span className="text-[10px] tracking-[0.2em] px-5 py-2.5">{t.nav.contactCta}</span>
           </div>
 
-          {/* CTA desktop — outlined discret */}
-          <Link
-            href="/contact-2"
-            className="hidden md:inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] uppercase px-5 py-2.5 flex-shrink-0 transition-all duration-250"
-            style={{
-              color: "#A8C4F0",
-              border: "1px solid rgba(107,159,238,0.35)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "#F0F5FF";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,159,238,0.75)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "#A8C4F0";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,159,238,0.35)";
-            }}
-          >
-            Nous contacter
-          </Link>
+          {/* Droite : CTA + LanguageSwitcher desktop */}
+          <div className="hidden md:flex items-center gap-5 flex-shrink-0">
+            <LanguageSwitcher />
+            <Link
+              href="/contact-2"
+              className="inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] uppercase px-5 py-2.5 transition-all duration-250"
+              style={{
+                color: "#A8C4F0",
+                border: "1px solid rgba(107,159,238,0.35)",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "#F0F5FF";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,159,238,0.75)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "#A8C4F0";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,159,238,0.35)";
+              }}
+            >
+              {t.nav.contactCta}
+            </Link>
+          </div>
 
           {/* Burger mobile */}
           <button
             className="md:hidden flex flex-col justify-center gap-[5px] p-2 -mr-2"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
           >
             <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(45deg) translateY(6px)" : "none", transition: "transform 0.25s ease" }} />
             <span className="block h-px"     style={{ backgroundColor: "#F0F5FF", width: menuOpen ? "20px" : "14px", opacity: menuOpen ? 0 : 1, transition: "opacity 0.2s ease, width 0.25s ease" }} />
@@ -151,60 +147,7 @@ export default function Header() {
       {/* Séparateur */}
       <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.07)", transition: "opacity 0.4s ease" }} />
 
-      {/* ── Rangée 2 : Navigation V1 (cachée) ── */}
-      <div
-        className="hidden md:block"
-        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)", display: "none" }}
-      >
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <nav className="flex items-center justify-evenly" style={{ height: "50px" }}>
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="relative flex items-center h-full whitespace-nowrap transition-all duration-200"
-                  style={{
-                    color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.52)",
-                    fontSize: "11px",
-                    fontWeight: isActive ? 600 : 400,
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.88)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.52)";
-                    }
-                  }}
-                >
-                  {link.label}
-                  {/* Underline bas */}
-                  <span
-                    className="absolute bottom-0 left-0 right-0"
-                    style={{
-                      height: "2px",
-                      background: "linear-gradient(to right, transparent, #8BB8F5, transparent)",
-                      borderRadius: "2px",
-                      transformOrigin: "center",
-                      transform: isActive ? "scaleX(1)" : "scaleX(0)",
-                      transition: "transform 0.3s ease",
-                    }}
-                  />
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-
-      {/* ── Rangée 3 : Navigation V2 ── */}
+      {/* ── Navigation V2 ── */}
       <div
         className="hidden md:block"
         style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
@@ -233,7 +176,6 @@ export default function Header() {
                   }}
                 >
                   {link.label}
-                  {/* Underline bas */}
                   <span
                     className="absolute bottom-0 left-0 right-0"
                     style={{
@@ -259,7 +201,7 @@ export default function Header() {
       <div
         className="md:hidden overflow-hidden"
         style={{
-          maxHeight: menuOpen ? "420px" : "0",
+          maxHeight: menuOpen ? "480px" : "0",
           transition: "max-height 0.35s ease",
           backgroundColor: "#040B16",
         }}
@@ -293,14 +235,21 @@ export default function Header() {
               </Link>
             );
           })}
-          <div className="pt-6 mt-2" style={{ borderTop: "1px solid rgba(27,48,85,0.7)" }}>
+          {/* Language switcher mobile */}
+          <div
+            className="flex items-center gap-4 pt-6 mt-2"
+            style={{ borderTop: "1px solid rgba(27,48,85,0.7)" }}
+          >
+            <LanguageSwitcher />
+          </div>
+          <div className="pt-4">
             <Link
               href="/contact-2"
               onClick={() => setMenuOpen(false)}
               className="flex items-center justify-center text-[11px] font-bold tracking-[0.22em] uppercase py-4 transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
             >
-              Nous contacter
+              {t.nav.contactCta}
             </Link>
           </div>
         </nav>

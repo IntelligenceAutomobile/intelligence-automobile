@@ -19,8 +19,10 @@ model Vehicle {
   fuel         String   @default("Diesel")
   power        Int?
   origin       String   @default("Allemagne")
-  description  String   @default("")
-  features     String   @default("[]")
+  description   String   @default("")
+  descriptionEn String   @default("")
+  features      String   @default("[]")
+  featuresEn    String   @default("[]")
   images       String   @default("[]")
   status       String   @default("disponible")
   isPublished  Boolean  @default(true)

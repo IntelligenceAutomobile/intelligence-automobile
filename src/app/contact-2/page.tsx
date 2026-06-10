@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/app/contact/ContactForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Contact V2 — Intelligence Automobile",
@@ -11,9 +12,10 @@ export default async function ContactV2Page({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  const params = await searchParams;
+  const [params, { t }] = await Promise.all([searchParams, getTranslations()]);
   const vehicule = params.vehicule;
   const service = params.service;
+  const s = t.contact;
 
   return (
     <>
@@ -29,7 +31,6 @@ export default async function ContactV2Page({
             overflow: "hidden",
           }}
         >
-          {/* Photo de fond */}
           <img
             src="/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg"
             alt=""
@@ -44,7 +45,6 @@ export default async function ContactV2Page({
             }}
           />
 
-          {/* Overlay latéral */}
           <div
             style={{
               position: "absolute",
@@ -54,7 +54,6 @@ export default async function ContactV2Page({
             }}
           />
 
-          {/* Overlay bas */}
           <div
             style={{
               position: "absolute",
@@ -66,7 +65,6 @@ export default async function ContactV2Page({
             }}
           />
 
-          {/* Texte bas-gauche */}
           <div
             style={{
               position: "absolute",
@@ -84,11 +82,11 @@ export default async function ContactV2Page({
                 letterSpacing: "-0.03em",
                 textTransform: "uppercase",
                 marginBottom: "1.8rem",
-                whiteSpace: "pre-line",
               }}
             >
-              {"Écrivez-\n"}
-              <span style={{ color: "#6B9FEE" }}>nous.</span>
+              {s.heroTitle[0]}
+              <br />
+              <span style={{ color: "#6B9FEE" }}>{s.heroTitle[1]}</span>
             </h1>
 
             <div style={{ marginBottom: "1.5rem" }}>
@@ -104,7 +102,7 @@ export default async function ContactV2Page({
                   letterSpacing: "0.01em",
                 }}
               >
-                Décrivez-nous votre projet en quelques mots. Nous vous répondons sous 24h et vous orientons vers la solution la plus adaptée.
+                {s.heroSubtitle}
               </p>
             </div>
           </div>
@@ -136,7 +134,7 @@ export default async function ContactV2Page({
                     marginBottom: "2.5rem",
                   }}
                 >
-                  Envoyer un message
+                  {s.sendMessage}
                 </p>
                 <ContactForm defaultVehicule={vehicule} defaultService={service} />
               </div>
@@ -146,18 +144,13 @@ export default async function ContactV2Page({
 
                 {/* Coordonnées */}
                 <div style={{ marginBottom: "2rem" }}>
-                  {[
-                    { label: "Email", value: "contact@intelligence-automobile.fr" },
-                    { label: "Téléphone", value: "+33 (0)6 00 00 00 00" },
-                    { label: "Zone d'activité", value: "France · Import DE & BE" },
-                    { label: "Réponse", value: "Sous 24h ouvrées" },
-                  ].map((item, i) => (
+                  {s.info.map((item, i) => (
                     <div
                       key={item.label}
                       style={{
                         padding: "1.25rem 0",
                         borderTop: "1px solid #1B3055",
-                        ...(i === 3 ? { borderBottom: "1px solid #1B3055" } : {}),
+                        ...(i === s.info.length - 1 ? { borderBottom: "1px solid #1B3055" } : {}),
                       }}
                     >
                       <span
@@ -198,7 +191,7 @@ export default async function ContactV2Page({
                       marginBottom: "0.75rem",
                     }}
                   >
-                    Première prise de contact
+                    {s.firstContactTitle}
                   </h3>
                   <p
                     style={{
@@ -207,9 +200,7 @@ export default async function ContactV2Page({
                       color: "#C8D8EE",
                     }}
                   >
-                    Pas besoin de préparer un dossier complet. Un message suffit :
-                    dites-nous ce que vous cherchez — acheter, importer ou vendre —
-                    et nous prendrons le temps de vous orienter.
+                    {s.firstContactText}
                   </p>
                 </div>
 
@@ -224,17 +215,13 @@ export default async function ContactV2Page({
                       marginBottom: "1.5rem",
                     }}
                   >
-                    Nos services
+                    {s.servicesLabel}
                   </p>
                   <div>
-                    {[
-                      { label: "Recherche personnalisée", href: "/recherche-2" },
-                      { label: "Revente sur mesure", href: "/aide-vente-2" },
-                      { label: "Transport & Livraison", href: "/convoyage-2" },
-                    ].map((s, i) => (
+                    {s.services.map((sv) => (
                       <a
-                        key={s.label}
-                        href={s.href}
+                        key={sv.label}
+                        href={sv.href}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -254,7 +241,7 @@ export default async function ContactV2Page({
                             color: "#C8D8EE",
                           }}
                         >
-                          {s.label}
+                          {sv.label}
                         </span>
                         <span style={{ fontSize: "0.75rem", color: "#6B9FEE" }}>
                           →

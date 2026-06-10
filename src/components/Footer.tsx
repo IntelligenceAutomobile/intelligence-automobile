@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/i18n/context";
 
 export default function Footer() {
+  const { t } = useLocale();
+
   return (
     <footer
       className="border-t mt-auto"
@@ -17,15 +20,10 @@ export default function Footer() {
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
             >
-              Navigation
+              {t.footer.navigation}
             </h3>
             <ul className="space-y-3">
-              {[
-                { href: "/vehicules", label: "Nos véhicules" },
-                { href: "/services", label: "Services" },
-                { href: "/methode", label: "Notre méthode" },
-                { href: "/contact", label: "Contact" },
-              ].map((link) => (
+              {t.footer.navLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -46,14 +44,10 @@ export default function Footer() {
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
             >
-              Services
+              {t.footer.services}
             </h3>
             <ul className="space-y-3">
-              {[
-                { href: "/services#achat-revente", label: "Achat · Revente" },
-                { href: "/services#mandat-import", label: "Mandat d'import" },
-                { href: "/services#aide-vente", label: "Aide à la vente" },
-              ].map((link) => (
+              {t.footer.serviceLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -74,7 +68,7 @@ export default function Footer() {
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
             >
-              Contact
+              {t.footer.contact}
             </h3>
             <ul className="space-y-3 text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
               <li>contact@intelligence-automobile.fr</li>
@@ -89,10 +83,10 @@ export default function Footer() {
           style={{ borderColor: "#1B3055" }}
         >
           <p className="text-xs" style={{ color: "#C8D8EE" }}>
-            © {new Date().getFullYear()} Intelligence Automobile. Tous droits réservés.
+            © {new Date().getFullYear()} Intelligence Automobile. {t.footer.rights}
           </p>
           <p className="text-xs" style={{ color: "#1B3055" }}>
-            Import premium · Allemagne · Belgique → France
+            {t.footer.tagline}
           </p>
         </div>
       </div>

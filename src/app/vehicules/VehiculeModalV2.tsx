@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { ModalVehicle } from "./VehiculeModal";
+import { useLocale } from "@/i18n/context";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -66,6 +67,10 @@ export default function VehiculeModalV2({
   vehicle: ModalVehicle;
   onClose: () => void;
 }) {
+  const { t, locale } = useLocale();
+  const tm = t.vehicleModal;
+  const tv = t.vehicles;
+
   const [visible, setVisible] = useState(false);
   const [showAllMaintenance, setShowAllMaintenance] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
@@ -121,22 +126,36 @@ export default function VehiculeModalV2({
   const prevImg = () => setImgIndex((i) => (i - 1 + totalImages) % totalImages);
   const nextImg = () => setImgIndex((i) => (i + 1) % totalImages);
 
-  const features = vehicle.features ?? [];
+  const isEn = locale === "en";
+  const features = (isEn && vehicle.featuresEn?.length ? vehicle.featuresEn : vehicle.features) ?? [];
+  const description = (isEn && vehicle.descriptionEn) ? vehicle.descriptionEn : vehicle.description;
+
   const pointsForts = features.slice(0, 6);
   const categories = categorize(features);
   const { name, subtitle } = parseTitle(vehicle.make, vehicle.model, vehicle.power);
 
-  const descriptionParagraphs = (vehicle.description?.split("\n\n") ?? [])
+  const fuelLabel = tv.fuelOptions.find((o) => o.value === vehicle.fuel)?.label ?? vehicle.fuel;
+  const transLabel = vehicle.transmission
+    ? (tv.transmissionOptions.find((o) => o.value === vehicle.transmission)?.label ?? vehicle.transmission)
+    : "—";
+
+  const descriptionParagraphs = (description?.split("\n\n") ?? [])
     .filter(p =>
       !p.toLowerCase().includes("accident") &&
       !p.toLowerCase().includes("contrôle technique") &&
       !p.toLowerCase().includes("intelligence automobile prend en charge") &&
-      !p.toLowerCase().includes("essai disponible")
+      !p.toLowerCase().includes("essai disponible") &&
+      !p.toLowerCase().includes("test drive available")
     )
     .slice(0, 2);
 
-  const etatFacts = (vehicle.description?.split("\n\n") ?? [])
-    .find(p => p.toLowerCase().includes("accident") || p.toLowerCase().includes("contrôle technique"))
+  const etatFacts = (description?.split("\n\n") ?? [])
+    .find(p =>
+      p.toLowerCase().includes("accident") ||
+      p.toLowerCase().includes("contrôle technique") ||
+      p.toLowerCase().includes("mot valid") ||
+      p.toLowerCase().includes("no accident")
+    )
     ?.split(/\.\s+/)
     .map(s => s.replace(/\.$/, "").trim())
     .filter(Boolean) ?? [];
@@ -212,7 +231,7 @@ export default function VehiculeModalV2({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: "#070F1E" }}>
-                  <span className="text-xs tracking-widest uppercase" style={{ color: "#1B3055" }}>Photos à venir</span>
+                  <span className="text-xs tracking-widest uppercase" style={{ color: "#1B3055" }}>{tm.photosComingSoon}</span>
                 </div>
               )}
               <div
@@ -247,7 +266,7 @@ export default function VehiculeModalV2({
                       borderRadius: "6px",
                     }}
                   >
-                    {isAvailable ? "Disponible" : "Vendu"}
+                    {isAvailable ? tm.available : tm.sold}
                   </span>
                 )}
               </div>
@@ -266,7 +285,7 @@ export default function VehiculeModalV2({
               {!vehicle.isDemo && (
                 <div className="flex items-center justify-center gap-2 px-4 py-2" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderBottom: "none" }}>
                   <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
-                  <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>Garantie 12 mois incluse</span>
+                  <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>{tm.warranty}</span>
                 </div>
               )}
               <div style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055" }}>
@@ -275,10 +294,10 @@ export default function VehiculeModalV2({
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ backgroundColor: "#1B3055", borderTop: "1px solid #1B3055" }}>
                   {[
-                    { label: "Année", value: String(vehicle.year) },
-                    { label: "Kilométrage", value: vehicle.mileage },
-                    { label: "Carburant", value: vehicle.fuel },
-                    { label: "Boîte", value: vehicle.transmission ?? "—" },
+                    { label: tm.specYear, value: String(vehicle.year) },
+                    { label: tm.specMileage, value: vehicle.mileage },
+                    { label: tm.specFuel, value: fuelLabel },
+                    { label: tm.specGearbox, value: transLabel },
                   ].map((s) => (
                     <div key={s.label} className="flex flex-col items-center justify-center py-3 px-2 text-center" style={{ backgroundColor: "#0D1F3A" }}>
                       <span className="text-[8px] tracking-[0.3em] uppercase mb-1" style={{ color: "#6B9FEE" }}>{s.label}</span>
@@ -289,9 +308,9 @@ export default function VehiculeModalV2({
                 {(vehicle.power || vehicle.color || vehicle.origin) && (
                   <div className="grid gap-px" style={{ backgroundColor: "#1B3055", borderTop: "1px solid #1B3055", gridTemplateColumns: `repeat(${[vehicle.power, vehicle.color, vehicle.origin].filter(Boolean).length}, 1fr)` }}>
                     {[
-                      vehicle.power ? { label: "Puissance", value: `${vehicle.power} ch` } : null,
-                      vehicle.color ? { label: "Couleur", value: vehicle.color } : null,
-                      vehicle.origin ? { label: "Origine", value: vehicle.origin } : null,
+                      vehicle.power ? { label: tm.specPower, value: `${vehicle.power} ch` } : null,
+                      vehicle.color ? { label: tm.specColor, value: vehicle.color } : null,
+                      vehicle.origin ? { label: tm.specOrigin, value: vehicle.origin } : null,
                     ].filter(Boolean).map((s) => (
                       <div key={s!.label} className="flex flex-col items-center justify-center py-3 px-2 text-center" style={{ backgroundColor: "#0D1F3A" }}>
                         <span className="text-[8px] tracking-[0.3em] uppercase mb-1" style={{ color: "#6B9FEE" }}>{s!.label}</span>
@@ -303,7 +322,7 @@ export default function VehiculeModalV2({
               </div>
               {!vehicle.isDemo && (
                 <div className="flex flex-col gap-1.5 px-4 py-2.5 mb-6" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderTop: "none" }}>
-                  {["Financement possible", "Démarches administratives prises en charge"].map((g) => (
+                  {[tm.financing, tm.adminIncluded].map((g) => (
                     <div key={g} className="flex items-center gap-2">
                       <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
                       <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>{g}</span>
@@ -317,7 +336,7 @@ export default function VehiculeModalV2({
               {/* Points forts */}
               {pointsForts.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>Points forts</p>
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>{tm.highlights}</p>
                   <div className="grid grid-cols-2 gap-px" style={{ backgroundColor: "#1B3055" }}>
                     {pointsForts.map((f) => (
                       <div
@@ -351,7 +370,7 @@ export default function VehiculeModalV2({
                         className="flex items-center gap-1 text-[10px] tracking-wide transition-opacity hover:opacity-80 self-start"
                         style={{ color: "#6B9FEE" }}
                       >
-                        {showFullDesc ? "Réduire ↑" : "Lire plus ↓"}
+                        {showFullDesc ? tm.readLess : tm.readMore}
                       </button>
                     </>
                   )}
@@ -361,7 +380,7 @@ export default function VehiculeModalV2({
               {/* État & historique — badges */}
               {etatFacts.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>État &amp; historique</p>
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>{tm.historyTitle}</p>
                   <div className="flex flex-wrap gap-2">
                     {etatFacts.map((fact, i) => (
                       <span
@@ -382,44 +401,47 @@ export default function VehiculeModalV2({
               {/* Équipements — accordéon */}
               {categories.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>Équipements</p>
+                  <p className="text-[9px] tracking-[0.35em] uppercase mb-3 text-center" style={{ color: "#C8D8EE" }}>{tm.equipmentTitle}</p>
                   <div className="flex flex-col gap-2">
-                    {categories.map((cat) => (
-                      <div key={cat.label}>
-                        <button
-                          onClick={() => toggleCategory(cat.label)}
-                          className="w-full flex items-center justify-between px-4 py-3 transition-opacity hover:opacity-80"
-                          style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055", borderLeft: "3px solid #6B9FEE" }}
-                        >
-                          <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
-                            {cat.label}
-                          </span>
-                          <span
-                            className="text-sm transition-transform duration-200"
-                            style={{ color: "#6B9FEE", display: "inline-block", transform: openCategories.has(cat.label) ? "rotate(90deg)" : "rotate(0deg)" }}
+                    {categories.map((cat) => {
+                      const displayLabel = tm.categoryLabels[cat.label as keyof typeof tm.categoryLabels] ?? cat.label;
+                      return (
+                        <div key={cat.label}>
+                          <button
+                            onClick={() => toggleCategory(cat.label)}
+                            className="w-full flex items-center justify-between px-4 py-3 transition-opacity hover:opacity-80"
+                            style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055", borderLeft: "3px solid #6B9FEE" }}
                           >
-                            ›
-                          </span>
-                        </button>
-                        {openCategories.has(cat.label) && (
-                          <div style={{ border: "1px solid #1B3055", borderTop: "none" }}>
-                            {Array.from({ length: Math.ceil(cat.items.length / 2) }, (_, i) => (
-                              <div key={i} className="grid grid-cols-2" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#0A1628" }}>
-                                {[0, 1].map((j) => {
-                                  const item = cat.items[i * 2 + j];
-                                  return (
-                                    <div key={j} className="flex items-start gap-2 px-4 py-3.5 text-[11px]" style={{ color: item ? "#D4E2F4" : "transparent", fontWeight: 400, borderLeft: j === 1 ? "1px solid #1B3055" : "none" }}>
-                                      <span className="flex-shrink-0 mt-0.5" style={{ color: "#6B9FEE" }}>—</span>
-                                      {item ?? ""}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                            <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
+                              {displayLabel}
+                            </span>
+                            <span
+                              className="text-sm transition-transform duration-200"
+                              style={{ color: "#6B9FEE", display: "inline-block", transform: openCategories.has(cat.label) ? "rotate(90deg)" : "rotate(0deg)" }}
+                            >
+                              ›
+                            </span>
+                          </button>
+                          {openCategories.has(cat.label) && (
+                            <div style={{ border: "1px solid #1B3055", borderTop: "none" }}>
+                              {Array.from({ length: Math.ceil(cat.items.length / 2) }, (_, i) => (
+                                <div key={i} className="grid grid-cols-2" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#0A1628" }}>
+                                  {[0, 1].map((j) => {
+                                    const item = cat.items[i * 2 + j];
+                                    return (
+                                      <div key={j} className="flex items-start gap-2 px-4 py-3.5 text-[11px]" style={{ color: item ? "#D4E2F4" : "transparent", fontWeight: 400, borderLeft: j === 1 ? "1px solid #1B3055" : "none" }}>
+                                        <span className="flex-shrink-0 mt-0.5" style={{ color: "#6B9FEE" }}>—</span>
+                                        {item ?? ""}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -428,9 +450,9 @@ export default function VehiculeModalV2({
               {maintenanceEntries.length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[9px] tracking-[0.3em] uppercase text-center" style={{ color: "#C8D8EE" }}>Entretien</p>
+                    <p className="text-[9px] tracking-[0.3em] uppercase text-center" style={{ color: "#C8D8EE" }}>{tm.maintenanceTitle}</p>
                     <span className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1" style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "6px" }}>
-                      {maintenanceEntries.length} interventions
+                      {maintenanceEntries.length} {tm.interventions}
                     </span>
                   </div>
                   <div style={{ border: "1px solid #1B3055", backgroundColor: "#070F1E" }}>
@@ -449,7 +471,7 @@ export default function VehiculeModalV2({
                     {maintenanceEntries.length > 5 && (
                       <button type="button" onClick={() => setShowAllMaintenance((v) => !v)} className="w-full px-4 py-3 text-center" style={{ borderTop: "1px solid #1B3055" }}>
                         <span className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>
-                          {showAllMaintenance ? "Réduire" : `+${maintenanceEntries.length - 5} interventions`}
+                          {showAllMaintenance ? tm.reduce : tm.moreInterventions.replace("%n", String(maintenanceEntries.length - 5))}
                         </span>
                       </button>
                     )}
@@ -466,7 +488,7 @@ export default function VehiculeModalV2({
                     style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055", borderLeft: "3px solid #6B9FEE" }}
                   >
                     <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
-                      Factures &amp; Documents
+                      {tm.documentsTitle}
                     </span>
                     <div className="flex items-center gap-2">
                       <span
@@ -488,7 +510,7 @@ export default function VehiculeModalV2({
                       {!facturesUnlocked ? (
                         <div className="px-5 py-5" style={{ backgroundColor: "#070F1E" }}>
                           <p className="text-xs mb-4" style={{ color: "#C8D8EE" }}>
-                            Contactez-nous pour obtenir le code d&apos;accès aux documents.
+                            {tm.documentsLocked}
                           </p>
                           <form
                             onSubmit={(e) => {
@@ -507,7 +529,7 @@ export default function VehiculeModalV2({
                               type="password"
                               value={facturesPassword}
                               onChange={(e) => { setFacturesPassword(e.target.value); setFacturesError(false); }}
-                              placeholder="Mot de passe"
+                              placeholder={tm.passwordPlaceholder}
                               className="flex-1 px-3 py-2.5 border text-xs outline-none"
                               style={{
                                 backgroundColor: "#112240",
@@ -520,12 +542,12 @@ export default function VehiculeModalV2({
                               className="px-4 py-2.5 text-[9px] font-semibold tracking-widest uppercase"
                               style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
                             >
-                              Accéder
+                              {tm.accessBtn}
                             </button>
                           </form>
                           {facturesError && (
                             <p className="text-[10px] mt-2" style={{ color: "#FF6B35" }}>
-                              Mot de passe incorrect
+                              {tm.wrongPassword}
                             </p>
                           )}
                         </div>
@@ -552,7 +574,7 @@ export default function VehiculeModalV2({
                                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center"
                                 style={{ backgroundColor: "rgba(107,159,238,0.12)" }}
                               >
-                                <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#F0F5FF" }}>Agrandir</span>
+                                <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#F0F5FF" }}>{tm.enlarge}</span>
                               </div>
                             </button>
                           ))}
@@ -567,7 +589,7 @@ export default function VehiculeModalV2({
               <div className="flex items-center justify-center gap-3 py-4">
                 <div style={{ width: "20px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.5 }} />
                 <span className="text-[10px] font-semibold tracking-[0.4em] uppercase" style={{ color: "#A8C4F0" }}>
-                  Sélection premium — Intelligence Automobile
+                  {tm.branding}
                 </span>
                 <div style={{ width: "20px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.5 }} />
               </div>
@@ -587,7 +609,7 @@ export default function VehiculeModalV2({
                 style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
                 onClick={onClose}
               >
-                Réserver ce véhicule
+                {tm.reserveCta}
               </Link>
             ) : (
               <Link
@@ -596,7 +618,7 @@ export default function VehiculeModalV2({
                 style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
                 onClick={onClose}
               >
-                Trouver un véhicule similaire
+                {tm.findSimilarCta}
               </Link>
             )}
             {!vehicle.isDemo && (
@@ -610,7 +632,7 @@ export default function VehiculeModalV2({
                     style={{ color: "#6B9FEE", border: "1px solid rgba(107,159,238,0.25)" }}
                     onClick={onClose}
                   >
-                    <span>↓</span> Dossier
+                    <span>↓</span> {tm.dossier}
                   </a>
                 )}
                 <Link
@@ -619,7 +641,7 @@ export default function VehiculeModalV2({
                   style={{ border: "1px solid #1B3055", color: "#C8D8EE" }}
                   onClick={onClose}
                 >
-                  Fiche complète →
+                  {tm.fullSheet}
                 </Link>
               </div>
             )}

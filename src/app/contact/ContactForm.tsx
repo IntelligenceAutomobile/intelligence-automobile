@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/i18n/context";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -11,12 +12,14 @@ export default function ContactForm({
   defaultVehicule?: string;
   defaultService?: string;
 }) {
+  const { t } = useLocale();
+  const f = t.contact.form;
   const [status, setStatus] = useState<Status>("idle");
 
   const getDefaultMessage = () => {
-    if (defaultVehicule) return `Bonjour, je suis intéressé(e) par le véhicule : ${defaultVehicule}. Pouvez-vous me donner plus d'informations ?`;
-    if (defaultService === "mandat") return "Bonjour, je souhaite vous confier un mandat d'import. Voici mon besoin : ";
-    if (defaultService === "vente") return "Bonjour, je souhaite être accompagné(e) dans la vente de mon véhicule. ";
+    if (defaultVehicule) return f.defaultVehicleMsg.replace("%v", defaultVehicule);
+    if (defaultService === "mandat") return f.defaultMandatMsg;
+    if (defaultService === "vente") return f.defaultVenteMsg;
     return "";
   };
 
@@ -73,13 +76,13 @@ export default function ContactForm({
             className="block text-xs tracking-widest uppercase mb-3"
             style={{ color: "#C8D8EE" }}
           >
-            Nom *
+            {f.nameLabel}
           </label>
           <input
             name="nom"
             required
             type="text"
-            placeholder="Votre nom"
+            placeholder={f.namePlaceholder}
             style={fieldStyle}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
@@ -90,13 +93,13 @@ export default function ContactForm({
             className="block text-xs tracking-widest uppercase mb-3"
             style={{ color: "#C8D8EE" }}
           >
-            Email *
+            {f.emailLabel}
           </label>
           <input
             name="email"
             required
             type="email"
-            placeholder="votre@email.fr"
+            placeholder={f.emailPlaceholder}
             style={fieldStyle}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
@@ -109,12 +112,12 @@ export default function ContactForm({
           className="block text-xs tracking-widest uppercase mb-3"
           style={{ color: "#C8D8EE" }}
         >
-          Téléphone
+          {f.phoneLabel}
         </label>
         <input
           name="telephone"
           type="tel"
-          placeholder="+33 6 00 00 00 00"
+          placeholder={f.phonePlaceholder}
           style={fieldStyle}
           onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
@@ -126,7 +129,7 @@ export default function ContactForm({
           className="block text-xs tracking-widest uppercase mb-3"
           style={{ color: "#C8D8EE" }}
         >
-          Sujet *
+          {f.subjectLabel}
         </label>
         <select
           name="sujet"
@@ -136,10 +139,9 @@ export default function ContactForm({
           onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "#1B3055")}
         >
-          <option value="achat">Achat d&apos;un véhicule</option>
-          <option value="mandat">Mandat d&apos;import</option>
-          <option value="vente">Aide à la vente</option>
-          <option value="autre">Autre</option>
+          {f.subjects.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
         </select>
       </div>
 
@@ -148,13 +150,13 @@ export default function ContactForm({
           className="block text-xs tracking-widest uppercase mb-3"
           style={{ color: "#C8D8EE" }}
         >
-          Message *
+          {f.messageLabel}
         </label>
         <textarea
           name="message"
           required
           rows={6}
-          placeholder="Décrivez votre projet..."
+          placeholder={f.messagePlaceholder}
           defaultValue={getDefaultMessage()}
           style={{ ...fieldStyle, resize: "none" }}
           onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
@@ -168,7 +170,7 @@ export default function ContactForm({
         className="w-full text-sm font-semibold tracking-widest uppercase py-4 rounded-full transition-opacity disabled:opacity-60"
         style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
       >
-        {status === "sending" ? "Envoi en cours..." : "Envoyer le message"}
+        {status === "sending" ? f.submittingBtn : f.submitBtn}
       </button>
 
       {status === "success" && (
@@ -180,7 +182,7 @@ export default function ContactForm({
             color: "#6B9FEE",
           }}
         >
-          Message envoyé. Nous vous répondrons sous 24h ouvrées.
+          {f.successMsg}
         </div>
       )}
       {status === "error" && (
@@ -192,7 +194,7 @@ export default function ContactForm({
             color: "#C8D8EE",
           }}
         >
-          Une erreur s&apos;est produite. Contactez-nous directement par email.
+          {f.errorMsg}
         </div>
       )}
     </form>

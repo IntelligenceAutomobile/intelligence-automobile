@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/i18n/context";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -44,6 +45,8 @@ function SectionCard({ title, children }: { title: string; children: React.React
 }
 
 export default function ConvoyageForm() {
+  const { t } = useLocale();
+  const f = t.transport.form;
   const [status, setStatus] = useState<Status>("idle");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -105,10 +108,10 @@ Notes : ${d.get("notes") || "Aucune"}`;
           className="font-black uppercase mb-4"
           style={{ fontSize: "1.4rem", letterSpacing: "-0.02em" }}
         >
-          Demande reçue
+          {f.successTitle}
         </h3>
         <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#AABFDA" }}>
-          Nous revenons vers vous sous 24h ouvrées avec un devis fixe et les détails de la prise en charge.
+          {f.successMsg}
         </p>
       </div>
     );
@@ -116,21 +119,21 @@ Notes : ${d.get("notes") || "Aucune"}`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
-      <SectionCard title="Le trajet">
+      <SectionCard title={f.tripSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Lieu de prise en charge *</label>
+            <label style={labelStyle}>{f.pickupLabel}</label>
             <input
-              name="depart" required type="text" placeholder="Ville ou code postal"
+              name="depart" required type="text" placeholder={f.pickupPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Lieu de livraison *</label>
+            <label style={labelStyle}>{f.deliveryLabel}</label>
             <input
-              name="arrivee" required type="text" placeholder="Ville ou code postal"
+              name="arrivee" required type="text" placeholder={f.deliveryPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -139,9 +142,9 @@ Notes : ${d.get("notes") || "Aucune"}`;
         </div>
 
         <div>
-          <label style={labelStyle}>Date souhaitée</label>
+          <label style={labelStyle}>{f.dateLabel}</label>
           <input
-            name="date" type="text" placeholder="Ex : à partir du 15 juin, semaine du 23..."
+            name="date" type="text" placeholder={f.datePlaceholder}
             style={fieldStyle}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -149,21 +152,21 @@ Notes : ${d.get("notes") || "Aucune"}`;
         </div>
       </SectionCard>
 
-      <SectionCard title="Le véhicule">
+      <SectionCard title={f.vehicleSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Marque *</label>
+            <label style={labelStyle}>{f.makeLabel}</label>
             <input
-              name="marque" required type="text" placeholder="BMW, Audi, Mercedes..."
+              name="marque" required type="text" placeholder={f.makePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Modèle *</label>
+            <label style={labelStyle}>{f.modelLabel}</label>
             <input
-              name="modele" required type="text" placeholder="Série 5, A6, Classe E..."
+              name="modele" required type="text" placeholder={f.modelPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -172,23 +175,23 @@ Notes : ${d.get("notes") || "Aucune"}`;
         </div>
 
         <div>
-          <label style={labelStyle}>Année</label>
+          <label style={labelStyle}>{f.yearLabel}</label>
           <select
             name="annee"
             style={{ ...fieldStyle, cursor: "pointer" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
           >
-            <option value="">Non précisée</option>
+            <option value="">{f.yearUnspecified}</option>
             {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
 
         <div>
-          <label style={labelStyle}>Notes</label>
+          <label style={labelStyle}>{f.notesLabel}</label>
           <textarea
             name="notes" rows={2}
-            placeholder="Particularité du véhicule, accès difficile, clés à récupérer auprès d'un tiers..."
+            placeholder={f.notesPlaceholder}
             style={{ ...fieldStyle, resize: "none" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -196,21 +199,21 @@ Notes : ${d.get("notes") || "Aucune"}`;
         </div>
       </SectionCard>
 
-      <SectionCard title="Vos coordonnées">
+      <SectionCard title={f.coordsSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Prénom *</label>
+            <label style={labelStyle}>{f.firstNameLabel}</label>
             <input
-              name="prenom" required type="text" placeholder="Votre prénom"
+              name="prenom" required type="text" placeholder={f.firstNamePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Nom *</label>
+            <label style={labelStyle}>{f.lastNameLabel}</label>
             <input
-              name="nom" required type="text" placeholder="Votre nom"
+              name="nom" required type="text" placeholder={f.lastNamePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -220,18 +223,18 @@ Notes : ${d.get("notes") || "Aucune"}`;
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label style={labelStyle}>Email *</label>
+            <label style={labelStyle}>{f.emailLabel}</label>
             <input
-              name="email" required type="email" placeholder="votre@email.fr"
+              name="email" required type="email" placeholder={f.emailPlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
           <div>
-            <label style={labelStyle}>Téléphone</label>
+            <label style={labelStyle}>{f.phoneLabel}</label>
             <input
-              name="telephone" type="tel" placeholder="+33 6 00 00 00 00"
+              name="telephone" type="tel" placeholder={f.phonePlaceholder}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -246,11 +249,11 @@ Notes : ${d.get("notes") || "Aucune"}`;
         className="w-full text-sm font-bold tracking-[0.2em] uppercase py-5 transition-all duration-300 hover:-translate-y-px disabled:opacity-60"
         style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
       >
-        {status === "sending" ? "Envoi en cours..." : "Demander un devis"}
+        {status === "sending" ? f.submittingBtn : f.submitBtn}
       </button>
 
       <p className="text-center text-[11px]" style={{ color: "#AABFDA" }}>
-        Devis gratuit sous 24h · Tarif fixe, sans surprise
+        {f.footer}
       </p>
 
       {status === "error" && (
@@ -258,7 +261,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
           className="p-5 text-sm"
           style={{ borderLeft: "2px solid #AABFDA", backgroundColor: "#071428", color: "#AABFDA" }}
         >
-          Une erreur s&apos;est produite. Contactez-nous à contact@intelligenceautomobile.com
+          {f.errorMsg}
         </div>
       )}
     </form>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, DM_Sans } from "next/font/google";
+import { cookies } from "next/headers";
+import { LocaleProvider } from "@/i18n/context";
 import "./globals.css";
 
 const geist = Geist({
@@ -20,14 +22,21 @@ export const metadata: Metadata = {
   keywords: "import automobile, véhicules premium, Allemagne, Belgique, BMW, Audi, Mercedes, Porsche",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("locale")?.value ?? "fr";
+
   return (
-    <html lang="fr" className={`${geist.variable} ${dmSans.variable} h-full`}>
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+    <html lang={locale} className={`${geist.variable} ${dmSans.variable} h-full`}>
+      <body className="min-h-full flex flex-col antialiased">
+        <LocaleProvider initialLocale={locale}>
+          {children}
+        </LocaleProvider>
+      </body>
     </html>
   );
 }

@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RechercheForm from "@/app/recherche/RechercheForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Recherche Personnalisée V2 — Intelligence Automobile",
@@ -8,39 +9,10 @@ export const metadata = {
     "Décrivez le véhicule que vous recherchez. Nous activons notre réseau européen et vous soumettons une sélection validée sous 5 à 15 jours.",
 };
 
-const steps = [
-  {
-    num: "01",
-    title: "Vous définissez",
-    desc: "Marque, modèle, motorisation, budget, kilométrage, options. Le plus précis vous êtes, le mieux nous ciblons.",
-  },
-  {
-    num: "02",
-    title: "Nous cherchons",
-    desc: "+2 000 annonces analysées chaque mois sur les marchés allemand et belge. Nous filtrons, vérifions, comparons.",
-  },
-  {
-    num: "03",
-    title: "Vous validez",
-    desc: "Sous 5 à 15 jours, vous recevez une sélection commentée avec photos, historique et rapport de prix. Aucun engagement avant votre accord.",
-  },
-  {
-    num: "04",
-    title: "Nous livrons",
-    desc: "Achat, contrôle technique, homologation, immatriculation française. Remise des clés en France.",
-  },
-];
+export default async function RecherchePage2() {
+  const { t } = await getTranslations();
+  const s = t.search;
 
-const garanties = [
-  "Résultats sous 5 à 15 jours ouvrés",
-  "Zéro frais avant votre validation",
-  "Rapport d'inspection complet fourni",
-  "Démarches administratives incluses",
-  "Marchés Allemagne & Belgique couverts",
-  "Commission fixe, transparente, annoncée",
-];
-
-export default function RecherchePage2() {
   return (
     <>
       <Header />
@@ -51,7 +23,6 @@ export default function RecherchePage2() {
           className="relative overflow-hidden"
           style={{ height: "100vh", minHeight: "600px" }}
         >
-          {/* Image plein écran */}
           <img
             src="/Photo du Site/Photo IA/Recherche personnalisé.png"
             alt=""
@@ -59,7 +30,6 @@ export default function RecherchePage2() {
             style={{ opacity: 0.85 }}
           />
 
-          {/* Overlay directionnel gauche */}
           <div
             className="absolute inset-0"
             style={{
@@ -68,7 +38,6 @@ export default function RecherchePage2() {
             }}
           />
 
-          {/* Overlay bas */}
           <div
             className="absolute bottom-0 left-0 right-0"
             style={{
@@ -77,7 +46,6 @@ export default function RecherchePage2() {
             }}
           />
 
-          {/* Contenu bas-gauche */}
           <div
             className="absolute z-10"
             style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
@@ -93,10 +61,10 @@ export default function RecherchePage2() {
                   color: "#F0F5FF",
                 }}
               >
-                Décrivez-le.
+                {s.heroTitle[0]}
                 <br />
-                Nous allons{" "}
-                <span style={{ color: "#6B9FEE" }}>le trouver.</span>
+                {s.heroTitle[1]}{" "}
+                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
               </h1>
 
               <div style={{ marginBottom: "1.5rem" }}>
@@ -112,7 +80,7 @@ export default function RecherchePage2() {
                     letterSpacing: "0.01em",
                   }}
                 >
-                  Dites-nous ce que vous recherchez. Nous vous soumettons une sélection validée — sans engagement.
+                  {s.heroSubtitle}
                 </p>
               </div>
 
@@ -132,7 +100,7 @@ export default function RecherchePage2() {
                   transition: "opacity 0.2s",
                 }}
               >
-                Déposer une demande →
+                {s.heroCta}
               </a>
             </div>
           </div>
@@ -144,7 +112,6 @@ export default function RecherchePage2() {
             className="max-w-7xl mx-auto"
             style={{ padding: "clamp(4rem, 8vw, 7rem) clamp(1.5rem, 6vw, 5rem)" }}
           >
-            {/* Titre section */}
             <p
               style={{
                 fontSize: "10px",
@@ -155,12 +122,11 @@ export default function RecherchePage2() {
                 fontWeight: 500,
               }}
             >
-              Comment ça marche
+              {s.stepsLabel}
             </p>
 
-            {/* Liste éditoriale */}
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {steps.map((step) => (
+              {s.steps.map((step) => (
                 <div
                   key={step.num}
                   style={{
@@ -173,7 +139,6 @@ export default function RecherchePage2() {
                     padding: "clamp(1.8rem, 3.5vw, 2.8rem) 0",
                   }}
                 >
-                  {/* Numéro */}
                   <div
                     style={{
                       fontWeight: 900,
@@ -190,7 +155,6 @@ export default function RecherchePage2() {
                     {step.num}
                   </div>
 
-                  {/* Titre + description */}
                   <div style={{ flex: 1, paddingTop: "0.5rem" }}>
                     <p
                       style={{
@@ -233,7 +197,6 @@ export default function RecherchePage2() {
             className="max-w-7xl mx-auto"
             style={{ padding: "0 clamp(1.5rem, 6vw, 5rem)" }}
           >
-            {/* Titre éditorial */}
             <div style={{ marginBottom: "clamp(3rem, 6vw, 5rem)" }}>
               <h2
                 style={{
@@ -244,22 +207,20 @@ export default function RecherchePage2() {
                   color: "#F0F5FF",
                 }}
               >
-                Décrivez votre
+                {s.formTitle[0]}
                 <br />
-                <span style={{ color: "#6B9FEE" }}>véhicule idéal.</span>
+                <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
             </div>
 
-            {/* Grid 2 colonnes */}
             <div
               className="grid grid-cols-1 lg:grid-cols-5"
               style={{ gap: "clamp(3rem, 6vw, 6rem)", alignItems: "start" }}
             >
-              {/* Colonne gauche — garanties (2fr) */}
+              {/* Colonne gauche — garanties */}
               <div className="lg:col-span-2" style={{ fontFamily: "var(--font-inter)" }}>
-                {/* Liste garanties */}
                 <div style={{ borderTop: "1px solid #1B3055", marginBottom: "2.5rem" }}>
-                  {garanties.map((g) => (
+                  {s.guarantees.map((g) => (
                     <div
                       key={g}
                       style={{
@@ -293,7 +254,6 @@ export default function RecherchePage2() {
                   ))}
                 </div>
 
-                {/* Encadré marchés / marques */}
                 <div
                   style={{
                     backgroundColor: "rgba(107,159,238,0.06)",
@@ -311,7 +271,7 @@ export default function RecherchePage2() {
                       fontWeight: 600,
                     }}
                   >
-                    Marchés couverts
+                    {s.marketsLabel}
                   </p>
                   <p
                     style={{
@@ -321,7 +281,7 @@ export default function RecherchePage2() {
                       marginBottom: "16px",
                     }}
                   >
-                    Allemagne · Belgique · Pays-Bas
+                    {s.markets}
                   </p>
 
                   <div
@@ -342,7 +302,7 @@ export default function RecherchePage2() {
                       fontWeight: 600,
                     }}
                   >
-                    Marques traitées
+                    {s.brandsLabel}
                   </p>
                   <p
                     style={{
@@ -352,12 +312,12 @@ export default function RecherchePage2() {
                       lineHeight: 1.7,
                     }}
                   >
-                    Audi · BMW · Mercedes · Porsche · Volkswagen · Lexus · Volvo · et plus
+                    {s.brands}
                   </p>
                 </div>
               </div>
 
-              {/* Colonne droite — formulaire (3fr) */}
+              {/* Colonne droite — formulaire */}
               <div className="lg:col-span-3">
                 <RechercheForm />
               </div>

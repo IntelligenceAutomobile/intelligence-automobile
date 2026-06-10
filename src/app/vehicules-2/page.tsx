@@ -5,6 +5,7 @@ import { getAdminSession } from "@/lib/auth";
 import VehiculesList from "@/app/vehicules/VehiculesList";
 import Image from "next/image";
 import HeroCta from "./HeroCta";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Nos véhicules V2 — Intelligence Automobile",
@@ -15,7 +16,7 @@ export default async function VehiculesV2Page({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  const [params, session] = await Promise.all([searchParams, getAdminSession()]);
+  const [params, session, { t }] = await Promise.all([searchParams, getAdminSession(), getTranslations()]);
   const isAdmin = !!session;
 
   const makeFilter = params.make;
@@ -129,7 +130,7 @@ export default async function VehiculesV2Page({
                   letterSpacing: "0.01em",
                 }}
               >
-                Chaque véhicule soigneusement sélectionné auprès de partenaires européens — contrôlé, documenté, prêt à livrer.
+                {t.vehicles.heroSubtitle}
               </p>
             </div>
 

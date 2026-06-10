@@ -19,18 +19,26 @@ export default async function VehiculesPage({
   const isAdmin = !!session;
 
   const makeFilter = params.make;
+  const modelFilter = params.model;
   const fuelFilter = params.fuel;
+  const transmissionFilter = params.transmission;
   const maxPrice = params.maxPrice ? parseInt(params.maxPrice) : undefined;
+  const maxMileage = params.maxMileage ? parseInt(params.maxMileage) : undefined;
+  const minYear = params.minYear ? parseInt(params.minYear) : undefined;
   const statusFilter = params.status ?? "tous";
 
   const where: Record<string, unknown> = {};
   if (!isAdmin) where.isPublished = true;
   if (statusFilter !== "tous") where.status = statusFilter;
   if (makeFilter) where.make = makeFilter;
+  if (modelFilter) where.model = { contains: modelFilter };
   if (fuelFilter) where.fuel = fuelFilter;
+  if (transmissionFilter) where.transmission = { contains: transmissionFilter };
   if (maxPrice) where.price = { lte: maxPrice };
+  if (maxMileage) where.mileage = { lte: maxMileage };
+  if (minYear) where.year = { gte: minYear };
 
-  const [vehicules, makes] = await Promise.all([
+  const [vehicules, makes, makeModels] = await Promise.all([
     prisma.vehicle.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -40,7 +48,17 @@ export default async function VehiculesPage({
       distinct: ["make"],
       orderBy: { make: "asc" },
     }),
+    prisma.vehicle.findMany({
+      select: { make: true, model: true },
+      distinct: ["make", "model"],
+      orderBy: { model: "asc" },
+    }),
   ]);
+
+  const modelsByMake: Record<string, string[]> = {};
+  for (const { make, model } of makeModels) {
+    (modelsByMake[make] ??= []).push(model);
+  }
 
   return (
     <>
@@ -85,7 +103,17 @@ export default async function VehiculesPage({
         <VehiculesList
           vehicules={vehicules}
           makes={makes.map((m) => m.make)}
-          filters={{ make: makeFilter, fuel: fuelFilter, maxPrice, status: statusFilter }}
+          modelsByMake={modelsByMake}
+          filters={{
+            make: makeFilter,
+            model: modelFilter,
+            fuel: fuelFilter,
+            transmission: transmissionFilter,
+            maxPrice,
+            maxMileage,
+            minYear,
+            status: statusFilter,
+          }}
           isAdmin={isAdmin}
         />
 

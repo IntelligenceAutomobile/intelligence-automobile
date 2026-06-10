@@ -1,6 +1,9 @@
 "use client";
 
+import { useLocale } from "@/i18n/context";
+
 export default function HeroCta() {
+  const { t } = useLocale();
   return (
     <button
       onClick={() =>
@@ -20,7 +23,7 @@ export default function HeroCta() {
         cursor: "pointer",
       }}
     >
-      Voir le stock →
+      {t.vehicles.browseCta} →
     </button>
   );
 }

@@ -1,77 +1,16 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Notre Méthode V2 — Intelligence Automobile",
 };
 
-const steps = [
-  {
-    num: "01",
-    title: "Analyse du marché",
-    description:
-      "Nous suivons quotidiennement les marchés européens — AutoScout24 Allemagne, Mobile.de, 2ememain.be — pour identifier les opportunités présentant un différentiel de prix favorable.",
-  },
-  {
-    num: "02",
-    title: "Sélection rigoureuse",
-    description:
-      "Historique d'entretien, cohérence du kilométrage, absence d'accident, configuration attractive. Chaque annonce est analysée selon des critères précis.",
-  },
-  {
-    num: "03",
-    title: "Vérification sur place",
-    description:
-      "Contrôle technique, lecture OBD, vérification des documents. Aucune acquisition sans validation complète par un expert certifié.",
-  },
-  {
-    num: "04",
-    title: "Acquisition sécurisée",
-    description:
-      "Contrat conforme, vérification gage/vol (HPI check), paiement sécurisé. La transaction est réalisée dans un cadre légal.",
-  },
-  {
-    num: "05",
-    title: "Import & conformité",
-    description:
-      "Certificat de conformité européen, quitus fiscal, carte grise française. Nous gérons l'intégralité des démarches.",
-  },
-  {
-    num: "06",
-    title: "Préparation & remise",
-    description:
-      "Nettoyage, remises en état esthétiques, photos professionnelles. Vous recevez un véhicule prêt à l'emploi.",
-  },
-];
+export default async function Methode2Page() {
+  const { t } = await getTranslations();
+  const s = t.method;
 
-const stats = [
-  { value: "6", label: "Étapes structurées, de la recherche à la remise" },
-  { value: "12–15h", label: "Temps moyen consacré par véhicule importé" },
-  { value: "< 30j", label: "Durée de détention objectif par véhicule" },
-  { value: "100%", label: "Des démarches administratives prises en charge" },
-];
-
-const pillars = [
-  {
-    title: "Discipline financière",
-    desc: "Chaque acquisition est conditionnée à une marge minimale identifiée avant engagement. Pas d'achat coup de cœur.",
-  },
-  {
-    title: "Stock limité",
-    desc: "Nous maintenons volontairement un faible nombre de véhicules pour préserver notre capacité financière.",
-  },
-  {
-    title: "Rotation rapide",
-    desc: "L'objectif est de vendre chaque véhicule en moins de 30 jours. Sélection pertinente et prix juste.",
-  },
-  {
-    title: "Transparence client",
-    desc: "Tous les coûts sont communiqués : prix d'achat, transport, conformité, préparation. Rien n'est caché.",
-  },
-];
-
-export default function Methode2Page() {
   return (
     <>
       <Header />
@@ -91,7 +30,6 @@ export default function Methode2Page() {
           paddingRight: "clamp(1.5rem, 6vw, 7rem)",
         }}
       >
-        {/* Background photo */}
         <div
           style={{
             position: "absolute",
@@ -103,7 +41,6 @@ export default function Methode2Page() {
             opacity: 1,
           }}
         />
-        {/* Dark gradient overlay */}
         <div
           style={{
             position: "absolute",
@@ -113,7 +50,6 @@ export default function Methode2Page() {
           }}
         />
 
-        {/* Content */}
         <div style={{ position: "relative", maxWidth: "820px" }}>
           <h1
             style={{
@@ -124,11 +60,11 @@ export default function Methode2Page() {
               color: "#F0F5FF",
               margin: 0,
               marginBottom: "2rem",
-              whiteSpace: "pre-line",
             }}
           >
-            {"Notre\n"}
-            <span style={{ color: "#6B9FEE" }}>méthode.</span>
+            {s.heroTitle[0]}
+            <br />
+            <span style={{ color: "#6B9FEE" }}>{s.heroTitle[1]}</span>
           </h1>
 
           <div style={{ marginBottom: "1.5rem" }}>
@@ -144,7 +80,7 @@ export default function Methode2Page() {
                 letterSpacing: "0.01em",
               }}
             >
-              L&apos;import automobile peut être très rentable — ou très risqué. Notre méthode transforme cette complexité en un processus structuré et reproductible.
+              {s.heroSubtitle}
             </p>
           </div>
 
@@ -164,7 +100,7 @@ export default function Methode2Page() {
               transition: "background 0.2s, color 0.2s",
             }}
           >
-            Voir le processus →
+            {s.heroCta}
           </a>
         </div>
       </section>
@@ -177,7 +113,7 @@ export default function Methode2Page() {
         }}
       >
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          {stats.map((stat, i) => (
+          {s.stats.map((stat, i) => (
             <div key={i}>
               {i > 0 && (
                 <div
@@ -241,7 +177,6 @@ export default function Methode2Page() {
         }}
       >
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          {/* Section header */}
           <div style={{ marginBottom: "6vh" }}>
             <p
               style={{
@@ -253,7 +188,7 @@ export default function Methode2Page() {
                 marginBottom: "1rem",
               }}
             >
-              Le processus
+              {s.processLabel}
             </p>
             <h2
               style={{
@@ -266,12 +201,11 @@ export default function Methode2Page() {
                 whiteSpace: "pre-line",
               }}
             >
-              {"De la recherche\nà la remise des clés."}
+              {s.processTitle}
             </h2>
           </div>
 
-          {/* Steps */}
-          {steps.map((step, i) => (
+          {s.steps.map((step, i) => (
             <div
               key={i}
               style={{
@@ -282,7 +216,6 @@ export default function Methode2Page() {
                 alignItems: "flex-start",
               }}
             >
-              {/* Step number */}
               <div
                 style={{
                   fontWeight: 900,
@@ -296,7 +229,6 @@ export default function Methode2Page() {
                 {step.num}
               </div>
 
-              {/* Step content */}
               <div style={{ flex: 1 }}>
                 <p
                   style={{
@@ -338,7 +270,6 @@ export default function Methode2Page() {
         }}
       >
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          {/* Section header */}
           <div style={{ marginBottom: "5vh" }}>
             <p
               style={{
@@ -350,7 +281,7 @@ export default function Methode2Page() {
                 marginBottom: "1rem",
               }}
             >
-              Nos principes
+              {s.pillarsLabel}
             </p>
             <h2
               style={{
@@ -363,11 +294,10 @@ export default function Methode2Page() {
                 whiteSpace: "pre-line",
               }}
             >
-              {"Les piliers\nde notre approche."}
+              {s.pillarsTitle}
             </h2>
           </div>
 
-          {/* Grid — gap via border trick */}
           <div
             style={{
               display: "grid",
@@ -376,7 +306,7 @@ export default function Methode2Page() {
               backgroundColor: "#1B3055",
             }}
           >
-            {pillars.map((pillar, i) => (
+            {s.pillars.map((pillar, i) => (
               <div
                 key={i}
                 style={{
@@ -384,7 +314,6 @@ export default function Methode2Page() {
                   padding: "2.5rem",
                 }}
               >
-                {/* Accent bar */}
                 <div
                   style={{
                     width: "32px",
@@ -442,7 +371,7 @@ export default function Methode2Page() {
             whiteSpace: "pre-line",
           }}
         >
-          {"Votre projet,\nnotre méthode."}
+          {s.ctaTitle}
         </h2>
 
         <div
@@ -454,7 +383,7 @@ export default function Methode2Page() {
           }}
         >
           <Link
-            href="/contact"
+            href="/contact-2"
             style={{
               display: "inline-block",
               padding: "0.9rem 2.2rem",
@@ -468,10 +397,10 @@ export default function Methode2Page() {
               borderRadius: 0,
             }}
           >
-            Nous contacter
+            {s.ctaContact}
           </Link>
           <Link
-            href="/nos-vehicules"
+            href="/vehicules-2"
             style={{
               display: "inline-block",
               padding: "0.9rem 2.2rem",
@@ -485,7 +414,7 @@ export default function Methode2Page() {
               borderRadius: 0,
             }}
           >
-            Voir le stock
+            {s.ctaStock}
           </Link>
         </div>
       </section>

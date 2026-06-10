@@ -24,7 +24,9 @@ export type ModalVehicle = {
   origin?: string;
   power?: number | null;
   description?: string;
+  descriptionEn?: string;
   features?: string[];
+  featuresEn?: string[];
   status?: string;
   isDemo?: boolean;
   // Champs enrichis

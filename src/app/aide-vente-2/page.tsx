@@ -1,94 +1,26 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AideVenteForm from "@/app/aide-vente/AideVenteForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Aide à la Vente V2 — Intelligence Automobile",
 };
 
-const comparatif = [
-  {
-    critere: "Prix obtenu",
-    dealer: "−20 à −35 % du marché",
-    seul: "Prix marché − friction",
-    ia: "Prix marché réel",
-  },
-  {
-    critere: "Délai moyen",
-    dealer: "Immédiat",
-    seul: "6 à 16 semaines",
-    ia: "2 à 4 semaines",
-  },
-  {
-    critere: "Contacts à gérer",
-    dealer: "Aucun",
-    seul: "100+, dont 80 % non qualifiés",
-    ia: "Aucun — nous filtrons tout",
-  },
-  {
-    critere: "Paperwork",
-    dealer: "Dealer s'en occupe",
-    seul: "Vous",
-    ia: "Nous",
-  },
-  {
-    critere: "Sécurité paiement",
-    dealer: "✓",
-    seul: "Variable",
-    ia: "✓ vérifiée",
-  },
-];
+export default async function AideVenteV2Page() {
+  const { t } = await getTranslations();
+  const s = t.resale;
 
-const steps = [
-  {
-    num: "01",
-    title: "Estimation",
-    desc: "Analyse du marché, de l'historique et de l'état du véhicule. Valorisation argumentée.",
-  },
-  {
-    num: "02",
-    title: "Mise en valeur",
-    desc: "Photos professionnelles, description experte, diffusion sur les canaux ciblés.",
-  },
-  {
-    num: "03",
-    title: "Gestion des contacts",
-    desc: "Nous filtrons chaque demande. Seuls les acheteurs sérieux vous sont présentés.",
-  },
-  {
-    num: "04",
-    title: "Transaction",
-    desc: "Sécurisation du paiement, transfert de propriété, démarches administratives.",
-  },
-];
-
-const garanties = [
-  "Estimation gratuite sous 24h",
-  "Prix marché réel, pas de reprise",
-  "Zéro contact non qualifié à gérer",
-  "Transaction 100 % sécurisée",
-  "Démarches administratives incluses",
-  "Honoraires transparents, annoncés avant accord",
-];
-
-const vehiculesAcceptes = {
-  types: ["Berlines premium", "SUV", "Coupés", "Sportives", "Cabriolets"],
-  marques: ["Audi", "BMW", "Mercedes", "Porsche", "Volkswagen", "Lexus", "Volvo"],
-  criteres: ["Moins de 12 ans", "Jusqu'à 180 000 km", "Entretien documenté"],
-};
-
-export default function AideVenteV2Page() {
   return (
     <>
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* ── HERO 100vh — image locale, texte bas-gauche ── */}
+        {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
           style={{ height: "100vh", minHeight: "600px" }}
         >
-          {/* Image plein écran */}
           <div className="absolute inset-0">
             <img
               src="/Photo du Site/Photo IA/Revente sur mesure 4.png"
@@ -96,7 +28,6 @@ export default function AideVenteV2Page() {
               className="w-full h-full object-cover object-center"
               style={{ opacity: 0.92 }}
             />
-            {/* Dégradé bas → fond principal */}
             <div
               className="absolute inset-0"
               style={{
@@ -104,7 +35,6 @@ export default function AideVenteV2Page() {
                   "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.78) 32%, rgba(7,15,30,0.22) 65%, transparent 100%)",
               }}
             />
-            {/* Dégradé gauche — renforce lisibilité du texte */}
             <div
               className="absolute inset-0"
               style={{
@@ -114,60 +44,59 @@ export default function AideVenteV2Page() {
             />
           </div>
 
-          {/* Texte positionné en bas-gauche */}
           <div
             className="absolute z-10"
             style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
           >
             <div style={{ maxWidth: "680px" }}>
-                <h1
-                  className="font-black"
+              <h1
+                className="font-black"
+                style={{
+                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                  lineHeight: 0.88,
+                  letterSpacing: "-0.04em",
+                  marginBottom: "clamp(1.5rem, 3vh, 2.5rem)",
+                }}
+              >
+                {s.heroTitle[0]}
+                <br />
+                {s.heroTitle[1]}
+                <br />
+                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
+              </h1>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+                <p
                   style={{
-                    fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
-                    lineHeight: 0.88,
-                    letterSpacing: "-0.04em",
-                    marginBottom: "clamp(1.5rem, 3vh, 2.5rem)",
+                    color: "rgba(168,196,240,0.68)",
+                    fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                    lineHeight: 1.8,
+                    fontWeight: 300,
+                    maxWidth: "440px",
+                    fontStyle: "italic",
+                    letterSpacing: "0.01em",
                   }}
                 >
-                  Votre véhicule
-                  <br />
-                  vaut plus que
-                  <br />
-                  <span style={{ color: "#6B9FEE" }}>ce qu&apos;on propose.</span>
-                </h1>
-                <div style={{ marginBottom: "1.5rem" }}>
-                  <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
-                  <p
-                    style={{
-                      color: "rgba(168,196,240,0.68)",
-                      fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
-                      lineHeight: 1.8,
-                      fontWeight: 300,
-                      maxWidth: "440px",
-                      fontStyle: "italic",
-                      letterSpacing: "0.01em",
-                    }}
-                  >
-                    Estimation au prix du marché réel, diffusion ciblée, transaction sécurisée. Vous vendez mieux — sans vous en occuper.
-                  </p>
-                </div>
-                <a
-                  href="#formulaire"
-                  style={{
-                    display: "inline-block",
-                    backgroundColor: "#F0F5FF",
-                    color: "#070F1E",
-                    fontWeight: 700,
-                    fontSize: "0.78rem",
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    padding: "14px 28px",
-                    borderRadius: 0,
-                    textDecoration: "none",
-                  }}
-                >
-                  Estimation gratuite →
-                </a>
+                  {s.heroSubtitle}
+                </p>
+              </div>
+              <a
+                href="#formulaire"
+                style={{
+                  display: "inline-block",
+                  backgroundColor: "#F0F5FF",
+                  color: "#070F1E",
+                  fontWeight: 700,
+                  fontSize: "0.78rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  padding: "14px 28px",
+                  borderRadius: 0,
+                  textDecoration: "none",
+                }}
+              >
+                {s.heroCta}
+              </a>
             </div>
           </div>
         </section>
@@ -182,7 +111,7 @@ export default function AideVenteV2Page() {
               className="text-[10px] tracking-[0.38em] uppercase mb-4 text-center"
               style={{ color: "#C8D8EE" }}
             >
-              Pourquoi pas la reprise concessionnaire ?
+              {s.comparativeLabel}
             </p>
             <h2
               className="font-black uppercase leading-[0.9] text-center mb-20"
@@ -191,7 +120,7 @@ export default function AideVenteV2Page() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Les faits, sans détour.
+              {s.comparativeTitle}
             </h2>
 
             {/* Table desktop */}
@@ -199,13 +128,12 @@ export default function AideVenteV2Page() {
               className="hidden md:block overflow-hidden"
               style={{ border: "1px solid #1B3055" }}
             >
-              {/* Header */}
               <div
                 className="grid grid-cols-4"
                 style={{ backgroundColor: "#080F1C", borderBottom: "1px solid #1B3055" }}
               >
                 <div className="px-6 py-5" />
-                {["Reprise concessionnaire", "Vente seul", "Aide à la Vente IA"].map(
+                {[s.colDealer, s.colSolo, s.colIA].map(
                   (col, i) => (
                     <div
                       key={col}
@@ -227,13 +155,12 @@ export default function AideVenteV2Page() {
                 )}
               </div>
 
-              {/* Rows */}
-              {comparatif.map((row, i) => (
+              {s.comparatif.map((row, i) => (
                 <div
                   key={row.critere}
                   className="grid grid-cols-4"
                   style={{
-                    borderBottom: i < comparatif.length - 1 ? "1px solid #1B3055" : "none",
+                    borderBottom: i < s.comparatif.length - 1 ? "1px solid #1B3055" : "none",
                   }}
                 >
                   <div className="px-6 py-5">
@@ -269,9 +196,9 @@ export default function AideVenteV2Page() {
               ))}
             </div>
 
-            {/* Table mobile — cartes empilées */}
+            {/* Table mobile */}
             <div className="md:hidden space-y-4">
-              {comparatif.map((row) => (
+              {s.comparatif.map((row) => (
                 <div key={row.critere} style={{ border: "1px solid #1B3055" }}>
                   <div
                     className="px-4 py-3"
@@ -289,13 +216,9 @@ export default function AideVenteV2Page() {
                   </div>
                   <div className="divide-y" style={{ borderColor: "#1B3055" }}>
                     {[
-                      {
-                        label: "Reprise concessionnaire",
-                        val: row.dealer,
-                        highlight: false,
-                      },
-                      { label: "Vente seul", val: row.seul, highlight: false },
-                      { label: "Aide à la Vente IA", val: row.ia, highlight: true },
+                      { label: s.colDealer, val: row.dealer, highlight: false },
+                      { label: s.colSolo, val: row.seul, highlight: false },
+                      { label: s.colIA, val: row.ia, highlight: true },
                     ].map((item) => (
                       <div
                         key={item.label}
@@ -331,7 +254,7 @@ export default function AideVenteV2Page() {
           </div>
         </section>
 
-        {/* ── ÉTAPES — liste éditoriale horizontale ── */}
+        {/* ── ÉTAPES ── */}
         <section
           className="border-b"
           style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
@@ -341,13 +264,12 @@ export default function AideVenteV2Page() {
               className="text-[10px] tracking-[0.38em] uppercase mb-20"
               style={{ color: "#C8D8EE" }}
             >
-              Comment ça marche
+              {s.stepsLabel}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              {steps.map((step, i) => (
+              {s.steps.map((step, i) => (
                 <div key={step.num} className="relative">
-                  {/* Séparateur gradient entre colonnes */}
                   {i > 0 && (
                     <div
                       className="hidden lg:block absolute left-0 top-0 bottom-0 w-px"
@@ -365,7 +287,6 @@ export default function AideVenteV2Page() {
                       ...(i > 0 && { borderLeftColor: "#6B9FEE" }),
                     }}
                   >
-                    {/* Numéro avec accent gauche sur mobile/tablet */}
                     <div
                       style={{
                         borderLeft: "2px solid #6B9FEE",
@@ -404,20 +325,19 @@ export default function AideVenteV2Page() {
           </div>
         </section>
 
-        {/* ── FORMULAIRE — même structure que recherche-2 ── */}
+        {/* ── FORMULAIRE ── */}
         <section
           id="formulaire"
           style={{ backgroundColor: "#040B16", borderTop: "1px solid #1B3055" }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
 
-            {/* Titre section */}
             <div className="mb-20">
               <p
                 className="text-[10px] tracking-[0.38em] uppercase mb-4"
                 style={{ color: "#6B9FEE" }}
               >
-                Estimation gratuite
+                {s.formSectionLabel}
               </p>
               <h2
                 className="font-black uppercase leading-[0.88]"
@@ -426,20 +346,17 @@ export default function AideVenteV2Page() {
                   letterSpacing: "-0.03em",
                 }}
               >
-                Décrivez votre
+                {s.formTitle[0]}
                 <br />
-                véhicule.
+                {s.formTitle[1]}
               </h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
 
-              {/* Colonne gauche — garanties + véhicules acceptés */}
               <div className="lg:col-span-2 space-y-10">
-
-                {/* Liste garanties */}
                 <div style={{ borderTop: "1px solid #1B3055" }}>
-                  {garanties.map((g) => (
+                  {s.guarantees.map((g) => (
                     <div
                       key={g}
                       className="flex items-center gap-4 py-4"
@@ -460,7 +377,6 @@ export default function AideVenteV2Page() {
                   ))}
                 </div>
 
-                {/* Véhicules acceptés */}
                 <div
                   className="p-5 space-y-5"
                   style={{
@@ -469,21 +385,9 @@ export default function AideVenteV2Page() {
                   }}
                 >
                   {[
-                    {
-                      label: "Types de véhicules",
-                      values: vehiculesAcceptes.types,
-                      separator: " · ",
-                    },
-                    {
-                      label: "Marques traitées",
-                      values: vehiculesAcceptes.marques,
-                      separator: " · ",
-                    },
-                    {
-                      label: "Critères",
-                      values: vehiculesAcceptes.criteres,
-                      separator: " · ",
-                    },
+                    { label: s.vehicleTypesLabel, values: s.vehicleTypes, separator: " · " },
+                    { label: s.vehicleBrandsLabel, values: s.vehicleBrands, separator: " · " },
+                    { label: s.vehicleCriteriaLabel, values: s.vehicleCriteria, separator: " · " },
                   ].map((block, i, arr) => (
                     <div
                       key={block.label}
@@ -510,10 +414,8 @@ export default function AideVenteV2Page() {
                     </div>
                   ))}
                 </div>
-
               </div>
 
-              {/* Colonne droite — formulaire */}
               <div className="lg:col-span-3">
                 <AideVenteForm />
               </div>
