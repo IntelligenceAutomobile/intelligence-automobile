@@ -45,7 +45,7 @@ export default function EquipementsAccordion({ categories }: { categories: Categ
             >
               <div className="flex items-center gap-4">
                 <span
-                  className="text-xs tracking-[0.4em] uppercase font-semibold"
+                  className="text-sm tracking-[0.4em] uppercase font-semibold"
                   style={{ color: isOpen ? "#6B9FEE" : "#C8D8EE" }}
                 >
                   {displayLabel}
@@ -82,8 +82,8 @@ export default function EquipementsAccordion({ categories }: { categories: Categ
                     key={i}
                     className="grid grid-cols-1 sm:grid-cols-2"
                     style={{
-                      borderTop: i > 0 ? "1px solid rgba(107,159,238,0.07)" : "none",
-                      backgroundColor: i % 2 === 0 ? "rgba(107,159,238,0.03)" : "transparent",
+                      borderTop: i > 0 ? "1px solid rgba(107,159,238,0.15)" : "none",
+                      backgroundColor: i % 2 === 0 ? "rgba(107,159,238,0.05)" : "transparent",
                     }}
                   >
                     {[0, 1].map((j) => {
@@ -92,9 +92,9 @@ export default function EquipementsAccordion({ categories }: { categories: Categ
                       return (
                         <div
                           key={j}
-                          className="flex items-start gap-3 px-6 py-4"
+                          className="flex items-start gap-3 px-6 py-5"
                           style={{
-                            borderLeft: j === 1 ? "1px solid rgba(107,159,238,0.07)" : "none",
+                            borderLeft: j === 1 ? "1px solid rgba(107,159,238,0.12)" : "none",
                           }}
                         >
                           <span
@@ -102,8 +102,8 @@ export default function EquipementsAccordion({ categories }: { categories: Categ
                             style={{ width: "5px", height: "5px", minWidth: "5px", backgroundColor: "#6B9FEE" }}
                           />
                           <span
-                            className="text-sm leading-snug"
-                            style={{ color: "#D4E2F4", fontWeight: 400 }}
+                            className="text-base leading-snug"
+                            style={{ color: "#E8F0FC", fontWeight: 400 }}
                           >
                             {item}
                           </span>

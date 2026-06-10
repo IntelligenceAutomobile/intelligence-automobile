@@ -444,6 +444,8 @@ export const fr = {
     mandatCta: "Mandat d'import sur-mesure",
     gallery: "Galerie",
     viewPhotos: "Voir les %n photos ↓",
+    showMoreInterventions: "Afficher les %n interventions précédentes",
+    showLessInterventions: "Réduire l'historique",
   },
 
   contact: {

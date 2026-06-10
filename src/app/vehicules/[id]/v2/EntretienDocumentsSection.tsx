@@ -10,6 +10,28 @@ type MaintenanceEntry = {
   linkedDoc?: string;
 };
 
+type MaintenanceHighlight = { icon: string; label: string; text: string; color: string };
+
+function rgba(hex: string, alpha: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+// Highlights years, "mai 2010"-style dates and parenthesized garage names in blue,
+// matching the DescriptionBlock convention
+function renderNote(text: string) {
+  const parts = text.split(/(\(.*?\)|(?:mai\s)?\d{4})/g);
+  return parts.map((part, i) =>
+    /^[(\d]|^mai/.test(part) ? (
+      <span key={i} style={{ color: "#6B9FEE", fontWeight: 600 }}>
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+}
+
 const DOC_LABELS: Record<string, string> = {
   "batterie-invoice-1.jpg": "Facture batterie (1/2)",
   "batterie-invoice-2.jpg": "Facture batterie (2/2)",
@@ -21,23 +43,44 @@ const DOC_LABELS: Record<string, string> = {
   "demande-immat.jpg":      "Demande d'immatriculation",
 };
 
+const VISIBLE_COUNT = 5;
+
 export default function EntretienDocumentsSection({
   maintenance,
   documents,
-  maintenanceTitle,
   interventionsLabel,
+  showMoreLabel,
+  showLessLabel,
+  highlights = [],
+  note,
 }: {
   maintenance: MaintenanceEntry[];
   documents: string[];
-  maintenanceTitle: string;
   interventionsLabel: string;
+  showMoreLabel: string;
+  showLessLabel: string;
+  highlights?: MaintenanceHighlight[];
+  note?: string;
 }) {
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [pendingDoc, setPendingDoc] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Collapse only if it hides at least 2 entries
+  const collapsible = maintenance.length > VISIBLE_COUNT + 1;
+  const visibleEntries = collapsible && !expanded ? maintenance.slice(0, VISIBLE_COUNT) : maintenance;
+  const hiddenEntries = maintenance.slice(VISIBLE_COUNT);
+  const hiddenYears = hiddenEntries
+    .map((e) => e.date.match(/\d{4}/)?.[0])
+    .filter((y): y is string => Boolean(y));
+  const yearRange =
+    hiddenYears.length > 1 && hiddenYears[0] !== hiddenYears[hiddenYears.length - 1]
+      ? ` (${hiddenYears[hiddenYears.length - 1]} → ${hiddenYears[0]})`
+      : "";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -151,23 +194,84 @@ export default function EntretienDocumentsSection({
 
       {/* ── ENTRETIEN ── */}
       <div className="mb-10">
-        <div className="flex items-center justify-between mb-5">
-          <p className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#C8D8EE" }}>
-            {maintenanceTitle}
-          </p>
+        <div className="flex items-center justify-end mb-5">
           {maintenance.length > 0 && (
             <span
-              className="text-[9px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1"
-              style={{ backgroundColor: "rgba(107,159,238,0.1)", color: "#6B9FEE", borderRadius: "4px" }}
+              className="text-[12px] tracking-[0.15em] uppercase font-bold px-3 py-1.5"
+              style={{
+                backgroundColor: "rgba(107,159,238,0.15)",
+                border: "1px solid rgba(107,159,238,0.3)",
+                color: "#6B9FEE",
+                borderRadius: "4px",
+              }}
             >
               {maintenance.length} {interventionsLabel}
             </span>
           )}
         </div>
 
+        {note && (
+          <div
+            className="flex items-start gap-4 px-5 py-4 mb-5"
+            style={{
+              backgroundColor: "rgba(107,159,238,0.06)",
+              border: "1px solid rgba(107,159,238,0.18)",
+              borderLeft: "3px solid #6B9FEE",
+              borderRadius: "6px",
+            }}
+          >
+            <span className="flex-shrink-0 mt-0.5" style={{ fontSize: "17px" }}>📓</span>
+            <p className="text-[15px] leading-loose" style={{ color: "#E8F0FC", fontWeight: 500 }}>
+              {renderNote(note)}
+            </p>
+          </div>
+        )}
+
+        {highlights.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+            {highlights.map((h) => (
+              <div
+                key={h.label}
+                className="flex flex-col gap-2.5 px-4 py-4 transition-all duration-300 hover:-translate-y-0.5"
+                style={{
+                  background: `linear-gradient(160deg, ${rgba(h.color, 0.12)} 0%, ${rgba(h.color, 0.03)} 100%)`,
+                  border: `1px solid ${rgba(h.color, 0.3)}`,
+                  borderTop: `2px solid ${h.color}`,
+                  borderRadius: "8px",
+                }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="flex items-center justify-center flex-shrink-0"
+                    style={{
+                      fontSize: "13px",
+                      width: "1.6rem",
+                      height: "1.6rem",
+                      backgroundColor: rgba(h.color, 0.15),
+                      borderRadius: "6px",
+                      color: h.color,
+                    }}
+                  >
+                    {h.icon}
+                  </span>
+                  <span
+                    className="text-[10px] tracking-[0.2em] uppercase font-bold"
+                    style={{ color: h.color }}
+                  >
+                    {h.label}
+                  </span>
+                </div>
+                <p className="text-[13.5px] leading-snug" style={{ color: "#E8F0FC", fontWeight: 500 }}>
+                  {h.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
         {maintenance.length > 0 ? (
           <div style={{ border: "1px solid rgba(107,159,238,0.18)" }}>
-            {maintenance.map((entry, i) => {
+            {visibleEntries.map((entry, i) => {
               const isLinked = Boolean(entry.linkedDoc && documents.length > 0);
               return (
                 <div
@@ -175,48 +279,81 @@ export default function EntretienDocumentsSection({
                   className={isLinked ? "group cursor-pointer" : ""}
                   onClick={isLinked ? () => handleLinkedEntryClick(entry.linkedDoc!) : undefined}
                   style={{
-                    borderTop: i > 0 ? "1px solid rgba(107,159,238,0.08)" : "none",
-                    backgroundColor: i % 2 === 0 ? "rgba(107,159,238,0.025)" : "transparent",
+                    borderTop: i > 0 ? "1px solid rgba(107,159,238,0.15)" : "none",
+                    backgroundColor: i % 2 === 0 ? "rgba(107,159,238,0.05)" : "transparent",
                     transition: isLinked ? "background-color 0.15s" : undefined,
                   }}
                   onMouseEnter={isLinked ? (e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(107,159,238,0.07)"; } : undefined}
-                  onMouseLeave={isLinked ? (e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = i % 2 === 0 ? "rgba(107,159,238,0.025)" : "transparent"; } : undefined}
+                  onMouseLeave={isLinked ? (e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = i % 2 === 0 ? "rgba(107,159,238,0.05)" : "transparent"; } : undefined}
                 >
-                  <div className="flex items-start gap-4 px-5 py-4">
-                    <span
-                      className="text-[9px] tracking-wide flex-shrink-0 pt-px font-semibold"
-                      style={{ color: "#6B9FEE", minWidth: "60px" }}
-                    >
-                      {entry.date}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs leading-snug" style={{ color: "#F0F5FF" }}>
-                        {entry.operation}
-                      </p>
-                      <p className="text-[9px] mt-1" style={{ color: "rgba(107,159,238,0.55)" }}>
+                  <div className="px-5 py-6">
+                    <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
+                      <span
+                        className="text-[12px] tracking-[0.1em] uppercase font-bold inline-block"
+                        style={{
+                          color: "#6B9FEE",
+                          backgroundColor: "rgba(107,159,238,0.1)",
+                          border: "1px solid rgba(107,159,238,0.25)",
+                          borderRadius: "5px",
+                          padding: "0.4rem 0.6rem",
+                        }}
+                      >
+                        {entry.date}
+                      </span>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {entry.amount && entry.amount !== "—" && (
+                          <span className="text-[15px] font-bold tabular-nums" style={{ color: "#6B9FEE" }}>
+                            {entry.amount}
+                          </span>
+                        )}
+                        {isLinked && (
+                          <span
+                            className="flex items-center justify-center flex-shrink-0"
+                            style={{
+                              color: "#6B9FEE",
+                              fontSize: "12px",
+                              width: "1.75rem",
+                              height: "1.75rem",
+                              backgroundColor: "rgba(107,159,238,0.12)",
+                              borderRadius: "50%",
+                            }}
+                            title="Voir la facture"
+                          >
+                            📄
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-[15px] leading-snug" style={{ color: "#E8F0FC" }}>
+                      {entry.operation}
+                    </p>
+                    {entry.km && entry.km !== "—" && (
+                      <p className="text-[13px] mt-1.5" style={{ color: "#8FB4F0" }}>
                         {entry.km}
                       </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {entry.amount && entry.amount !== "—" && (
-                        <span className="text-xs font-bold tabular-nums" style={{ color: "#6B9FEE" }}>
-                          {entry.amount}
-                        </span>
-                      )}
-                      {isLinked && (
-                        <span
-                          className="text-[9px] tracking-wide"
-                          style={{ color: "rgba(107,159,238,0.5)" }}
-                          title="Voir la facture"
-                        >
-                          📄
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               );
             })}
+            {collapsible && (
+              <button
+                onClick={() => setExpanded((e) => !e)}
+                className="w-full flex items-center justify-center gap-2.5 px-5 py-4 text-[12px] tracking-[0.15em] uppercase font-bold transition-colors"
+                style={{
+                  borderTop: "1px solid rgba(107,159,238,0.15)",
+                  backgroundColor: "rgba(107,159,238,0.08)",
+                  color: "#6B9FEE",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(107,159,238,0.14)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(107,159,238,0.08)"; }}
+              >
+                <span style={{ fontSize: "10px" }}>{expanded ? "▲" : "▼"}</span>
+                {expanded
+                  ? showLessLabel
+                  : `${showMoreLabel.replace("%n", String(hiddenEntries.length))}${yearRange}`}
+              </button>
+            )}
           </div>
         ) : (
           <p className="text-xs" style={{ color: "rgba(107,159,238,0.45)" }}>
@@ -228,7 +365,7 @@ export default function EntretienDocumentsSection({
       {/* ── FACTURES & DOCUMENTS ── */}
       {documents.length > 0 && (
         <div>
-          <p className="text-[9px] tracking-[0.3em] uppercase mb-5" style={{ color: "#C8D8EE" }}>
+          <p className="text-sm tracking-[0.25em] uppercase font-bold mb-5" style={{ color: "#F0F5FF" }}>
             Factures &amp; Documents
           </p>
 
@@ -239,9 +376,19 @@ export default function EntretienDocumentsSection({
                   Entrez le mot de passe pour accéder à la facture associée.
                 </p>
               )}
-              <p className="text-sm mb-6" style={{ color: "#C8D8EE" }}>
-                Les documents de ce véhicule sont protégés. Contactez-nous pour obtenir le code d&apos;accès.
-              </p>
+              <div
+                className="flex items-center gap-3 px-4 py-3 mb-6"
+                style={{
+                  backgroundColor: "rgba(107,159,238,0.05)",
+                  border: "1px solid rgba(107,159,238,0.15)",
+                  borderRadius: "6px",
+                }}
+              >
+                <span style={{ color: "#6B9FEE", fontSize: "15px" }}>🔒</span>
+                <p className="text-[14px]" style={{ color: "#E8F0FC" }}>
+                  Les documents de ce véhicule sont protégés. Contactez-nous pour obtenir le code d&apos;accès.
+                </p>
+              </div>
               <form onSubmit={handleSubmit} className="flex gap-3 max-w-sm">
                 <input
                   ref={passwordRef}
@@ -282,7 +429,7 @@ export default function EntretienDocumentsSection({
                     onClick={() => setLightboxIndex(i)}
                   >
                     <p
-                      className="text-[9px] tracking-[0.25em] uppercase px-4 py-3"
+                      className="text-[10px] tracking-[0.25em] uppercase px-4 py-3"
                       style={{ color: "#C8D8EE", borderBottom: "1px solid #1B3055" }}
                     >
                       {label}

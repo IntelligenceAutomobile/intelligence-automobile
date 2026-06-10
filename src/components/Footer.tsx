@@ -16,21 +16,22 @@ export default function Footer() {
         {/* Liens & contact */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
+            <div style={{ width: "24px", height: "2px", backgroundColor: "#6B9FEE", marginBottom: "0.75rem" }} />
             <h3
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
             >
               {t.footer.navigation}
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-3.5">
               {t.footer.navLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
                     className="text-sm transition-colors duration-200"
-                    style={{ color: "#C8D8EE" }}
+                    style={{ color: "#D4E2F4" }}
                     onMouseEnter={(e) => (e.currentTarget.style.color = "#6B9FEE")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#C8D8EE")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#D4E2F4")}
                   >
                     {link.label}
                   </Link>
@@ -40,21 +41,22 @@ export default function Footer() {
           </div>
 
           <div>
+            <div style={{ width: "24px", height: "2px", backgroundColor: "#6B9FEE", marginBottom: "0.75rem" }} />
             <h3
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
             >
               {t.footer.services}
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-3.5">
               {t.footer.serviceLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
                     className="text-sm transition-colors duration-200"
-                    style={{ color: "#C8D8EE" }}
+                    style={{ color: "#D4E2F4" }}
                     onMouseEnter={(e) => (e.currentTarget.style.color = "#6B9FEE")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#C8D8EE")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#D4E2F4")}
                   >
                     {link.label}
                   </Link>
@@ -64,13 +66,14 @@ export default function Footer() {
           </div>
 
           <div>
+            <div style={{ width: "24px", height: "2px", backgroundColor: "#6B9FEE", marginBottom: "0.75rem" }} />
             <h3
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
             >
               {t.footer.contact}
             </h3>
-            <ul className="space-y-3 text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
+            <ul className="space-y-3.5 text-sm" style={{ color: "#D4E2F4", fontWeight: 400 }}>
               <li>contact@intelligence-automobile.fr</li>
               <li>+33 (0)6 00 00 00 00</li>
               <li>France</li>
@@ -85,7 +88,7 @@ export default function Footer() {
           <p className="text-xs" style={{ color: "#C8D8EE" }}>
             © {new Date().getFullYear()} Intelligence Automobile. {t.footer.rights}
           </p>
-          <p className="text-xs" style={{ color: "#1B3055" }}>
+          <p className="text-xs" style={{ color: "rgba(107,159,238,0.35)" }}>
             {t.footer.tagline}
           </p>
         </div>

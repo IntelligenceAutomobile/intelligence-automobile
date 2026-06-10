@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { existsSync, readdirSync } from "fs";
@@ -20,17 +21,38 @@ const MAINTENANCE_DATA: Record<string, MaintenanceEntry[]> = {
     { date: "Mars 2025", km: "—", operation: "Batterie VARTA A6 AGM neuve + montage en atelier", amount: "301,89 €", linkedDoc: "batterie-invoice-1.jpg" },
   ],
   "audi-tt-mk2-sline-2010": [
+    { date: "Janv. 2026", km: "151 042 km", operation: "Contrôle technique FAVORABLE, valide jusqu'au 28/01/2028 (Autosur Tremblay · PV N° 26049227)" },
+    { date: "Juil. 2025", km: "~151 000 km", operation: "Disques AV+AR neufs, plaquettes AV+AR neuves, filtres air et habitacle (Autodoc)", amount: "276,96 €" },
     { date: "Nov. 2024", km: "145 762 km", operation: "Entretien intermédiaire huile 5W40 + diagnostic électronique complet (Midas Paris 17)", amount: "109,00 €" },
     { date: "Août 2024", km: "140 168 km", operation: "Contrôle technique FAVORABLE (Securitest Mandelieu · PV N° 24073569)" },
-    { date: "Déc. 2023", km: "134 073 km", operation: "Kit distribution, courroie multi-V, bougies, plaquettes AV (ByMyCar Vaucluse)", amount: "355,72 €" },
     { date: "Déc. 2023", km: "138 653 km", operation: "Vidange moteur, filtres" },
+    { date: "Déc. 2023", km: "134 073 km", operation: "Kit distribution, courroie multi-V, bougies, plaquettes AV (ByMyCar Vaucluse)", amount: "355,72 €" },
     { date: "Avr. 2021", km: "134 073 km", operation: "Vidange moteur, filtres, contrôles (La Chaume Carpentras)" },
     { date: "Août 2019", km: "130 874 km", operation: "Inspection, vidange, filtres air et habitacle, Haldex (Link Gengenbach GmbH DE)" },
-    { date: "Sept. 2018", km: "125 334 km", operation: "Inspection, vidange, filtres, Zahnriemen (ACTU GmbH Hannover DE)" },
+    { date: "Sept. 2018", km: "125 334 km", operation: "Inspection, vidange, filtres, Multitronic, Zahnriemen (ACTU GmbH Hannover DE)" },
     { date: "Août 2017", km: "115 176 km", operation: "Inspection, vidange moteur 5W30LL, filtres (Audi Wolfsburg DE)" },
     { date: "Août 2016", km: "105 885 km", operation: "Vidange moteur, huile 5W30LL (Audi Wolfsburg DE)" },
     { date: "Avr. 2015", km: "90 010 km", operation: "Inspection + vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
     { date: "Juil. 2014", km: "78 735 km", operation: "Inspection + vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
+    { date: "Août 2013", km: "61 225 km", operation: "Vidange moteur, filtres, contrôles (Glinicke Bad Oeynhausen DE)" },
+    { date: "Mai 2013", km: "55 432 km", operation: "Vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
+    { date: "Oct. 2012", km: "41 930 km", operation: "Vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
+    { date: "Mai 2012", km: "30 234 km", operation: "Vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
+    { date: "Oct. 2011", km: "21 215 km", operation: "Inspection Audi, vidange moteur, remplacement filtres (Glinicke Bad Oeynhausen DE)" },
+  ],
+};
+
+const MAINTENANCE_NOTES: Record<string, string> = {
+  "audi-tt-mk2-sline-2010":
+    "Carnet Audi d'origine tamponné par des concessionnaires agréés de la mise en circulation (mai 2010) à 2023. Interventions récentes sur factures originales (Midas, Autodoc, ByMyCar) et deux contrôles techniques favorables.",
+};
+
+type MaintenanceHighlight = { icon: string; label: string; text: string; color: string };
+const MAINTENANCE_HIGHLIGHTS: Record<string, MaintenanceHighlight[]> = {
+  "audi-tt-mk2-sline-2010": [
+    { icon: "📓", label: "Carnet d'origine", text: "Tampons de concessionnaires agréés Audi de mai 2010 à 2023", color: "#6B9FEE" },
+    { icon: "🧾", label: "Factures originales", text: "Interventions récentes documentées (Midas, Autodoc, ByMyCar)", color: "#E8C36B" },
+    { icon: "✓", label: "Contrôle technique", text: "2 CT favorables — dernier valide jusqu'au 28/01/2028", color: "#5BD89A" },
   ],
 };
 
@@ -147,6 +169,13 @@ export default async function VehiculeDetailV2Page({
     return sectionIdx.toString().padStart(2, "0");
   };
 
+  const sectionCardStyle: CSSProperties = {
+    background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
+    border: "1px solid rgba(107,159,238,0.12)",
+    borderRadius: "10px",
+    padding: "2rem",
+  };
+
   return (
     <>
       <Header />
@@ -208,8 +237,17 @@ export default async function VehiculeDetailV2Page({
                 <div className="mb-14">
                   <div className="flex items-baseline gap-5 mb-10">
                     <span
-                      className="font-black tabular-nums flex-shrink-0 leading-none"
-                      style={{ fontSize: "2rem", color: "#6B9FEE", opacity: 0.5, letterSpacing: "-0.04em" }}
+                      className="font-black tabular-nums flex-shrink-0 leading-none flex items-center justify-center"
+                      style={{
+                        fontSize: "1.1rem",
+                        color: "#6B9FEE",
+                        letterSpacing: "-0.02em",
+                        width: "2.75rem",
+                        height: "2.75rem",
+                        backgroundColor: "rgba(107,159,238,0.1)",
+                        border: "1px solid rgba(107,159,238,0.3)",
+                        borderRadius: "8px",
+                      }}
                     >
                       {nextNum()}
                     </span>
@@ -219,30 +257,44 @@ export default async function VehiculeDetailV2Page({
                     >
                       {td.presentationSection}
                     </p>
-                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "#1B3055" }} />
+                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
                   </div>
 
-                  <DescriptionBlock paragraphs={descParagraphs} />
+                  <div style={sectionCardStyle}>
+                    <DescriptionBlock paragraphs={descParagraphs} />
 
-                  {etatFacts.length > 0 && (
-                    <div className="mt-8 flex flex-wrap gap-2">
-                      {etatFacts.map((fact, i) => (
-                        <span
-                          key={i}
-                          className="flex items-center gap-2 px-4 py-2 text-[11px]"
-                          style={{
-                            backgroundColor: "rgba(107,159,238,0.06)",
-                            border: "1px solid rgba(107,159,238,0.2)",
-                            color: "#C8D8EE",
-                            borderRadius: "3px",
-                          }}
-                        >
-                          <span style={{ color: "#6B9FEE", fontSize: "8px" }}>✓</span>
-                          {fact}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                    {etatFacts.length > 0 && (
+                      <div className="mt-8 flex flex-wrap gap-3">
+                        {etatFacts.map((fact, i) => (
+                          <span
+                            key={i}
+                            className="flex items-center gap-3 px-4 py-3 text-[14px] font-medium"
+                            style={{
+                              backgroundColor: "rgba(107,159,238,0.08)",
+                              border: "1px solid rgba(107,159,238,0.25)",
+                              color: "#E8F0FC",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            <span
+                              className="flex items-center justify-center flex-shrink-0 font-bold"
+                              style={{
+                                color: "#6B9FEE",
+                                fontSize: "11px",
+                                width: "1.25rem",
+                                height: "1.25rem",
+                                backgroundColor: "rgba(107,159,238,0.15)",
+                                borderRadius: "50%",
+                              }}
+                            >
+                              ✓
+                            </span>
+                            {fact}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -251,8 +303,17 @@ export default async function VehiculeDetailV2Page({
                 <div className="mb-14">
                   <div className="flex items-baseline gap-5 mb-10">
                     <span
-                      className="font-black tabular-nums flex-shrink-0 leading-none"
-                      style={{ fontSize: "2rem", color: "#6B9FEE", opacity: 0.5, letterSpacing: "-0.04em" }}
+                      className="font-black tabular-nums flex-shrink-0 leading-none flex items-center justify-center"
+                      style={{
+                        fontSize: "1.1rem",
+                        color: "#6B9FEE",
+                        letterSpacing: "-0.02em",
+                        width: "2.75rem",
+                        height: "2.75rem",
+                        backgroundColor: "rgba(107,159,238,0.1)",
+                        border: "1px solid rgba(107,159,238,0.3)",
+                        borderRadius: "8px",
+                      }}
                     >
                       {nextNum()}
                     </span>
@@ -262,23 +323,29 @@ export default async function VehiculeDetailV2Page({
                     >
                       {tm.highlights}
                     </p>
-                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "#1B3055" }} />
+                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
                   </div>
 
-                  <div
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-px"
-                    style={{ backgroundColor: "rgba(107,159,238,0.15)" }}
-                  >
-                    {pointsForts.map((f) => (
-                      <div
-                        key={f}
-                        className="flex items-start gap-4 px-5 py-5"
-                        style={{ backgroundColor: "#0B1929", borderLeft: "3px solid #6B9FEE" }}
-                      >
-                        <span className="flex-shrink-0 text-xs font-bold mt-0.5" style={{ color: "#6B9FEE" }}>✓</span>
-                        <span className="text-sm leading-snug font-medium" style={{ color: "#E8F0FC" }}>{f}</span>
-                      </div>
-                    ))}
+                  <div style={sectionCardStyle}>
+                    <div
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                    >
+                      {pointsForts.map((f) => (
+                        <div
+                          key={f}
+                          className="flex items-start gap-4 px-5 py-5 transition-all duration-300 hover:-translate-y-0.5"
+                          style={{
+                            backgroundColor: "rgba(107,159,238,0.05)",
+                            border: "1px solid rgba(107,159,238,0.12)",
+                            borderLeft: "3px solid #6B9FEE",
+                            borderRadius: "6px",
+                          }}
+                        >
+                          <span className="flex-shrink-0 text-xs font-bold mt-0.5" style={{ color: "#6B9FEE" }}>✓</span>
+                          <span className="text-[15px] leading-snug font-medium" style={{ color: "#E8F0FC" }}>{f}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -288,8 +355,17 @@ export default async function VehiculeDetailV2Page({
                 <div className="mb-14">
                   <div className="flex items-baseline gap-5 mb-10">
                     <span
-                      className="font-black tabular-nums flex-shrink-0 leading-none"
-                      style={{ fontSize: "2rem", color: "#6B9FEE", opacity: 0.5, letterSpacing: "-0.04em" }}
+                      className="font-black tabular-nums flex-shrink-0 leading-none flex items-center justify-center"
+                      style={{
+                        fontSize: "1.1rem",
+                        color: "#6B9FEE",
+                        letterSpacing: "-0.02em",
+                        width: "2.75rem",
+                        height: "2.75rem",
+                        backgroundColor: "rgba(107,159,238,0.1)",
+                        border: "1px solid rgba(107,159,238,0.3)",
+                        borderRadius: "8px",
+                      }}
                     >
                       {nextNum()}
                     </span>
@@ -299,10 +375,12 @@ export default async function VehiculeDetailV2Page({
                     >
                       {tm.equipmentTitle}
                     </p>
-                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "#1B3055" }} />
+                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
                   </div>
 
-                  <EquipementsAccordion categories={categories} />
+                  <div style={sectionCardStyle}>
+                    <EquipementsAccordion categories={categories} />
+                  </div>
                 </div>
               )}
 
@@ -312,8 +390,17 @@ export default async function VehiculeDetailV2Page({
                   {/* Header numéroté */}
                   <div className="flex items-baseline gap-5 mb-10">
                     <span
-                      className="font-black tabular-nums flex-shrink-0 leading-none"
-                      style={{ fontSize: "2rem", color: "#6B9FEE", opacity: 0.5, letterSpacing: "-0.04em" }}
+                      className="font-black tabular-nums flex-shrink-0 leading-none flex items-center justify-center"
+                      style={{
+                        fontSize: "1.1rem",
+                        color: "#6B9FEE",
+                        letterSpacing: "-0.02em",
+                        width: "2.75rem",
+                        height: "2.75rem",
+                        backgroundColor: "rgba(107,159,238,0.1)",
+                        border: "1px solid rgba(107,159,238,0.3)",
+                        borderRadius: "8px",
+                      }}
                     >
                       {nextNum()}
                     </span>
@@ -323,22 +410,27 @@ export default async function VehiculeDetailV2Page({
                     >
                       Entretien &amp; Documents
                     </p>
-                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "#1B3055" }} />
+                    <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
                   </div>
 
-                  <EntretienDocumentsSection
-                    maintenance={maintenance}
-                    documents={documents}
-                    maintenanceTitle={tm.maintenanceTitle}
-                    interventionsLabel={tm.interventions}
-                  />
+                  <div style={sectionCardStyle}>
+                    <EntretienDocumentsSection
+                      maintenance={maintenance}
+                      documents={documents}
+                      interventionsLabel={tm.interventions}
+                      showMoreLabel={td.showMoreInterventions}
+                      showLessLabel={td.showLessInterventions}
+                      highlights={MAINTENANCE_HIGHLIGHTS[id] ?? []}
+                      note={MAINTENANCE_NOTES[id]}
+                    />
+                  </div>
                 </div>
               )}
 
               {/* Branding */}
               <div className="flex items-center gap-4 mt-4">
                 <div style={{ width: "32px", height: "1px", backgroundColor: "rgba(107,159,238,0.4)" }} />
-                <span className="text-[9px] tracking-[0.4em] uppercase" style={{ color: "rgba(107,159,238,0.5)" }}>
+                <span className="text-[10px] tracking-[0.4em] uppercase" style={{ color: "#7BA5DC" }}>
                   {tm.branding}
                 </span>
               </div>
@@ -353,22 +445,37 @@ export default async function VehiculeDetailV2Page({
                     background: "linear-gradient(160deg, #0E2040 0%, #091626 100%)",
                     border: "1px solid rgba(107,159,238,0.2)",
                     borderTop: "2px solid #6B9FEE",
+                    borderRadius: "10px",
+                    boxShadow: "0 20px 60px rgba(107,159,238,0.08)",
+                    overflow: "hidden",
                   }}
                 >
                   {/* Bandeau garantie */}
                   <div
-                    className="flex items-center gap-2 px-6 py-3"
+                    className="flex items-center gap-2.5 px-6 py-3.5"
                     style={{ borderBottom: "1px solid rgba(107,159,238,0.12)" }}
                   >
-                    <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
-                    <span className="text-[10px] tracking-wide" style={{ color: "#7BA5DC" }}>
+                    <span
+                      className="flex items-center justify-center flex-shrink-0 font-bold"
+                      style={{
+                        color: "#6B9FEE",
+                        fontSize: "10px",
+                        width: "1.25rem",
+                        height: "1.25rem",
+                        backgroundColor: "rgba(107,159,238,0.15)",
+                        borderRadius: "50%",
+                      }}
+                    >
+                      ✓
+                    </span>
+                    <span className="text-[13px] font-medium tracking-wide" style={{ color: "#E8F0FC" }}>
                       {tm.warranty}
                     </span>
                   </div>
 
                   {/* Prix */}
                   <div className="px-6 pt-6 pb-2">
-                    <p className="text-[8px] tracking-[0.5em] uppercase mb-2" style={{ color: "rgba(107,159,238,0.6)" }}>
+                    <p className="text-[9px] font-medium tracking-[0.4em] uppercase mb-2" style={{ color: "#9DBEF0" }}>
                       {td.priceLabel}
                     </p>
                     <div
@@ -398,14 +505,14 @@ export default async function VehiculeDetailV2Page({
                           style={{ backgroundColor: "#0B1929" }}
                         >
                           <span
-                            className="text-[9px] tracking-[0.3em] uppercase mb-1.5"
-                            style={{ color: "rgba(107,159,238,0.75)" }}
+                            className="text-[10px] font-semibold tracking-[0.25em] uppercase mb-1.5"
+                            style={{ color: "#A8C6F4" }}
                           >
                             {s!.label}
                           </span>
                           <span
                             className="font-black leading-tight"
-                            style={{ fontSize: "1.05rem", color: "#F0F5FF", letterSpacing: "-0.01em" }}
+                            style={{ fontSize: "1.15rem", color: "#F0F5FF", letterSpacing: "-0.01em" }}
                           >
                             {s!.value}
                           </span>
@@ -471,8 +578,8 @@ export default async function VehiculeDetailV2Page({
                   {images.length > 1 && (
                     <a
                       href="#galerie"
-                      className="block w-full text-center text-[10px] tracking-[0.3em] uppercase py-3 transition-opacity hover:opacity-70"
-                      style={{ color: "rgba(107,159,238,0.6)" }}
+                      className="block w-full text-center text-[11px] font-semibold tracking-[0.3em] uppercase py-3 transition-opacity hover:opacity-70"
+                      style={{ color: "#8FB4F0" }}
                     >
                       {td.viewPhotos.replace("%n", String(images.length))}
                     </a>
@@ -501,9 +608,12 @@ export default async function VehiculeDetailV2Page({
           )}
 
           {/* ── CTA FINAL ── */}
-          <div className="border-t pb-28 lg:pb-24" style={{ borderColor: "#1B3055", paddingTop: "5rem" }}>
-            <div className="max-w-2xl mx-auto text-center">
-              <p className="text-[9px] tracking-[0.5em] uppercase mb-5" style={{ color: "rgba(107,159,238,0.6)" }}>
+          <div className="pb-28 lg:pb-24" style={{ paddingTop: "3.5rem" }}>
+            <div
+              className="max-w-3xl mx-auto text-center"
+              style={{ ...sectionCardStyle, padding: "3.5rem 2.5rem" }}
+            >
+              <p className="text-[11px] font-bold tracking-[0.5em] uppercase mb-5" style={{ color: "#6B9FEE" }}>
                 {td.testDriveLabel}
               </p>
               <h2
@@ -512,7 +622,7 @@ export default async function VehiculeDetailV2Page({
               >
                 {td.ctaTitle}
               </h2>
-              <p className="text-sm mb-12" style={{ color: "#7BA5DC", fontWeight: 400 }}>
+              <p className="text-[15px] mb-12" style={{ color: "#A8C6F4", fontWeight: 400 }}>
                 {td.ctaSubtitle}
               </p>
               {isAvailable && (

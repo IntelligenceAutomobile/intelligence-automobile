@@ -25,7 +25,7 @@ export default function DescriptionBlock({ paragraphs }: { paragraphs: string[] 
   return (
     <div className="flex flex-col gap-4">
       {visible.map((p, i) => (
-        <p key={i} className="text-sm leading-loose" style={{ color: "#C8D8EE", fontWeight: 400 }}>
+        <p key={i} className="text-[15px] leading-loose" style={{ color: "#E8F0FC", fontWeight: 500 }}>
           {renderDesc(p)}
         </p>
       ))}

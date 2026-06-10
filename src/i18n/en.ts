@@ -441,6 +441,8 @@ export const en: Translations = {
     mandatCta: "Custom import mandate",
     gallery: "Gallery",
     viewPhotos: "View all %n photos ↓",
+    showMoreInterventions: "Show %n earlier services",
+    showLessInterventions: "Collapse history",
   },
 
   contact: {
