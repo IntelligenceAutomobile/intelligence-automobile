@@ -31,6 +31,9 @@ export type Branding = {
   logoVisible: boolean;
   logoAlign: LogoAlign;
   logoSize: number; // hauteur en mm
+  // Position libre (mm depuis le coin haut-gauche de la page). null = placement auto via logoAlign.
+  logoX: number | null;
+  logoY: number | null;
 };
 
 export function defaultBranding(): Branding {
@@ -45,6 +48,8 @@ export function defaultBranding(): Branding {
     logoVisible: true,
     logoAlign: "left",
     logoSize: 16,
+    logoX: null,
+    logoY: null,
   };
 }
 
@@ -56,6 +61,7 @@ export function mergeBranding(raw: unknown): Branding {
   const str = (v: unknown, d: string) => (typeof v === "string" ? v : d);
   const align = r.logoAlign === "center" || r.logoAlign === "right" || r.logoAlign === "left" ? (r.logoAlign as LogoAlign) : base.logoAlign;
   const size = typeof r.logoSize === "number" && r.logoSize > 0 ? r.logoSize : base.logoSize;
+  const coord = (v: unknown): number | null => (typeof v === "number" && isFinite(v) ? v : null);
   return {
     emitterName: str(r.emitterName, base.emitterName),
     emitterAddress: str(r.emitterAddress, base.emitterAddress),
@@ -67,6 +73,8 @@ export function mergeBranding(raw: unknown): Branding {
     logoVisible: typeof r.logoVisible === "boolean" ? r.logoVisible : base.logoVisible,
     logoAlign: align,
     logoSize: Math.min(40, Math.max(6, size)),
+    logoX: coord(r.logoX),
+    logoY: coord(r.logoY),
   };
 }
 

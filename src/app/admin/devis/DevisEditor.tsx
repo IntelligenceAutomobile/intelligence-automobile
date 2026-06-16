@@ -216,6 +216,34 @@ export default function DevisEditor({
     return () => ro.disconnect();
   }, []);
 
+  // Glisser le logo directement dans l'aperçu → position libre (mm depuis le coin haut-gauche).
+  const PX_PER_MM = 96 / 25.4;
+  function onLogoPointerDown(e: React.PointerEvent<HTMLImageElement>) {
+    e.preventDefault();
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const imgRect = e.currentTarget.getBoundingClientRect();
+    const seedX = (imgRect.left - wrapRect.left) / scale / PX_PER_MM;
+    const seedY = (imgRect.top - wrapRect.top) / scale / PX_PER_MM;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const move = (ev: PointerEvent) => {
+      const dx = (ev.clientX - startX) / scale / PX_PER_MM;
+      const dy = (ev.clientY - startY) / scale / PX_PER_MM;
+      updateBranding({
+        logoX: Math.max(0, Math.min(205, Math.round((seedX + dx) * 10) / 10)),
+        logoY: Math.max(0, Math.min(290, Math.round((seedY + dy) * 10) / 10)),
+      });
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
   const filteredVehicles = vehicles.filter((v) => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -440,34 +468,44 @@ export default function DevisEditor({
             Afficher le logo sur le devis
           </label>
           {q.branding.logoVisible && (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Position du logo">
-                <div className="flex gap-1">
-                  {(["left", "center", "right"] as LogoAlign[]).map((val) => {
-                    const lab = val === "left" ? "Gauche" : val === "center" ? "Centre" : "Droite";
-                    const active = q.branding.logoAlign === val;
-                    return (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => updateBranding({ logoAlign: val })}
-                        className="flex-1 px-2 py-2.5 text-[11px] uppercase tracking-widest border transition-colors"
-                        style={{
-                          borderColor: active ? T.accent : T.border,
-                          color: active ? T.text : T.muted,
-                          backgroundColor: active ? "rgba(107,159,238,0.12)" : "transparent",
-                        }}
-                      >
-                        {lab}
-                      </button>
-                    );
-                  })}
-                </div>
-              </Field>
-              <Field label={`Taille du logo — ${q.branding.logoSize} mm`}>
-                <input type="range" min={8} max={32} step={1} value={q.branding.logoSize} onChange={(e) => updateBranding({ logoSize: parseInt(e.target.value) })} className="w-full" style={{ accentColor: T.accent }} />
-              </Field>
-            </div>
+            <>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="Placement rapide">
+                  <div className="flex gap-1">
+                    {(["left", "center", "right"] as LogoAlign[]).map((val) => {
+                      const lab = val === "left" ? "Gauche" : val === "center" ? "Centre" : "Droite";
+                      const active = q.branding.logoX == null && q.branding.logoAlign === val;
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => updateBranding({ logoAlign: val, logoX: null, logoY: null })}
+                          className="flex-1 px-2 py-2.5 text-[11px] uppercase tracking-widest border transition-colors"
+                          style={{
+                            borderColor: active ? T.accent : T.border,
+                            color: active ? T.text : T.muted,
+                            backgroundColor: active ? "rgba(107,159,238,0.12)" : "transparent",
+                          }}
+                        >
+                          {lab}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+                <Field label={`Taille du logo — ${q.branding.logoSize} mm`}>
+                  <input type="range" min={8} max={32} step={1} value={q.branding.logoSize} onChange={(e) => updateBranding({ logoSize: parseInt(e.target.value) })} className="w-full" style={{ accentColor: T.accent }} />
+                </Field>
+              </div>
+              <p className="text-[12px] -mt-1 flex items-center gap-2 flex-wrap" style={{ color: T.muted }}>
+                <span>↔ Glissez le logo directement dans l&apos;aperçu pour le placer où vous voulez.</span>
+                {q.branding.logoX != null && (
+                  <button type="button" onClick={() => updateBranding({ logoX: null, logoY: null })} className="underline" style={{ color: T.accent }}>
+                    Replacer automatiquement
+                  </button>
+                )}
+              </p>
+            </>
           )}
 
           <div className="grid sm:grid-cols-2 gap-4">
@@ -524,7 +562,7 @@ export default function DevisEditor({
           <div style={{ height: docH * scale }} />
           <div style={{ position: "absolute", top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: "top left" }}>
             <div ref={docRef} style={{ width: A4_W }}>
-              <DevisDocument quote={q} />
+              <DevisDocument quote={q} onLogoPointerDown={onLogoPointerDown} />
             </div>
           </div>
         </div>

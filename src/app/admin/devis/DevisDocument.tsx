@@ -28,12 +28,20 @@ const labelMini: CSSProperties = {
   color: C.muted,
 };
 
-export default function DevisDocument({ quote }: { quote: QuoteData }) {
+export default function DevisDocument({
+  quote,
+  onLogoPointerDown,
+}: {
+  quote: QuoteData;
+  onLogoPointerDown?: (e: React.PointerEvent<HTMLImageElement>) => void;
+}) {
   const t = computeTotals(quote);
   const b = quote.branding;
   const addrLines = b.emitterAddress.split("\n").map((l) => l.trim()).filter(Boolean);
   const showHT = t.showTva;
   const logoJustify = b.logoAlign === "center" ? "center" : b.logoAlign === "right" ? "flex-end" : "flex-start";
+  const logoFree = b.logoX != null && b.logoY != null;
+  const logoCursor = onLogoPointerDown ? "move" : "default";
 
   return (
     <div
@@ -49,15 +57,32 @@ export default function DevisDocument({ quote }: { quote: QuoteData }) {
         lineHeight: 1.45,
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
     >
-      {/* ── Logo (positionnable + redimensionnable) ── */}
-      {b.logoVisible && (
-        <div style={{ display: "flex", justifyContent: logoJustify, marginBottom: "6mm" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={COMPANY.logoSrc} alt={b.emitterName} style={{ height: `${b.logoSize}mm`, objectFit: "contain" }} />
-        </div>
-      )}
+      {/* ── Logo : position libre (absolue) ou auto (alignée) ── */}
+      {b.logoVisible &&
+        (logoFree ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={COMPANY.logoSrc}
+            alt={b.emitterName}
+            onPointerDown={onLogoPointerDown}
+            draggable={false}
+            style={{ position: "absolute", left: `${b.logoX}mm`, top: `${b.logoY}mm`, height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none", zIndex: 5 }}
+          />
+        ) : (
+          <div style={{ display: "flex", justifyContent: logoJustify, marginBottom: "6mm" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={COMPANY.logoSrc}
+              alt={b.emitterName}
+              onPointerDown={onLogoPointerDown}
+              draggable={false}
+              style={{ height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none" }}
+            />
+          </div>
+        ))}
 
       {/* ── Émetteur / bloc devis ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12mm" }}>
