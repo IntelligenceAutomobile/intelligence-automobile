@@ -1,0 +1,188 @@
+// Primitives de design partagées pour le back-office.
+// Module "partagé" (pas de "use client") : importable depuis les composants
+// serveur ET client. N'utilise aucun hook ni API client.
+import type { CSSProperties, ReactNode } from "react";
+
+/* ── Jetons de couleur, alignés sur le site public ── */
+export const T = {
+  bg: "#070F1E",
+  surface: "#112240",
+  surfaceAlt: "#0A1628",
+  float: "#040B16",
+  border: "#1B3055",
+  text: "#F0F5FF",
+  textDim: "#C8D8EE",
+  muted: "#7C92B5",
+  accent: "#6B9FEE",
+  accentDark: "#4B7FD8",
+  danger: "#FF6B35",
+} as const;
+
+/* ── Champs de formulaire ── */
+export const fieldStyle: CSSProperties = {
+  backgroundColor: T.float,
+  border: `1px solid ${T.border}`,
+  color: T.text,
+  outline: "none",
+  width: "100%",
+  transition: "border-color 0.2s",
+};
+export const fieldClass =
+  "w-full px-4 py-3 text-sm outline-none focus:border-[#6B9FEE]";
+export const labelClass = "block text-xs tracking-widest uppercase mb-2";
+
+/* ── Boutons ── */
+export const btnPrimaryClass =
+  "inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-widest uppercase px-5 py-3 transition-opacity duration-200 hover:opacity-90 disabled:opacity-60";
+export const btnPrimaryStyle: CSSProperties = { backgroundColor: T.accent, color: T.bg };
+
+export const btnGhostClass =
+  "inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-widest uppercase px-5 py-3 border transition-colors duration-200 hover:border-[#6B9FEE] hover:text-[#F0F5FF]";
+export const btnGhostStyle: CSSProperties = { borderColor: T.border, color: T.textDim };
+
+/* ── Filet d'accent dégradé (comme l'en-tête du site) ── */
+export function AccentLine() {
+  return (
+    <div
+      style={{
+        height: "1px",
+        background: "linear-gradient(to right, transparent, #6B9FEE, transparent)",
+        opacity: 0.45,
+      }}
+    />
+  );
+}
+
+/* ── Conteneur de page ── */
+export function AdminPage({
+  width = "wide",
+  children,
+}: {
+  width?: "wide" | "narrow";
+  children: ReactNode;
+}) {
+  return (
+    <div className={`mx-auto px-6 py-10 ${width === "narrow" ? "max-w-3xl" : "max-w-6xl"}`}>
+      {children}
+    </div>
+  );
+}
+
+/* ── En-tête de page (barre d'accent + titre + action optionnelle) ── */
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex items-end justify-between gap-4 mb-8">
+      <div>
+        <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
+        <h1 className="text-2xl font-light" style={{ color: T.text, letterSpacing: "-0.01em" }}>
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-sm mt-1.5" style={{ color: T.muted }}>
+            {subtitle}
+          </p>
+        )}
+      </div>
+      {action && <div className="flex-shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+/* ── Carte de section titrée (formulaires) ── */
+export function SectionCard({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <div style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }} className="p-5 sm:p-6 space-y-5">
+      {title && (
+        <p
+          className="text-[11px] tracking-[0.2em] uppercase pb-4"
+          style={{ color: T.accent, borderBottom: `1px solid ${T.border}` }}
+        >
+          {title}
+        </p>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/* ── Badge de statut ── */
+const STATUS_MAP: Record<string, { bg: string; bd: string; fg: string; label: string }> = {
+  disponible: { bg: "rgba(107,159,238,0.10)", bd: "rgba(107,159,238,0.35)", fg: "#6B9FEE", label: "Disponible" },
+  reserve: { bg: "rgba(240,180,90,0.10)", bd: "rgba(240,180,90,0.38)", fg: "#F0B45A", label: "Réservé" },
+  vendu: { bg: "rgba(200,216,238,0.05)", bd: T.border, fg: T.textDim, label: "Vendu" },
+};
+
+export function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_MAP[status] ?? { bg: "transparent", bd: T.border, fg: T.textDim, label: status };
+  return (
+    <span
+      className="inline-block text-[10px] tracking-[0.15em] uppercase px-2.5 py-1 whitespace-nowrap"
+      style={{ backgroundColor: s.bg, border: `1px solid ${s.bd}`, color: s.fg }}
+    >
+      {s.label}
+    </span>
+  );
+}
+
+/* ── Vignette photo ── */
+export function Thumb({
+  src,
+  alt,
+  w = 72,
+  h = 54,
+}: {
+  src?: string | null;
+  alt?: string;
+  w?: number;
+  h?: number;
+}) {
+  return (
+    <div
+      className="flex-shrink-0 overflow-hidden flex items-center justify-center"
+      style={{ width: w, height: h, backgroundColor: T.float, border: `1px solid ${T.border}` }}
+    >
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt ?? ""} className="w-full h-full object-cover" />
+      ) : (
+        <span style={{ color: T.border, fontSize: 18 }}>—</span>
+      )}
+    </div>
+  );
+}
+
+/* ── Carte de statistique (tableau de bord) ── */
+export function StatCard({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div
+      className="p-6 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
+      style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+    >
+      <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-4" />
+      <div className="text-4xl font-light mb-1" style={{ color: T.accent }}>
+        {value}
+      </div>
+      <div className="text-xs tracking-widest uppercase" style={{ color: T.textDim }}>
+        {label}
+      </div>
+    </div>
+  );
+}
+
+/* ── Utilitaire : première image d'un véhicule (champ JSON) ── */
+export function firstImage(imagesJson: string): string | null {
+  try {
+    const arr = JSON.parse(imagesJson);
+    return Array.isArray(arr) && typeof arr[0] === "string" ? arr[0] : null;
+  } catch {
+    return null;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 type MaintenanceEntry = {
   date: string;
@@ -11,25 +11,11 @@ type MaintenanceEntry = {
 };
 
 type MaintenanceHighlight = { icon: string; label: string; text: string; color: string };
+type DocItem = { url: string; label?: string };
 
 function rgba(hex: string, alpha: number) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
-}
-
-// Highlights years, "mai 2010"-style dates and parenthesized garage names in blue,
-// matching the DescriptionBlock convention
-function renderNote(text: string) {
-  const parts = text.split(/(\(.*?\)|(?:mai\s)?\d{4})/g);
-  return parts.map((part, i) =>
-    /^[(\d]|^mai/.test(part) ? (
-      <span key={i} style={{ color: "#6B9FEE", fontWeight: 600 }}>
-        {part}
-      </span>
-    ) : (
-      part
-    )
-  );
 }
 
 const DOC_LABELS: Record<string, string> = {
@@ -52,15 +38,13 @@ export default function EntretienDocumentsSection({
   showMoreLabel,
   showLessLabel,
   highlights = [],
-  note,
 }: {
   maintenance: MaintenanceEntry[];
-  documents: string[];
+  documents: (string | DocItem)[];
   interventionsLabel: string;
   showMoreLabel: string;
   showLessLabel: string;
   highlights?: MaintenanceHighlight[];
-  note?: string;
 }) {
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
@@ -69,6 +53,23 @@ export default function EntretienDocumentsSection({
   const [pendingDoc, setPendingDoc] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Normalise les documents : legacy (chemin string) OU structuré ({url,label})
+  const docs = useMemo<{ url: string; label: string }[]>(
+    () =>
+      documents.map((d) => {
+        if (typeof d === "string") {
+          const filename = d.split("/").pop() ?? d;
+          return { url: d, label: DOC_LABELS[filename] ?? filename };
+        }
+        const filename = d.url.split("/").pop() ?? d.url;
+        return { url: d.url, label: d.label || DOC_LABELS[filename] || filename };
+      }),
+    [documents]
+  );
+  // linkedDoc peut être une URL complète (nouveau) ou un nom de fichier (legacy)
+  const findDocIndex = (ref: string) =>
+    docs.findIndex((d) => d.url === ref || d.url.endsWith("/" + ref));
 
   // Collapse only if it hides at least 2 entries
   const collapsible = maintenance.length > VISIBLE_COUNT + 1;
@@ -89,7 +90,7 @@ export default function EntretienDocumentsSection({
       setError(false);
       // If user clicked a linked entry before unlocking, open it now
       if (pendingDoc) {
-        const idx = documents.findIndex((d) => d.endsWith("/" + pendingDoc));
+        const idx = findDocIndex(pendingDoc);
         if (idx >= 0) setLightboxIndex(idx);
         setPendingDoc(null);
       }
@@ -101,7 +102,7 @@ export default function EntretienDocumentsSection({
 
   function handleLinkedEntryClick(linkedDoc: string) {
     if (unlocked) {
-      const idx = documents.findIndex((d) => d.endsWith("/" + linkedDoc));
+      const idx = findDocIndex(linkedDoc);
       if (idx >= 0) setLightboxIndex(idx);
     } else {
       setPendingDoc(linkedDoc);
@@ -115,11 +116,11 @@ export default function EntretienDocumentsSection({
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
   const goPrev = useCallback(() => {
-    setLightboxIndex((i) => (i !== null ? (i - 1 + documents.length) % documents.length : null));
-  }, [documents.length]);
+    setLightboxIndex((i) => (i !== null ? (i - 1 + docs.length) % docs.length : null));
+  }, [docs.length]);
   const goNext = useCallback(() => {
-    setLightboxIndex((i) => (i !== null ? (i + 1) % documents.length : null));
-  }, [documents.length]);
+    setLightboxIndex((i) => (i !== null ? (i + 1) % docs.length : null));
+  }, [docs.length]);
 
   useEffect(() => {
     if (lightboxIndex === null) return;
@@ -132,10 +133,8 @@ export default function EntretienDocumentsSection({
     return () => window.removeEventListener("keydown", onKey);
   }, [lightboxIndex, goPrev, goNext, closeLightbox]);
 
-  const currentDoc = lightboxIndex !== null ? documents[lightboxIndex] : null;
-  const currentLabel = currentDoc
-    ? (DOC_LABELS[currentDoc.split("/").pop() ?? ""] ?? currentDoc.split("/").pop())
-    : "";
+  const currentDoc = lightboxIndex !== null ? docs[lightboxIndex] : null;
+  const currentLabel = currentDoc?.label ?? "";
 
   return (
     <>
@@ -160,7 +159,7 @@ export default function EntretienDocumentsSection({
           >
             {currentLabel}
             <span className="ml-4 opacity-50">
-              {lightboxIndex + 1} / {documents.length}
+              {lightboxIndex + 1} / {docs.length}
             </span>
           </div>
           <button
@@ -176,8 +175,8 @@ export default function EntretienDocumentsSection({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={currentDoc}
-              alt={currentLabel ?? ""}
+              src={currentDoc.url}
+              alt={currentLabel}
               className="max-w-full max-h-[85vh] object-contain"
             />
           </div>
@@ -210,28 +209,11 @@ export default function EntretienDocumentsSection({
           )}
         </div>
 
-        {note && (
-          <div
-            className="flex items-start gap-4 px-5 py-4 mb-5"
-            style={{
-              backgroundColor: "rgba(107,159,238,0.06)",
-              border: "1px solid rgba(107,159,238,0.18)",
-              borderLeft: "3px solid #6B9FEE",
-              borderRadius: "6px",
-            }}
-          >
-            <span className="flex-shrink-0 mt-0.5" style={{ fontSize: "17px" }}>📓</span>
-            <p className="text-[15px] leading-loose" style={{ color: "#E8F0FC", fontWeight: 500 }}>
-              {renderNote(note)}
-            </p>
-          </div>
-        )}
-
         {highlights.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-            {highlights.map((h) => (
+            {highlights.map((h, i) => (
               <div
-                key={h.label}
+                key={i}
                 className="flex flex-col gap-2.5 px-4 py-4 transition-all duration-300 hover:-translate-y-0.5"
                 style={{
                   background: `linear-gradient(160deg, ${rgba(h.color, 0.12)} 0%, ${rgba(h.color, 0.03)} 100%)`,
@@ -272,7 +254,9 @@ export default function EntretienDocumentsSection({
         {maintenance.length > 0 ? (
           <div style={{ border: "1px solid rgba(107,159,238,0.18)" }}>
             {visibleEntries.map((entry, i) => {
-              const isLinked = Boolean(entry.linkedDoc && documents.length > 0);
+              // Lien actif seulement si le document référencé existe encore (pas de clic mort)
+              const isLinked = entry.linkedDoc ? findDocIndex(entry.linkedDoc) >= 0 : false;
+              const isCT = /contrôle technique|ct favorable/i.test(entry.operation);
               return (
                 <div
                   key={i}
@@ -291,9 +275,9 @@ export default function EntretienDocumentsSection({
                       <span
                         className="text-[12px] tracking-[0.1em] uppercase font-bold inline-block"
                         style={{
-                          color: "#6B9FEE",
-                          backgroundColor: "rgba(107,159,238,0.1)",
-                          border: "1px solid rgba(107,159,238,0.25)",
+                          color: isCT ? "#5BD89A" : "#6B9FEE",
+                          backgroundColor: isCT ? "rgba(91,216,154,0.1)" : "rgba(107,159,238,0.1)",
+                          border: isCT ? "1px solid rgba(91,216,154,0.3)" : "1px solid rgba(107,159,238,0.25)",
                           borderRadius: "5px",
                           padding: "0.4rem 0.6rem",
                         }}
@@ -302,7 +286,7 @@ export default function EntretienDocumentsSection({
                       </span>
                       <div className="flex items-center gap-3 flex-shrink-0">
                         {entry.amount && entry.amount !== "—" && (
-                          <span className="text-[15px] font-bold tabular-nums" style={{ color: "#6B9FEE" }}>
+                          <span className="text-[15px] font-semibold tabular-nums" style={{ color: "#C8D8EE" }}>
                             {entry.amount}
                           </span>
                         )}
@@ -363,7 +347,7 @@ export default function EntretienDocumentsSection({
       </div>
 
       {/* ── FACTURES & DOCUMENTS ── */}
-      {documents.length > 0 && (
+      {docs.length > 0 && (
         <div>
           <p className="text-sm tracking-[0.25em] uppercase font-bold mb-5" style={{ color: "#F0F5FF" }}>
             Factures &amp; Documents
@@ -419,29 +403,25 @@ export default function EntretienDocumentsSection({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {documents.map((doc, i) => {
-                const filename = doc.split("/").pop() ?? doc;
-                const label = DOC_LABELS[filename] ?? filename;
-                return (
-                  <div
-                    key={doc}
-                    style={{ backgroundColor: "#0D1F3C", cursor: "pointer" }}
-                    onClick={() => setLightboxIndex(i)}
+              {docs.map((doc, i) => (
+                <div
+                  key={doc.url}
+                  style={{ backgroundColor: "#0D1F3C", cursor: "pointer" }}
+                  onClick={() => setLightboxIndex(i)}
+                >
+                  <p
+                    className="text-[10px] tracking-[0.25em] uppercase px-4 py-3"
+                    style={{ color: "#C8D8EE", borderBottom: "1px solid #1B3055" }}
                   >
-                    <p
-                      className="text-[10px] tracking-[0.25em] uppercase px-4 py-3"
-                      style={{ color: "#C8D8EE", borderBottom: "1px solid #1B3055" }}
-                    >
-                      {label}
-                    </p>
-                    <img
-                      src={doc}
-                      alt={label}
-                      className="w-full h-auto transition-opacity hover:opacity-80"
-                    />
-                  </div>
-                );
-              })}
+                    {doc.label}
+                  </p>
+                  <img
+                    src={doc.url}
+                    alt={doc.label}
+                    className="w-full h-auto transition-opacity hover:opacity-80"
+                  />
+                </div>
+              ))}
             </div>
           )}
         </div>

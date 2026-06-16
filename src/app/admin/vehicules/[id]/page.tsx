@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import VehiculeForm from "@/components/VehiculeForm";
+import { T, AdminPage, PageHeader } from "../../ui";
 
 export default async function EditVehiculePage({
   params,
@@ -31,29 +32,25 @@ export default async function EditVehiculePage({
     description: v.description,
     features: JSON.parse(v.features) as string[],
     images: JSON.parse(v.images) as string[],
+    conditionFacts: JSON.parse(v.conditionFacts || "[]"),
+    maintenanceHistory: JSON.parse(v.maintenanceHistory || "[]"),
+    maintenanceHighlights: JSON.parse(v.maintenanceHighlights || "[]"),
+    documents: JSON.parse(v.documents || "[]"),
     status: v.status,
+    isPublished: v.isPublished,
   };
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: "#0B1930", color: "#F0F5FF" }}
-    >
-      <div
-        className="border-b px-6 py-4 flex items-center gap-4"
-        style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}
+    <AdminPage width="narrow">
+      <Link
+        href="/admin/vehicules"
+        className="inline-block text-[11px] tracking-widest uppercase mb-6 transition-colors hover:text-[#F0F5FF]"
+        style={{ color: T.muted }}
       >
-        <Link href="/admin/vehicules" className="text-xs tracking-widest uppercase" style={{ color: "#C8D8EE" }}>
-          ← Stock
-        </Link>
-        <span className="text-sm font-semibold" style={{ color: "#F0F5FF" }}>
-          Modifier : {v.make} {v.model}
-        </span>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        <VehiculeForm data={vehiculeData} />
-      </div>
-    </div>
+        ← Stock
+      </Link>
+      <PageHeader title={`${v.make} ${v.model}`} subtitle="Modifier la fiche du véhicule." />
+      <VehiculeForm data={vehiculeData} />
+    </AdminPage>
   );
 }

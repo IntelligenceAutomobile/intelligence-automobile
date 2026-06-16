@@ -23,7 +23,12 @@ export async function POST(req: NextRequest) {
         description: body.description ?? "",
         features: JSON.stringify(body.features ?? []),
         images: JSON.stringify(body.images ?? []),
+        conditionFacts: JSON.stringify(body.conditionFacts ?? []),
+        maintenanceHistory: JSON.stringify(body.maintenanceHistory ?? []),
+        maintenanceHighlights: JSON.stringify(body.maintenanceHighlights ?? []),
+        documents: JSON.stringify(body.documents ?? []),
         status: body.status ?? "disponible",
+        isPublished: body.isPublished !== undefined ? Boolean(body.isPublished) : undefined,
       },
     });
     return NextResponse.json(vehicle);

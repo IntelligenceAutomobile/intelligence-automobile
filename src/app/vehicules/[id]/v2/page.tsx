@@ -12,6 +12,7 @@ import EquipementsAccordion from "./EquipementsAccordion";
 import DescriptionBlock from "./DescriptionBlock";
 import EntretienDocumentsSection from "./EntretienDocumentsSection";
 import { getTranslations } from "@/lib/i18n-server";
+import { formatNumber } from "@/lib/format";
 
 // ── Maintenance data (server-side) ───────────────────────────────────────────
 type MaintenanceEntry = { date: string; km: string; operation: string; amount?: string; linkedDoc?: string };
@@ -42,11 +43,6 @@ const MAINTENANCE_DATA: Record<string, MaintenanceEntry[]> = {
   ],
 };
 
-const MAINTENANCE_NOTES: Record<string, string> = {
-  "audi-tt-mk2-sline-2010":
-    "Carnet Audi d'origine tamponné par des concessionnaires agréés de la mise en circulation (mai 2010) à 2023. Interventions récentes sur factures originales (Midas, Autodoc, ByMyCar) et deux contrôles techniques favorables.",
-};
-
 type MaintenanceHighlight = { icon: string; label: string; text: string; color: string };
 const MAINTENANCE_HIGHLIGHTS: Record<string, MaintenanceHighlight[]> = {
   "audi-tt-mk2-sline-2010": [
@@ -55,6 +51,13 @@ const MAINTENANCE_HIGHLIGHTS: Record<string, MaintenanceHighlight[]> = {
     { icon: "✓", label: "Contrôle technique", text: "2 CT favorables — dernier valide jusqu'au 28/01/2028", color: "#5BD89A" },
   ],
 };
+
+// Fiches d'avant le formulaire structuré : seules celles-ci utilisent le fallback legacy
+// (données codées en dur + scan disque + heuristique de description).
+const LEGACY_IDS = new Set<string>([
+  ...Object.keys(MAINTENANCE_DATA),
+  ...Object.keys(MAINTENANCE_HIGHLIGHTS),
+]);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -118,15 +121,34 @@ export default async function VehiculeDetailV2Page({
   const features = JSON.parse(isEn && v.featuresEn ? v.featuresEn : v.features) as string[];
   const description = (isEn && v.descriptionEn) ? v.descriptionEn : v.description;
 
+  // Le fallback legacy (données codées en dur + scan disque) ne concerne QUE les fiches
+  // d'avant le formulaire structuré. Pour tout autre véhicule, un champ vide reste vide
+  // (ne pas ressusciter d'anciennes données si l'admin vide volontairement une section).
+  const isLegacy = LEGACY_IDS.has(id);
+
+  // Documents : champ structuré ({url,label}) si renseigné, sinon scan du dossier /public (legacy)
+  const dbDocuments = JSON.parse(v.documents || "[]") as { url: string; label?: string }[];
   const facturesPath = join(process.cwd(), "public", id, "factures");
-  const documents = existsSync(facturesPath)
+  const fsDocuments = isLegacy && existsSync(facturesPath)
     ? readdirSync(facturesPath)
         .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
         .sort()
         .map((f) => `/${id}/factures/${f}`)
     : [];
+  const documents: (string | { url: string; label?: string })[] =
+    dbDocuments.length > 0 ? dbDocuments : fsDocuments;
 
-  const maintenance = MAINTENANCE_DATA[id] ?? [];
+  // Entretien : champ structuré si renseigné, sinon données legacy codées en dur
+  const dbMaintenance = JSON.parse(v.maintenanceHistory || "[]") as MaintenanceEntry[];
+  const maintenance = dbMaintenance.length > 0 ? dbMaintenance : (isLegacy ? (MAINTENANCE_DATA[id] ?? []) : []);
+
+  // Badges de traçabilité : champ structuré (couleurs attribuées en cycle) sinon legacy
+  const HIGHLIGHT_COLORS = ["#6B9FEE", "#E8C36B", "#5BD89A"];
+  const dbHighlights = JSON.parse(v.maintenanceHighlights || "[]") as (Omit<MaintenanceHighlight, "color"> & { color?: string })[];
+  const highlights: MaintenanceHighlight[] =
+    dbHighlights.length > 0
+      ? dbHighlights.map((h, i) => ({ ...h, color: h.color || HIGHLIGHT_COLORS[i % HIGHLIGHT_COLORS.length] }))
+      : (isLegacy ? (MAINTENANCE_HIGHLIGHTS[id] ?? []) : []);
 
   const { name, subtitle } = parseTitle(v.make, v.model, v.power);
   const categories = categorize(features);
@@ -138,27 +160,46 @@ export default async function VehiculeDetailV2Page({
   const tv = t.vehicles;
   const td = t.vehicleDetail;
 
+  // État : champ structuré conditionFacts si renseigné ; sinon extraction heuristique (legacy uniquement)
+  const dbConditionFacts = JSON.parse(v.conditionFacts || "[]") as string[];
+  const useStructuredCondition = dbConditionFacts.length > 0;
+  const useLegacyConditionHeuristic = !useStructuredCondition && isLegacy;
+
   const allParagraphs = (description?.split("\n\n") ?? []).filter(Boolean);
-  const descParagraphs = allParagraphs.filter(
-    (p) =>
-      !p.toLowerCase().includes("accident") &&
-      !p.toLowerCase().includes("contrôle technique") &&
-      !p.toLowerCase().includes("intelligence automobile prend en charge") &&
-      !p.toLowerCase().includes("essai disponible") &&
-      !p.toLowerCase().includes("test drive available")
-  );
-  const etatParagraph = allParagraphs.find(
-    (p) =>
-      p.toLowerCase().includes("accident") ||
-      p.toLowerCase().includes("contrôle technique") ||
-      p.toLowerCase().includes("mot valid") ||
-      p.toLowerCase().includes("no accident")
-  );
-  const etatFacts =
-    etatParagraph
-      ?.split(/\.\s+/)
-      .map((s) => s.replace(/\.$/, "").trim())
-      .filter(Boolean) ?? [];
+  const descParagraphs = allParagraphs.filter((p) => {
+    const low = p.toLowerCase();
+    // Toujours retirer les paragraphes marketing / CTA
+    if (
+      low.includes("intelligence automobile prend en charge") ||
+      low.includes("essai disponible") ||
+      low.includes("test drive available")
+    )
+      return false;
+    // Heuristique legacy : retirer le paragraphe « état » seulement pour les fiches legacy non structurées
+    if (useLegacyConditionHeuristic && (low.includes("accident") || low.includes("contrôle technique")))
+      return false;
+    return true;
+  });
+
+  let etatFacts: string[];
+  if (useStructuredCondition) {
+    etatFacts = dbConditionFacts;
+  } else if (useLegacyConditionHeuristic) {
+    const etatParagraph = allParagraphs.find(
+      (p) =>
+        p.toLowerCase().includes("accident") ||
+        p.toLowerCase().includes("contrôle technique") ||
+        p.toLowerCase().includes("mot valid") ||
+        p.toLowerCase().includes("no accident")
+    );
+    etatFacts =
+      etatParagraph
+        ?.split(/\.\s+/)
+        .map((s) => s.replace(/\.$/, "").trim())
+        .filter(Boolean) ?? [];
+  } else {
+    etatFacts = [];
+  }
 
   const fuelLabel = tv.fuelOptions.find((o) => o.value === v.fuel)?.label ?? v.fuel;
 
@@ -196,9 +237,9 @@ export default async function VehiculeDetailV2Page({
             <span
               className="text-[9px] tracking-[0.3em] uppercase px-3 py-1.5"
               style={{
-                backgroundColor: isAvailable ? "rgba(107,159,238,0.12)" : "transparent",
-                color: isAvailable ? "#6B9FEE" : "#C8D8EE",
-                border: isAvailable ? "1px solid rgba(107,159,238,0.3)" : "1px solid #1B3055",
+                backgroundColor: isAvailable ? "rgba(91,216,154,0.12)" : "transparent",
+                color: isAvailable ? "#5BD89A" : "#C8D8EE",
+                border: isAvailable ? "1px solid rgba(91,216,154,0.35)" : "1px solid #1B3055",
                 borderRadius: "4px",
               }}
             >
@@ -279,11 +320,11 @@ export default async function VehiculeDetailV2Page({
                             <span
                               className="flex items-center justify-center flex-shrink-0 font-bold"
                               style={{
-                                color: "#6B9FEE",
+                                color: "#5BD89A",
                                 fontSize: "11px",
                                 width: "1.25rem",
                                 height: "1.25rem",
-                                backgroundColor: "rgba(107,159,238,0.15)",
+                                backgroundColor: "rgba(91,216,154,0.15)",
                                 borderRadius: "50%",
                               }}
                             >
@@ -420,25 +461,25 @@ export default async function VehiculeDetailV2Page({
                       interventionsLabel={tm.interventions}
                       showMoreLabel={td.showMoreInterventions}
                       showLessLabel={td.showLessInterventions}
-                      highlights={MAINTENANCE_HIGHLIGHTS[id] ?? []}
-                      note={MAINTENANCE_NOTES[id]}
+                      highlights={highlights}
                     />
                   </div>
                 </div>
               )}
 
               {/* Branding */}
-              <div className="flex items-center gap-4 mt-4">
-                <div style={{ width: "32px", height: "1px", backgroundColor: "rgba(107,159,238,0.4)" }} />
-                <span className="text-[10px] tracking-[0.4em] uppercase" style={{ color: "#7BA5DC" }}>
+              <div className="flex items-center gap-4 mt-8">
+                <div style={{ width: "40px", height: "2px", backgroundColor: "#E8C36B", borderRadius: "1px" }} />
+                <span className="text-[11px] tracking-[0.45em] uppercase font-semibold" style={{ color: "#E8F0FC" }}>
                   {tm.branding}
                 </span>
+                <div className="flex-1" style={{ height: "1px", backgroundColor: "rgba(107,159,238,0.15)" }} />
               </div>
             </div>
 
             {/* ── COLONNE DROITE (2/5) — STICKY ── */}
             <div className="lg:col-span-2">
-              <div style={{ position: "sticky", top: "7rem" }}>
+              <div style={{ position: "sticky", top: "calc(7rem + 50px)" }}>
 
                 <div
                   style={{
@@ -453,22 +494,25 @@ export default async function VehiculeDetailV2Page({
                   {/* Bandeau garantie */}
                   <div
                     className="flex items-center gap-2.5 px-6 py-3.5"
-                    style={{ borderBottom: "1px solid rgba(107,159,238,0.12)" }}
+                    style={{
+                      borderBottom: "1px solid rgba(107,159,238,0.12)",
+                      backgroundColor: "rgba(232,195,107,0.06)",
+                    }}
                   >
                     <span
                       className="flex items-center justify-center flex-shrink-0 font-bold"
                       style={{
-                        color: "#6B9FEE",
+                        color: "#E8C36B",
                         fontSize: "10px",
                         width: "1.25rem",
                         height: "1.25rem",
-                        backgroundColor: "rgba(107,159,238,0.15)",
+                        backgroundColor: "rgba(232,195,107,0.15)",
                         borderRadius: "50%",
                       }}
                     >
                       ✓
                     </span>
-                    <span className="text-[13px] font-medium tracking-wide" style={{ color: "#E8F0FC" }}>
+                    <span className="text-[13px] font-medium tracking-wide" style={{ color: "#EBD9A8" }}>
                       {tm.warranty}
                     </span>
                   </div>
@@ -482,7 +526,7 @@ export default async function VehiculeDetailV2Page({
                       className="font-black leading-none mb-1"
                       style={{ fontSize: "clamp(2.6rem, 4.5vw, 3.4rem)", letterSpacing: "-0.04em", color: "#F0F5FF" }}
                     >
-                      {v.price.toLocaleString("fr-FR")} €
+                      {formatNumber(v.price)} €
                     </div>
                   </div>
 
@@ -492,10 +536,12 @@ export default async function VehiculeDetailV2Page({
                     style={{ backgroundColor: "rgba(107,159,238,0.15)" }}
                   >
                     {[
-                      { label: tv.specMileage, value: `${v.mileage.toLocaleString("fr-FR")} km` },
+                      { label: tv.specMileage, value: `${formatNumber(v.mileage)} km` },
                       { label: td.circLabel, value: String(v.year) },
                       v.power ? { label: tv.specPower, value: `${v.power} ch` } : null,
                       { label: tv.specFuel, value: fuelLabel },
+                      { label: tv.specGearbox, value: v.transmission },
+                      { label: tv.specOrigin, value: v.origin },
                     ]
                       .filter(Boolean)
                       .map((s) => (
@@ -664,7 +710,7 @@ export default async function VehiculeDetailV2Page({
               className="block w-full text-center text-xs font-bold tracking-[0.2em] uppercase py-4"
               style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
             >
-              {tm.reserveCta} · {v.price.toLocaleString("fr-FR")} €
+              {tm.reserveCta} · {formatNumber(v.price)} €
             </Link>
           </div>
         )}
