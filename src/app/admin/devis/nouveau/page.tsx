@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { emptyQuote } from "@/lib/devis";
+import { emptyQuote, mergeBranding, type QuoteKind } from "@/lib/devis";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
 
@@ -11,17 +11,27 @@ export default async function NouveauDevisPage() {
   if (!session) redirect("/admin/login");
 
   const year = new Date().getFullYear();
-  const [vehicles, count] = await Promise.all([
+  const [vehicles, count, last] = await Promise.all([
     prisma.vehicle.findMany({
       orderBy: { createdAt: "desc" },
       select: { id: true, make: true, model: true, year: true, mileage: true, price: true, fuel: true, transmission: true, power: true },
     }),
     prisma.quote.count({ where: { number: { startsWith: `${year}-` } } }),
+    // Reprend l'émetteur/logo + le type du dernier devis comme valeurs par défaut (repli sur company.ts).
+    prisma.quote.findFirst({ orderBy: { updatedAt: "desc" }, select: { branding: true, kind: true } }),
   ]);
+
+  let lastBranding: unknown = {};
+  try {
+    lastBranding = JSON.parse(last?.branding ?? "{}");
+  } catch {
+    /* ignore */
+  }
+  const lastKind: QuoteKind = last?.kind === "prestation" ? "prestation" : "vehicule";
 
   const number = `${year}-${String(count + 1).padStart(3, "0")}`;
   const issueDate = new Date().toISOString().slice(0, 10);
-  const initial = emptyQuote(number, issueDate);
+  const initial = emptyQuote(number, issueDate, mergeBranding(lastBranding), lastKind);
 
   return (
     <AdminPage>

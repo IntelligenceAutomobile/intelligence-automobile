@@ -6,11 +6,15 @@ import { formatNumber } from "@/lib/format";
 import {
   computeTotals,
   formatEuro,
+  kindDefaults,
+  PRESTATION_PRESETS,
   type QuoteData,
   type QuoteItem,
   type TvaMode,
   type DepositMode,
   type QuoteStatus,
+  type LogoAlign,
+  type QuoteKind,
 } from "@/lib/devis";
 import DevisDocument from "./DevisDocument";
 import {
@@ -67,6 +71,7 @@ export default function DevisEditor({
   const [savedId, setSavedId] = useState<string | null>(isEdit ? (initial.id ?? null) : null);
   const [dirty, setDirty] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [prestaOpen, setPrestaOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const totals = useMemo(() => computeTotals(q), [q]);
@@ -74,6 +79,23 @@ export default function DevisEditor({
   function update(patch: Partial<QuoteData>) {
     setQ((prev) => ({ ...prev, ...patch }));
     setDirty(true);
+  }
+  function updateBranding(patch: Partial<QuoteData["branding"]>) {
+    setQ((prev) => ({ ...prev, branding: { ...prev.branding, ...patch } }));
+    setDirty(true);
+  }
+  // Bascule le type de devis et applique les défauts (TVA + conditions) correspondants.
+  function setKind(kind: QuoteKind) {
+    const d = kindDefaults(kind);
+    setQ((prev) => ({ ...prev, kind, tvaMode: d.tvaMode, paymentTerms: d.paymentTerms }));
+    setDirty(true);
+  }
+  function addPreset(p: { designation: string; detail: string }) {
+    const it: QuoteItem = { id: newId(), designation: p.designation, detail: p.detail, qty: 1, unitPrice: 0 };
+    setPriceInputs((x) => ({ ...x, [it.id]: "" }));
+    setQ((prev) => ({ ...prev, items: [...prev.items, it] }));
+    setDirty(true);
+    setPrestaOpen(false);
   }
   function updateItem(id: string, patch: Partial<QuoteItem>) {
     setQ((prev) => ({ ...prev, items: prev.items.map((it) => (it.id === id ? { ...it, ...patch } : it)) }));
@@ -200,6 +222,33 @@ export default function DevisEditor({
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(360px,46%)] gap-6 items-start">
       {/* ─────────── Colonne formulaire ─────────── */}
       <div className="space-y-5">
+        {/* Type de devis */}
+        <SectionCard title="Type de devis">
+          <div className="flex gap-2">
+            {([
+              ["vehicule", "Vente de véhicule", "Prix TTC, TVA sur marge, depuis le stock"],
+              ["prestation", "Prestation (site web / IA)", "HT + TVA 20 %, bibliothèque de prestations"],
+            ] as [QuoteKind, string, string][]).map(([val, lab, hint]) => {
+              const active = q.kind === val;
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setKind(val)}
+                  className="flex-1 text-left p-3 border transition-colors"
+                  style={{
+                    borderColor: active ? T.accent : T.border,
+                    backgroundColor: active ? "rgba(107,159,238,0.12)" : "transparent",
+                  }}
+                >
+                  <div className="text-sm font-semibold" style={{ color: active ? T.text : T.textDim }}>{lab}</div>
+                  <div className="text-[11px] mt-1" style={{ color: T.muted }}>{hint}</div>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
+
         {/* Client */}
         <SectionCard title="Client">
           <div className="grid sm:grid-cols-2 gap-4">
@@ -226,8 +275,21 @@ export default function DevisEditor({
         {/* Lignes */}
         <SectionCard title="Lignes du devis">
           <div className="flex flex-wrap gap-2 relative">
-            <button type="button" className={btnPrimaryClass} style={btnPrimaryStyle} onClick={() => setPickerOpen((o) => !o)}>
+            <button
+              type="button"
+              className={q.kind === "vehicule" ? btnPrimaryClass : btnGhostClass}
+              style={q.kind === "vehicule" ? btnPrimaryStyle : btnGhostStyle}
+              onClick={() => { setPickerOpen((o) => !o); setPrestaOpen(false); }}
+            >
               + Depuis le stock
+            </button>
+            <button
+              type="button"
+              className={q.kind === "prestation" ? btnPrimaryClass : btnGhostClass}
+              style={q.kind === "prestation" ? btnPrimaryStyle : btnGhostStyle}
+              onClick={() => { setPrestaOpen((o) => !o); setPickerOpen(false); }}
+            >
+              + Prestation
             </button>
             <button type="button" className={btnGhostClass} style={btnGhostStyle} onClick={addFreeLine}>
               + Ligne libre
@@ -252,6 +314,17 @@ export default function DevisEditor({
                     ))
                   )}
                 </div>
+              </div>
+            )}
+
+            {prestaOpen && (
+              <div className="absolute z-20 top-full mt-2 left-0 w-full sm:w-[440px] max-h-[360px] overflow-auto p-2" style={{ backgroundColor: T.float, border: `1px solid ${T.border}` }}>
+                {PRESTATION_PRESETS.map((p) => (
+                  <button key={p.designation} type="button" onClick={() => addPreset(p)} className="w-full text-left px-3 py-2 transition-colors hover:bg-[#112240]">
+                    <div className="text-sm" style={{ color: T.text }}>{p.designation}</div>
+                    {p.detail && <div className="text-[11px] mt-0.5" style={{ color: T.muted }}>{p.detail}</div>}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -358,6 +431,72 @@ export default function DevisEditor({
               <option value="refuse">Refusé</option>
             </select>
           </Field>
+        </SectionCard>
+
+        {/* Émetteur & logo */}
+        <SectionCard title="Émetteur & logo">
+          <label className="flex items-center gap-2.5 text-sm cursor-pointer" style={{ color: T.textDim }}>
+            <input type="checkbox" checked={q.branding.logoVisible} onChange={(e) => updateBranding({ logoVisible: e.target.checked })} style={{ accentColor: T.accent, width: 16, height: 16 }} />
+            Afficher le logo sur le devis
+          </label>
+          {q.branding.logoVisible && (
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Position du logo">
+                <div className="flex gap-1">
+                  {(["left", "center", "right"] as LogoAlign[]).map((val) => {
+                    const lab = val === "left" ? "Gauche" : val === "center" ? "Centre" : "Droite";
+                    const active = q.branding.logoAlign === val;
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => updateBranding({ logoAlign: val })}
+                        className="flex-1 px-2 py-2.5 text-[11px] uppercase tracking-widest border transition-colors"
+                        style={{
+                          borderColor: active ? T.accent : T.border,
+                          color: active ? T.text : T.muted,
+                          backgroundColor: active ? "rgba(107,159,238,0.12)" : "transparent",
+                        }}
+                      >
+                        {lab}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+              <Field label={`Taille du logo — ${q.branding.logoSize} mm`}>
+                <input type="range" min={8} max={32} step={1} value={q.branding.logoSize} onChange={(e) => updateBranding({ logoSize: parseInt(e.target.value) })} className="w-full" style={{ accentColor: T.accent }} />
+              </Field>
+            </div>
+          )}
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Nom de l'émetteur">
+              <input className={fieldClass} style={fieldStyle} value={q.branding.emitterName} onChange={(e) => updateBranding({ emitterName: e.target.value })} placeholder="SASU Intelligence Automobile" />
+            </Field>
+            <Field label="Représentant">
+              <input className={fieldClass} style={fieldStyle} value={q.branding.emitterRepresentative} onChange={(e) => updateBranding({ emitterRepresentative: e.target.value })} placeholder="César Vachon" />
+            </Field>
+          </div>
+          <Field label="Adresse de l'émetteur">
+            <textarea className={fieldClass} style={{ ...fieldStyle, resize: "vertical" }} rows={3} value={q.branding.emitterAddress} onChange={(e) => updateBranding({ emitterAddress: e.target.value })} placeholder="30 rue Pouchet&#10;75017 Paris&#10;France" />
+          </Field>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Email">
+              <input className={fieldClass} style={fieldStyle} value={q.branding.emitterEmail} onChange={(e) => updateBranding({ emitterEmail: e.target.value })} placeholder="contact@…" />
+            </Field>
+            <Field label="Téléphone">
+              <input className={fieldClass} style={fieldStyle} value={q.branding.emitterPhone} onChange={(e) => updateBranding({ emitterPhone: e.target.value })} placeholder="+33 …" />
+            </Field>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="SIRET">
+              <input className={fieldClass} style={fieldStyle} value={q.branding.emitterSiret} onChange={(e) => updateBranding({ emitterSiret: e.target.value })} placeholder="(à compléter)" />
+            </Field>
+            <Field label="N° TVA intracom.">
+              <input className={fieldClass} style={fieldStyle} value={q.branding.emitterTva} onChange={(e) => updateBranding({ emitterTva: e.target.value })} placeholder="(à compléter)" />
+            </Field>
+          </div>
         </SectionCard>
 
         {error && <p className="text-sm" style={{ color: T.danger }}>{error}</p>}

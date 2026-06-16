@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { QuoteData, QuoteItem, TvaMode, DepositMode, QuoteStatus } from "@/lib/devis";
+import { mergeBranding, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind } from "@/lib/devis";
 import DevisDocument from "../../DevisDocument";
 import PrintToolbar from "./PrintToolbar";
 
@@ -31,10 +31,17 @@ export default async function ImprimerDevisPage({ params }: { params: Promise<{ 
   } catch {
     /* ignore */
   }
+  let brandingRaw: unknown = {};
+  try {
+    brandingRaw = JSON.parse(row.branding ?? "{}");
+  } catch {
+    /* ignore */
+  }
 
   const quote: QuoteData = {
     id: row.id,
     number: row.number,
+    kind: row.kind as QuoteKind,
     status: row.status as QuoteStatus,
     clientName: row.clientName,
     clientCompany: row.clientCompany,
@@ -51,6 +58,7 @@ export default async function ImprimerDevisPage({ params }: { params: Promise<{ 
     paymentTerms: row.paymentTerms,
     notes: row.notes,
     vehicleId: row.vehicleId,
+    branding: mergeBranding(brandingRaw),
   };
 
   return (

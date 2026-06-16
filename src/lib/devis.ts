@@ -1,9 +1,74 @@
 // Types et calculs partagés du devis (module neutre : importable côté serveur ET client).
 // Aucune dépendance React/Next ici.
+import { COMPANY } from "./company";
 
 export type TvaMode = "marge" | "tva20" | "exonere";
 export type DepositMode = "percent" | "amount" | "none";
 export type QuoteStatus = "brouillon" | "envoye" | "accepte" | "refuse";
+export type LogoAlign = "left" | "center" | "right";
+export type QuoteKind = "vehicule" | "prestation";
+
+// Prestations proposées en ajout rapide (mode « Prestation »).
+export const PRESTATION_PRESETS: { designation: string; detail: string }[] = [
+  { designation: "Création de site internet vitrine", detail: "Conception, développement responsive, mise en ligne" },
+  { designation: "Développement web sur-mesure", detail: "Application / fonctionnalités spécifiques" },
+  { designation: "Intégration d'un outil / agent IA", detail: "Mise en place et intégration" },
+  { designation: "Reprise / refonte de site existant", detail: "" },
+  { designation: "Maintenance & support", detail: "Forfait mensuel" },
+  { designation: "Hébergement & nom de domaine", detail: "Forfait annuel" },
+  { designation: "Rédaction de contenu / SEO", detail: "" },
+];
+
+// Personnalisation de l'en-tête : identité émetteur + réglages du logo.
+export type Branding = {
+  emitterName: string;
+  emitterAddress: string; // multiligne
+  emitterRepresentative: string;
+  emitterEmail: string;
+  emitterPhone: string;
+  emitterSiret: string;
+  emitterTva: string;
+  logoVisible: boolean;
+  logoAlign: LogoAlign;
+  logoSize: number; // hauteur en mm
+};
+
+export function defaultBranding(): Branding {
+  return {
+    emitterName: COMPANY.legalName,
+    emitterAddress: COMPANY.addressLines.filter(Boolean).join("\n"),
+    emitterRepresentative: COMPANY.representative,
+    emitterEmail: COMPANY.email,
+    emitterPhone: COMPANY.phone,
+    emitterSiret: COMPANY.siret,
+    emitterTva: COMPANY.tvaNumber,
+    logoVisible: true,
+    logoAlign: "left",
+    logoSize: 16,
+  };
+}
+
+// Complète n'importe quel objet partiel avec les valeurs par défaut (rétro-compat).
+export function mergeBranding(raw: unknown): Branding {
+  const base = defaultBranding();
+  if (!raw || typeof raw !== "object") return base;
+  const r = raw as Record<string, unknown>;
+  const str = (v: unknown, d: string) => (typeof v === "string" ? v : d);
+  const align = r.logoAlign === "center" || r.logoAlign === "right" || r.logoAlign === "left" ? (r.logoAlign as LogoAlign) : base.logoAlign;
+  const size = typeof r.logoSize === "number" && r.logoSize > 0 ? r.logoSize : base.logoSize;
+  return {
+    emitterName: str(r.emitterName, base.emitterName),
+    emitterAddress: str(r.emitterAddress, base.emitterAddress),
+    emitterRepresentative: str(r.emitterRepresentative, base.emitterRepresentative),
+    emitterEmail: str(r.emitterEmail, base.emitterEmail),
+    emitterPhone: str(r.emitterPhone, base.emitterPhone),
+    emitterSiret: str(r.emitterSiret, base.emitterSiret),
+    emitterTva: str(r.emitterTva, base.emitterTva),
+    logoVisible: typeof r.logoVisible === "boolean" ? r.logoVisible : base.logoVisible,
+    logoAlign: align,
+    logoSize: Math.min(40, Math.max(6, size)),
+  };
+}
 
 export type QuoteItem = {
   id: string;
@@ -18,6 +83,7 @@ export type QuoteItem = {
 export type QuoteData = {
   id?: string;
   number: string;
+  kind: QuoteKind;
   status: QuoteStatus;
   clientName: string;
   clientCompany: string;
@@ -34,6 +100,7 @@ export type QuoteData = {
   paymentTerms: string;
   notes: string;
   vehicleId?: string | null;
+  branding: Branding;
 };
 
 export type QuoteTotals = {
@@ -127,9 +194,25 @@ export function validUntilFr(issueDate: string, days: number): string {
   return formatDateFr(iso);
 }
 
-export function emptyQuote(number: string, issueDate: string): QuoteData {
+// Valeurs par défaut dépendant du type de devis.
+export function kindDefaults(kind: QuoteKind): { tvaMode: TvaMode; paymentTerms: string } {
+  if (kind === "prestation") {
+    return {
+      tvaMode: "tva20",
+      paymentTerms: "Acompte de 30 % à la commande, solde à la livraison du projet.",
+    };
+  }
+  return {
+    tvaMode: "marge",
+    paymentTerms: "Acompte à la commande, solde à la livraison du véhicule.",
+  };
+}
+
+export function emptyQuote(number: string, issueDate: string, branding?: Branding, kind: QuoteKind = "vehicule"): QuoteData {
+  const d = kindDefaults(kind);
   return {
     number,
+    kind,
     status: "brouillon",
     clientName: "",
     clientCompany: "",
@@ -139,12 +222,13 @@ export function emptyQuote(number: string, issueDate: string): QuoteData {
     issueDate,
     validityDays: 30,
     items: [],
-    tvaMode: "marge",
+    tvaMode: d.tvaMode,
     tvaRate: 20,
     depositMode: "percent",
     depositValue: 30,
-    paymentTerms: "Acompte à la commande, solde à la livraison du véhicule.",
+    paymentTerms: d.paymentTerms,
     notes: "",
     vehicleId: null,
+    branding: branding ?? defaultBranding(),
   };
 }

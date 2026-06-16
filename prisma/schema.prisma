@@ -82,6 +82,7 @@ model Quote {
   id     String @id @default(cuid())
   number String @unique
 
+  kind   String @default("vehicule")  // vehicule | prestation
   status String @default("brouillon") // brouillon | envoye | accepte | refuse
 
   // Client (destinataire)
@@ -110,6 +111,9 @@ model Quote {
   // Texte libre
   paymentTerms String @default("")
   notes        String @default("")
+
+  // Personnalisation émetteur + logo (JSON) : { emitterName, emitterAddress, …, logoAlign, logoSize, logoVisible }
+  branding String @default("{}")
 
   // Lien véhicule principal (optionnel)
   vehicleId String?

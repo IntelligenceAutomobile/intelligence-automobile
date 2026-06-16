@@ -30,8 +30,10 @@ const labelMini: CSSProperties = {
 
 export default function DevisDocument({ quote }: { quote: QuoteData }) {
   const t = computeTotals(quote);
-  const emitterAddr = COMPANY.addressLines.filter(Boolean);
+  const b = quote.branding;
+  const addrLines = b.emitterAddress.split("\n").map((l) => l.trim()).filter(Boolean);
   const showHT = t.showTva;
+  const logoJustify = b.logoAlign === "center" ? "center" : b.logoAlign === "right" ? "flex-end" : "flex-start";
 
   return (
     <div
@@ -49,21 +51,27 @@ export default function DevisDocument({ quote }: { quote: QuoteData }) {
         flexDirection: "column",
       }}
     >
-      {/* ── En-tête : logo + émetteur / bloc devis ── */}
+      {/* ── Logo (positionnable + redimensionnable) ── */}
+      {b.logoVisible && (
+        <div style={{ display: "flex", justifyContent: logoJustify, marginBottom: "6mm" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={COMPANY.logoSrc} alt={b.emitterName} style={{ height: `${b.logoSize}mm`, objectFit: "contain" }} />
+        </div>
+      )}
+
+      {/* ── Émetteur / bloc devis ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12mm" }}>
         <div style={{ minWidth: 0 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={COMPANY.logoSrc} alt={COMPANY.brandName} style={{ height: "16mm", objectFit: "contain", marginBottom: "3mm" }} />
-          <div style={{ fontWeight: 700, fontSize: "10.5pt" }}>{COMPANY.legalName}</div>
-          <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1mm" }}>
-            {emitterAddr.map((l, i) => (
+          <div style={{ fontWeight: 700, fontSize: "11pt" }}>{b.emitterName}</div>
+          <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1.5mm" }}>
+            {addrLines.map((l, i) => (
               <div key={i}>{l}</div>
             ))}
-            {COMPANY.representative && <div>{COMPANY.representative}</div>}
-            {COMPANY.siret && <div>SIRET : {COMPANY.siret}</div>}
-            {COMPANY.tvaNumber && <div>TVA : {COMPANY.tvaNumber}</div>}
-            {COMPANY.email && <div>{COMPANY.email}</div>}
-            {COMPANY.phone && <div>{COMPANY.phone}</div>}
+            {b.emitterRepresentative && <div>{b.emitterRepresentative}</div>}
+            {b.emitterSiret && <div>SIRET : {b.emitterSiret}</div>}
+            {b.emitterTva && <div>TVA : {b.emitterTva}</div>}
+            {b.emitterEmail && <div>{b.emitterEmail}</div>}
+            {b.emitterPhone && <div>{b.emitterPhone}</div>}
           </div>
         </div>
 
@@ -91,15 +99,8 @@ export default function DevisDocument({ quote }: { quote: QuoteData }) {
         </div>
       </div>
 
-      {/* ── Parties ── */}
-      <div style={{ display: "flex", gap: "6mm", marginTop: "10mm" }}>
-        <PartyBox label="Émetteur">
-          <div style={{ fontWeight: 600 }}>{COMPANY.legalName}</div>
-          <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1mm" }}>
-            {emitterAddr.join(", ")}
-            {COMPANY.representative && <div>{COMPANY.representative}</div>}
-          </div>
-        </PartyBox>
+      {/* ── Destinataire ── */}
+      <div style={{ display: "flex", gap: "6mm", marginTop: "9mm" }}>
         <PartyBox label="Client">
           {quote.clientName || quote.clientCompany ? (
             <>
@@ -115,6 +116,7 @@ export default function DevisDocument({ quote }: { quote: QuoteData }) {
             <div style={{ color: "#B9C0CC", fontStyle: "italic", fontSize: "8.5pt" }}>Coordonnées du client…</div>
           )}
         </PartyBox>
+        <div style={{ flex: 1 }} />
       </div>
 
       {/* ── Tableau des lignes ── */}
@@ -179,7 +181,7 @@ export default function DevisDocument({ quote }: { quote: QuoteData }) {
                   value={formatEuro(t.deposit)}
                   spaced
                 />
-                <TotalRow label="Solde à la livraison" value={formatEuro(t.balance)} />
+                <TotalRow label="Solde" value={formatEuro(t.balance)} />
               </>
             )}
           </tbody>
@@ -207,7 +209,7 @@ export default function DevisDocument({ quote }: { quote: QuoteData }) {
 
       {/* ── Signatures ── */}
       <div style={{ display: "flex", justifyContent: "space-between", gap: "12mm", marginTop: "14mm" }}>
-        <SignatureBox title={`Pour ${COMPANY.legalName}`} name={COMPANY.representative} />
+        <SignatureBox title={`Pour ${b.emitterName}`} name={b.emitterRepresentative} />
         <SignatureBox title="Bon pour accord — Le client" hint="Date, signature et cachet" />
       </div>
 

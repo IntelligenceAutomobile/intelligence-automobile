@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { QuoteData, QuoteItem, TvaMode, DepositMode, QuoteStatus } from "@/lib/devis";
+import { mergeBranding, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind } from "@/lib/devis";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
 
@@ -26,10 +26,17 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
   } catch {
     /* ignore */
   }
+  let brandingRaw: unknown = {};
+  try {
+    brandingRaw = JSON.parse(row.branding ?? "{}");
+  } catch {
+    /* ignore */
+  }
 
   const initial: QuoteData = {
     id: row.id,
     number: row.number,
+    kind: row.kind as QuoteKind,
     status: row.status as QuoteStatus,
     clientName: row.clientName,
     clientCompany: row.clientCompany,
@@ -46,6 +53,7 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
     paymentTerms: row.paymentTerms,
     notes: row.notes,
     vehicleId: row.vehicleId,
+    branding: mergeBranding(brandingRaw),
   };
 
   return (
