@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 
 type VehiculeData = {
   id?: string;
@@ -29,7 +30,10 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
   const [features, setFeatures] = useState<string[]>(data?.features ?? []);
   const [newFeature, setNewFeature] = useState("");
   const [images, setImages] = useState<string[]>(data?.images ?? []);
-  const [newImage, setNewImage] = useState("");
+  const [uploading, setUploading] = useState(0);
+  const [uploadError, setUploadError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPublished, setIsPublished] = useState(data?.isPublished !== false);
 
   const isEdit = !!data?.id;
@@ -77,6 +81,46 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       setError(json.error ?? "Erreur");
     }
     setLoading(false);
+  }
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const list = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (list.length === 0) return;
+
+    setUploadError("");
+    setUploading((n) => n + list.length);
+
+    await Promise.all(
+      list.map(async (file) => {
+        try {
+          const blob = await upload(`vehicules/${crypto.randomUUID()}-${file.name}`, file, {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+          });
+          setImages((prev) => [...prev, blob.url]);
+        } catch {
+          setUploadError("Une ou plusieurs photos n'ont pas pu être envoyées. Réessayez.");
+        } finally {
+          setUploading((n) => n - 1);
+        }
+      })
+    );
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function moveImage(index: number, dir: -1 | 1) {
+    setImages((prev) => {
+      const target = index + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   }
 
   const inputStyle = {
@@ -177,46 +221,103 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
         <textarea name="description" rows={4} defaultValue={data?.description} placeholder="Décrivez le véhicule..." className={inputClass + " resize-none"} style={inputStyle} />
       </div>
 
-      {/* URLs des images */}
+      {/* Photos */}
       <div>
-        <label className={labelClass} style={{ color: "#C8D8EE" }}>Images (URLs)</label>
-        <div className="space-y-2 mb-2">
-          {images.map((img, i) => (
-            <div key={i} className="flex gap-2">
-              <input value={img} readOnly className={inputClass + " flex-1"} style={inputStyle} />
-              <button
-                type="button"
-                onClick={() => setImages(images.filter((_, j) => j !== i))}
-                className="px-3 py-2 text-xs border"
-                style={{ borderColor: "#1B3055", color: "#C8D8EE" }}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+        <label className={labelClass} style={{ color: "#C8D8EE" }}>
+          Photos {images.length > 0 ? `(${images.length})` : ""}
+        </label>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+
+        {/* Zone d'ajout : clic ou glisser-déposer */}
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+          className="flex flex-col items-center gap-2 py-8 px-4 text-center cursor-pointer"
+          style={{ border: `1px dashed ${dragOver ? "#6B9FEE" : "#1B3055"}`, backgroundColor: "#112240" }}
+        >
+          <span style={{ color: "#6B9FEE", fontSize: "22px", lineHeight: 1 }}>↑</span>
+          <span className="text-sm" style={{ color: "#C8D8EE" }}>
+            Cliquez pour choisir des photos, ou prenez-les avec votre téléphone
+          </span>
+          <span className="text-[11px]" style={{ color: "#7C92B5" }}>
+            Vous pouvez aussi glisser-déposer vos images ici — JPG, PNG, HEIC (15 Mo max/photo)
+          </span>
         </div>
-        <div className="flex gap-2">
-          <input
-            value={newImage}
-            onChange={(e) => setNewImage(e.target.value)}
-            placeholder="https://... (URL image)"
-            className={inputClass + " flex-1"}
-            style={inputStyle}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              if (newImage.trim()) {
-                setImages([...images, newImage.trim()]);
-                setNewImage("");
-              }
-            }}
-            className="px-4 py-2 text-xs font-semibold tracking-widest uppercase"
-            style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}
-          >
-            Ajouter
-          </button>
-        </div>
+
+        {uploading > 0 && (
+          <p className="text-xs mt-2 flex items-center gap-2" style={{ color: "#6B9FEE" }}>
+            <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            Envoi de {uploading} photo{uploading > 1 ? "s" : ""}…
+          </p>
+        )}
+        {uploadError && <p className="text-xs mt-2" style={{ color: "#FF6B35" }}>{uploadError}</p>}
+
+        {images.length > 0 && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3">
+            {images.map((url, i) => (
+              <div key={url} className="relative group" style={{ aspectRatio: "4 / 3" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" style={{ border: "1px solid #1B3055" }} />
+
+                {i === 0 && (
+                  <span
+                    className="absolute top-1 left-1 text-[9px] font-semibold tracking-widest uppercase px-1.5 py-0.5"
+                    style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}
+                  >
+                    Principale
+                  </span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  title="Supprimer cette photo"
+                  className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center"
+                  style={{ backgroundColor: "#0B1930", border: "1px solid #1B3055", color: "#F0F5FF", fontSize: "13px", lineHeight: 1 }}
+                >
+                  ×
+                </button>
+
+                <div className="absolute bottom-1 left-1 right-1 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    disabled={i === 0}
+                    onClick={() => moveImage(i, -1)}
+                    title="Déplacer avant"
+                    className="w-6 h-6 flex items-center justify-center disabled:opacity-30"
+                    style={{ backgroundColor: "#0B1930", border: "1px solid #1B3055", color: "#F0F5FF", fontSize: "14px", lineHeight: 1 }}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === images.length - 1}
+                    onClick={() => moveImage(i, 1)}
+                    title="Déplacer après"
+                    className="w-6 h-6 flex items-center justify-center disabled:opacity-30"
+                    style={{ backgroundColor: "#0B1930", border: "1px solid #1B3055", color: "#F0F5FF", fontSize: "14px", lineHeight: 1 }}
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p className="text-[11px] mt-2" style={{ color: "#7C92B5" }}>
+          La première photo sert d&apos;image principale de l&apos;annonce. Utilisez ‹ › pour réordonner.
+        </p>
       </div>
 
       {/* Équipements */}
@@ -279,11 +380,17 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       <div className="flex gap-4">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || uploading > 0}
           className="text-sm font-semibold tracking-widest uppercase px-8 py-4 transition-opacity disabled:opacity-60"
           style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}
         >
-          {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer le véhicule"}
+          {loading
+            ? "Enregistrement..."
+            : uploading > 0
+              ? "Photos en cours d'envoi…"
+              : isEdit
+                ? "Mettre à jour"
+                : "Créer le véhicule"}
         </button>
         <button
           type="button"
