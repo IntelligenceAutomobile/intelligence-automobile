@@ -8,6 +8,18 @@ export type QuoteStatus = "brouillon" | "envoye" | "accepte" | "refuse";
 export type LogoAlign = "left" | "center" | "right";
 export type QuoteKind = "vehicule" | "prestation";
 
+// Blocs de l'en-tête déplaçables/redimensionnables (hors logo, géré à part).
+export type HeaderBlockId = "emitter" | "client" | "meta";
+export type BlockBox = { x: number; y: number; w: number }; // mm
+
+// Disposition par défaut des blocs (mm, repère = coin haut-gauche de la zone de contenu, largeur ~178mm).
+export const DEFAULT_BLOCK_BOX: Record<HeaderBlockId, BlockBox> = {
+  emitter: { x: 0, y: 22, w: 95 },
+  meta: { x: 108, y: 22, w: 70 },
+  client: { x: 0, y: 48, w: 95 },
+};
+export const DEFAULT_HEADER_HEIGHT = 74; // mm
+
 // Prestations proposées en ajout rapide (mode « Prestation »).
 export const PRESTATION_PRESETS: { designation: string; detail: string }[] = [
   { designation: "Création de site internet vitrine", detail: "Conception, développement responsive, mise en ligne" },
@@ -34,7 +46,15 @@ export type Branding = {
   // Position libre (mm depuis le coin haut-gauche de la page). null = placement auto via logoAlign.
   logoX: number | null;
   logoY: number | null;
+  // Mise en page libre de l'en-tête : hauteur de la zone + position/largeur de chaque bloc (null = défaut).
+  headerHeight: number;
+  blocks: Record<HeaderBlockId, BlockBox | null>;
 };
+
+// Boîte effective d'un bloc (valeur enregistrée ou défaut).
+export function blockBox(b: Branding, id: HeaderBlockId): BlockBox {
+  return b.blocks[id] ?? DEFAULT_BLOCK_BOX[id];
+}
 
 export function defaultBranding(): Branding {
   return {
@@ -50,6 +70,8 @@ export function defaultBranding(): Branding {
     logoSize: 16,
     logoX: null,
     logoY: null,
+    headerHeight: DEFAULT_HEADER_HEIGHT,
+    blocks: { emitter: null, client: null, meta: null },
   };
 }
 
@@ -62,6 +84,16 @@ export function mergeBranding(raw: unknown): Branding {
   const align = r.logoAlign === "center" || r.logoAlign === "right" || r.logoAlign === "left" ? (r.logoAlign as LogoAlign) : base.logoAlign;
   const size = typeof r.logoSize === "number" && r.logoSize > 0 ? r.logoSize : base.logoSize;
   const coord = (v: unknown): number | null => (typeof v === "number" && isFinite(v) ? v : null);
+  const box = (v: unknown): BlockBox | null => {
+    if (!v || typeof v !== "object") return null;
+    const o = v as Record<string, unknown>;
+    if (typeof o.x === "number" && typeof o.y === "number" && typeof o.w === "number") {
+      return { x: o.x, y: o.y, w: o.w };
+    }
+    return null;
+  };
+  const rawBlocks = (r.blocks && typeof r.blocks === "object" ? r.blocks : {}) as Record<string, unknown>;
+  const headerHeight = typeof r.headerHeight === "number" && r.headerHeight > 0 ? Math.min(180, Math.max(24, r.headerHeight)) : base.headerHeight;
   return {
     emitterName: str(r.emitterName, base.emitterName),
     emitterAddress: str(r.emitterAddress, base.emitterAddress),
@@ -75,6 +107,12 @@ export function mergeBranding(raw: unknown): Branding {
     logoSize: Math.min(40, Math.max(6, size)),
     logoX: coord(r.logoX),
     logoY: coord(r.logoY),
+    headerHeight,
+    blocks: {
+      emitter: box(rawBlocks.emitter),
+      client: box(rawBlocks.client),
+      meta: box(rawBlocks.meta),
+    },
   };
 }
 

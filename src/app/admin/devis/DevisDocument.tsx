@@ -8,7 +8,9 @@ import {
   formatDateFr,
   validUntilFr,
   lineTotal,
+  blockBox,
   type QuoteData,
+  type HeaderBlockId,
 } from "@/lib/devis";
 
 /* Palette « papier » (sur fond blanc) */
@@ -30,10 +32,16 @@ const labelMini: CSSProperties = {
 
 export default function DevisDocument({
   quote,
+  editable = false,
   onLogoPointerDown,
+  onBlockPointerDown,
+  onBlockResizePointerDown,
 }: {
   quote: QuoteData;
+  editable?: boolean;
   onLogoPointerDown?: (e: React.PointerEvent<HTMLImageElement>) => void;
+  onBlockPointerDown?: (id: HeaderBlockId, e: React.PointerEvent) => void;
+  onBlockResizePointerDown?: (id: HeaderBlockId, e: React.PointerEvent) => void;
 }) {
   const t = computeTotals(quote);
   const b = quote.branding;
@@ -42,6 +50,30 @@ export default function DevisDocument({
   const logoJustify = b.logoAlign === "center" ? "center" : b.logoAlign === "right" ? "flex-end" : "flex-start";
   const logoFree = b.logoX != null && b.logoY != null;
   const logoCursor = onLogoPointerDown ? "move" : "default";
+
+  // Style/handlers communs d'un bloc d'en-tête déplaçable + redimensionnable.
+  function blockWrap(id: HeaderBlockId): CSSProperties {
+    const box = blockBox(b, id);
+    return {
+      position: "absolute",
+      left: `${box.x}mm`,
+      top: `${box.y}mm`,
+      width: `${box.w}mm`,
+      cursor: editable ? "move" : "default",
+      outline: editable ? "1px dashed rgba(30,79,163,0.35)" : undefined,
+      outlineOffset: "2px",
+      touchAction: "none",
+    };
+  }
+  function resizeHandle(id: HeaderBlockId) {
+    if (!editable || !onBlockResizePointerDown) return null;
+    return (
+      <div
+        onPointerDown={(e) => { e.stopPropagation(); onBlockResizePointerDown(id, e); }}
+        style={{ position: "absolute", right: "-4px", top: "50%", transform: "translateY(-50%)", width: 9, height: 22, background: C.accent, borderRadius: 2, cursor: "ew-resize", touchAction: "none" }}
+      />
+    );
+  }
 
   return (
     <div
@@ -60,33 +92,41 @@ export default function DevisDocument({
         position: "relative",
       }}
     >
-      {/* ── Logo : position libre (absolue) ou auto (alignée) ── */}
-      {b.logoVisible &&
-        (logoFree ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={COMPANY.logoSrc}
-            alt={b.emitterName}
-            onPointerDown={onLogoPointerDown}
-            draggable={false}
-            style={{ position: "absolute", left: `${b.logoX}mm`, top: `${b.logoY}mm`, height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none", zIndex: 5 }}
-          />
-        ) : (
-          <div style={{ display: "flex", justifyContent: logoJustify, marginBottom: "6mm" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* ── Zone en-tête : mise en page libre (blocs déplaçables) ── */}
+      <div
+        style={{
+          position: "relative",
+          height: `${b.headerHeight}mm`,
+          marginBottom: "4mm",
+          outline: editable ? "1px dashed rgba(30,79,163,0.18)" : undefined,
+        }}
+      >
+        {/* Logo : position libre (absolue) ou auto (alignée en haut) */}
+        {b.logoVisible &&
+          (logoFree ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={COMPANY.logoSrc}
               alt={b.emitterName}
               onPointerDown={onLogoPointerDown}
               draggable={false}
-              style={{ height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none" }}
+              style={{ position: "absolute", left: `${b.logoX}mm`, top: `${b.logoY}mm`, height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none", zIndex: 5 }}
             />
-          </div>
-        ))}
+          ) : (
+            <div style={{ display: "flex", justifyContent: logoJustify }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={COMPANY.logoSrc}
+                alt={b.emitterName}
+                onPointerDown={onLogoPointerDown}
+                draggable={false}
+                style={{ height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none" }}
+              />
+            </div>
+          ))}
 
-      {/* ── Émetteur / bloc devis ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12mm" }}>
-        <div style={{ minWidth: 0 }}>
+        {/* Émetteur */}
+        <div style={blockWrap("emitter")} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("emitter", e) : undefined}>
           <div style={{ fontWeight: 700, fontSize: "11pt" }}>{b.emitterName}</div>
           <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1.5mm" }}>
             {addrLines.map((l, i) => (
@@ -98,9 +138,11 @@ export default function DevisDocument({
             {b.emitterEmail && <div>{b.emitterEmail}</div>}
             {b.emitterPhone && <div>{b.emitterPhone}</div>}
           </div>
+          {resizeHandle("emitter")}
         </div>
 
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
+        {/* Bloc DEVIS + métadonnées */}
+        <div style={{ ...blockWrap("meta"), textAlign: "right" }} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("meta", e) : undefined}>
           <div style={{ fontSize: "20pt", fontWeight: 300, letterSpacing: "0.18em", color: C.accent }}>DEVIS</div>
           <div style={{ width: 38, height: 2, backgroundColor: C.accent, marginLeft: "auto", marginTop: "2mm", marginBottom: "3mm" }} />
           <table style={{ marginLeft: "auto", fontSize: "8.5pt", borderCollapse: "collapse" }}>
@@ -121,27 +163,28 @@ export default function DevisDocument({
               </tr>
             </tbody>
           </table>
+          {resizeHandle("meta")}
         </div>
-      </div>
 
-      {/* ── Destinataire ── */}
-      <div style={{ display: "flex", gap: "6mm", marginTop: "9mm" }}>
-        <PartyBox label="Client">
-          {quote.clientName || quote.clientCompany ? (
-            <>
-              {quote.clientCompany && <div style={{ fontWeight: 600 }}>{quote.clientCompany}</div>}
-              {quote.clientName && <div style={{ fontWeight: quote.clientCompany ? 400 : 600 }}>{quote.clientName}</div>}
-              <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1mm" }}>
-                {quote.clientAddress && <div style={{ whiteSpace: "pre-line" }}>{quote.clientAddress}</div>}
-                {quote.clientEmail && <div>{quote.clientEmail}</div>}
-                {quote.clientPhone && <div>{quote.clientPhone}</div>}
-              </div>
-            </>
-          ) : (
-            <div style={{ color: "#B9C0CC", fontStyle: "italic", fontSize: "8.5pt" }}>Coordonnées du client…</div>
-          )}
-        </PartyBox>
-        <div style={{ flex: 1 }} />
+        {/* Destinataire */}
+        <div style={blockWrap("client")} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("client", e) : undefined}>
+          <PartyBox label="Client">
+            {quote.clientName || quote.clientCompany ? (
+              <>
+                {quote.clientCompany && <div style={{ fontWeight: 600 }}>{quote.clientCompany}</div>}
+                {quote.clientName && <div style={{ fontWeight: quote.clientCompany ? 400 : 600 }}>{quote.clientName}</div>}
+                <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1mm" }}>
+                  {quote.clientAddress && <div style={{ whiteSpace: "pre-line" }}>{quote.clientAddress}</div>}
+                  {quote.clientEmail && <div>{quote.clientEmail}</div>}
+                  {quote.clientPhone && <div>{quote.clientPhone}</div>}
+                </div>
+              </>
+            ) : (
+              <div style={{ color: "#B9C0CC", fontStyle: "italic", fontSize: "8.5pt" }}>Coordonnées du client…</div>
+            )}
+          </PartyBox>
+          {resizeHandle("client")}
+        </div>
       </div>
 
       {/* ── Tableau des lignes ── */}

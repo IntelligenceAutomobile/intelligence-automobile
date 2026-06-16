@@ -7,6 +7,7 @@ import {
   computeTotals,
   formatEuro,
   kindDefaults,
+  blockBox,
   PRESTATION_PRESETS,
   type QuoteData,
   type QuoteItem,
@@ -15,6 +16,7 @@ import {
   type QuoteStatus,
   type LogoAlign,
   type QuoteKind,
+  type HeaderBlockId,
 } from "@/lib/devis";
 import DevisDocument from "./DevisDocument";
 import {
@@ -244,6 +246,52 @@ export default function DevisEditor({
     window.addEventListener("pointerup", up);
   }
 
+  // Déplacer un bloc d'en-tête (émetteur / destinataire / bloc DEVIS) dans l'aperçu.
+  function updateBlock(id: HeaderBlockId, patch: Partial<{ x: number; y: number; w: number }>) {
+    setQ((prev) => {
+      const cur = prev.branding.blocks[id] ?? blockBox(prev.branding, id);
+      return { ...prev, branding: { ...prev.branding, blocks: { ...prev.branding.blocks, [id]: { ...cur, ...patch } } } };
+    });
+    setDirty(true);
+  }
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(v * 10) / 10));
+  function onBlockPointerDown(id: HeaderBlockId, e: React.PointerEvent) {
+    e.preventDefault();
+    const seed = blockBox(q.branding, id);
+    const headerH = q.branding.headerHeight;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const move = (ev: PointerEvent) => {
+      const dx = (ev.clientX - startX) / scale / PX_PER_MM;
+      const dy = (ev.clientY - startY) / scale / PX_PER_MM;
+      updateBlock(id, { x: clamp(seed.x + dx, 0, 178 - 8), y: clamp(seed.y + dy, 0, headerH) });
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+  function onBlockResizePointerDown(id: HeaderBlockId, e: React.PointerEvent) {
+    e.preventDefault();
+    const seed = blockBox(q.branding, id);
+    const startX = e.clientX;
+    const move = (ev: PointerEvent) => {
+      const dx = (ev.clientX - startX) / scale / PX_PER_MM;
+      updateBlock(id, { w: clamp(seed.w + dx, 25, 178) });
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+  function resetLayout() {
+    updateBranding({ logoX: null, logoY: null, blocks: { emitter: null, client: null, meta: null } });
+  }
+
   const filteredVehicles = vehicles.filter((v) => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -461,8 +509,8 @@ export default function DevisEditor({
           </Field>
         </SectionCard>
 
-        {/* Émetteur & logo */}
-        <SectionCard title="Émetteur & logo">
+        {/* Émetteur, logo & mise en page */}
+        <SectionCard title="Émetteur, logo & mise en page">
           <label className="flex items-center gap-2.5 text-sm cursor-pointer" style={{ color: T.textDim }}>
             <input type="checkbox" checked={q.branding.logoVisible} onChange={(e) => updateBranding({ logoVisible: e.target.checked })} style={{ accentColor: T.accent, width: 16, height: 16 }} />
             Afficher le logo sur le devis
@@ -497,16 +545,27 @@ export default function DevisEditor({
                   <input type="range" min={8} max={32} step={1} value={q.branding.logoSize} onChange={(e) => updateBranding({ logoSize: parseInt(e.target.value) })} className="w-full" style={{ accentColor: T.accent }} />
                 </Field>
               </div>
-              <p className="text-[12px] -mt-1 flex items-center gap-2 flex-wrap" style={{ color: T.muted }}>
-                <span>↔ Glissez le logo directement dans l&apos;aperçu pour le placer où vous voulez.</span>
-                {q.branding.logoX != null && (
-                  <button type="button" onClick={() => updateBranding({ logoX: null, logoY: null })} className="underline" style={{ color: T.accent }}>
-                    Replacer automatiquement
-                  </button>
-                )}
+              <p className="text-[12px] -mt-1" style={{ color: T.muted }}>
+                ↔ Glissez le logo directement dans l&apos;aperçu pour le placer où vous voulez.
               </p>
             </>
           )}
+
+          {/* Mise en page de l'en-tête */}
+          <div className="pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-4">
+              <span className="text-[12px]" style={{ color: T.muted }}>
+                ↔ Glissez les blocs (émetteur, client, DEVIS) dans l&apos;aperçu. La poignée bleue ajuste la largeur.
+              </span>
+              <button type="button" onClick={resetLayout} className="text-[11px] tracking-widest uppercase underline" style={{ color: T.accent }}>
+                Réinitialiser la mise en page
+              </button>
+            </div>
+            <label className="block mt-3">
+              <span className={labelClass} style={{ color: T.muted }}>Hauteur de l&apos;en-tête — {q.branding.headerHeight} mm</span>
+              <input type="range" min={40} max={120} step={1} value={q.branding.headerHeight} onChange={(e) => updateBranding({ headerHeight: parseInt(e.target.value) })} className="w-full" style={{ accentColor: T.accent }} />
+            </label>
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Nom de l'émetteur">
@@ -562,7 +621,13 @@ export default function DevisEditor({
           <div style={{ height: docH * scale }} />
           <div style={{ position: "absolute", top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: "top left" }}>
             <div ref={docRef} style={{ width: A4_W }}>
-              <DevisDocument quote={q} onLogoPointerDown={onLogoPointerDown} />
+              <DevisDocument
+                quote={q}
+                editable
+                onLogoPointerDown={onLogoPointerDown}
+                onBlockPointerDown={onBlockPointerDown}
+                onBlockResizePointerDown={onBlockResizePointerDown}
+              />
             </div>
           </div>
         </div>
