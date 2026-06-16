@@ -9,7 +9,7 @@ export default async function NouveauVehiculePage() {
   if (!session) redirect("/admin/login");
 
   return (
-    <AdminPage width="narrow">
+    <AdminPage width="wide">
       <Link
         href="/admin/vehicules"
         className="inline-block text-[11px] tracking-widest uppercase mb-6 transition-colors hover:text-[#F0F5FF]"

@@ -2,6 +2,7 @@
 // Module "partagé" (pas de "use client") : importable depuis les composants
 // serveur ET client. N'utilise aucun hook ni API client.
 import type { CSSProperties, ReactNode } from "react";
+import Link from "next/link";
 
 /* ── Jetons de couleur, alignés sur le site public ── */
 export const T = {
@@ -97,9 +98,9 @@ export function PageHeader({
 }
 
 /* ── Carte de section titrée (formulaires) ── */
-export function SectionCard({ title, children }: { title?: string; children: ReactNode }) {
+export function SectionCard({ title, id, children }: { title?: string; id?: string; children: ReactNode }) {
   return (
-    <div style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }} className="p-5 sm:p-6 space-y-5">
+    <div id={id} style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }} className="p-5 sm:p-6 space-y-5 scroll-mt-24">
       {title && (
         <p
           className="text-[11px] tracking-[0.2em] uppercase pb-4"
@@ -160,19 +161,48 @@ export function Thumb({
 }
 
 /* ── Carte de statistique (tableau de bord) ── */
-export function StatCard({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div
-      className="p-6 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
-      style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
-    >
-      <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-4" />
-      <div className="text-4xl font-light mb-1" style={{ color: T.accent }}>
+export function StatCard({
+  label,
+  value,
+  href,
+  hint,
+}: {
+  label: string;
+  value: number | string;
+  href?: string;
+  hint?: string;
+}) {
+  const cls = "block p-6 transition-all duration-200" + (href ? " hover:-translate-y-px hover:border-[#6B9FEE]" : "");
+  const style: CSSProperties = { backgroundColor: T.surface, border: `1px solid ${T.border}` };
+  const inner = (
+    <>
+      <div className="flex items-start justify-between">
+        <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-4" />
+        {href && <span className="text-sm" style={{ color: T.muted }}>→</span>}
+      </div>
+      <div className="text-3xl sm:text-4xl font-light mb-1 break-words" style={{ color: T.accent }}>
         {value}
       </div>
       <div className="text-xs tracking-widest uppercase" style={{ color: T.textDim }}>
         {label}
       </div>
+      {hint && (
+        <div className="text-[11px] mt-1" style={{ color: T.muted }}>
+          {hint}
+        </div>
+      )}
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className={cls} style={style}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <div className={cls} style={style}>
+      {inner}
     </div>
   );
 }

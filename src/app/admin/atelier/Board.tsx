@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { upload } from "@vercel/blob/client";
+import { T } from "@/app/admin/ui";
 
 type Status = "todo" | "doing" | "done";
 
@@ -292,24 +293,24 @@ export default function Board({ authorName }: { authorName: string }) {
     }
   }
 
-  async function logout() {
-    await fetch("/api/collab/logout", { method: "POST" });
-    window.location.href = "/atelier";
+  async function changeName() {
+    await fetch("/api/collab/identity", { method: "DELETE" });
+    window.location.reload();
   }
 
   const activeCat = CATEGORIES.find(c => c.id === selectedCat)!;
   const visibleNotes = notes.filter(n => n.category === selectedCat);
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0B1930", color: "#F0F5FF" }}>
+    <div style={{ display: "flex", height: "calc(100vh - 70px)", backgroundColor: T.bg, color: T.text }}>
 
       {/* ── Sidebar ─────────────────────────────── */}
-      <div style={{ width: "210px", flexShrink: 0, backgroundColor: "#071422", borderRight: "1px solid #1B3055", display: "flex", flexDirection: "column" }}>
+      <div style={{ width: "210px", flexShrink: 0, backgroundColor: T.surfaceAlt, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column" }}>
 
-        {/* Logo */}
-        <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid #1B3055" }}>
-          <span style={{ color: "#6B9FEE", fontSize: "12px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>IA</span>
-          <div style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.1em", marginTop: "2px" }}>Espace équipe</div>
+        {/* Titre */}
+        <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${T.border}` }}>
+          <span style={{ color: T.accent, fontSize: "12px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>Atelier</span>
+          <div style={{ color: T.muted, fontSize: "10px", letterSpacing: "0.1em", marginTop: "2px" }}>Espace équipe</div>
         </div>
 
         {/* Catégories */}
@@ -395,16 +396,16 @@ export default function Board({ authorName }: { authorName: string }) {
           </button>
         </div>
 
-        {/* Utilisateur + déconnexion */}
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #1B3055" }}>
-          <div style={{ color: "#C8D8EE", fontSize: "12px", marginBottom: "6px" }}>{authorName}</div>
+        {/* Identité (signature des notes) */}
+        <div style={{ padding: "12px 16px", borderTop: `1px solid ${T.border}` }}>
+          <div style={{ color: T.textDim, fontSize: "12px", marginBottom: "6px" }}>Signé : {authorName}</div>
           <button
-            onClick={logout}
-            style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")}
-            onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}
+            onClick={changeName}
+            style={{ color: T.muted, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase" }}
+            onMouseEnter={e => (e.currentTarget.style.color = T.textDim)}
+            onMouseLeave={e => (e.currentTarget.style.color = T.muted)}
           >
-            Quitter
+            Changer de nom
           </button>
         </div>
       </div>

@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, name } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
@@ -33,6 +33,17 @@ export async function POST(req: NextRequest) {
       expires: expiresAt,
       path: "/",
     });
+
+    // Prénom de signature pour l'Atelier (reconnaissance des posts)
+    if (name === "César" || name === "Fab") {
+      response.cookies.set("ia_collab_name", name, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60,
+        path: "/",
+      });
+    }
 
     return response;
   } catch {

@@ -5,9 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { AdminPage, PageHeader, firstImage, btnPrimaryClass, btnPrimaryStyle } from "../ui";
 import StockList, { type StockItem } from "./StockList";
 
-export default async function AdminVehiculesList() {
+const VALID_FILTERS = ["disponible", "reserve", "vendu"];
+
+export default async function AdminVehiculesList({
+  searchParams,
+}: {
+  searchParams: Promise<{ statut?: string }>;
+}) {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
+
+  const { statut } = await searchParams;
+  const initialFilter = statut && VALID_FILTERS.includes(statut) ? statut : "all";
 
   const vehicules = await prisma.vehicle.findMany({
     orderBy: { createdAt: "desc" },
@@ -24,6 +33,7 @@ export default async function AdminVehiculesList() {
     origin: v.origin,
     status: v.status,
     image: firstImage(v.images),
+    isPublished: v.isPublished,
   }));
 
   return (
@@ -37,7 +47,7 @@ export default async function AdminVehiculesList() {
           </Link>
         }
       />
-      <StockList vehicles={items} />
+      <StockList vehicles={items} initialFilter={initialFilter} />
     </AdminPage>
   );
 }

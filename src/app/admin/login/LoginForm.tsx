@@ -21,6 +21,7 @@ export default function LoginForm() {
       body: JSON.stringify({
         email: data.get("email"),
         password: data.get("password"),
+        name: data.get("name"),
       }),
     });
 
@@ -40,6 +41,23 @@ export default function LoginForm() {
       className="space-y-4 p-6 sm:p-8"
       style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
     >
+      <div>
+        <label className={labelClass} style={{ color: T.textDim }}>
+          Qui êtes-vous ?
+        </label>
+        <select
+          name="name"
+          required
+          defaultValue=""
+          className="w-full px-4 py-3 text-sm outline-none focus:border-[#6B9FEE]"
+          style={fieldStyle}
+        >
+          <option value="" disabled>—</option>
+          <option value="César">César</option>
+          <option value="Fab">Fab</option>
+        </select>
+      </div>
+
       <div>
         <label className={labelClass} style={{ color: T.textDim }}>
           Email
