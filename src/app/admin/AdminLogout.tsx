@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { T } from "./ui";
 
 export default function AdminLogout() {
   const router = useRouter();
@@ -13,8 +14,8 @@ export default function AdminLogout() {
   return (
     <button
       onClick={handleLogout}
-      className="text-xs tracking-widest uppercase transition-colors"
-      style={{ color: "#C8D8EE" }}
+      className="text-[11px] tracking-widest uppercase transition-colors hover:text-[#FF6B35]"
+      style={{ color: T.muted }}
     >
       Déconnexion
     </button>

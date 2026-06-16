@@ -7,6 +7,11 @@ export const metadata = {
   title: "Notre Méthode V2 — Intelligence Automobile",
 };
 
+function rgba(hex: string, alpha: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 export default async function Methode2Page() {
   const { t } = await getTranslations();
   const s = t.method;
@@ -50,10 +55,10 @@ export default async function Methode2Page() {
           }}
         />
 
-        <div style={{ position: "relative", maxWidth: "820px" }}>
+        <div style={{ position: "relative", maxWidth: "900px" }}>
           <h1
             style={{
-              fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+              fontSize: "clamp(2.4rem, 4.5vw, 4.5rem)",
               fontWeight: 900,
               lineHeight: 0.95,
               letterSpacing: "-0.02em",
@@ -256,16 +261,144 @@ export default async function Methode2Page() {
                 >
                   {step.description}
                 </p>
+                <p
+                  style={
+                    i === s.steps.length - 1
+                      ? {
+                          fontSize: "clamp(1.05rem, 1.8vw, 1.4rem)",
+                          fontStyle: "italic",
+                          fontWeight: 600,
+                          color: "#6B9FEE",
+                          margin: 0,
+                          marginTop: "1.4rem",
+                          letterSpacing: "0.01em",
+                          lineHeight: 1.4,
+                        }
+                      : {
+                          fontSize: "0.85rem",
+                          fontStyle: "italic",
+                          color: "#6B9FEE",
+                          margin: 0,
+                          marginTop: "1rem",
+                          letterSpacing: "0.01em",
+                        }
+                  }
+                >
+                  {step.tagline}
+                </p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ─── LES PILIERS ──────────────────────────────────────────────────────── */}
+      {/* ─── CE QUE NOUS SÉCURISONS ───────────────────────────────────────────── */}
       <section
         style={{
           backgroundColor: "#070F1E",
+          padding: "10vh clamp(1.5rem, 6vw, 7rem)",
+        }}
+      >
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ marginBottom: "5vh" }}>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "#6B9FEE",
+                marginBottom: "1rem",
+              }}
+            >
+              {s.secureLabel}
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(2rem, 4.5vw, 4rem)",
+                fontWeight: 900,
+                lineHeight: 1.0,
+                letterSpacing: "-0.02em",
+                color: "#F0F5FF",
+                margin: 0,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {s.secureTitle}
+            </h2>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+              gap: "1.25rem",
+            }}
+          >
+            {s.secureItems.map((item, i) => (
+              <div
+                key={i}
+                className="transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.9rem",
+                  padding: "1.8rem",
+                  borderRadius: "10px",
+                  background: `linear-gradient(160deg, ${rgba(item.color, 0.12)} 0%, ${rgba(item.color, 0.03)} 100%)`,
+                  border: `1px solid ${rgba(item.color, 0.3)}`,
+                  borderTop: `2px solid ${item.color}`,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      width: "2.6rem",
+                      height: "2.6rem",
+                      borderRadius: "8px",
+                      fontSize: "1.2rem",
+                      backgroundColor: rgba(item.color, 0.15),
+                    }}
+                  >
+                    {item.icon}
+                  </span>
+                  <p
+                    style={{
+                      fontWeight: 900,
+                      fontSize: "0.8rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      color: "#F0F5FF",
+                      margin: 0,
+                    }}
+                  >
+                    {item.title}
+                  </p>
+                </div>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#C8D8EE",
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}
+                >
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── NOS VALEURS ──────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          backgroundColor: "#040B16",
           padding: "10vh clamp(1.5rem, 6vw, 7rem)",
         }}
       >
@@ -301,40 +434,54 @@ export default async function Methode2Page() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "1px",
-              backgroundColor: "#1B3055",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+              gap: "1.25rem",
             }}
           >
             {s.pillars.map((pillar, i) => (
               <div
                 key={i}
+                className="transition-all duration-300 hover:-translate-y-1"
                 style={{
-                  backgroundColor: "#070F1E",
-                  padding: "2.5rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.9rem",
+                  padding: "1.8rem",
+                  borderRadius: "10px",
+                  background: `linear-gradient(160deg, ${rgba(pillar.color, 0.12)} 0%, ${rgba(pillar.color, 0.03)} 100%)`,
+                  border: `1px solid ${rgba(pillar.color, 0.3)}`,
+                  borderTop: `2px solid ${pillar.color}`,
                 }}
               >
-                <div
-                  style={{
-                    width: "32px",
-                    height: "2px",
-                    backgroundColor: "#6B9FEE",
-                    marginBottom: "1.5rem",
-                  }}
-                />
-                <p
-                  style={{
-                    fontWeight: 900,
-                    fontSize: "0.85rem",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    color: "#F0F5FF",
-                    margin: 0,
-                    marginBottom: "1rem",
-                  }}
-                >
-                  {pillar.title}
-                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      width: "2.6rem",
+                      height: "2.6rem",
+                      borderRadius: "8px",
+                      fontSize: "1.2rem",
+                      backgroundColor: rgba(pillar.color, 0.15),
+                    }}
+                  >
+                    {pillar.icon}
+                  </span>
+                  <p
+                    style={{
+                      fontWeight: 900,
+                      fontSize: "0.8rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      color: "#F0F5FF",
+                      margin: 0,
+                    }}
+                  >
+                    {pillar.title}
+                  </p>
+                </div>
                 <p
                   style={{
                     fontSize: "13px",
@@ -346,6 +493,79 @@ export default async function Methode2Page() {
                   {pillar.desc}
                 </p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CABINET PREMIUM ──────────────────────────────────────────────────── */}
+      <section
+        style={{
+          backgroundColor: "#070F1E",
+          padding: "10vh clamp(1.5rem, 6vw, 7rem)",
+        }}
+      >
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "#6B9FEE",
+              marginBottom: "1rem",
+            }}
+          >
+            {s.cabinetLabel}
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(2rem, 4.5vw, 4rem)",
+              fontWeight: 900,
+              lineHeight: 1.0,
+              letterSpacing: "-0.02em",
+              color: "#F0F5FF",
+              margin: 0,
+              marginBottom: "2.5rem",
+              whiteSpace: "pre-line",
+            }}
+          >
+            {s.cabinetTitle}
+          </h2>
+          <p
+            style={{
+              fontSize: "15px",
+              color: "#C4D8EE",
+              lineHeight: 1.8,
+              margin: 0,
+              marginBottom: "3rem",
+              maxWidth: "620px",
+            }}
+          >
+            {s.cabinetText}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+            }}
+          >
+            {s.cabinetPoints.map((point, i) => (
+              <span
+                key={i}
+                style={{
+                  padding: "0.6rem 1.3rem",
+                  border: "1px solid #1B3055",
+                  color: "#F0F5FF",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {point}
+              </span>
             ))}
           </div>
         </div>
@@ -367,12 +587,24 @@ export default async function Methode2Page() {
             letterSpacing: "-0.02em",
             color: "#F0F5FF",
             margin: 0,
-            marginBottom: "3rem",
+            marginBottom: "1.8rem",
             whiteSpace: "pre-line",
           }}
         >
           {s.ctaTitle}
         </h2>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#C4D8EE",
+            lineHeight: 1.8,
+            margin: "0 auto",
+            marginBottom: "3rem",
+            maxWidth: "520px",
+          }}
+        >
+          {s.ctaSubtitle}
+        </p>
 
         <div
           style={{

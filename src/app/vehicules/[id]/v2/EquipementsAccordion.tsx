@@ -83,7 +83,7 @@ export default function EquipementsAccordion({ categories }: { categories: Categ
                     className="grid grid-cols-1 sm:grid-cols-2"
                     style={{
                       borderTop: i > 0 ? "1px solid rgba(107,159,238,0.15)" : "none",
-                      backgroundColor: i % 2 === 0 ? "rgba(107,159,238,0.05)" : "transparent",
+                      backgroundColor: "rgba(107,159,238,0.05)",
                     }}
                   >
                     {[0, 1].map((j) => {

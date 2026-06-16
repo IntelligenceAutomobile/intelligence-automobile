@@ -93,7 +93,7 @@ export default async function ContactPage({
                   {[
                     {
                       label: "Email",
-                      value: "contact@intelligence-automobile.fr",
+                      value: "contact@intelligenceautomobile.com",
                     },
                     {
                       label: "Téléphone",

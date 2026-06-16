@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { T, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle } from "../ui";
 
 export default function LoginForm() {
   const [error, setError] = useState("");
@@ -33,19 +34,14 @@ export default function LoginForm() {
     setLoading(false);
   }
 
-  const inputStyle = {
-    backgroundColor: "#112240",
-    borderColor: "#1B3055",
-    color: "#F0F5FF",
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 p-6 sm:p-8"
+      style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+    >
       <div>
-        <label
-          className="block text-xs tracking-widest uppercase mb-2"
-          style={{ color: "#C8D8EE" }}
-        >
+        <label className={labelClass} style={{ color: T.textDim }}>
           Email
         </label>
         <input
@@ -53,16 +49,13 @@ export default function LoginForm() {
           type="email"
           required
           autoComplete="email"
-          className="w-full px-4 py-3 border text-sm outline-none"
-          style={inputStyle}
+          className="w-full px-4 py-3 text-sm outline-none focus:border-[#6B9FEE]"
+          style={fieldStyle}
         />
       </div>
 
       <div>
-        <label
-          className="block text-xs tracking-widest uppercase mb-2"
-          style={{ color: "#C8D8EE" }}
-        >
+        <label className={labelClass} style={{ color: T.textDim }}>
           Mot de passe
         </label>
         <input
@@ -70,13 +63,13 @@ export default function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="w-full px-4 py-3 border text-sm outline-none"
-          style={inputStyle}
+          className="w-full px-4 py-3 text-sm outline-none focus:border-[#6B9FEE]"
+          style={fieldStyle}
         />
       </div>
 
       {error && (
-        <p className="text-xs" style={{ color: "#C8D8EE" }}>
+        <p className="text-xs" style={{ color: T.danger }}>
           {error}
         </p>
       )}
@@ -84,8 +77,8 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full text-sm font-semibold tracking-widest uppercase py-4 transition-opacity disabled:opacity-60"
-        style={{ backgroundColor: "#6B9FEE", color: "#0B1930" }}
+        className={btnPrimaryClass + " w-full py-4"}
+        style={btnPrimaryStyle}
       >
         {loading ? "Connexion..." : "Se connecter"}
       </button>
