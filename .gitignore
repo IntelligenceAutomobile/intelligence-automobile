@@ -46,3 +46,16 @@ next-env.d.ts
 *.db
 *.db-shm
 *.db-wal
+
+# scripts & fichiers de travail temporaires
+*-tmp*.mjs
+*-tmp*.ts
+/screenshot-*.png
+/Dif2.jpg
+/Difference .jpg
+/dif 3 .jpg
+
+# outils / assets hors dépôt (gérés séparément)
+/tools/
+*.pt
+/public/Audi TT 3/
