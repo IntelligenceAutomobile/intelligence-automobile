@@ -7,6 +7,7 @@ import { T } from "./ui";
 const LINKS = [
   { href: "/admin", label: "Tableau de bord", exact: true },
   { href: "/admin/vehicules", label: "Stock", exact: false },
+  { href: "/admin/devis", label: "Devis", exact: false },
   { href: "/admin/atelier", label: "Atelier", exact: false },
 ];
 

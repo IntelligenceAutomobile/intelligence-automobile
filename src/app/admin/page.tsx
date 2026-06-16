@@ -72,7 +72,7 @@ export default async function AdminDashboard() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
 
-  const [total, disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees] = await Promise.all([
+  const [total, disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, quotesCount] = await Promise.all([
     prisma.vehicle.count(),
     prisma.vehicle.count({ where: { status: "disponible" } }),
     prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -85,6 +85,7 @@ export default async function AdminDashboard() {
       take: 6,
     }),
     prisma.vehicle.findMany({ where: { isPublished: false }, orderBy: { createdAt: "desc" }, take: 6 }),
+    prisma.quote.count(),
   ]);
 
   const stockValue = valueAgg._sum.price ?? 0;
@@ -99,6 +100,21 @@ export default async function AdminDashboard() {
         <StatCard label="Vendus" value={vendus} href="/admin/vehicules?statut=vendu" />
         <StatCard label="Valeur du stock" value={`${formatNumber(stockValue)} €`} hint="Annonces disponibles" />
       </div>
+
+      <Link
+        href="/admin/devis"
+        className="flex items-center justify-between p-5 mb-8 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
+        style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+      >
+        <div>
+          <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
+          <span className="text-sm" style={{ color: T.text }}>
+            <span className="text-2xl font-light mr-2" style={{ color: T.accent }}>{quotesCount}</span>
+            devis enregistré{quotesCount > 1 ? "s" : ""}
+          </span>
+        </div>
+        <span className="text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>Gérer les devis →</span>
+      </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
         <InsightPanel title="À compléter" items={aCompleter} emptyLabel="Tout est complet ✓" showReasons />

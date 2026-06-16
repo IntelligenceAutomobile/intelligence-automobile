@@ -77,3 +77,43 @@ model CollabComment {
   parent    CollabComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   CollabComment[] @relation("CommentReplies")
 }
+
+model Quote {
+  id     String @id @default(cuid())
+  number String @unique
+
+  status String @default("brouillon") // brouillon | envoye | accepte | refuse
+
+  // Client (destinataire)
+  clientName    String @default("")
+  clientCompany String @default("")
+  clientAddress String @default("")
+  clientEmail   String @default("")
+  clientPhone   String @default("")
+
+  // Dates (chaînes calendaires YYYY-MM-DD, éditées telles quelles)
+  issueDate    String
+  validityDays Int    @default(30)
+
+  // Lignes : JSON [{ designation, detail, qty, unitPrice, vehicleId? }]
+  // unitPrice = HT en mode "tva20", TTC en modes "marge"/"exonere"
+  items String @default("[]")
+
+  // Fiscalité
+  tvaMode String @default("marge") // marge | tva20 | exonere
+  tvaRate Int    @default(20)
+
+  // Acompte
+  depositMode  String @default("percent") // percent | amount | none
+  depositValue Float  @default(30)
+
+  // Texte libre
+  paymentTerms String @default("")
+  notes        String @default("")
+
+  // Lien véhicule principal (optionnel)
+  vehicleId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
