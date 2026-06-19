@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
+import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { T, AdminPage, PageHeader, StatCard, StatusBadge, Thumb, firstImage } from "./ui";
 
 type VehLite = { id: string; make: string; model: string; images: string; price: number };
@@ -72,7 +73,7 @@ export default async function AdminDashboard() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
 
-  const [total, disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, quotesCount] = await Promise.all([
+  const [total, disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, quotesCount, ledgerRows] = await Promise.all([
     prisma.vehicle.count(),
     prisma.vehicle.count({ where: { status: "disponible" } }),
     prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -86,9 +87,24 @@ export default async function AdminDashboard() {
     }),
     prisma.vehicle.findMany({ where: { isPublished: false }, orderBy: { createdAt: "desc" }, take: 6 }),
     prisma.quote.count(),
+    prisma.ledgerEntry.findMany(),
   ]);
 
   const stockValue = valueAgg._sum.price ?? 0;
+
+  const balance = computeBalance(
+    ledgerRows.map((r) => ({
+      id: r.id,
+      date: r.date,
+      label: r.label,
+      category: r.category,
+      amountCents: r.amountCents,
+      paidBy: r.paidBy as Partner,
+      scope: r.scope as Scope,
+      share: r.share,
+      note: r.note,
+    })),
+  );
 
   return (
     <AdminPage>
@@ -101,20 +117,44 @@ export default async function AdminDashboard() {
         <StatCard label="Valeur du stock" value={`${formatNumber(stockValue)} €`} hint="Annonces disponibles" />
       </div>
 
-      <Link
-        href="/admin/devis"
-        className="flex items-center justify-between p-5 mb-8 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
-        style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
-      >
-        <div>
-          <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
-          <span className="text-sm" style={{ color: T.text }}>
-            <span className="text-2xl font-light mr-2" style={{ color: T.accent }}>{quotesCount}</span>
-            devis enregistré{quotesCount > 1 ? "s" : ""}
-          </span>
-        </div>
-        <span className="text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>Gérer les devis →</span>
-      </Link>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        <Link
+          href="/admin/devis"
+          className="flex items-center justify-between p-5 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
+          style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+        >
+          <div>
+            <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
+            <span className="text-sm" style={{ color: T.text }}>
+              <span className="text-2xl font-light mr-2" style={{ color: T.accent }}>{quotesCount}</span>
+              devis enregistré{quotesCount > 1 ? "s" : ""}
+            </span>
+          </div>
+          <span className="text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>Gérer les devis →</span>
+        </Link>
+
+        <Link
+          href="/admin/comptes"
+          className="flex items-center justify-between p-5 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
+          style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+        >
+          <div className="min-w-0">
+            <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
+            <span className="text-sm" style={{ color: T.text }}>
+              {balance.settled ? (
+                <>Comptes associés <span style={{ color: "#4ED1A1" }}>équilibrés ✓</span></>
+              ) : (
+                <>
+                  <span style={{ color: PARTNER_COLOR[balance.debtor!] }}>{balance.debtor}</span> doit{" "}
+                  <span className="text-2xl font-light" style={{ color: T.accent }}>{formatEuroCents(balance.amountCents)}</span> à{" "}
+                  <span style={{ color: PARTNER_COLOR[balance.creditor!] }}>{balance.creditor}</span>
+                </>
+              )}
+            </span>
+          </div>
+          <span className="text-[11px] tracking-widest uppercase flex-shrink-0 ml-3" style={{ color: T.accent }}>Comptes →</span>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
         <InsightPanel title="À compléter" items={aCompleter} emptyLabel="Tout est complet ✓" showReasons />

@@ -15,6 +15,8 @@ import {
   btnGhostClass,
   btnGhostStyle,
 } from "@/app/admin/ui";
+import { useLocale } from "@/i18n/context";
+import VehiculeDetailView, { buildPresentation, type VehiculeDetailModel } from "@/app/vehicules/[id]/VehiculeDetailView";
 
 type DocItem = { url: string; label: string };
 type MaintEntry = { date: string; km: string; operation: string; amount: string; linkedDoc: string };
@@ -106,6 +108,9 @@ function Hint({ children }: { children: React.ReactNode }) {
 
 export default function VehiculeForm({ data }: { data?: VehiculeData }) {
   const router = useRouter();
+  const { t } = useLocale();
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewModel, setPreviewModel] = useState<VehiculeDetailModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -166,6 +171,45 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       maintenance: maintenance.map(({ _key, ...m }) => m),
       highlights: highlights.map(({ _key, ...h }) => h),
     };
+  }
+
+  // Modèle de la fiche v2 à partir de l'état courant (aperçu, sans sauvegarde).
+  // Les couleurs des badges sont attribuées en cycle, comme sur la vraie page.
+  function buildPreviewModel(): VehiculeDetailModel {
+    const f = formRef.current;
+    const fd = f ? new FormData(f) : null;
+    const g = (n: string) => (fd ? String(fd.get(n) ?? "") : "");
+    const { descParagraphs, etatFacts } = buildPresentation(g("description"), conditionFacts);
+    const HL_COLORS = ["#6B9FEE", "#E8C36B", "#5BD89A"];
+    return {
+      make: g("make"),
+      model: g("model"),
+      year: Number(g("year")) || 0,
+      mileage: Number(onlyDigits(kmStr) || "0"),
+      price: Number(onlyDigits(priceStr) || "0"),
+      power: g("power") ? Number(g("power")) : null,
+      color: g("color"),
+      transmission: g("transmission") || "Automatique",
+      fuel: g("fuel") || "Diesel",
+      origin: g("origin") || "Allemagne",
+      status: g("status") || "disponible",
+      descParagraphs,
+      etatFacts,
+      features,
+      maintenance: maintenance
+        .filter((m) => m.operation.trim() || m.date.trim() || m.km.trim() || m.amount.trim() || m.linkedDoc)
+        .map(({ _key, ...m }) => m),
+      documents,
+      highlights: highlights
+        .filter((h) => h.label.trim() || h.text.trim())
+        .map((h, i) => ({ icon: h.icon, label: h.label, text: h.text, color: HL_COLORS[i % HL_COLORS.length] })),
+      images,
+    };
+  }
+
+  function openPreview() {
+    setPreviewModel(buildPreviewModel());
+    setShowPreview(true);
   }
 
   // Surveillance du défilement → section active
@@ -893,6 +937,14 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
             </span>
             <div className="flex gap-3 sm:ml-auto">
               <button
+                type="button"
+                onClick={openPreview}
+                className={btnGhostClass + " px-6 py-3"}
+                style={btnGhostStyle}
+              >
+                👁 Aperçu
+              </button>
+              <button
                 type="submit"
                 disabled={loading || uploading > 0 || docUploading > 0}
                 className={btnPrimaryClass + " px-8 py-3"}
@@ -907,6 +959,31 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
           </div>
         </form>
       </div>
+
+      {showPreview && previewModel && (
+        <div
+          className="fixed inset-0 z-[100] overflow-y-auto"
+          style={{ backgroundColor: "#070F1E" }}
+          onClickCapture={(e) => {
+            // Aperçu : neutralise toute navigation (liens contact, retour stock, galerie…)
+            const a = (e.target as HTMLElement).closest("a");
+            if (a) e.preventDefault();
+          }}
+        >
+          <div
+            className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-3"
+            style={{ backgroundColor: "rgba(7,15,30,0.92)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderBottom: `1px solid ${T.border}` }}
+          >
+            <span className="text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Aperçu de la fiche — non enregistré
+            </span>
+            <button type="button" onClick={() => setShowPreview(false)} className={btnPrimaryClass + " px-6 py-2.5"} style={btnPrimaryStyle}>
+              Fermer l&apos;aperçu
+            </button>
+          </div>
+          <VehiculeDetailView model={previewModel} t={t} isPreview />
+        </div>
+      )}
     </div>
   );
 }

@@ -38,6 +38,7 @@ export default function EntretienDocumentsSection({
   showMoreLabel,
   showLessLabel,
   highlights = [],
+  previewUnlocked = false,
 }: {
   maintenance: MaintenanceEntry[];
   documents: (string | DocItem)[];
@@ -45,9 +46,11 @@ export default function EntretienDocumentsSection({
   showMoreLabel: string;
   showLessLabel: string;
   highlights?: MaintenanceHighlight[];
+  previewUnlocked?: boolean;
 }) {
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+  const isUnlocked = unlocked || previewUnlocked;
   const [error, setError] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [pendingDoc, setPendingDoc] = useState<string | null>(null);
@@ -101,7 +104,7 @@ export default function EntretienDocumentsSection({
   }
 
   function handleLinkedEntryClick(linkedDoc: string) {
-    if (unlocked) {
+    if (isUnlocked) {
       const idx = findDocIndex(linkedDoc);
       if (idx >= 0) setLightboxIndex(idx);
     } else {
@@ -353,7 +356,7 @@ export default function EntretienDocumentsSection({
             Factures &amp; Documents
           </p>
 
-          {!unlocked ? (
+          {!isUnlocked ? (
             <div>
               {pendingDoc && (
                 <p className="text-xs mb-4" style={{ color: "#6B9FEE" }}>
