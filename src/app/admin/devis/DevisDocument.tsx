@@ -8,20 +8,29 @@ import {
   formatDateFr,
   validUntilFr,
   lineTotal,
+  lineGross,
+  lineDiscount,
   blockBox,
   type QuoteData,
   type HeaderBlockId,
 } from "@/lib/devis";
 
-/* Palette « papier » (sur fond blanc) */
+/* Palette « papier » neutre (sur fond blanc) — l'accent est dérivé du branding. */
 const C = {
   ink: "#16213A",
-  accent: "#1E4FA3",
-  headBg: "#0E2747",
   muted: "#6B7280",
   border: "#D9DEE8",
   zebra: "#F5F7FB",
 };
+
+// Éclaircit/assombrit une couleur hex (factor < 1 assombrit, > 1 éclaircit).
+function shade(hex: string, factor: number): string {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return hex;
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  const c = (h: string) => clamp(parseInt(h, 16) * factor).toString(16).padStart(2, "0");
+  return `#${c(m[1])}${c(m[2])}${c(m[3])}`;
+}
 
 const labelMini: CSSProperties = {
   fontSize: "7.5pt",
@@ -51,6 +60,13 @@ export default function DevisDocument({
   const logoFree = b.logoX != null && b.logoY != null;
   const logoCursor = onLogoPointerDown ? "move" : "default";
 
+  // Palette dérivée de l'accent + du thème.
+  const accent = b.accentColor || "#1E4FA3";
+  const headBg = b.theme === "colored" ? accent : b.theme === "minimal" ? "transparent" : shade(accent, 0.38);
+  const headFg = b.theme === "minimal" ? C.ink : "#FFFFFF";
+  const headBorder = b.theme === "minimal" ? `2px solid ${accent}` : undefined;
+  const zebra = b.theme === "minimal" ? "transparent" : C.zebra;
+
   // Style/handlers communs d'un bloc d'en-tête déplaçable + redimensionnable.
   function blockWrap(id: HeaderBlockId): CSSProperties {
     const box = blockBox(b, id);
@@ -70,7 +86,7 @@ export default function DevisDocument({
     return (
       <div
         onPointerDown={(e) => { e.stopPropagation(); onBlockResizePointerDown(id, e); }}
-        style={{ position: "absolute", right: "-4px", top: "50%", transform: "translateY(-50%)", width: 9, height: 22, background: C.accent, borderRadius: 2, cursor: "ew-resize", touchAction: "none" }}
+        style={{ position: "absolute", right: "-4px", top: "50%", transform: "translateY(-50%)", width: 9, height: 22, background: accent, borderRadius: 2, cursor: "ew-resize", touchAction: "none" }}
       />
     );
   }
@@ -143,8 +159,8 @@ export default function DevisDocument({
 
         {/* Bloc DEVIS + métadonnées */}
         <div style={{ ...blockWrap("meta"), textAlign: "right" }} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("meta", e) : undefined}>
-          <div style={{ fontSize: "20pt", fontWeight: 300, letterSpacing: "0.18em", color: C.accent }}>DEVIS</div>
-          <div style={{ width: 38, height: 2, backgroundColor: C.accent, marginLeft: "auto", marginTop: "2mm", marginBottom: "3mm" }} />
+          <div style={{ fontSize: "20pt", fontWeight: 300, letterSpacing: "0.18em", color: accent }}>DEVIS</div>
+          <div style={{ width: 38, height: 2, backgroundColor: accent, marginLeft: "auto", marginTop: "2mm", marginBottom: "3mm" }} />
           <table style={{ marginLeft: "auto", fontSize: "8.5pt", borderCollapse: "collapse" }}>
             <tbody>
               {quote.number && (
@@ -190,9 +206,9 @@ export default function DevisDocument({
       {/* ── Tableau des lignes ── */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "8mm", fontSize: "9pt" }}>
         <thead>
-          <tr style={{ backgroundColor: C.headBg, color: "#FFFFFF" }}>
+          <tr style={{ backgroundColor: headBg, color: headFg, borderBottom: headBorder }}>
             <th style={thCell("left")}>Désignation</th>
-            <th style={{ ...thCell("right"), width: "14mm" }}>Qté</th>
+            <th style={{ ...thCell("right"), width: "16mm" }}>Qté</th>
             <th style={{ ...thCell("right"), width: "30mm" }}>{showHT ? "P.U. HT" : "P.U."}</th>
             <th style={{ ...thCell("right"), width: "32mm" }}>{showHT ? "Total HT" : "Total"}</th>
           </tr>
@@ -205,17 +221,31 @@ export default function DevisDocument({
               </td>
             </tr>
           ) : (
-            quote.items.map((it, i) => (
-              <tr key={it.id} style={{ backgroundColor: i % 2 ? C.zebra : "transparent" }}>
-                <td style={tdCell("left")}>
-                  <div style={{ fontWeight: 600 }}>{it.designation || "—"}</div>
-                  {it.detail && <div style={{ color: C.muted, fontSize: "8pt", marginTop: "0.5mm", whiteSpace: "pre-line" }}>{it.detail}</div>}
-                </td>
-                <td style={tdCell("right")}>{it.qty}</td>
-                <td style={tdCell("right")}>{formatEuro(it.unitPrice)}</td>
-                <td style={{ ...tdCell("right"), fontWeight: 600 }}>{formatEuro(lineTotal(it))}</td>
-              </tr>
-            ))
+            quote.items.map((it, i) => {
+              const disc = lineDiscount(it);
+              return (
+                <tr key={it.id} style={{ backgroundColor: i % 2 ? zebra : "transparent" }}>
+                  <td style={tdCell("left")}>
+                    <div style={{ fontWeight: 600 }}>{it.designation || "—"}</div>
+                    {it.detail && <div style={{ color: C.muted, fontSize: "8pt", marginTop: "0.5mm", whiteSpace: "pre-line" }}>{it.detail}</div>}
+                    {disc > 0 && (
+                      <div style={{ color: accent, fontSize: "8pt", marginTop: "0.5mm" }}>
+                        Remise {it.discountKind === "amount" ? formatEuro(it.discount || 0) : `${it.discount} %`} (−{formatEuro(disc)})
+                      </div>
+                    )}
+                  </td>
+                  <td style={tdCell("right")}>
+                    {it.qty}
+                    {it.unit ? ` ${it.unit}` : ""}
+                  </td>
+                  <td style={tdCell("right")}>{formatEuro(it.unitPrice)}</td>
+                  <td style={{ ...tdCell("right"), fontWeight: 600 }}>
+                    {disc > 0 && <span style={{ color: "#AEB6C2", textDecoration: "line-through", fontWeight: 400, fontSize: "8pt", marginRight: "2mm" }}>{formatEuro(lineGross(it))}</span>}
+                    {formatEuro(lineTotal(it))}
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
@@ -228,11 +258,11 @@ export default function DevisDocument({
               <>
                 <TotalRow label="Total HT" value={formatEuro(t.totalHT)} />
                 <TotalRow label={`TVA ${quote.tvaRate} %`} value={formatEuro(t.tvaAmount)} />
-                <TotalRow label="Total TTC" value={formatEuro(t.totalTTC)} grand />
+                <TotalRow label="Total TTC" value={formatEuro(t.totalTTC)} grand barColor={accent} />
               </>
             ) : (
               <>
-                <TotalRow label="Total" value={formatEuro(t.totalTTC)} grand />
+                <TotalRow label="Total" value={formatEuro(t.totalTTC)} grand barColor={accent} />
                 <tr>
                   <td colSpan={2} style={{ fontSize: "7.5pt", color: C.muted, paddingTop: "1mm" }}>
                     {quote.tvaMode === "marge"
@@ -259,7 +289,7 @@ export default function DevisDocument({
       {/* ── Conditions / notes ── */}
       {(quote.paymentTerms || quote.notes) && (
         <div style={{ marginTop: "9mm" }}>
-          <SectionTitle>Conditions</SectionTitle>
+          <SectionTitle color={accent}>Conditions</SectionTitle>
           {quote.paymentTerms && (
             <div style={{ display: "flex", gap: "5mm", marginTop: "2mm", fontSize: "9pt" }}>
               <div style={{ ...labelMini, width: "32mm", flexShrink: 0 }}>Règlement</div>
@@ -308,22 +338,22 @@ function PartyBox({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children, color = "#1E4FA3" }: { children: React.ReactNode; color?: string }) {
   return (
-    <div style={{ ...labelMini, color: C.accent, borderBottom: `1px solid ${C.border}`, paddingBottom: "1.5mm" }}>
+    <div style={{ ...labelMini, color, borderBottom: `1px solid ${C.border}`, paddingBottom: "1.5mm" }}>
       {children}
     </div>
   );
 }
 
-function TotalRow({ label, value, grand, spaced }: { label: string; value: string; grand?: boolean; spaced?: boolean }) {
+function TotalRow({ label, value, grand, spaced, barColor = "#0E2747" }: { label: string; value: string; grand?: boolean; spaced?: boolean; barColor?: string }) {
   return (
     <tr>
       <td
         style={{
           padding: grand ? "2.5mm 0 0" : "1mm 0",
           paddingTop: spaced ? "4mm" : undefined,
-          borderTop: grand ? `2px solid ${C.headBg}` : undefined,
+          borderTop: grand ? `2px solid ${barColor}` : undefined,
           color: grand ? C.ink : C.muted,
           fontWeight: grand ? 700 : 400,
           fontSize: grand ? "11pt" : undefined,
@@ -335,7 +365,7 @@ function TotalRow({ label, value, grand, spaced }: { label: string; value: strin
         style={{
           padding: grand ? "2.5mm 0 0" : "1mm 0",
           paddingTop: spaced ? "4mm" : undefined,
-          borderTop: grand ? `2px solid ${C.headBg}` : undefined,
+          borderTop: grand ? `2px solid ${barColor}` : undefined,
           textAlign: "right",
           fontWeight: grand ? 700 : 600,
           fontSize: grand ? "11pt" : undefined,

@@ -16,6 +16,15 @@ const PRINT_CSS = `
 }
 `;
 
+// Titre de l'onglet = nom de fichier proposé par le navigateur pour le PDF.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const row = await prisma.quote.findUnique({ where: { id }, select: { number: true, clientCompany: true, clientName: true } });
+  const client = row?.clientCompany || row?.clientName || "";
+  const title = `Devis ${row?.number ?? ""}${client ? ` - ${client}` : ""}`.trim();
+  return { title: title || "Devis" };
+}
+
 export default async function ImprimerDevisPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");

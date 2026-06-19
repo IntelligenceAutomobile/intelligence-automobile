@@ -7,6 +7,16 @@ export type DepositMode = "percent" | "amount" | "none";
 export type QuoteStatus = "brouillon" | "envoye" | "accepte" | "refuse";
 export type LogoAlign = "left" | "center" | "right";
 export type QuoteKind = "vehicule" | "prestation";
+export type DocTheme = "classic" | "colored" | "minimal";
+
+// Couleurs d'accent prédéfinies (pastilles).
+export const ACCENT_PRESETS: { label: string; value: string }[] = [
+  { label: "Bleu marine", value: "#1E4FA3" },
+  { label: "Magenta", value: "#ED008C" },
+  { label: "Anthracite", value: "#2B2F36" },
+  { label: "Émeraude", value: "#0F8A6A" },
+  { label: "Bordeaux", value: "#8A1538" },
+];
 
 // Blocs de l'en-tête déplaçables/redimensionnables (hors logo, géré à part).
 export type HeaderBlockId = "emitter" | "client" | "meta";
@@ -49,6 +59,9 @@ export type Branding = {
   // Mise en page libre de l'en-tête : hauteur de la zone + position/largeur de chaque bloc (null = défaut).
   headerHeight: number;
   blocks: Record<HeaderBlockId, BlockBox | null>;
+  // Apparence du document.
+  accentColor: string; // #RRGGBB
+  theme: DocTheme;
 };
 
 // Boîte effective d'un bloc (valeur enregistrée ou défaut).
@@ -72,6 +85,8 @@ export function defaultBranding(): Branding {
     logoY: null,
     headerHeight: DEFAULT_HEADER_HEIGHT,
     blocks: { emitter: null, client: null, meta: null },
+    accentColor: "#1E4FA3",
+    theme: "classic",
   };
 }
 
@@ -94,6 +109,8 @@ export function mergeBranding(raw: unknown): Branding {
   };
   const rawBlocks = (r.blocks && typeof r.blocks === "object" ? r.blocks : {}) as Record<string, unknown>;
   const headerHeight = typeof r.headerHeight === "number" && r.headerHeight > 0 ? Math.min(180, Math.max(24, r.headerHeight)) : base.headerHeight;
+  const accentColor = typeof r.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(r.accentColor) ? r.accentColor : base.accentColor;
+  const theme: DocTheme = r.theme === "colored" || r.theme === "minimal" || r.theme === "classic" ? (r.theme as DocTheme) : base.theme;
   return {
     emitterName: str(r.emitterName, base.emitterName),
     emitterAddress: str(r.emitterAddress, base.emitterAddress),
@@ -113,8 +130,12 @@ export function mergeBranding(raw: unknown): Branding {
       client: box(rawBlocks.client),
       meta: box(rawBlocks.meta),
     },
+    accentColor,
+    theme,
   };
 }
+
+export type DiscountKind = "percent" | "amount";
 
 export type QuoteItem = {
   id: string;
@@ -123,8 +144,13 @@ export type QuoteItem = {
   qty: number;
   // Prix unitaire : HT en mode "tva20", TTC (prix de vente affiché) en "marge"/"exonere".
   unitPrice: number;
+  unit?: string; // "" | forfait | jour | heure | mois | unité…
+  discount?: number; // valeur de la remise (0 = aucune)
+  discountKind?: DiscountKind; // percent (défaut) | amount
   vehicleId?: string;
 };
+
+export const UNIT_OPTIONS = ["", "forfait", "jour", "heure", "mois", "unité"] as const;
 
 export type QuoteData = {
   id?: string;
@@ -162,8 +188,23 @@ export type QuoteTotals = {
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
-export function lineTotal(item: QuoteItem): number {
+// Total brut d'une ligne (avant remise).
+export function lineGross(item: QuoteItem): number {
   return round2((Number(item.qty) || 0) * (Number(item.unitPrice) || 0));
+}
+
+// Montant de la remise appliquée à une ligne.
+export function lineDiscount(item: QuoteItem): number {
+  const d = Number(item.discount) || 0;
+  if (d <= 0) return 0;
+  const gross = lineGross(item);
+  const amount = item.discountKind === "amount" ? d : gross * (d / 100);
+  return round2(Math.min(gross, Math.max(0, amount)));
+}
+
+// Total net d'une ligne (après remise).
+export function lineTotal(item: QuoteItem): number {
+  return round2(Math.max(0, lineGross(item) - lineDiscount(item)));
 }
 
 export function computeTotals(q: Pick<QuoteData, "items" | "tvaMode" | "tvaRate" | "depositMode" | "depositValue">): QuoteTotals {

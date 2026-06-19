@@ -9,6 +9,10 @@ import {
   kindDefaults,
   blockBox,
   PRESTATION_PRESETS,
+  UNIT_OPTIONS,
+  ACCENT_PRESETS,
+  type DocTheme,
+  type DiscountKind,
   type QuoteData,
   type QuoteItem,
   type TvaMode,
@@ -413,14 +417,23 @@ export default function DevisEditor({
                   <div className="flex-1 space-y-2 min-w-0">
                     <input className={fieldClass} style={fieldStyle} value={it.designation} onChange={(e) => updateItem(it.id, { designation: e.target.value })} placeholder="Désignation" />
                     <input className={fieldClass} style={{ ...fieldStyle, fontSize: "0.8rem" }} value={it.detail} onChange={(e) => updateItem(it.id, { detail: e.target.value })} placeholder="Détail (année, km, options…)" />
-                    <div className="flex gap-2">
-                      <label className="flex items-center gap-2 text-xs" style={{ color: T.muted }}>
-                        Qté
-                        <input type="number" min={1} step={1} className="w-16 px-2 py-1.5 text-sm" style={fieldStyle} value={it.qty} onChange={(e) => updateItem(it.id, { qty: Math.max(0, parseInt(e.target.value) || 0) })} />
+                    <div className="flex flex-wrap gap-2 items-end">
+                      <label className="text-[11px]" style={{ color: T.muted }}>
+                        <span className="block mb-1">Qté</span>
+                        <input type="number" min={0} step={1} className="w-14 px-2 py-1.5 text-sm" style={fieldStyle} value={it.qty} onChange={(e) => updateItem(it.id, { qty: Math.max(0, parseInt(e.target.value) || 0) })} />
                       </label>
-                      <label className="flex items-center gap-2 text-xs flex-1" style={{ color: T.muted }}>
-                        {q.tvaMode === "tva20" ? "P.U. HT" : "Prix"}
-                        <span className="flex items-center flex-1" style={{ position: "relative" }}>
+                      <label className="text-[11px]" style={{ color: T.muted }}>
+                        <span className="block mb-1">Unité</span>
+                        <select className="px-2 py-1.5 text-sm" style={fieldStyle} value={it.unit ?? ""} onChange={(e) => updateItem(it.id, { unit: e.target.value })}>
+                          <option value="">—</option>
+                          {UNIT_OPTIONS.filter(Boolean).map((u) => (
+                            <option key={u} value={u}>{u}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-[11px] flex-1 min-w-[110px]" style={{ color: T.muted }}>
+                        <span className="block mb-1">{q.tvaMode === "tva20" ? "P.U. HT" : "Prix"}</span>
+                        <span className="flex items-center" style={{ position: "relative" }}>
                           <input
                             inputMode="decimal"
                             className="w-full px-2 py-1.5 text-sm pr-7"
@@ -433,6 +446,16 @@ export default function DevisEditor({
                             placeholder="0"
                           />
                           <span style={{ position: "absolute", right: 8, color: T.muted, fontSize: "0.8rem" }}>€</span>
+                        </span>
+                      </label>
+                      <label className="text-[11px]" style={{ color: T.muted }}>
+                        <span className="block mb-1">Remise</span>
+                        <span className="flex">
+                          <input inputMode="decimal" className="w-14 px-2 py-1.5 text-sm" style={fieldStyle} value={it.discount ? String(it.discount) : ""} onChange={(e) => updateItem(it.id, { discount: parseAmount(e.target.value) })} placeholder="0" />
+                          <select className="px-1 py-1.5 text-sm" style={fieldStyle} value={it.discountKind ?? "percent"} onChange={(e) => updateItem(it.id, { discountKind: e.target.value as DiscountKind })}>
+                            <option value="percent">%</option>
+                            <option value="amount">€</option>
+                          </select>
                         </span>
                       </label>
                     </div>
@@ -594,6 +617,57 @@ export default function DevisEditor({
               <input className={fieldClass} style={fieldStyle} value={q.branding.emitterTva} onChange={(e) => updateBranding({ emitterTva: e.target.value })} placeholder="(à compléter)" />
             </Field>
           </div>
+        </SectionCard>
+
+        {/* Apparence du document */}
+        <SectionCard title="Apparence du document">
+          <Field label="Couleur d'accent">
+            <div className="flex items-center gap-2 flex-wrap">
+              {ACCENT_PRESETS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  title={c.label}
+                  onClick={() => updateBranding({ accentColor: c.value })}
+                  className="w-7 h-7 rounded-full transition-transform hover:scale-110"
+                  style={{ backgroundColor: c.value, outline: q.branding.accentColor.toLowerCase() === c.value.toLowerCase() ? `2px solid ${T.text}` : `1px solid ${T.border}`, outlineOffset: 2 }}
+                />
+              ))}
+              <input
+                type="color"
+                value={q.branding.accentColor}
+                onChange={(e) => updateBranding({ accentColor: e.target.value })}
+                className="w-9 h-7 p-0 border-0 bg-transparent cursor-pointer"
+                title="Couleur personnalisée"
+              />
+            </div>
+          </Field>
+          <Field label="Thème">
+            <div className="flex gap-1">
+              {([
+                ["classic", "Classique"],
+                ["colored", "Coloré"],
+                ["minimal", "Épuré"],
+              ] as [DocTheme, string][]).map(([val, lab]) => {
+                const active = q.branding.theme === val;
+                return (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => updateBranding({ theme: val })}
+                    className="flex-1 px-2 py-2.5 text-[11px] uppercase tracking-widest border transition-colors"
+                    style={{
+                      borderColor: active ? T.accent : T.border,
+                      color: active ? T.text : T.muted,
+                      backgroundColor: active ? "rgba(107,159,238,0.12)" : "transparent",
+                    }}
+                  >
+                    {lab}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
         </SectionCard>
 
         {error && <p className="text-sm" style={{ color: T.danger }}>{error}</p>}
