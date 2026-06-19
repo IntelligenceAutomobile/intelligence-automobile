@@ -636,7 +636,7 @@ export default function VehiculeModalV2({
                   </a>
                 )}
                 <Link
-                  href={`/vehicules/${vehicle.id}${vehicle.layoutVariant ? `/${vehicle.layoutVariant}` : ""}`}
+                  href={`/vehicules/${vehicle.id}`}
                   className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 transition-opacity hover:opacity-80"
                   style={{ border: "1px solid #1B3055", color: "#C8D8EE" }}
                   onClick={onClose}

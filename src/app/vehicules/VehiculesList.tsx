@@ -51,14 +51,6 @@ const VEHICLE_ENRICHMENTS: Record<string, Partial<ModalVehicle>> = {
   },
 };
 
-// IDs dont le modal utilise VehiculeModalV2
-const V2_IDS = new Set([
-  "cmpqmqrnk0000f4vvwbr2z3dq",
-  "cmppfcv2u00002cvvmr6dkxaw",
-  "audi-tt-mk2-sline-2010",
-  "audi-tt-mk3-sline-2014",
-]);
-
 // ── Véhicules de démonstration enrichis ──────────────────────────────────────
 const DEMO_VEHICLES: ModalVehicle[] = [
   {
@@ -253,7 +245,7 @@ function toModal(v: Vehicle, priceOnRequest: string): ModalVehicle {
     features,
     featuresEn,
     status: v.status,
-    layoutVariant: V2_IDS.has(v.id) ? "v2" : undefined,
+    layoutVariant: "v2",
     ...enrichment,
   };
 }

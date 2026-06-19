@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
-import VehiculeForm from "@/components/VehiculeForm";
+import NouveauClient from "./NouveauClient";
 import { T, AdminPage, PageHeader } from "../../ui";
 
 export default async function NouveauVehiculePage() {
@@ -17,8 +17,8 @@ export default async function NouveauVehiculePage() {
       >
         ← Stock
       </Link>
-      <PageHeader title="Ajouter un véhicule" subtitle="Renseignez la fiche puis ajoutez les photos." />
-      <VehiculeForm />
+      <PageHeader title="Ajouter un véhicule" subtitle="Collez une source pour pré-remplir, ou renseignez la fiche à la main." />
+      <NouveauClient />
     </AdminPage>
   );
 }
