@@ -28,7 +28,6 @@ export type ModalVehicle = {
   features?: string[];
   featuresEn?: string[];
   status?: string;
-  isDemo?: boolean;
   // Champs enrichis
   finition?: string;
   couple?: string;
@@ -466,19 +465,17 @@ export default function VehiculeModal({
                   </a>
                 )}
 
-                {!vehicle.isDemo && (
-                  <Link
-                    href={`/vehicules/${vehicle.id}`}
-                    className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-colors duration-200"
-                    style={{
-                      border: "1px solid #1B3055",
-                      color: "#C8D8EE",
-                    }}
-                    onClick={onClose}
-                  >
-                    Voir le dossier complet →
-                  </Link>
-                )}
+                <Link
+                  href={`/vehicules/${vehicle.id}`}
+                  className="w-full text-center text-xs font-semibold tracking-widest uppercase py-4 rounded-full transition-colors duration-200"
+                  style={{
+                    border: "1px solid #1B3055",
+                    color: "#C8D8EE",
+                  }}
+                  onClick={onClose}
+                >
+                  Voir le dossier complet →
+                </Link>
 
                 <Link
                   href="/"

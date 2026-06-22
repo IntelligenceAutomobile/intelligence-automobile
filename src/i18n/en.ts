@@ -85,7 +85,6 @@ export const en: Translations = {
     maxMileage: "Max mileage",
     minYear: "Min year",
     photoComingSoon: "Photo coming soon",
-    example: "Example",
     hidden: "Hidden",
     soldBadge: "Sold",
     availableBadge: "Available",

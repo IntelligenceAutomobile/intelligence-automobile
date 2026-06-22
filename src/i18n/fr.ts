@@ -85,7 +85,6 @@ export const fr = {
     minYear: "Année min",
     // Card
     photoComingSoon: "Photo à venir",
-    example: "Exemple",
     hidden: "Masqué",
     soldBadge: "Vendu",
     availableBadge: "Disponible",

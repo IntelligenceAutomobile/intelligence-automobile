@@ -44,8 +44,36 @@ export default async function HomePage() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF", overflowX: "hidden" }}>
 
-        {/* 1. HERO */}
-        <section style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+        {/* 1. HERO — mobile : bande photo (voiture entière, format 3:2 = aucun rognage) + titre dessous */}
+        <section className="md:hidden" style={{ position: "relative", backgroundColor: "#070F1E" }}>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 2", overflow: "hidden" }}>
+            <img
+              src="/Photo du Site/Photo IA/ChatGPT Image 5 juin 2026, 09_00_29.png"
+              alt=""
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+            />
+            {/* assombrit le haut pour la lisibilité du logo posé dessus */}
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
+            {/* fondu bas qui fusionne la photo avec le fond sombre */}
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "55%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
+          </div>
+          <div style={{ padding: "0.25rem 6vw 2.75rem" }}>
+            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 11vw, 3.4rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
+              {t.home.heroTitle[0]}
+              <br />{t.home.heroTitle[1]}
+              <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
+            </h1>
+            <Link
+              href="/vehicules-2"
+              style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 32px", transition: "opacity 0.2s" }}
+            >
+              {t.home.heroCta}
+            </Link>
+          </div>
+        </section>
+
+        {/* 1. HERO — desktop : plein écran immersif (inchangé) */}
+        <section className="hidden md:block" style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
           <img
             src="/Photo du Site/Photo IA/ChatGPT Image 5 juin 2026, 09_00_29.png"
             alt=""

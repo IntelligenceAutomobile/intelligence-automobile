@@ -98,8 +98,11 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="relative flex items-center justify-between" style={{ paddingTop: "18px", paddingBottom: "18px" }}>
 
-          {/* Logo — centré absolument */}
-          <Link href="/" className="absolute left-1/2 flex-shrink-0" style={{ transform: "translateX(calc(-50% - 30px))" }}>
+          {/* Logo — centré (mobile : vrai centre ; desktop : compensation optique -30px) */}
+          <Link
+            href="/"
+            className="absolute left-1/2 flex-shrink-0 [transform:translateX(-50%)] md:[transform:translateX(calc(-50%_-_30px))]"
+          >
             <LogoFull markHeight={110} layout="row" textScale={0.82} />
           </Link>
 

@@ -51,142 +51,6 @@ const VEHICLE_ENRICHMENTS: Record<string, Partial<ModalVehicle>> = {
   },
 };
 
-// ── Véhicules de démonstration enrichis ──────────────────────────────────────
-const DEMO_VEHICLES: ModalVehicle[] = [
-  {
-    id: "demo-4",
-    make: "Renault",
-    model: "Mégane III RS 250",
-    year: 2009,
-    mileage: "164 334 km",
-    fuel: "Essence",
-    transmission: "Manuelle 6 rapports",
-    color: "Gris Cassiopée Metal",
-    origin: "France",
-    power: 250,
-    price: "À définir",
-    status: "disponible",
-    finition: "Sport Luxe",
-    couple: "360 Nm",
-    acceleration: "6.0 s",
-    tires: "Michelin PS4S 235/35 R19",
-    images: ["https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85"],
-    description: "L'une des meilleures sportives compactes jamais construites — et l'une des dernières vraies RS à propulsion turbo avant l'ère des boîtes à double embrayage. Finition Sport Luxe avec freins Brembo 4 pistons de série. Kit de distribution refait en avril 2026 par spécialiste Carbelt. 21 factures originales couvrant 15 ans d'entretien rigoureux.",
-    features: [
-      "Freins Brembo 4 pistons AV",
-      "Disques 340 mm rainurés AV",
-      "Jantes 19\" diamant noir",
-      "Sièges cuir RS noir/jaune",
-      "Ceintures jaunes RS",
-      "Volant cuir RS surpiqûres",
-      "Pédalier aluminium sport",
-      "Instrumentation jaune iconic",
-    ],
-    maintenance: [
-      { date: "Avr. 2026", km: "164 334 km", operation: "Kit distribution COMPLET + pompe eau + révision complète + galet tendeur", amount: "1 223 €" },
-      { date: "Avr. 2026", km: "163 974 km", operation: "Remplacement liquide de frein + purge", amount: "85 €" },
-      { date: "Juil. 2025", km: "163 148 km", operation: "Réparation sinistre avant — nombreuses pièces + peinture + compresseur clim + capteur pression", amount: "17 480 €" },
-      { date: "Mai 2024", km: "154 450 km", operation: "Pneumatiques 235/35R19 x2 + montage", amount: "580 €" },
-      { date: "Déc. 2023", km: "153 897 km", operation: "Bougies d'allumage (lot de 4)", amount: "185 €" },
-      { date: "Oct. 2023", km: "149 259 km", operation: "Remplacement pare-brise + kit collage", amount: "1 079 €" },
-      { date: "Oct. 2023", km: "149 259 km", operation: "Révision complète + disques/plaquettes AR + batterie + filtres x4 + huile", amount: "1 844 €" },
-      { date: "Juin 2022", km: "147 343 km", operation: "Kit distribution COMPLET + pompe eau + révision complète" },
-      { date: "Mai 2021", km: "132 374 km", operation: "Révision bougies + vidange" },
-      { date: "Janv. 2021", km: "125 938 km", operation: "Pneu x1 + géométrie + liquide frein" },
-      { date: "Juin 2019", km: "93 973 km", operation: "Révision + plaquettes AV + freins + purge" },
-      { date: "Févr. 2018", km: "68 515 km", operation: "Révision éco Renault RN0710" },
-      { date: "Juin 2017", km: "63 727 km", operation: "Révision + pneus x2 + contrôle technique" },
-      { date: "Mars 2016", km: "53 380 km", operation: "Révision 50 000 km + distribution + pompe eau + CT" },
-      { date: "Déc. 2013", km: "40 516 km", operation: "Révision 40 000 km + CT + filtres + liquide frein + liquide refroidissement" },
-      { date: "Mai 2012", km: "29 924 km", operation: "Vidange + filtre huile + niveaux + contrôle frein" },
-      { date: "Mai 2011", km: "19 243 km", operation: "Révision 20 000 km + filtres air/habitacle + huile 5W40" },
-    ],
-    dossierUrl: "/dossiers/megane-rs-250.pdf",
-    isDemo: true,
-  },
-  {
-    id: "demo-1",
-    make: "BMW",
-    model: "M3 Competition",
-    year: 2020,
-    mileage: "42 000 km",
-    fuel: "Essence",
-    transmission: "Automatique",
-    color: "Gris Frozen",
-    origin: "Allemagne",
-    power: 510,
-    price: "64 900 €",
-    status: "disponible",
-    images: ["https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=85"],
-    description: "BMW M3 Competition en parfait état, issue d'une flotte professionnelle avec carnet d'entretien complet en réseau BMW. Historique vérifiable sans accident. Livrée prête à immatriculer en France avec certificat de conformité.",
-    features: [
-      "Toit carbone M",
-      "Sièges baquets M",
-      "Jantes forgées 19\"",
-      "Affichage tête haute",
-      "Pack Carbon M",
-      "Caméra 360°",
-      "Régulateur adaptatif",
-      "Son Harman Kardon",
-    ],
-    isDemo: true,
-  },
-  {
-    id: "demo-2",
-    make: "Audi",
-    model: "RS4 Avant",
-    year: 2021,
-    mileage: "31 500 km",
-    fuel: "Essence",
-    transmission: "Automatique",
-    color: "Blanc Glacier",
-    origin: "Allemagne",
-    power: 450,
-    price: "59 500 €",
-    status: "disponible",
-    images: ["https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=1200&q=85"],
-    description: "Audi RS4 Avant 2021 avec suivi Audi Service exclusif. Véhicule de leasing d'entreprise — un seul propriétaire, entretien rigoureux, aucun sinistre déclaré. Kilométrage bas pour l'année.",
-    features: [
-      "Pack Sport Plus",
-      "Toit ouvrant panoramique",
-      "Sièges RS chauffants",
-      "Matrix LED",
-      "B&O Sound System",
-      "Roues RS 20\" anthracite",
-      "Virtual Cockpit Plus",
-      "Suspension RS sport",
-    ],
-    isDemo: true,
-  },
-  {
-    id: "demo-3",
-    make: "Mercedes-AMG",
-    model: "C 63 S Coupé",
-    year: 2019,
-    mileage: "55 000 km",
-    fuel: "Essence",
-    transmission: "Automatique",
-    color: "Noir Obsidienne",
-    origin: "Belgique",
-    power: 510,
-    price: "52 900 €",
-    status: "disponible",
-    images: ["https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85"],
-    description: "Mercedes-AMG C 63 S Coupé importée de Belgique. Configuration rare, entretien Mercedes-Benz exclusif avec toutes les factures. Moteur V8 biturbo dans son état d'origine, aucune modification.",
-    features: [
-      "Pack AMG Nuit",
-      "Échappement sport AMG",
-      "Sièges AMG cuir Nappa",
-      "Toit ouvrant",
-      "Burmester Surround",
-      "Jantes AMG 19\" bicolores",
-      "Caméra recul",
-      "Aide au stationnement",
-    ],
-    isDemo: true,
-  },
-];
-
 // ── Types ────────────────────────────────────────────────────────────────────
 type Vehicle = {
   id: string;
@@ -265,7 +129,6 @@ function VehicleCard({
   price,
   isSold,
   isHidden,
-  isDemo,
   onClick,
 }: {
   images: string[];
@@ -281,7 +144,6 @@ function VehicleCard({
   price: string;
   isSold?: boolean;
   isHidden?: boolean;
-  isDemo?: boolean;
   onClick: () => void;
 }) {
   const { t } = useLocale();
@@ -343,15 +205,6 @@ function VehicleCard({
           className="absolute inset-0 transition-opacity duration-400 group-hover:opacity-0"
           style={{ background: "linear-gradient(to top, rgba(7,15,30,0.45) 0%, rgba(7,15,30,0.15) 40%, transparent 70%)" }}
         />
-
-        {/* Badge démo */}
-        {isDemo && (
-          <div className="absolute top-5 left-5 z-10">
-            <span className="text-[9px] tracking-[0.25em] uppercase px-3 py-1.5" style={{ backgroundColor: "rgba(7,15,30,0.8)", color: "#1B3055", border: "1px solid #1B3055" }}>
-              {tv.example}
-            </span>
-          </div>
-        )}
 
         {/* Badge masqué (admin only) */}
         {isHidden && (
@@ -417,18 +270,16 @@ function VehicleCard({
       >
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
-          {!isDemo && (
-            <span
-              className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
-              style={{
-                color: isSold ? "#C8D8EE" : "#6B9FEE",
-                border: `1px solid ${isSold ? "#1B3055" : "rgba(107,159,238,0.3)"}`,
-                backgroundColor: isSold ? "transparent" : "rgba(107,159,238,0.08)",
-              }}
-            >
-              {isSold ? tv.soldBadge : tv.availableBadge}
-            </span>
-          )}
+          <span
+            className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
+            style={{
+              color: isSold ? "#C8D8EE" : "#6B9FEE",
+              border: `1px solid ${isSold ? "#1B3055" : "rgba(107,159,238,0.3)"}`,
+              backgroundColor: isSold ? "transparent" : "rgba(107,159,238,0.08)",
+            }}
+          >
+            {isSold ? tv.soldBadge : tv.availableBadge}
+          </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
@@ -767,25 +618,6 @@ export default function VehiculesList({
             />
           );
         })}
-        {!hasActiveFilters && DEMO_VEHICLES.map((v) => (
-          <div key={v.id} style={{ opacity: 0.7 }}>
-            <VehicleCard
-              images={v.images}
-              make={v.make}
-              year={v.year}
-              model={v.model}
-              mileage={v.mileage}
-              fuel={v.fuel}
-              transmission={v.transmission}
-              power={v.power}
-              color={v.color}
-              origin={v.origin}
-              price={v.price}
-              isDemo
-              onClick={() => setSelected(v)}
-            />
-          </div>
-        ))}
       </div>
 
       {/* ── CTA RECHERCHE PERSONNALISÉE ── */}

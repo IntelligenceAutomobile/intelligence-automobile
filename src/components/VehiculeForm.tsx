@@ -74,6 +74,21 @@ const HIGHLIGHT_PRESETS: Highlight[] = [
   { icon: "🔧", label: "Entretien suivi", text: "" },
 ];
 
+// France + ses pays frontaliers. « Autre » ouvre un champ texte libre.
+const ORIGIN_OPTIONS = [
+  "France",
+  "Belgique",
+  "Luxembourg",
+  "Allemagne",
+  "Suisse",
+  "Italie",
+  "Monaco",
+  "Espagne",
+  "Andorre",
+];
+const ORIGIN_DEFAULT = "Allemagne";
+const ORIGIN_OTHER = "Autre";
+
 const SECTIONS = [
   { id: "sec-identite", label: "Identité" },
   { id: "sec-presentation", label: "Présentation" },
@@ -88,6 +103,25 @@ function prettyLabelFromFilename(name: string) {
   const base = name.replace(/\.[^.]+$/, "").replace(/^[0-9a-f-]{8,}-/i, "");
   const spaced = base.replace(/[-_]+/g, " ").trim();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+// ── Formats des pièces jointes ──
+const DOC_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "tiff", "tif", "bmp", "avif"];
+// Accepté à l'upload : images + PDF + bureautique (cohérent avec /api/upload).
+const DOC_ALLOWED_EXTS = [...DOC_IMAGE_EXTS, "pdf", "doc", "docx", "xls", "xlsx"];
+const DOC_ACCEPT = "image/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx";
+
+function fileExt(nameOrUrl: string) {
+  const clean = nameOrUrl.split(/[?#]/)[0];
+  const base = clean.substring(clean.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  return dot >= 0 ? base.slice(dot + 1).toLowerCase() : "";
+}
+function isAllowedDoc(file: File) {
+  return file.type.startsWith("image/") || DOC_ALLOWED_EXTS.includes(fileExt(file.name));
+}
+function isImageDoc(url: string) {
+  return DOC_IMAGE_EXTS.includes(fileExt(url));
 }
 
 const onlyDigits = (s: string) => s.replace(/[^\d]/g, "");
@@ -115,6 +149,26 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
   const [error, setError] = useState("");
 
   const [isPublished, setIsPublished] = useState(data?.isPublished !== false);
+
+  // Origine : select contrôlé + champ libre quand « Autre » est choisi.
+  // Si l'origine enregistrée n'est pas dans la liste, on bascule sur « Autre » pré-rempli.
+  const initialOrigin = data?.origin ?? ORIGIN_DEFAULT;
+  const initialOriginKnown = ORIGIN_OPTIONS.includes(initialOrigin);
+  const [originChoice, setOriginChoice] = useState(initialOriginKnown ? initialOrigin : ORIGIN_OTHER);
+  const [originCustom, setOriginCustom] = useState(initialOriginKnown ? "" : initialOrigin);
+  const originValue = originChoice === ORIGIN_OTHER ? originCustom.trim() : originChoice;
+
+  // Réhydrate le state depuis une valeur brute (restauration de brouillon).
+  function applyOrigin(value: string) {
+    const v = value || ORIGIN_DEFAULT;
+    if (ORIGIN_OPTIONS.includes(v)) {
+      setOriginChoice(v);
+      setOriginCustom("");
+    } else {
+      setOriginChoice(ORIGIN_OTHER);
+      setOriginCustom(v);
+    }
+  }
 
   const [priceStr, setPriceStr] = useState(data?.price != null ? formatNumber(data.price) : "");
   const [kmStr, setKmStr] = useState(data?.mileage != null ? formatNumber(data.mileage) : "");
@@ -326,8 +380,9 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       };
       set("make", d.make); set("model", d.model); set("year", d.year); set("color", d.color);
       set("fuel", d.fuel); set("transmission", d.transmission); set("power", d.power);
-      set("origin", d.origin); set("status", d.status); set("description", d.description);
+      set("status", d.status); set("description", d.description);
     }
+    applyOrigin((d.origin as string) ?? "");
     setDraftAvailable(false);
   }
   function ignoreRestore() {
@@ -449,7 +504,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
   // ── Documents ──
   async function handleDocFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    const list = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const list = Array.from(files).filter(isAllowedDoc);
     if (docInputRef.current) docInputRef.current.value = "";
     if (list.length === 0) return;
 
@@ -661,11 +716,28 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
               </div>
               <div>
                 <label className={labelClass} style={{ color: T.textDim }}>Origine</label>
-                <select name="origin" defaultValue={data?.origin ?? "Allemagne"} className={fieldClass} style={fieldStyle}>
-                  <option>Allemagne</option>
-                  <option>Belgique</option>
-                  <option>Autre UE</option>
+                {/* Valeur réellement soumise (pays choisi, ou texte libre si « Autre »). */}
+                <input type="hidden" name="origin" value={originValue} />
+                <select
+                  value={originChoice}
+                  onChange={(e) => setOriginChoice(e.target.value)}
+                  className={fieldClass}
+                  style={fieldStyle}
+                >
+                  {ORIGIN_OPTIONS.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                  <option value={ORIGIN_OTHER}>Autre…</option>
                 </select>
+                {originChoice === ORIGIN_OTHER && (
+                  <input
+                    value={originCustom}
+                    onChange={(e) => setOriginCustom(e.target.value)}
+                    placeholder="Saisir le pays"
+                    className={fieldClass + " mt-2"}
+                    style={fieldStyle}
+                  />
+                )}
               </div>
               <div>
                 <label className={labelClass} style={{ color: T.textDim }}>Statut</label>
@@ -834,7 +906,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
           {/* ── DOCUMENTS ── */}
           <SectionCard id="sec-documents" title={`Documents${documents.length > 0 ? ` (${documents.length})` : ""}`}>
             <Hint>Factures, contrôle technique, carte grise, carnet… Protégés par mot de passe côté client. Nommez chaque document pour le lier à une intervention ci-dessous.</Hint>
-            <input ref={docInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleDocFiles(e.target.files)} />
+            <input ref={docInputRef} type="file" accept={DOC_ACCEPT} multiple className="hidden" onChange={(e) => handleDocFiles(e.target.files)} />
             <div
               role="button"
               tabIndex={0}
@@ -844,8 +916,8 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
               style={{ border: `1px dashed ${T.border}`, backgroundColor: T.float }}
             >
               <span style={{ color: T.accent, fontSize: "20px", lineHeight: 1 }}>📄</span>
-              <span className="text-sm" style={{ color: T.textDim }}>Ajouter des documents (scans ou photos)</span>
-              <span className="text-[11px]" style={{ color: T.muted }}>JPG, PNG, HEIC (15 Mo max)</span>
+              <span className="text-sm" style={{ color: T.textDim }}>Ajouter des documents (PDF, scans ou photos)</span>
+              <span className="text-[11px]" style={{ color: T.muted }}>PDF, JPG, PNG, HEIC, Word, Excel… (25 Mo max)</span>
             </div>
 
             {docUploading > 0 && (
@@ -860,8 +932,22 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
               <div className="space-y-2">
                 {documents.map((d, i) => (
                   <div key={d.url} className="flex items-center gap-3 p-2 border" style={{ borderColor: T.border }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={d.url} alt={d.label} className="w-14 h-14 object-cover flex-shrink-0" style={{ border: `1px solid ${T.border}` }} />
+                    {isImageDoc(d.url) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={d.url} alt={d.label} className="w-14 h-14 object-cover flex-shrink-0" style={{ border: `1px solid ${T.border}` }} />
+                    ) : (
+                      <a
+                        href={d.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Ouvrir le document"
+                        className="w-14 h-14 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ border: `1px solid ${T.border}`, backgroundColor: T.float, color: T.accent }}
+                      >
+                        <span style={{ fontSize: "16px", lineHeight: 1 }}>📄</span>
+                        {fileExt(d.url) || "fichier"}
+                      </a>
+                    )}
                     <input value={d.label} onChange={(e) => updateDocLabel(i, e.target.value)} placeholder="Nom du document" className={fieldClass + " flex-1"} style={fieldStyle} />
                     <button type="button" onClick={() => removeDoc(i)} title="Supprimer" className={iconBtnClass} style={{ borderColor: T.border, color: T.danger }}>✕</button>
                   </div>

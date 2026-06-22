@@ -282,12 +282,10 @@ export default function VehiculeModalV2({
               )}
 
               {/* Bloc prix */}
-              {!vehicle.isDemo && (
-                <div className="flex items-center justify-center gap-2 px-4 py-2" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderBottom: "none" }}>
-                  <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
-                  <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>{tm.warranty}</span>
-                </div>
-              )}
+              <div className="flex items-center justify-center gap-2 px-4 py-2" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderBottom: "none" }}>
+                <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
+                <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>{tm.warranty}</span>
+              </div>
               <div style={{ backgroundColor: "#070F1E", border: "1px solid #1B3055" }}>
                 <div className="font-black leading-none text-center py-5 px-4" style={{ fontSize: "clamp(1.8rem, 5vw, 2.4rem)", color: "#F0F5FF", letterSpacing: "-0.03em" }}>
                   {vehicle.price}
@@ -320,16 +318,14 @@ export default function VehiculeModalV2({
                   </div>
                 )}
               </div>
-              {!vehicle.isDemo && (
-                <div className="flex flex-col gap-1.5 px-4 py-2.5 mb-6" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderTop: "none" }}>
-                  {[tm.financing, tm.adminIncluded].map((g) => (
-                    <div key={g} className="flex items-center gap-2">
-                      <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
-                      <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>{g}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-col gap-1.5 px-4 py-2.5 mb-6" style={{ backgroundColor: "rgba(107,159,238,0.06)", border: "1px solid rgba(107,159,238,0.18)", borderTop: "none" }}>
+                {[tm.financing, tm.adminIncluded].map((g) => (
+                  <div key={g} className="flex items-center gap-2">
+                    <span style={{ color: "#6B9FEE", fontSize: "9px" }}>✓</span>
+                    <span className="text-[10px] tracking-wide" style={{ color: "#A8C4F0" }}>{g}</span>
+                  </div>
+                ))}
+              </div>
 
               <div className="mb-6" style={{ borderTop: "1px solid #1B3055" }} />
 
@@ -621,30 +617,28 @@ export default function VehiculeModalV2({
                 {tm.findSimilarCta}
               </Link>
             )}
-            {!vehicle.isDemo && (
-              <div className="flex gap-3 mt-3">
-                {vehicle.dossierUrl && (
-                  <a
-                    href={vehicle.dossierUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 flex items-center justify-center gap-1.5 transition-opacity hover:opacity-80"
-                    style={{ color: "#6B9FEE", border: "1px solid rgba(107,159,238,0.25)" }}
-                    onClick={onClose}
-                  >
-                    <span>↓</span> {tm.dossier}
-                  </a>
-                )}
-                <Link
-                  href={`/vehicules/${vehicle.id}`}
-                  className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 transition-opacity hover:opacity-80"
-                  style={{ border: "1px solid #1B3055", color: "#C8D8EE" }}
+            <div className="flex gap-3 mt-3">
+              {vehicle.dossierUrl && (
+                <a
+                  href={vehicle.dossierUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 flex items-center justify-center gap-1.5 transition-opacity hover:opacity-80"
+                  style={{ color: "#6B9FEE", border: "1px solid rgba(107,159,238,0.25)" }}
                   onClick={onClose}
                 >
-                  {tm.fullSheet}
-                </Link>
-              </div>
-            )}
+                  <span>↓</span> {tm.dossier}
+                </a>
+              )}
+              <Link
+                href={`/vehicules/${vehicle.id}`}
+                className="flex-1 text-center text-xs font-semibold tracking-wide uppercase py-3 transition-opacity hover:opacity-80"
+                style={{ border: "1px solid #1B3055", color: "#C8D8EE" }}
+                onClick={onClose}
+              >
+                {tm.fullSheet}
+              </Link>
+            </div>
           </div>
 
         </div>
