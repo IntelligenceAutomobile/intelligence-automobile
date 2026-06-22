@@ -136,7 +136,7 @@ export default function Header() {
 
           {/* Burger mobile */}
           <button
-            className="md:hidden flex flex-col justify-center gap-[5px] p-2 -mr-2"
+            className="md:hidden ml-auto flex flex-col justify-center gap-[5px] p-2 -mr-2"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
           >

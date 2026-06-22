@@ -18,9 +18,41 @@ export default async function RecherchePage2() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* ── HERO 100vh ── */}
+        {/* ── HERO mobile : bande photo + titre dessous ── */}
+        <section className="md:hidden" style={{ position: "relative", backgroundColor: "#070F1E" }}>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 2", overflow: "hidden" }}>
+            <img
+              src="/Photo du Site/Photo IA/Recherche personnalisé.png"
+              alt=""
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "55%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
+          </div>
+          <div style={{ padding: "0.25rem 6vw 2.5rem" }}>
+            <h1 style={{ fontSize: "clamp(2.4rem, 11vw, 3.4rem)", fontWeight: 900, lineHeight: 0.95, letterSpacing: "-0.03em", marginBottom: "1.25rem", color: "#F0F5FF" }}>
+              {s.heroTitle[0]}
+              <br />
+              {s.heroTitle[1]} <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
+            </h1>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+              <p style={{ color: "rgba(168,196,240,0.68)", fontSize: "0.85rem", lineHeight: 1.8, fontWeight: 400, fontStyle: "italic", letterSpacing: "0.01em" }}>
+                {s.heroSubtitle}
+              </p>
+            </div>
+            <a
+              href="#formulaire"
+              style={{ display: "inline-block", backgroundColor: "#F0F5FF", color: "#070F1E", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", padding: "16px 36px", borderRadius: 0, textDecoration: "none" }}
+            >
+              {s.heroCta}
+            </a>
+          </div>
+        </section>
+
+        {/* ── HERO 100vh (desktop, inchangé) ── */}
         <section
-          className="relative overflow-hidden"
+          className="relative overflow-hidden hidden md:block"
           style={{ height: "100vh", minHeight: "600px" }}
         >
           <img

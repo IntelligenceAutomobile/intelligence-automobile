@@ -21,7 +21,7 @@ const sectionCardStyle = {
 
 function SectionHeader({ num, label }: { num: string; label: string }) {
   return (
-    <div className="flex items-center gap-5 mb-10">
+    <div className="flex items-center gap-3 sm:gap-5 mb-10">
       <span
         className="font-black tabular-nums flex-shrink-0 leading-none flex items-center justify-center"
         style={{
@@ -38,7 +38,7 @@ function SectionHeader({ num, label }: { num: string; label: string }) {
         {num}
       </span>
       <p
-        className="text-sm tracking-[0.5em] uppercase font-bold flex-shrink-0"
+        className="text-[11px] sm:text-sm tracking-[0.15em] sm:tracking-[0.5em] uppercase font-bold min-w-0"
         style={{ color: "#F0F5FF" }}
       >
         {label}

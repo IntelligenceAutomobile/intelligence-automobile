@@ -105,6 +105,22 @@ function prettyLabelFromFilename(name: string) {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
+// Identifiant robuste. crypto.randomUUID() n'existe qu'en contexte sécurisé
+// (HTTPS / localhost) ; en test mobile via IP LAN (http://192.168.x.x) il est
+// absent et lèverait une exception qui casserait l'hydratation du formulaire et
+// les uploads. Ces ID ne servent que de clés React et de préfixes de fichiers,
+// donc un repli simple suffit.
+function safeId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    /* contexte non sécurisé : repli ci-dessous */
+  }
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 // ── Formats des pièces jointes ──
 const DOC_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "tiff", "tif", "bmp", "avif"];
 // Accepté à l'upload : images + PDF + bureautique (cohérent avec /api/upload).
@@ -180,10 +196,10 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
   const [newCondition, setNewCondition] = useState("");
 
   const [maintenance, setMaintenance] = useState<MaintRow[]>(() =>
-    (data?.maintenanceHistory ?? []).map((m) => ({ ...m, _key: crypto.randomUUID() }))
+    (data?.maintenanceHistory ?? []).map((m) => ({ ...m, _key: safeId() }))
   );
   const [highlights, setHighlights] = useState<HighlightRow[]>(() =>
-    (data?.maintenanceHighlights ?? []).map((h) => ({ ...h, _key: crypto.randomUUID() }))
+    (data?.maintenanceHighlights ?? []).map((h) => ({ ...h, _key: safeId() }))
   );
 
   const [images, setImages] = useState<string[]>(data?.images ?? []);
@@ -370,8 +386,8 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
     setConditionFacts((d.conditionFacts as string[]) ?? []);
     setImages((d.images as string[]) ?? []);
     setDocuments((d.documents as DocItem[]) ?? []);
-    setMaintenance(((d.maintenance as MaintEntry[]) ?? []).map((m) => ({ ...m, _key: crypto.randomUUID() })));
-    setHighlights(((d.highlights as Highlight[]) ?? []).map((h) => ({ ...h, _key: crypto.randomUUID() })));
+    setMaintenance(((d.maintenance as MaintEntry[]) ?? []).map((m) => ({ ...m, _key: safeId() })));
+    setHighlights(((d.highlights as Highlight[]) ?? []).map((h) => ({ ...h, _key: safeId() })));
     const f = formRef.current;
     if (f) {
       const set = (n: string, v: unknown) => {
@@ -474,13 +490,13 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
     await Promise.all(
       list.map(async (file) => {
         try {
-          const blob = await upload(`vehicules/${crypto.randomUUID()}-${file.name}`, file, {
+          const blob = await upload(`vehicules/${safeId()}-${file.name}`, file, {
             access: "public",
             handleUploadUrl: "/api/upload",
           });
           setImages((prev) => [...prev, blob.url]);
-        } catch {
-          setUploadError("Une ou plusieurs photos n'ont pas pu être envoyées. Réessayez.");
+        } catch (e) {
+          setUploadError(`Envoi impossible${e instanceof Error ? ` : ${e.message}` : ""}. Réessayez.`);
         } finally {
           setUploading((n) => n - 1);
         }
@@ -514,13 +530,13 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
     await Promise.all(
       list.map(async (file) => {
         try {
-          const blob = await upload(`documents/${crypto.randomUUID()}-${file.name}`, file, {
+          const blob = await upload(`documents/${safeId()}-${file.name}`, file, {
             access: "public",
             handleUploadUrl: "/api/upload",
           });
           setDocuments((prev) => [...prev, { url: blob.url, label: prettyLabelFromFilename(file.name) }]);
-        } catch {
-          setDocUploadError("Un ou plusieurs documents n'ont pas pu être envoyés. Réessayez.");
+        } catch (e) {
+          setDocUploadError(`Envoi impossible${e instanceof Error ? ` : ${e.message}` : ""}. Réessayez.`);
         } finally {
           setDocUploading((n) => n - 1);
         }
@@ -552,7 +568,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
 
   // ── Entretien ──
   function addMaintenance() {
-    setMaintenance((prev) => [...prev, { date: "", km: "", operation: "", amount: "", linkedDoc: "", _key: crypto.randomUUID() }]);
+    setMaintenance((prev) => [...prev, { date: "", km: "", operation: "", amount: "", linkedDoc: "", _key: safeId() }]);
   }
   function updateMaintenance(index: number, field: keyof MaintEntry, value: string) {
     setMaintenance((prev) => prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)));
@@ -574,7 +590,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
   function addHighlight(preset?: Highlight) {
     setHighlights((prev) => [
       ...prev,
-      preset ? { ...preset, _key: crypto.randomUUID() } : { icon: "✓", label: "", text: "", _key: crypto.randomUUID() },
+      preset ? { ...preset, _key: safeId() } : { icon: "✓", label: "", text: "", _key: safeId() },
     ]);
   }
   function updateHighlight(index: number, field: keyof Highlight, value: string) {
