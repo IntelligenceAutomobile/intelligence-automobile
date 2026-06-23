@@ -36,9 +36,9 @@ export const fr = {
     heroCta: "Voir les véhicules",
     scrollIndicator: "Défiler",
     stats: [
-      { val: "+2 000", label: "Annonces analysées par mois sur les marchés européens" },
-      { val: "20–30%", label: "D'économie constatée vs. le marché français" },
-      { val: "100%", label: "Transparence — tous les coûts détaillés avant tout engagement" },
+      { val: "+2 000", label: "annonces analysées chaque mois par notre système de veille automatisé sur les marchés européens" },
+      { val: "15–30 %", label: "d'écart documenté par rapport au marché français sur le segment premium importé" },
+      { val: "100%", label: "transparent pas de frais cachés, chaque coût détaillé avant tout engagement" },
     ],
     service01Title: ["Recherche", "personnalisée"],
     service01Desc: "Vous décrivez. On trouve. Au meilleur prix européen.",

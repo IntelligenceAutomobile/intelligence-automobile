@@ -38,9 +38,9 @@ export const en: Translations = {
     heroCta: "Browse vehicles",
     scrollIndicator: "Scroll",
     stats: [
-      { val: "+2,000", label: "Listings analysed every month across European markets" },
-      { val: "20–30%", label: "Savings observed versus the French market" },
-      { val: "100%", label: "Transparency — all costs detailed before any commitment" },
+      { val: "+2,000", label: "listings analysed every month by our automated market-watch system across European markets" },
+      { val: "15–30%", label: "documented gap versus the French market on the imported premium segment" },
+      { val: "100%", label: "transparent — no hidden fees, every cost detailed before any commitment" },
     ],
     service01Title: ["Custom", "Search"],
     service01Desc: "You describe. We find. At the best European price.",
