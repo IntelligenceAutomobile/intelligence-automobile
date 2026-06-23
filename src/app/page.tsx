@@ -136,9 +136,9 @@ export default async function HomePage() {
 
         {/* SERVICE 01 — Recherche */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/recherche-2" className="flex flex-col lg:flex-row" style={{ minHeight: "70vh", textDecoration: "none", cursor: "pointer" }}>
-            <div className="w-full lg:w-[58%]" style={{ position: "relative", minHeight: "380px", overflow: "hidden" }}>
-              <img className="ia-service-img" src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+          <Link href="/recherche-2" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+            <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Recherche personnalisé.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
@@ -158,7 +158,7 @@ export default async function HomePage() {
 
         {/* SERVICE 02 — Revente */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/aide-vente-2" className="flex flex-col-reverse lg:flex-row" style={{ minHeight: "70vh", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/aide-vente-2" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: "-1.5rem", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.07)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>02</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
@@ -170,8 +170,8 @@ export default async function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="w-full lg:w-[58%]" style={{ position: "relative", minHeight: "380px", overflow: "hidden" }}>
-              <img className="ia-service-img" src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1200&q=85" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+            <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Revente sur mesure 4.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
@@ -180,9 +180,9 @@ export default async function HomePage() {
 
         {/* SERVICE 03 — Transport */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/convoyage-2" className="flex flex-col lg:flex-row" style={{ minHeight: "70vh", textDecoration: "none", cursor: "pointer" }}>
-            <div className="w-full lg:w-[58%]" style={{ position: "relative", minHeight: "380px", overflow: "hidden" }}>
-              <img className="ia-service-img" src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+          <Link href="/convoyage-2" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+            <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>

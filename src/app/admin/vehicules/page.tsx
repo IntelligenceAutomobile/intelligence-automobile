@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { AdminPage, PageHeader, firstImage, btnPrimaryClass, btnPrimaryStyle } from "../ui";
+import { AdminPage, PageHeader, firstImage, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../ui";
 import StockList, { type StockItem } from "./StockList";
 
 const VALID_FILTERS = ["disponible", "reserve", "vendu"];
@@ -42,9 +42,14 @@ export default async function AdminVehiculesList({
         title="Gestion du stock"
         subtitle="Toutes vos annonces, publiées ou masquées."
         action={
-          <Link href="/admin/vehicules/nouveau" className={btnPrimaryClass} style={btnPrimaryStyle}>
-            + Ajouter
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/admin/vehicules/modale-apercu" className={btnGhostClass} style={btnGhostStyle}>
+              Aperçu ancienne modale
+            </Link>
+            <Link href="/admin/vehicules/nouveau" className={btnPrimaryClass} style={btnPrimaryStyle}>
+              + Ajouter
+            </Link>
+          </div>
         }
       />
       <StockList vehicles={items} initialFilter={initialFilter} />
