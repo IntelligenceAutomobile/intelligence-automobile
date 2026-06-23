@@ -225,7 +225,7 @@ export default function VehiculeDetailView({
                   >
                     {td.presentationSection}
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
@@ -291,7 +291,7 @@ export default function VehiculeDetailView({
                   >
                     {tm.highlights}
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
@@ -343,7 +343,7 @@ export default function VehiculeDetailView({
                   >
                     {tm.equipmentTitle}
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
@@ -378,7 +378,7 @@ export default function VehiculeDetailView({
                   >
                     Entretien &amp; Documents
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
