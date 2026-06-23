@@ -107,7 +107,7 @@ function VehicleCard({
 
   return (
     <div
-      className="group block w-full text-left"
+      className="group block w-full text-left @container"
       style={{ backgroundColor: "#070F1E" }}
     >
       {/* ── IMAGE ── */}
@@ -187,13 +187,14 @@ function VehicleCard({
       </div>
 
       {/* ── BARRE UNIFIÉE : MARQUE · STATUT · CARACTÉRISTIQUES · PRIX ── */}
+      {/* Carte étroite (<29rem) : [marque+badge ··· prix] ligne 1, "Caractéristiques" ligne 2. Carte large : tout sur une seule ligne (inchangé). */}
       <button
         type="button"
         onClick={toggleInfo}
-        className="w-full flex items-center justify-between px-5 py-3 gap-3 transition-opacity duration-200 hover:opacity-80"
+        className="w-full flex flex-wrap @[29rem]:flex-nowrap items-center @[29rem]:justify-between gap-x-3 gap-y-2 px-5 py-3 transition-opacity duration-200 hover:opacity-80"
         style={{ borderTop: "1px solid #1B3055", borderBottom: "1px solid #1B3055", backgroundColor: "#070F1E" }}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 order-1">
           <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
           <span
             className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
@@ -206,7 +207,8 @@ function VehicleCard({
             {isSold ? tv.soldBadge : tv.availableBadge}
           </span>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <span className="font-black text-base flex-shrink-0 ml-auto @[29rem]:ml-0 order-2 @[29rem]:order-3" style={{ color: "#F0F5FF" }}>{price}</span>
+        <div className="flex items-center justify-between gap-2 w-full @[29rem]:w-auto order-3 @[29rem]:order-2 pt-2.5 @[29rem]:pt-0 border-t @[29rem]:border-t-0" style={{ borderColor: "#13243B" }}>
           <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
             {tv.specs}
           </span>
@@ -218,7 +220,6 @@ function VehicleCard({
             <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <span className="font-black text-base flex-shrink-0" style={{ color: "#F0F5FF" }}>{price}</span>
       </button>
 
       {/* ── GRILLE DÉROULANTE ── */}
@@ -304,6 +305,7 @@ export default function VehiculesList({
   const { t } = useLocale();
   const tv = t.vehicles;
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -329,6 +331,7 @@ export default function VehiculesList({
     filters.make || filters.model || filters.fuel || filters.transmission ||
     filters.maxPrice || filters.maxMileage || filters.minYear;
   const hasMoreFiltersActive = filters.fuel || filters.transmission || filters.maxMileage || filters.minYear;
+  const activeFilterCount = [filters.make, filters.model, filters.fuel, filters.transmission, filters.maxPrice, filters.maxMileage, filters.minYear].filter(Boolean).length;
 
   const dbMakesSet = new Set(makes);
   const extraMakes = SPORT_MAKES.filter((m) => !dbMakesSet.has(m)).sort((a, b) => a.localeCompare(b));
@@ -340,9 +343,9 @@ export default function VehiculesList({
   return (
     <section style={{ backgroundColor: "#070F1E" }}>
 
-      {/* ── FILTRES ── */}
+      {/* ── FILTRES DESKTOP (barre inline, inchangée) ── */}
       <div
-        className="border-b sticky top-[64px] z-20 backdrop-blur-sm"
+        className="hidden lg:block border-b sticky top-[64px] z-20 backdrop-blur-sm"
         style={{ backgroundColor: "rgba(7,15,30,0.95)", borderColor: "#1B3055" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -514,6 +517,153 @@ export default function VehiculesList({
                 ))}
               </select>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── FILTRES MOBILE (lg:hidden) : pastilles statut + bouton « Filtres » → bottom sheet ── */}
+      <div className="lg:hidden border-b sticky top-[64px] z-20 backdrop-blur-sm" style={{ backgroundColor: "rgba(7,15,30,0.95)", borderColor: "#1B3055" }}>
+        <div className="flex items-center gap-2 px-5 py-3">
+          <div className="flex gap-1.5 flex-1 min-w-0">
+            {[
+              { key: "disponible", label: tv.available },
+              { key: "vendu", label: tv.sold },
+              { key: "tous", label: tv.all },
+            ].map((s) => (
+              <button
+                key={s.key}
+                onClick={() => updateFilter("status", s.key === "tous" ? "" : s.key)}
+                className="flex-1 text-[10px] tracking-[0.08em] uppercase px-1 py-2.5 transition-all duration-200"
+                style={{
+                  background: currentStatus === s.key ? "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)" : "rgba(107,159,238,0.04)",
+                  color: currentStatus === s.key ? "#070F1E" : "#C8D8EE",
+                  border: `1px solid ${currentStatus === s.key ? "transparent" : "rgba(107,159,238,0.2)"}`,
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setFiltersOpen(true)}
+            className="flex items-center gap-1.5 flex-shrink-0 text-[10px] tracking-[0.15em] uppercase font-semibold px-3 py-2.5"
+            style={{ color: "#F0F5FF", border: "1px solid rgba(107,159,238,0.35)", backgroundColor: "rgba(107,159,238,0.08)" }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 3.5h12M4.5 8h7M7 12.5h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+            {tv.filters}
+            {activeFilterCount > 0 && (
+              <span className="text-[9px] leading-none px-1.5 py-1" style={{ backgroundColor: "#6B9FEE", color: "#070F1E", borderRadius: "10px" }}>{activeFilterCount}</span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── BOTTOM SHEET FILTRES (lg:hidden) ── */}
+      <div className={`lg:hidden fixed inset-0 z-50 ${filtersOpen ? "" : "pointer-events-none"}`}>
+        <div
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{ backgroundColor: "rgba(4,11,22,0.72)", opacity: filtersOpen ? 1 : 0 }}
+          onClick={() => setFiltersOpen(false)}
+        />
+        <div
+          className="absolute bottom-0 left-0 right-0 flex flex-col transition-transform duration-300"
+          style={{
+            maxHeight: "86vh",
+            transform: filtersOpen ? "translateY(0)" : "translateY(100%)",
+            backgroundColor: "#0A1628",
+            borderTop: "1px solid #1B3055",
+            borderTopLeftRadius: "18px",
+            borderTopRightRadius: "18px",
+          }}
+        >
+          {/* En-tête */}
+          <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #14243d" }}>
+            <span className="text-[12px] tracking-[0.25em] uppercase font-bold" style={{ color: "#F0F5FF" }}>{tv.filters}</span>
+            <button onClick={() => setFiltersOpen(false)} aria-label="Fermer" className="p-1 -mr-1" style={{ color: "#6B9FEE" }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+            </button>
+          </div>
+
+          {/* Champs (scrollable) */}
+          <div className="overflow-y-auto px-6 py-5 flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.allMakes}</span>
+              <select value={filters.make ?? ""} onChange={(e) => updateFilter("make", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.make ? "#F0F5FF" : "#C8D8EE" }}>
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allMakes}</option>
+                {makes.length > 0 && (
+                  <optgroup label={tv.inStock} style={{ backgroundColor: "#070F1E" }}>
+                    {makes.map((m) => <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>)}
+                  </optgroup>
+                )}
+                {extraMakes.length > 0 && (
+                  <optgroup label={tv.otherMakes} style={{ backgroundColor: "#070F1E" }}>
+                    {extraMakes.map((m) => <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>)}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+
+            {filters.make && availableModels.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.allModels}</span>
+                <select value={filters.model ?? ""} onChange={(e) => updateFilter("model", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.model ? "#F0F5FF" : "#C8D8EE" }}>
+                  <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allModels} {filters.make}</option>
+                  {availableModels.map((m) => <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>)}
+                </select>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.maxBudget}</span>
+              <select value={filters.maxPrice ?? ""} onChange={(e) => updateFilter("maxPrice", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.maxPrice ? "#F0F5FF" : "#C8D8EE" }}>
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.maxBudget}</option>
+                {[15000, 20000, 30000, 40000, 50000, 60000, 70000, 80000].map((p) => <option key={p} value={p} style={{ backgroundColor: "#070F1E" }}>{p.toLocaleString("fr-FR")} €</option>)}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.fuelFilter}</span>
+              <select value={filters.fuel ?? ""} onChange={(e) => updateFilter("fuel", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.fuel ? "#F0F5FF" : "#C8D8EE" }}>
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.fuelFilter}</option>
+                {fuelOpts.map((o) => <option key={o.value} value={o.value} style={{ backgroundColor: "#070F1E" }}>{o.label}</option>)}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.transmissionFilter}</span>
+              <select value={filters.transmission ?? ""} onChange={(e) => updateFilter("transmission", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.transmission ? "#F0F5FF" : "#C8D8EE" }}>
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.transmissionFilter}</option>
+                {transOpts.map((o) => <option key={o.value} value={o.value} style={{ backgroundColor: "#070F1E" }}>{o.label}</option>)}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.maxMileage}</span>
+              <select value={filters.maxMileage ?? ""} onChange={(e) => updateFilter("maxMileage", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.maxMileage ? "#F0F5FF" : "#C8D8EE" }}>
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.maxMileage}</option>
+                {[50000, 100000, 150000, 200000, 250000].map((k) => <option key={k} value={k} style={{ backgroundColor: "#070F1E" }}>{k.toLocaleString("fr-FR")} km</option>)}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.minYear}</span>
+              <select value={filters.minYear ?? ""} onChange={(e) => updateFilter("minYear", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.minYear ? "#F0F5FF" : "#C8D8EE" }}>
+                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.minYear}</option>
+                {[2024, 2022, 2020, 2018, 2015, 2010, 2005, 2000].map((y) => <option key={y} value={y} style={{ backgroundColor: "#070F1E" }}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Pied : réinitialiser + appliquer */}
+          <div className="flex items-center gap-3 px-6 py-4" style={{ borderTop: "1px solid #14243d" }}>
+            {hasActiveFilters && (
+              <Link href="/vehicules-2" onClick={() => setFiltersOpen(false)} className="text-[11px] tracking-[0.2em] uppercase flex-shrink-0 px-2 py-3" style={{ color: "#6B9FEE" }}>
+                {tv.clearFilters}
+              </Link>
+            )}
+            <button onClick={() => setFiltersOpen(false)} className="flex-1 text-[11px] tracking-[0.2em] uppercase font-bold py-4 transition-opacity hover:opacity-90" style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}>
+              {tv.applyFilters}
+            </button>
           </div>
         </div>
       </div>
