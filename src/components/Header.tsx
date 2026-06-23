@@ -60,13 +60,14 @@ export default function Header() {
   const [isAdmin, setIsAdmin]   = useState(false);
 
   const NAV_LINKS_V2 = [
-    { href: "/",             label: t.nav.home },
-    { href: "/vehicules-2",  label: t.nav.vehicles },
-    { href: "/recherche-2",  label: t.nav.search },
-    { href: "/aide-vente-2", label: t.nav.resale },
-    { href: "/convoyage-2",  label: t.nav.transport },
-    { href: "/methode-2",    label: t.nav.method },
-    { href: "/contact-2",    label: t.nav.contact },
+    { href: "/",           label: t.nav.home },
+    { href: "/vehicules",  label: t.nav.vehicles },
+    { href: "/recherche",  label: t.nav.search },
+    { href: "/aide-vente", label: t.nav.resale },
+    { href: "/convoyage",  label: t.nav.transport },
+    { href: "/methode",    label: t.nav.method },
+    { href: "/services",   label: t.nav.services },
+    { href: "/contact",    label: t.nav.contact },
   ];
 
   useEffect(() => {
@@ -115,7 +116,7 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-5 flex-shrink-0">
             <LanguageSwitcher />
             <Link
-              href="/contact-2"
+              href="/contact"
               className="inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] uppercase px-5 py-2.5 transition-all duration-250"
               style={{
                 color: "#A8C4F0",
@@ -150,7 +151,7 @@ export default function Header() {
       {/* Séparateur */}
       <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.07)", transition: "opacity 0.4s ease" }} />
 
-      {/* ── Navigation V2 ── */}
+      {/* ── Navigation ── */}
       <div
         className="hidden lg:block"
         style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
@@ -204,7 +205,7 @@ export default function Header() {
       <div
         className="lg:hidden overflow-hidden"
         style={{
-          maxHeight: menuOpen ? "480px" : "0",
+          maxHeight: menuOpen ? "680px" : "0",
           transition: "max-height 0.35s ease",
           backgroundColor: "#040B16",
         }}
@@ -247,7 +248,7 @@ export default function Header() {
           </div>
           <div className="pt-4">
             <Link
-              href="/contact-2"
+              href="/contact"
               onClick={() => setMenuOpen(false)}
               className="flex items-center justify-center text-[11px] font-bold tracking-[0.22em] uppercase py-4 transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}

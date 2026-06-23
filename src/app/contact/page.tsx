@@ -1,21 +1,21 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ContactForm from "./ContactForm";
+import ContactForm from "@/app/contact/ContactForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Contact — Intelligence Automobile",
-  description:
-    "Contactez Intelligence Automobile pour votre projet d'achat, d'import ou de vente de véhicule premium.",
 };
 
-export default async function ContactPage({
+export default async function ContactV2Page({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  const params = await searchParams;
+  const [params, { t }] = await Promise.all([searchParams, getTranslations()]);
   const vehicule = params.vehicule;
   const service = params.service;
+  const s = t.contact;
 
   return (
     <>
@@ -24,160 +24,226 @@ export default async function ContactPage({
 
         {/* ── HERO ── */}
         <section
-          className="border-b"
-          style={{ borderColor: "#1B3055", paddingTop: "80px", backgroundColor: "#070F1E" }}
+          style={{
+            position: "relative",
+            height: "80vh",
+            minHeight: "520px",
+            overflow: "hidden",
+          }}
         >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 lg:py-28">
-            <p
-              className="text-xs tracking-[0.35em] uppercase mb-6"
-              style={{ color: "#6B9FEE" }}
-            >
-              Parlons de votre projet
-            </p>
+          <img
+            src="/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg"
+            alt=""
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              opacity: 0.80,
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(120deg, rgba(7,15,30,0.9) 0%, rgba(7,15,30,0.3) 55%, transparent 100%)",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "40%",
+              background: "linear-gradient(to top, #070F1E, transparent)",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: "8vh",
+              left: "6vw",
+              right: "6vw",
+              maxWidth: "660px",
+            }}
+          >
             <h1
-              className="font-black uppercase leading-[0.9] mb-8"
               style={{
                 fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
-                letterSpacing: "-0.025em",
+                fontWeight: 900,
+                lineHeight: 0.88,
+                letterSpacing: "-0.03em",
+                textTransform: "uppercase",
+                marginBottom: "1.8rem",
               }}
             >
-              Écrivez-
+              {s.heroTitle[0]}
               <br />
-              <span style={{ color: "#6B9FEE" }}>nous.</span>
+              <span style={{ color: "#6B9FEE" }}>{s.heroTitle[1]}</span>
             </h1>
-            <p
-              className="text-base leading-relaxed max-w-lg"
-              style={{ color: "#C8D8EE", fontWeight: 400 }}
-            >
-              Décrivez-nous votre projet en quelques mots. Nous vous répondons
-              sous 24h et vous orientons vers la solution la plus adaptée à votre
-              situation.
-            </p>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+              <p
+                style={{
+                  color: "rgba(168,196,240,0.68)",
+                  fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                  lineHeight: 1.8,
+                  fontWeight: 300,
+                  maxWidth: "440px",
+                  fontStyle: "italic",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {s.heroSubtitle}
+              </p>
+            </div>
           </div>
         </section>
 
         {/* ── CONTENU PRINCIPAL ── */}
         <section
-          className="border-b"
-          style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
+          style={{
+            backgroundColor: "#070F1E",
+            borderTop: "1px solid #1B3055",
+          }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-0">
 
-              {/* ── FORMULAIRE ── */}
+              {/* ── COLONNE GAUCHE : Formulaire ── */}
               <div
-                className="py-16 lg:py-24 lg:pr-16"
-                style={{ borderRight: "1px solid #1B3055" }}
+                style={{
+                  borderRight: "1px solid #1B3055",
+                  padding: "6vh 4vw 6vh 0",
+                }}
               >
                 <p
-                  className="text-xs tracking-[0.35em] uppercase mb-10"
-                  style={{ color: "#6B9FEE" }}
+                  style={{
+                    fontSize: "10px",
+                    letterSpacing: "0.35em",
+                    textTransform: "uppercase",
+                    color: "#6B9FEE",
+                    marginBottom: "2.5rem",
+                  }}
                 >
-                  Envoyer un message
+                  {s.sendMessage}
                 </p>
                 <ContactForm defaultVehicule={vehicule} defaultService={service} />
               </div>
 
-              {/* ── SIDEBAR INFOS ── */}
-              <div className="py-16 lg:py-24 lg:pl-12">
+              {/* ── COLONNE DROITE : Infos ── */}
+              <div style={{ padding: "6vh 0 6vh 3vw" }}>
 
                 {/* Coordonnées */}
-                <p
-                  className="text-xs tracking-[0.35em] uppercase mb-8"
-                  style={{ color: "#6B9FEE" }}
-                >
-                  Nos coordonnées
-                </p>
-
-                <div className="space-y-0 mb-12">
-                  {[
-                    {
-                      label: "Email",
-                      value: "contact@intelligenceautomobile.com",
-                    },
-                    {
-                      label: "Téléphone",
-                      value: "+33 (0)6 00 00 00 00",
-                    },
-                    {
-                      label: "Zone d'activité",
-                      value: "France · Import DE & BE",
-                    },
-                    {
-                      label: "Réponse",
-                      value: "Sous 24h ouvrées",
-                    },
-                  ].map((item, i) => (
+                <div style={{ marginBottom: "2rem" }}>
+                  {s.info.map((item, i) => (
                     <div
                       key={item.label}
-                      className="py-5"
-                      style={{ borderTop: i === 0 ? "1px solid #1B3055" : "1px solid #1B3055" }}
+                      style={{
+                        padding: "1.25rem 0",
+                        borderTop: "1px solid #1B3055",
+                        ...(i === s.info.length - 1 ? { borderBottom: "1px solid #1B3055" } : {}),
+                      }}
                     >
                       <span
-                        className="block text-xs tracking-widest uppercase mb-1"
-                        style={{ color: "#6B9FEE" }}
+                        style={{
+                          display: "block",
+                          fontSize: "10px",
+                          letterSpacing: "0.35em",
+                          textTransform: "uppercase",
+                          color: "#6B9FEE",
+                          marginBottom: "0.3rem",
+                        }}
                       >
                         {item.label}
                       </span>
-                      <span className="text-sm" style={{ color: "#F0F5FF" }}>
+                      <span style={{ fontSize: "0.875rem", color: "#F0F5FF" }}>
                         {item.value}
                       </span>
                     </div>
                   ))}
-                  <div style={{ borderTop: "1px solid #1B3055" }} />
                 </div>
 
-                {/* Note rassurante */}
+                {/* Encadré Première prise de contact */}
                 <div
-                  className="p-6"
                   style={{
                     backgroundColor: "#040B16",
                     borderLeft: "2px solid #6B9FEE",
+                    padding: "24px",
+                    marginTop: "2rem",
                   }}
                 >
                   <h3
-                    className="font-black uppercase mb-3"
-                    style={{ fontSize: "0.75rem", letterSpacing: "0.06em", color: "#F0F5FF" }}
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 900,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: "#F0F5FF",
+                      marginBottom: "0.75rem",
+                    }}
                   >
-                    Première prise de contact
+                    {s.firstContactTitle}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
-                    Pas besoin de préparer un dossier complet. Un message suffit :
-                    dites-nous ce que vous cherchez — acheter, importer ou vendre —
-                    et nous prendrons le temps de vous orienter.
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      lineHeight: 1.65,
+                      color: "#C8D8EE",
+                    }}
+                  >
+                    {s.firstContactText}
                   </p>
                 </div>
 
                 {/* Services rapides */}
-                <div className="mt-10">
+                <div style={{ marginTop: "2.5rem" }}>
                   <p
-                    className="text-xs tracking-[0.35em] uppercase mb-6"
-                    style={{ color: "#6B9FEE" }}
+                    style={{
+                      fontSize: "10px",
+                      letterSpacing: "0.35em",
+                      textTransform: "uppercase",
+                      color: "#6B9FEE",
+                      marginBottom: "1.5rem",
+                    }}
                   >
-                    Nos services
+                    {s.servicesLabel}
                   </p>
-                  <div className="space-y-0">
-                    {[
-                      { label: "Achat · Revente", href: "/services#achat-revente" },
-                      { label: "Mandat d'import", href: "/services#mandat-import" },
-                      { label: "Aide à la vente", href: "/services#aide-vente" },
-                    ].map((s, i) => (
+                  <div>
+                    {s.services.map((sv) => (
                       <a
-                        key={s.label}
-                        href={s.href}
-                        className="flex items-center justify-between py-4 group transition-colors duration-200"
-                        style={{ borderTop: i === 0 ? "1px solid #1B3055" : "1px solid #1B3055" }}
+                        key={sv.label}
+                        href={sv.href}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "1rem 0",
+                          borderTop: "1px solid #1B3055",
+                          textDecoration: "none",
+                          transition: "color 0.2s",
+                        }}
                       >
                         <span
-                          className="text-sm font-semibold uppercase tracking-wider"
-                          style={{ color: "#C8D8EE" }}
+                          style={{
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                            color: "#C8D8EE",
+                          }}
                         >
-                          {s.label}
+                          {sv.label}
                         </span>
-                        <span
-                          className="text-xs transition-transform duration-300 group-hover:translate-x-1"
-                          style={{ color: "#6B9FEE" }}
-                        >
+                        <span style={{ fontSize: "0.75rem", color: "#6B9FEE" }}>
                           →
                         </span>
                       </a>

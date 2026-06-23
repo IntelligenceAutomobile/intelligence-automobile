@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import RechercheForm from "./RechercheForm";
+import RechercheForm from "@/app/recherche/RechercheForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Recherche Personnalisée — Intelligence Automobile",
@@ -8,206 +9,342 @@ export const metadata = {
     "Décrivez le véhicule que vous recherchez. Nous activons notre réseau européen et vous soumettons une sélection validée sous 5 à 15 jours.",
 };
 
-const steps = [
-  {
-    num: "01",
-    title: "Vous définissez",
-    desc: "Marque, modèle, motorisation, budget, kilométrage, options. Le plus précis vous êtes, le mieux nous ciblons.",
-  },
-  {
-    num: "02",
-    title: "Nous cherchons",
-    desc: "+2 000 annonces analysées chaque mois sur les marchés allemand et belge. Nous filtrons, vérifions, comparons.",
-  },
-  {
-    num: "03",
-    title: "Vous validez",
-    desc: "Sous 5 à 15 jours, vous recevez une sélection commentée avec photos, historique et rapport de prix. Aucun engagement avant votre accord.",
-  },
-  {
-    num: "04",
-    title: "Nous livrons",
-    desc: "Achat, contrôle technique, homologation, immatriculation française. Remise des clés en France.",
-  },
-];
+export default async function RecherchePage2() {
+  const { t } = await getTranslations();
+  const s = t.search;
 
-const garanties = [
-  { icon: "◈", text: "Résultats sous 5 à 15 jours ouvrés" },
-  { icon: "◈", text: "Zéro frais avant votre validation" },
-  { icon: "◈", text: "Rapport d'inspection complet fourni" },
-  { icon: "◈", text: "Démarches administratives incluses" },
-  { icon: "◈", text: "Marchés Allemagne & Belgique couverts" },
-  { icon: "◈", text: "Commission fixe, transparente, annoncée" },
-];
-
-export default function RecherchePage() {
   return (
     <>
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* ── HERO ── */}
-        <section
-          className="relative overflow-hidden"
-          style={{ backgroundColor: "#070F1E", paddingTop: "200px", paddingBottom: "100px" }}
-        >
-          {/* Image fond */}
-          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[58%]">
+        {/* ── HERO mobile : bande photo + titre dessous ── */}
+        <section className="md:hidden" style={{ position: "relative", backgroundColor: "#070F1E" }}>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 2", overflow: "hidden" }}>
             <img
-              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=85"
+              src="/Photo du Site/Photo IA/Recherche personnalisé.png"
               alt=""
-              className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.80 }}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
             />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to right, #070F1E 25%, rgba(7,15,30,0.6) 55%, transparent 80%)",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(to top, #070F1E 0%, transparent 40%)" }}
-            />
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "55%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
           </div>
+          <div style={{ padding: "0.25rem 6vw 2.5rem" }}>
+            <h1 style={{ fontSize: "clamp(2.4rem, 11vw, 3.4rem)", fontWeight: 900, lineHeight: 0.95, letterSpacing: "-0.03em", marginBottom: "1.25rem", color: "#F0F5FF" }}>
+              {s.heroTitle[0]}
+              <br />
+              {s.heroTitle[1]} <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
+            </h1>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+              <p style={{ color: "rgba(168,196,240,0.68)", fontSize: "0.85rem", lineHeight: 1.8, fontWeight: 400, fontStyle: "italic", letterSpacing: "0.01em" }}>
+                {s.heroSubtitle}
+              </p>
+            </div>
+            <a
+              href="#formulaire"
+              style={{ display: "inline-block", backgroundColor: "#F0F5FF", color: "#070F1E", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", padding: "16px 36px", borderRadius: 0, textDecoration: "none" }}
+            >
+              {s.heroCta}
+            </a>
+          </div>
+        </section>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12">
-            <div className="max-w-xl">
-              <p className="text-xs tracking-[0.35em] uppercase mb-8" style={{ color: "#6B9FEE" }}>
-                Recherche personnalisée · Mandat d&apos;import
-              </p>
+        {/* ── HERO 100vh (desktop, inchangé) ── */}
+        <section
+          className="relative overflow-hidden hidden md:block"
+          style={{ height: "100vh", minHeight: "600px" }}
+        >
+          <img
+            src="/Photo du Site/Photo IA/Recherche personnalisé.png"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: 0.85 }}
+          />
+
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(120deg, rgba(7,15,30,0.85) 0%, rgba(7,15,30,0.2) 60%, transparent 100%)",
+            }}
+          />
+
+          <div
+            className="absolute bottom-0 left-0 right-0"
+            style={{
+              height: "40%",
+              background: "linear-gradient(to top, #070F1E, transparent)",
+            }}
+          />
+
+          <div
+            className="absolute z-10"
+            style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
+          >
+            <div style={{ maxWidth: "760px" }}>
               <h1
-                className="font-black leading-[0.9] mb-8"
-                style={{ fontSize: "clamp(3rem, 5.5vw, 5.5rem)", letterSpacing: "-0.03em" }}
+                style={{
+                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                  fontWeight: 900,
+                  lineHeight: 0.95,
+                  letterSpacing: "-0.03em",
+                  marginBottom: "2rem",
+                  color: "#F0F5FF",
+                }}
               >
-                Décrivez-le.
+                {s.heroTitle[0]}
                 <br />
-                Nous allons
-                <br />
-                <span style={{ color: "#6B9FEE" }}>le trouver.</span>
+                {s.heroTitle[1]}{" "}
+                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
               </h1>
-              <p
-                className="text-base md:text-lg leading-relaxed max-w-md"
-                style={{ color: "#C8D8EE", fontWeight: 400 }}
+
+              <div style={{ marginBottom: "1.5rem" }}>
+                <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+                <p
+                  style={{
+                    color: "rgba(168,196,240,0.68)",
+                    fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                    lineHeight: 1.8,
+                    fontWeight: 400,
+                    maxWidth: "440px",
+                    fontStyle: "italic",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  {s.heroSubtitle}
+                </p>
+              </div>
+
+              <a
+                href="#formulaire"
+                style={{
+                  display: "inline-block",
+                  backgroundColor: "#F0F5FF",
+                  color: "#070F1E",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  padding: "16px 36px",
+                  borderRadius: 0,
+                  textDecoration: "none",
+                  transition: "opacity 0.2s",
+                }}
               >
-                Vous avez un modèle en tête, un budget, des exigences. Nous activons notre réseau
-                européen et vous soumettons une sélection validée — sans engagement de votre part.
-              </p>
+                {s.heroCta}
+              </a>
             </div>
           </div>
         </section>
 
-        {/* ── 4 ÉTAPES ── */}
-        <section
-          className="border-t border-b"
-          style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
-        >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
-            <p className="text-xs tracking-[0.35em] uppercase mb-16 text-center" style={{ color: "#C8D8EE" }}>
-              Comment ça marche
+        {/* ── SECTION ÉTAPES ── */}
+        <section style={{ backgroundColor: "#040B16" }}>
+          <div
+            className="max-w-7xl mx-auto"
+            style={{ padding: "clamp(4rem, 8vw, 7rem) clamp(1.5rem, 6vw, 5rem)" }}
+          >
+            <p
+              style={{
+                fontSize: "10px",
+                letterSpacing: "0.35em",
+                textTransform: "uppercase",
+                color: "#6B9FEE",
+                marginBottom: "clamp(2.5rem, 5vw, 4.5rem)",
+                fontWeight: 500,
+              }}
+            >
+              {s.stepsLabel}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-              {steps.map((step, i) => (
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {s.steps.map((step) => (
                 <div
                   key={step.num}
-                  className="px-8 py-6"
-                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055" }}
+                  style={{
+                    borderTop: "1px solid",
+                    borderImage:
+                      "linear-gradient(to right, rgba(107,159,238,0.6), rgba(107,159,238,0.08)) 1",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "clamp(2rem, 5vw, 5rem)",
+                    padding: "clamp(1.8rem, 3.5vw, 2.8rem) 0",
+                  }}
                 >
-                  <span
-                    className="block font-black leading-none mb-6"
+                  <div
                     style={{
-                      fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
-                      color: "#6B9FEE",
+                      fontWeight: 900,
+                      fontSize: "clamp(2.8rem, 5.5vw, 5rem)",
+                      lineHeight: 1,
+                      borderLeft: "2px solid #6B9FEE",
+                      paddingLeft: "1.6rem",
+                      color: "#F0F5FF",
                       letterSpacing: "-0.04em",
+                      flexShrink: 0,
+                      minWidth: "clamp(6rem, 10vw, 10rem)",
                     }}
                   >
                     {step.num}
-                  </span>
-                  <h3
-                    className="font-black uppercase mb-4"
-                    style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}
-                  >
-                    {step.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                    {step.desc}
-                  </p>
+                  </div>
+
+                  <div style={{ flex: 1, paddingTop: "0.5rem" }}>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                        letterSpacing: "0.12em",
+                        color: "#F0F5FF",
+                        marginBottom: "0.8rem",
+                      }}
+                    >
+                      {step.title}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "#C4D8EE",
+                        lineHeight: 1.8,
+                        fontWeight: 400,
+                        borderTop: "1px solid rgba(107,159,238,0.35)",
+                        paddingTop: "0.8rem",
+                        maxWidth: "520px",
+                      }}
+                    >
+                      {step.desc}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── FORMULAIRE + GARANTIES ── */}
-        <section style={{ backgroundColor: "#070F1E" }}>
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
-
-            <div className="mb-16">
-              <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: "#6B9FEE" }}>
-                Votre demande
-              </p>
+        {/* ── SECTION FORMULAIRE ── */}
+        <section
+          id="formulaire"
+          style={{ backgroundColor: "#070F1E", padding: "10vh 0" }}
+        >
+          <div
+            className="max-w-7xl mx-auto"
+            style={{ padding: "0 clamp(1.5rem, 6vw, 5rem)" }}
+          >
+            <div style={{ marginBottom: "clamp(3rem, 6vw, 5rem)" }}>
               <h2
-                className="font-black uppercase leading-[0.9]"
-                style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.025em" }}
+                style={{
+                  fontSize: "clamp(2.8rem, 6vw, 6.5rem)",
+                  fontWeight: 900,
+                  lineHeight: 0.9,
+                  letterSpacing: "-0.04em",
+                  color: "#F0F5FF",
+                }}
               >
-                Décrivez votre
+                {s.formTitle[0]}
                 <br />
-                véhicule idéal.
+                <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
-
+            <div
+              className="grid grid-cols-1 lg:grid-cols-5"
+              style={{ gap: "clamp(3rem, 6vw, 6rem)", alignItems: "start" }}
+            >
               {/* Colonne gauche — garanties */}
-              <div className="lg:col-span-2 space-y-10" style={{ fontFamily: "var(--font-inter)" }}>
-                <p className="text-base leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                  Nous opérons exclusivement sur les marchés{" "}
-                  <strong style={{ color: "#F0F5FF" }}>allemand et belge</strong>, réputés pour la
-                  qualité de leur offre et leurs prix compétitifs. Chaque véhicule est vérifié avant
-                  de vous être soumis.
-                </p>
-
-                <div
-                  className="space-y-0"
-                  style={{ borderTop: "1px solid #1B3055" }}
-                >
-                  {garanties.map((g) => (
+              <div className="lg:col-span-2" style={{ fontFamily: "var(--font-inter)" }}>
+                <div style={{ borderTop: "1px solid #1B3055", marginBottom: "2.5rem" }}>
+                  {s.guarantees.map((g) => (
                     <div
-                      key={g.text}
-                      className="flex items-center gap-4 py-4"
-                      style={{ borderBottom: "1px solid #1B3055" }}
+                      key={g}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "1rem",
+                        padding: "1rem 0",
+                        borderBottom: "1px solid #1B3055",
+                      }}
                     >
-                      <span style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}>✓</span>
-                      <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                        {g.text}
+                      <span
+                        style={{
+                          color: "#6B9FEE",
+                          fontSize: "11px",
+                          flexShrink: 0,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ✓
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "#C4D8EE",
+                          fontWeight: 400,
+                        }}
+                      >
+                        {g}
                       </span>
                     </div>
                   ))}
                 </div>
 
                 <div
-                  className="p-5"
                   style={{
                     backgroundColor: "rgba(107,159,238,0.06)",
                     border: "1px solid rgba(107,159,238,0.18)",
+                    padding: "20px",
                   }}
                 >
-                  <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
-                    Marchés couverts
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      color: "#6B9FEE",
+                      marginBottom: "10px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {s.marketsLabel}
                   </p>
-                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                    Allemagne · Belgique · Pays-Bas
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#C8D8EE",
+                      fontWeight: 400,
+                      marginBottom: "16px",
+                    }}
+                  >
+                    {s.markets}
                   </p>
+
                   <div
-                    className="my-4"
-                    style={{ height: "1px", backgroundColor: "rgba(107,159,238,0.18)" }}
+                    style={{
+                      height: "1px",
+                      backgroundColor: "rgba(107,159,238,0.18)",
+                      marginBottom: "16px",
+                    }}
                   />
-                  <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
-                    Marques traitées
+
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      color: "#6B9FEE",
+                      marginBottom: "10px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {s.brandsLabel}
                   </p>
-                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                    Audi · BMW · Mercedes · Porsche · Volkswagen · Lexus · Volvo · et plus
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#C8D8EE",
+                      fontWeight: 400,
+                      lineHeight: 1.7,
+                    }}
+                  >
+                    {s.brands}
                   </p>
                 </div>
               </div>

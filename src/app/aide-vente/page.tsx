@@ -1,137 +1,102 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AideVenteForm from "./AideVenteForm";
+import AideVenteForm from "@/app/aide-vente/AideVenteForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Aide à la Vente — Intelligence Automobile",
-  description:
-    "Estimation au prix du marché réel, diffusion ciblée, transaction sécurisée. Vendez votre véhicule premium au juste prix, sans vous en occuper.",
 };
 
-const steps = [
-  {
-    num: "01",
-    title: "Estimation",
-    desc: "Analyse du marché, de l'historique et de l'état du véhicule. Nous vous soumettons une valorisation argumentée — pas un chiffre sorti de nulle part.",
-  },
-  {
-    num: "02",
-    title: "Mise en valeur",
-    desc: "Photos professionnelles, description experte, diffusion sur les canaux ciblés et dans notre réseau d'acheteurs qualifiés.",
-  },
-  {
-    num: "03",
-    title: "Gestion des contacts",
-    desc: "Nous filtrons chaque demande. Seuls les acheteurs sérieux et solvables vous sont présentés — ou nous gérons directement en votre nom.",
-  },
-  {
-    num: "04",
-    title: "Transaction",
-    desc: "Sécurisation du paiement, transfert de propriété, démarches administratives. Vous touchez le prix convenu. Nous gérons le reste.",
-  },
-];
+export default async function AideVenteV2Page() {
+  const { t } = await getTranslations();
+  const s = t.resale;
 
-const comparatif = [
-  {
-    critere: "Prix obtenu",
-    dealer: "−20 à −35 % du marché",
-    seul: "Prix marché − friction",
-    ia: "Prix marché réel",
-  },
-  {
-    critere: "Délai moyen",
-    dealer: "Immédiat",
-    seul: "6 à 16 semaines",
-    ia: "2 à 4 semaines",
-  },
-  {
-    critere: "Contacts à gérer",
-    dealer: "Aucun",
-    seul: "100+, dont 80 % non qualifiés",
-    ia: "Aucun — nous filtrons tout",
-  },
-  {
-    critere: "Paperwork",
-    dealer: "Dealer s'en occupe",
-    seul: "Vous",
-    ia: "Nous",
-  },
-  {
-    critere: "Sécurité paiement",
-    dealer: "✓",
-    seul: "Variable",
-    ia: "✓ vérifiée",
-  },
-];
-
-const garanties = [
-  "Estimation gratuite sous 24h",
-  "Prix marché réel, pas de reprise",
-  "Zéro contact non qualifié à gérer",
-  "Transaction 100 % sécurisée",
-  "Démarches administratives incluses",
-  "Honoraires transparents, annoncés avant accord",
-];
-
-const vehiculesAcceptes = {
-  types: ["Berlines premium", "SUV", "Coupés", "Sportives", "Cabriolets"],
-  marques: ["Audi", "BMW", "Mercedes", "Porsche", "Volkswagen", "Lexus", "Volvo"],
-  criteres: ["Moins de 12 ans", "Jusqu'à 180 000 km", "Entretien documenté"],
-};
-
-export default function AideVentePage() {
   return (
     <>
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* ── HERO ── */}
+        {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
-          style={{ backgroundColor: "#070F1E", paddingTop: "200px", paddingBottom: "100px" }}
+          style={{ height: "100vh", minHeight: "600px" }}
         >
-          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[58%]">
+          <div className="absolute inset-0">
             <img
-              src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1600&q=85"
+              src="/Photo du Site/Photo IA/Revente sur mesure 4.png"
               alt=""
               className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.80 }}
+              style={{ opacity: 0.92 }}
             />
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to right, #070F1E 28%, rgba(7,15,30,0.6) 58%, transparent 82%)",
+                  "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.78) 32%, rgba(7,15,30,0.22) 65%, transparent 100%)",
               }}
             />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(to top, #070F1E 0%, transparent 40%)" }}
+              style={{
+                background:
+                  "linear-gradient(to right, rgba(7,15,30,0.88) 0%, rgba(7,15,30,0.52) 38%, transparent 70%)",
+              }}
             />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12">
-            <div className="max-w-xl">
-              <p className="text-xs tracking-[0.35em] uppercase mb-8" style={{ color: "#6B9FEE" }}>
-                Aide à la vente · Véhicules premium
-              </p>
+          <div
+            className="absolute z-10"
+            style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
+          >
+            <div style={{ maxWidth: "680px" }}>
               <h1
-                className="font-black leading-[0.9] mb-8"
-                style={{ fontSize: "clamp(3rem, 5.5vw, 5.5rem)", letterSpacing: "-0.03em" }}
+                className="font-black"
+                style={{
+                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                  lineHeight: 0.88,
+                  letterSpacing: "-0.04em",
+                  marginBottom: "clamp(1.5rem, 3vh, 2.5rem)",
+                }}
               >
-                Votre véhicule
+                {s.heroTitle[0]}
                 <br />
-                vaut plus que ce
+                {s.heroTitle[1]}
                 <br />
-                <span style={{ color: "#6B9FEE" }}>qu&apos;on vous propose.</span>
+                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
               </h1>
-              <p
-                className="text-base md:text-lg leading-relaxed max-w-md"
-                style={{ color: "#C8D8EE", fontWeight: 400 }}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+                <p
+                  style={{
+                    color: "rgba(168,196,240,0.68)",
+                    fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                    lineHeight: 1.8,
+                    fontWeight: 300,
+                    maxWidth: "440px",
+                    fontStyle: "italic",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  {s.heroSubtitle}
+                </p>
+              </div>
+              <a
+                href="#formulaire"
+                style={{
+                  display: "inline-block",
+                  backgroundColor: "#F0F5FF",
+                  color: "#070F1E",
+                  fontWeight: 700,
+                  fontSize: "0.78rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  padding: "14px 28px",
+                  borderRadius: 0,
+                  textDecoration: "none",
+                }}
               >
-                Estimation au prix du marché réel, diffusion ciblée, transaction sécurisée.
-                Vous vendez mieux — sans vous en occuper.
-              </p>
+                {s.heroCta}
+              </a>
             </div>
           </div>
         </section>
@@ -141,57 +106,80 @@ export default function AideVentePage() {
           className="border-t border-b"
           style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
         >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
-            <p className="text-xs tracking-[0.35em] uppercase mb-4 text-center" style={{ color: "#C8D8EE" }}>
-              Pourquoi pas la reprise concessionnaire ?
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
+            <p
+              className="text-[10px] tracking-[0.38em] uppercase mb-4 text-center"
+              style={{ color: "#C8D8EE" }}
+            >
+              {s.comparativeLabel}
             </p>
             <h2
-              className="font-black uppercase leading-[0.9] text-center mb-16"
-              style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", letterSpacing: "-0.025em" }}
+              className="font-black uppercase leading-[0.9] text-center mb-20"
+              style={{
+                fontSize: "clamp(2rem, 3.8vw, 3.4rem)",
+                letterSpacing: "-0.03em",
+              }}
             >
-              Les faits, sans détour.
+              {s.comparativeTitle}
             </h2>
 
             {/* Table desktop */}
-            <div className="hidden md:block overflow-hidden" style={{ border: "1px solid #1B3055" }}>
-              {/* Header */}
-              <div className="grid grid-cols-4" style={{ backgroundColor: "#0A1628", borderBottom: "1px solid #1B3055" }}>
-                <div className="px-6 py-4" />
-                {["Reprise concessionnaire", "Vente seul", "Aide à la Vente IA"].map((col, i) => (
-                  <div
-                    key={col}
-                    className="px-6 py-4"
-                    style={{
-                      borderLeft: "1px solid #1B3055",
-                      borderRight: i === 2 ? "none" : undefined,
-                    }}
-                  >
-                    <span
-                      className="text-[9px] tracking-[0.3em] uppercase font-semibold"
-                      style={{ color: i === 2 ? "#6B9FEE" : "#C8D8EE" }}
+            <div
+              className="hidden md:block overflow-hidden"
+              style={{ border: "1px solid #1B3055" }}
+            >
+              <div
+                className="grid grid-cols-4"
+                style={{ backgroundColor: "#080F1C", borderBottom: "1px solid #1B3055" }}
+              >
+                <div className="px-6 py-5" />
+                {[s.colDealer, s.colSolo, s.colIA].map(
+                  (col, i) => (
+                    <div
+                      key={col}
+                      className="px-6 py-5"
+                      style={{
+                        borderLeft: "1px solid #1B3055",
+                        backgroundColor:
+                          i === 2 ? "rgba(107,159,238,0.04)" : undefined,
+                      }}
                     >
-                      {col}
-                    </span>
-                  </div>
-                ))}
+                      <span
+                        className="text-[9px] tracking-[0.32em] uppercase font-semibold"
+                        style={{ color: i === 2 ? "#6B9FEE" : "#C8D8EE" }}
+                      >
+                        {col}
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
-              {/* Rows */}
-              {comparatif.map((row, i) => (
+
+              {s.comparatif.map((row, i) => (
                 <div
                   key={row.critere}
                   className="grid grid-cols-4"
-                  style={{ borderBottom: i < comparatif.length - 1 ? "1px solid #1B3055" : "none" }}
+                  style={{
+                    borderBottom: i < s.comparatif.length - 1 ? "1px solid #1B3055" : "none",
+                  }}
                 >
                   <div className="px-6 py-5">
-                    <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#C8D8EE" }}>
+                    <span
+                      className="text-[10px] tracking-[0.25em] uppercase"
+                      style={{ color: "#C8D8EE" }}
+                    >
                       {row.critere}
                     </span>
                   </div>
                   <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>{row.dealer}</span>
+                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 400 }}>
+                      {row.dealer}
+                    </span>
                   </div>
                   <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>{row.seul}</span>
+                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 400 }}>
+                      {row.seul}
+                    </span>
                   </div>
                   <div
                     className="px-6 py-5"
@@ -200,36 +188,61 @@ export default function AideVentePage() {
                       backgroundColor: "rgba(107,159,238,0.04)",
                     }}
                   >
-                    <span className="text-sm font-medium" style={{ color: "#F0F5FF" }}>{row.ia}</span>
+                    <span className="text-sm font-medium" style={{ color: "#F0F5FF" }}>
+                      {row.ia}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Table mobile — cartes */}
+            {/* Table mobile */}
             <div className="md:hidden space-y-4">
-              {comparatif.map((row) => (
+              {s.comparatif.map((row) => (
                 <div key={row.critere} style={{ border: "1px solid #1B3055" }}>
-                  <div className="px-4 py-3" style={{ backgroundColor: "#0A1628", borderBottom: "1px solid #1B3055" }}>
-                    <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "#C8D8EE" }}>
+                  <div
+                    className="px-4 py-3"
+                    style={{
+                      backgroundColor: "#080F1C",
+                      borderBottom: "1px solid #1B3055",
+                    }}
+                  >
+                    <span
+                      className="text-[9px] tracking-[0.3em] uppercase"
+                      style={{ color: "#C8D8EE" }}
+                    >
                       {row.critere}
                     </span>
                   </div>
                   <div className="divide-y" style={{ borderColor: "#1B3055" }}>
                     {[
-                      { label: "Reprise concessionnaire", val: row.dealer, highlight: false },
-                      { label: "Vente seul", val: row.seul, highlight: false },
-                      { label: "Aide à la Vente IA", val: row.ia, highlight: true },
+                      { label: s.colDealer, val: row.dealer, highlight: false },
+                      { label: s.colSolo, val: row.seul, highlight: false },
+                      { label: s.colIA, val: row.ia, highlight: true },
                     ].map((item) => (
                       <div
                         key={item.label}
                         className="flex justify-between items-center px-4 py-3"
-                        style={{ backgroundColor: item.highlight ? "rgba(107,159,238,0.04)" : undefined }}
+                        style={{
+                          backgroundColor: item.highlight
+                            ? "rgba(107,159,238,0.04)"
+                            : undefined,
+                        }}
                       >
-                        <span className="text-[10px]" style={{ color: item.highlight ? "#6B9FEE" : "#C8D8EE" }}>
+                        <span
+                          className="text-[10px]"
+                          style={{ color: item.highlight ? "#6B9FEE" : "#C8D8EE" }}
+                        >
                           {item.label}
                         </span>
-                        <span className="text-sm text-right max-w-[55%]" style={{ color: item.highlight ? "#F0F5FF" : "#C8D8EE", fontWeight: item.highlight ? 500 : 300 }}>
+                        <span
+                          className="text-sm text-right"
+                          style={{
+                            maxWidth: "55%",
+                            color: item.highlight ? "#F0F5FF" : "#C4D8EE",
+                            fontWeight: item.highlight ? 500 : 300,
+                          }}
+                        >
                           {item.val}
                         </span>
                       </div>
@@ -241,90 +254,129 @@ export default function AideVentePage() {
           </div>
         </section>
 
-        {/* ── 4 ÉTAPES ── */}
+        {/* ── ÉTAPES ── */}
         <section
           className="border-b"
           style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
         >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
-            <p className="text-xs tracking-[0.35em] uppercase mb-16 text-center" style={{ color: "#C8D8EE" }}>
-              Comment ça marche
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
+            <p
+              className="text-[10px] tracking-[0.38em] uppercase mb-20"
+              style={{ color: "#C8D8EE" }}
+            >
+              {s.stepsLabel}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-              {steps.map((step, i) => (
-                <div
-                  key={step.num}
-                  className="px-8 py-6"
-                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055" }}
-                >
-                  <span
-                    className="block font-black leading-none mb-6"
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              {s.steps.map((step, i) => (
+                <div key={step.num} className="relative">
+                  {i > 0 && (
+                    <div
+                      className="hidden lg:block absolute left-0 top-0 bottom-0 w-px"
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, transparent 0%, #1B3055 20%, #1B3055 80%, transparent 100%)",
+                      }}
+                    />
+                  )}
+                  <div
+                    className="px-8 py-6"
                     style={{
-                      fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
-                      color: "#6B9FEE",
-                      letterSpacing: "-0.04em",
+                      borderLeft:
+                        i > 0 ? "2px solid #6B9FEE" : undefined,
+                      ...(i > 0 && { borderLeftColor: "#6B9FEE" }),
                     }}
                   >
-                    {step.num}
-                  </span>
-                  <h3
-                    className="font-black uppercase mb-4"
-                    style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}
-                  >
-                    {step.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                    {step.desc}
-                  </p>
+                    <div
+                      style={{
+                        borderLeft: "2px solid #6B9FEE",
+                        paddingLeft: "16px",
+                        marginBottom: "1.5rem",
+                      }}
+                    >
+                      <span
+                        className="font-black leading-none"
+                        style={{
+                          fontSize: "clamp(2.4rem, 4vw, 3.2rem)",
+                          color: "#6B9FEE",
+                          letterSpacing: "-0.04em",
+                          display: "block",
+                        }}
+                      >
+                        {step.num}
+                      </span>
+                    </div>
+                    <h3
+                      className="font-black uppercase mb-4"
+                      style={{ fontSize: "0.9rem", letterSpacing: "0.06em" }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "#C8D8EE", fontWeight: 400 }}
+                    >
+                      {step.desc}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── FORMULAIRE + GARANTIES ── */}
-        <section style={{ backgroundColor: "#070F1E" }}>
+        {/* ── FORMULAIRE ── */}
+        <section
+          id="formulaire"
+          style={{ backgroundColor: "#040B16", borderTop: "1px solid #1B3055" }}
+        >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
 
-            <div className="mb-16">
-              <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: "#6B9FEE" }}>
-                Estimation gratuite
+            <div className="mb-20">
+              <p
+                className="text-[10px] tracking-[0.38em] uppercase mb-4"
+                style={{ color: "#6B9FEE" }}
+              >
+                {s.formSectionLabel}
               </p>
               <h2
-                className="font-black uppercase leading-[0.9]"
-                style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.025em" }}
+                className="font-black uppercase leading-[0.88]"
+                style={{
+                  fontSize: "clamp(2.4rem, 5vw, 5rem)",
+                  letterSpacing: "-0.03em",
+                }}
               >
-                Décrivez votre
+                {s.formTitle[0]}
                 <br />
-                véhicule.
+                {s.formTitle[1]}
               </h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
 
-              {/* Colonne gauche */}
               <div className="lg:col-span-2 space-y-10">
-                <p className="text-base leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                  Nous connaissons les marchés allemand et belge mieux que personne.
-                  Cette expertise nous permet de{" "}
-                  <strong style={{ color: "#F0F5FF" }}>positionner votre véhicule au prix juste</strong>
-                  {" "}— ni bradé, ni surestimé.
-                </p>
-
                 <div style={{ borderTop: "1px solid #1B3055" }}>
-                  {garanties.map((g) => (
+                  {s.guarantees.map((g) => (
                     <div
                       key={g}
                       className="flex items-center gap-4 py-4"
                       style={{ borderBottom: "1px solid #1B3055" }}
                     >
-                      <span style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}>✓</span>
-                      <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>{g}</span>
+                      <span
+                        style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}
+                      >
+                        ✓
+                      </span>
+                      <span
+                        className="text-sm"
+                        style={{ color: "#C4D8EE", fontWeight: 400 }}
+                      >
+                        {g}
+                      </span>
                     </div>
                   ))}
                 </div>
 
-                {/* Véhicules acceptés */}
                 <div
                   className="p-5 space-y-5"
                   style={{
@@ -333,34 +385,41 @@ export default function AideVentePage() {
                   }}
                 >
                   {[
-                    { label: "Types de véhicules", values: vehiculesAcceptes.types },
-                    { label: "Marques traitées", values: vehiculesAcceptes.marques },
-                    { label: "Critères", values: vehiculesAcceptes.criteres },
+                    { label: s.vehicleTypesLabel, values: s.vehicleTypes, separator: " · " },
+                    { label: s.vehicleBrandsLabel, values: s.vehicleBrands, separator: " · " },
+                    { label: s.vehicleCriteriaLabel, values: s.vehicleCriteria, separator: " · " },
                   ].map((block, i, arr) => (
                     <div
                       key={block.label}
-                      style={{ paddingBottom: i < arr.length - 1 ? "16px" : undefined, borderBottom: i < arr.length - 1 ? "1px solid rgba(107,159,238,0.18)" : "none" }}
+                      style={{
+                        paddingBottom: i < arr.length - 1 ? "20px" : undefined,
+                        borderBottom:
+                          i < arr.length - 1
+                            ? "1px solid rgba(107,159,238,0.18)"
+                            : "none",
+                      }}
                     >
-                      <p className="text-[9px] tracking-[0.35em] uppercase mb-2" style={{ color: "#6B9FEE" }}>
+                      <p
+                        className="text-[9px] tracking-[0.38em] uppercase mb-2"
+                        style={{ color: "#6B9FEE" }}
+                      >
                         {block.label}
                       </p>
-                      <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                        {block.values.join(" · ")}
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ color: "#C8D8EE", fontWeight: 400 }}
+                      >
+                        {block.values.join(block.separator)}
                       </p>
                     </div>
                   ))}
                 </div>
-
-                <p className="text-xs leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                  Vous n&apos;êtes pas sûr que votre véhicule entre dans nos critères ?
-                  Décrivez-le quand même — nous vous répondrons sous 24h.
-                </p>
               </div>
 
-              {/* Colonne droite — formulaire */}
               <div className="lg:col-span-3">
                 <AideVenteForm />
               </div>
+
             </div>
           </div>
         </section>

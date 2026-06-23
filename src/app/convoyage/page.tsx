@@ -1,117 +1,125 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ConvoyageForm from "./ConvoyageForm";
+import ConvoyageForm from "@/app/convoyage/ConvoyageForm";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
-  title: "Convoyage — Intelligence Automobile",
-  description:
-    "Prise en charge, conduite et livraison de votre véhicule premium. Conducteurs professionnels assurés, photos avant/après, tarif fixe. France entière et Europe.",
+  title: "Transport & Livraison — Intelligence Automobile",
 };
 
-const steps = [
-  {
-    num: "01",
-    title: "Votre demande",
-    desc: "Indiquez le point de départ, la destination, le véhicule et la date souhaitée. Nous revenons vers vous sous 24h avec un devis clair et définitif.",
-  },
-  {
-    num: "02",
-    title: "Accord & préparation",
-    desc: "Vous validez le devis. Nous coordonnons la prise en charge, confirmons le créneau et documentons l'état du véhicule avant départ — photos à l'appui.",
-  },
-  {
-    num: "03",
-    title: "Prise en charge",
-    desc: "Un conducteur professionnel et assuré récupère le véhicule. État des lieux contradictoire, signature, départ.",
-  },
-  {
-    num: "04",
-    title: "Livraison",
-    desc: "Le véhicule vous est remis à destination dans l'état convenu. Photos de livraison transmises. Tarif inchangé, quoi qu'il arrive.",
-  },
-];
+export default async function ConvoyagePage2() {
+  const { t } = await getTranslations();
+  const s = t.transport;
 
-const garanties = [
-  { text: "Conducteurs professionnels assurés RC" },
-  { text: "Photos d'état avant départ et à la livraison" },
-  { text: "Couverture RC pendant tout le transport" },
-  { text: "Tarif fixe annoncé avant accord, sans supplément" },
-  { text: "France entière + Belgique, Allemagne, Pays-Bas" },
-  { text: "Interlocuteur direct tout au long de la mission" },
-];
-
-export default function ConvoyagePage() {
   return (
     <>
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* ── HERO ── */}
+        {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
-          style={{ backgroundColor: "#070F1E", paddingTop: "200px", paddingBottom: "100px" }}
+          style={{ height: "100vh", minHeight: "600px" }}
         >
-          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[58%]">
-            <img
-              src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1600&q=85"
-              alt=""
-              className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.80 }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to right, #070F1E 28%, rgba(7,15,30,0.6) 58%, transparent 82%)",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(to top, #070F1E 0%, transparent 40%)" }}
-            />
-          </div>
+          <img
+            src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: 0.92 }}
+          />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12">
-            <div className="max-w-xl">
-              <p className="text-xs tracking-[0.35em] uppercase mb-8" style={{ color: "#6B9FEE" }}>
-                Convoyage · Livraison de véhicule
-              </p>
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(120deg, rgba(7,15,30,0.85) 0%, rgba(7,15,30,0.2) 60%, transparent 100%)",
+            }}
+          />
+
+          <div
+            className="absolute left-0 right-0 bottom-0"
+            style={{
+              height: "40%",
+              background: "linear-gradient(to top, #070F1E, transparent)",
+            }}
+          />
+
+          <div
+            className="absolute z-10"
+            style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
+          >
+            <div style={{ maxWidth: "680px" }}>
               <h1
-                className="font-black leading-[0.9] mb-8"
-                style={{ fontSize: "clamp(3rem, 5.5vw, 5.5rem)", letterSpacing: "-0.03em" }}
+                style={{
+                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                  fontWeight: 900,
+                  lineHeight: 0.88,
+                  letterSpacing: "-0.03em",
+                  marginBottom: "1.8rem",
+                }}
               >
-                Votre véhicule
+                {s.heroTitle[0]}
                 <br />
-                livré, sans
+                {s.heroTitle[1]}
                 <br />
-                <span style={{ color: "#6B9FEE" }}>vous déplacer.</span>
+                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
               </h1>
-              <p
-                className="text-base md:text-lg leading-relaxed max-w-md"
-                style={{ color: "#C8D8EE", fontWeight: 400 }}
+
+              <div style={{ marginBottom: "1.5rem" }}>
+                <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+                <p
+                  style={{
+                    color: "rgba(168,196,240,0.68)",
+                    fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                    lineHeight: 1.8,
+                    fontWeight: 300,
+                    maxWidth: "440px",
+                    fontStyle: "italic",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  {s.heroSubtitle}
+                </p>
+              </div>
+
+              <a
+                href="#formulaire"
+                style={{
+                  display: "inline-block",
+                  backgroundColor: "#F0F5FF",
+                  color: "#070F1E",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  letterSpacing: "0.04em",
+                  padding: "0.9rem 2rem",
+                  borderRadius: 0,
+                  textDecoration: "none",
+                }}
               >
-                Conducteur professionnel, couverture assurance complète, photos avant et après.
-                Nous acheminons votre véhicule en toute sécurité — où que vous en ayez besoin.
-              </p>
+                {s.heroCta}
+              </a>
             </div>
           </div>
         </section>
 
-        {/* ── 4 ÉTAPES ── */}
+        {/* ── ÉTAPES ── */}
         <section
           className="border-t border-b"
           style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
-            <p className="text-xs tracking-[0.35em] uppercase mb-16 text-center" style={{ color: "#C8D8EE" }}>
-              Comment ça marche
+            <p
+              className="text-xs tracking-[0.35em] uppercase mb-16 text-center"
+              style={{ color: "#C8D8EE" }}
+            >
+              {s.stepsLabel}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-              {steps.map((step, i) => (
+              {s.steps.map((step, i) => (
                 <div
                   key={step.num}
-                  className="pr-8 py-6"
-                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055", paddingLeft: i === 0 ? 0 : "2rem" }}
+                  className="px-8 py-6"
+                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055" }}
                 >
                   <span
                     className="block font-black leading-none mb-6"
@@ -138,79 +146,96 @@ export default function ConvoyagePage() {
           </div>
         </section>
 
-        {/* ── FORMULAIRE + GARANTIES ── */}
-        <section style={{ backgroundColor: "#070F1E" }}>
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
-
-            <div className="mb-16">
-              <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: "#6B9FEE" }}>
-                Devis gratuit
-              </p>
+        {/* ── FORMULAIRE ── */}
+        <section id="formulaire" style={{ backgroundColor: "#070F1E" }}>
+          <div
+            className="max-w-7xl mx-auto px-6 lg:px-12"
+            style={{ paddingTop: "6rem", paddingBottom: "6rem" }}
+          >
+            <div style={{ marginBottom: "4rem" }}>
               <h2
-                className="font-black uppercase leading-[0.9]"
-                style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.025em" }}
+                style={{
+                  fontWeight: 900,
+                  fontSize: "clamp(2.4rem, 5vw, 5rem)",
+                  lineHeight: 0.9,
+                  letterSpacing: "-0.03em",
+                }}
               >
-                Dites-nous
+                {s.formTitle[0]}
                 <br />
-                où livrer.
+                <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
+            <div
+              className="grid grid-cols-1 lg:grid-cols-5"
+              style={{ gap: "clamp(2.5rem, 5vw, 5rem)", alignItems: "start" }}
+            >
+              <div className="lg:col-span-2">
 
-              {/* Colonne gauche — garanties */}
-              <div className="lg:col-span-2 space-y-10">
-                <p className="text-base leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                  Que vous ayez acheté un véhicule à distance, récupéré un achat à l'étranger ou ayez
-                  simplement besoin d'acheminer une voiture d'un point A à un point B —{" "}
-                  <strong style={{ color: "#F0F5FF" }}>nous nous en chargeons.</strong>
-                </p>
-
-                <div style={{ borderTop: "1px solid #1B3055" }}>
-                  {garanties.map((g) => (
+                <div style={{ borderTop: "1px solid #1B3055", marginBottom: "2rem" }}>
+                  {s.guarantees.map((g) => (
                     <div
-                      key={g.text}
-                      className="flex items-center gap-4 py-4"
-                      style={{ borderBottom: "1px solid #1B3055" }}
+                      key={g}
+                      className="flex items-center gap-4"
+                      style={{
+                        borderBottom: "1px solid #1B3055",
+                        padding: "0.9rem 0",
+                      }}
                     >
-                      <span style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}>✓</span>
-                      <span className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>{g.text}</span>
+                      <span style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}>
+                        ✓
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#C4D8EE",
+                          fontWeight: 400,
+                        }}
+                      >
+                        {g}
+                      </span>
                     </div>
                   ))}
                 </div>
 
                 <div
-                  className="p-5"
                   style={{
                     backgroundColor: "rgba(107,159,238,0.06)",
                     border: "1px solid rgba(107,159,238,0.18)",
+                    padding: "1.5rem",
                   }}
                 >
-                  <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
-                    Zones couvertes
+                  <p
+                    className="uppercase tracking-[0.3em]"
+                    style={{ fontSize: "0.65rem", color: "#6B9FEE", marginBottom: "0.5rem" }}
+                  >
+                    {s.zonesLabel}
                   </p>
-                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                    France entière · Belgique · Allemagne · Pays-Bas
+                  <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
+                    {s.zones}
                   </p>
+
                   <div
-                    className="my-4"
-                    style={{ height: "1px", backgroundColor: "rgba(107,159,238,0.18)" }}
+                    style={{
+                      height: "1px",
+                      backgroundColor: "rgba(107,159,238,0.18)",
+                      margin: "1rem 0",
+                    }}
                   />
-                  <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
-                    Délai de livraison
+
+                  <p
+                    className="uppercase tracking-[0.3em]"
+                    style={{ fontSize: "0.65rem", color: "#6B9FEE", marginBottom: "0.5rem" }}
+                  >
+                    {s.delayLabel}
                   </p>
-                  <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                    J+1 à J+3 selon la distance · Sur rendez-vous
+                  <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
+                    {s.delay}
                   </p>
                 </div>
-
-                <p className="text-xs leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
-                  Besoin d&apos;un convoyage récurrent ou d&apos;un trajet hors zone ?
-                  Décrivez votre besoin — nous étudions toutes les demandes.
-                </p>
               </div>
 
-              {/* Colonne droite — formulaire */}
               <div className="lg:col-span-3">
                 <ConvoyageForm />
               </div>

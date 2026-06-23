@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
 import { getTranslations } from "@/lib/i18n-server";
 import { formatNumber } from "@/lib/format";
+import CountUp from "@/components/CountUp";
 
 export default async function HomePage() {
   const [{ t }, derniersVehicules, stockCount] = await Promise.all([
@@ -40,6 +41,15 @@ export default async function HomePage() {
         }
         .ia-card-img {
           transition: transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+
+        /* labels en capitales — plus lisibles (plus clairs, un peu plus gras, tracking resserré) */
+        .ia-eyebrow {
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          color: #9DBFF2;
         }
 
         /* 7. STOCK — cartes véhicules */
@@ -115,8 +125,8 @@ export default async function HomePage() {
           animation: ia-stock-dot-pulse 2.4s ease-in-out infinite;
         }
         @keyframes ia-stock-dot-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(107,159,238,0.5); opacity: 1; }
-          50%      { box-shadow: 0 0 8px 2px rgba(107,159,238,0.55); opacity: 0.6; }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.5); opacity: 1; }
+          50%      { box-shadow: 0 0 9px 2px rgba(52,211,153,0.6); opacity: 0.6; }
         }
         .ia-stock-cta {
           transition: box-shadow 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
@@ -217,7 +227,7 @@ export default async function HomePage() {
         <section className="md:hidden" style={{ position: "relative", backgroundColor: "#070F1E" }}>
           <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 2", overflow: "hidden" }}>
             <img
-              src="/Photo du Site/Photo IA/ChatGPT Image 5 juin 2026, 09_00_29.png"
+              src="/Voiture Page Accueil/Porsche spyder 2 avec logo 2.png"
               alt=""
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             />
@@ -233,7 +243,7 @@ export default async function HomePage() {
               <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
             </h1>
             <Link
-              href="/vehicules-2"
+              href="/vehicules"
               style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 32px", transition: "opacity 0.2s" }}
             >
               {t.home.heroCta}
@@ -244,7 +254,7 @@ export default async function HomePage() {
         {/* 1. HERO — desktop : plein écran immersif (inchangé) */}
         <section className="hidden md:block" style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
           <img
-            src="/Photo du Site/Photo IA/ChatGPT Image 5 juin 2026, 09_00_29.png"
+            src="/Voiture Page Accueil/Porsche spyder 2 avec logo 2.png"
             alt=""
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", opacity: 1.0 }}
           />
@@ -260,7 +270,7 @@ export default async function HomePage() {
             </h1>
             <div style={{ display: "flex", alignItems: "center" }}>
               <Link
-                href="/vehicules-2"
+                href="/vehicules"
                 style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "14px 32px", transition: "opacity 0.2s" }}
               >
                 {t.home.heroCta}
@@ -269,7 +279,7 @@ export default async function HomePage() {
           </div>
 
           <div style={{ position: "absolute", right: "3.5vw", bottom: "10vh", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-            <span style={{ fontSize: "9px", letterSpacing: "0.35em", textTransform: "uppercase", color: "#1B3055", writingMode: "vertical-rl" }}>{t.home.scrollIndicator}</span>
+            <span style={{ fontSize: "9px", letterSpacing: "0.35em", textTransform: "uppercase", color: "#7A9CC8", writingMode: "vertical-rl" }}>{t.home.scrollIndicator}</span>
             <div style={{ width: "1px", height: "56px", background: "linear-gradient(to bottom, #1B3055, transparent)" }} />
           </div>
         </section>
@@ -278,7 +288,7 @@ export default async function HomePage() {
         <div style={{ borderTop: "1px solid #1B3055", borderBottom: "1px solid #1B3055", backgroundColor: "#040B16", overflow: "hidden", height: "54px", display: "flex", alignItems: "center" }}>
           <div className="ia-marquee-track">
             {[1, 2].map((n) => (
-              <span key={n} style={{ fontSize: "11px", letterSpacing: "0.45em", textTransform: "uppercase", color: "#7A9CC8", whiteSpace: "nowrap", paddingRight: "4rem" }}>
+              <span key={n} style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.4em", textTransform: "uppercase", color: "#C4D8EE", whiteSpace: "nowrap", paddingRight: "4rem" }}>
                 PORSCHE &nbsp;·&nbsp; BMW M &nbsp;·&nbsp; MERCEDES AMG &nbsp;·&nbsp; AUDI RS &nbsp;·&nbsp; FERRARI &nbsp;·&nbsp; ALPINE &nbsp;·&nbsp; MASERATI &nbsp;·&nbsp; ALFA ROMEO &nbsp;·&nbsp; LAMBORGHINI &nbsp;·&nbsp;
               </span>
             ))}
@@ -292,7 +302,7 @@ export default async function HomePage() {
               <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%)" }} />
               <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "4.5vh 6vw", display: "flex", alignItems: "center", gap: "5vw" }}>
                 <div style={{ fontWeight: 900, fontSize: "clamp(2.8rem, 5.5vw, 5rem)", letterSpacing: "-0.04em", color: "#F0F5FF", lineHeight: 1, flexShrink: 0, minWidth: "200px", borderLeft: "2px solid #6B9FEE", paddingLeft: "1.6rem" }}>
-                  {s.val}
+                  <CountUp value={s.val} />
                 </div>
                 <div style={{ fontSize: "13px", lineHeight: 1.8, color: "#C8D8EE", letterSpacing: "0.03em" }}>
                   {s.label}
@@ -305,7 +315,7 @@ export default async function HomePage() {
 
         {/* SERVICE 01 — Recherche */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/recherche-2" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/recherche" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
               <img className="ia-service-img" src="/Photo du Site/Photo IA/Recherche personnalisé.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
@@ -327,7 +337,7 @@ export default async function HomePage() {
 
         {/* SERVICE 02 — Revente */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/aide-vente-2" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/aide-vente" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: "-1.5rem", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>02</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
@@ -349,7 +359,7 @@ export default async function HomePage() {
 
         {/* SERVICE 03 — Transport */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/convoyage-2" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/convoyage" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
               <img className="ia-service-img" src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
@@ -372,7 +382,7 @@ export default async function HomePage() {
         {/* 6. PROCESSUS */}
         <section style={{ borderTop: "1px solid #1B3055", backgroundColor: "#070F1E", padding: "12vh 0" }}>
           <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 5vw" }}>
-            <p style={{ fontSize: "10px", letterSpacing: "0.42em", textTransform: "uppercase", color: "#6B9FEE", marginBottom: "6vh", textAlign: "center" }}>
+            <p className="ia-eyebrow" style={{ marginBottom: "6vh", textAlign: "center" }}>
               {t.home.processLabel}
             </p>
             <div style={{ position: "relative" }}>
@@ -396,7 +406,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div style={{ textAlign: "center", marginTop: "6vh" }}>
-              <Link href="/methode-2" style={{ fontSize: "10px", letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", borderBottom: "1px solid rgba(107,159,238,0.3)", paddingBottom: "2px" }}>
+              <Link href="/methode" style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.3em", textTransform: "uppercase", color: "#9DBFF2", borderBottom: "1px solid rgba(157,191,242,0.55)", paddingBottom: "2px" }}>
                 {t.home.processLink}
               </Link>
             </div>
@@ -408,17 +418,20 @@ export default async function HomePage() {
           <section style={{ borderTop: "1px solid #1B3055", backgroundColor: "#070F1E", padding: "10vh 0 12vh" }}>
             <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 5vw" }}>
               <div style={{ marginBottom: "5vh" }}>
-                <p style={{ fontSize: "10px", letterSpacing: "0.42em", textTransform: "uppercase", color: "#6B9FEE", marginBottom: "1.4rem" }}>
-                  {t.home.stockLabel}
-                </p>
-                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem 2rem" }}>
-                  <h2 style={{ fontWeight: 900, fontSize: "clamp(2rem, 4.5vw, 3.8rem)", letterSpacing: "-0.025em", textTransform: "uppercase", lineHeight: 1, color: "#F0F5FF" }}>
-                    {t.home.stockTitle}<span style={{ color: "#6B9FEE" }}>.</span>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "1.5rem 2rem" }}>
+                  <h2 style={{ fontWeight: 900, fontSize: "clamp(2rem, 4.5vw, 3.8rem)", letterSpacing: "-0.025em", textTransform: "uppercase", lineHeight: 0.92, color: "#F0F5FF", margin: 0 }}>
+                    {t.home.stockTitle[0]}<br />{t.home.stockTitle[1]}<span style={{ color: "#6B9FEE" }}>.</span>
                   </h2>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "9px", border: "1px solid #1B3055", padding: "7px 14px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#6B9FEE", whiteSpace: "nowrap" }}>
-                    <span className="ia-stock-dot" style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#6B9FEE", flexShrink: 0 }} />
-                    {formatNumber(stockCount)} {t.home.stockAvailable}
-                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.85rem" }}>
+                    <p className="ia-eyebrow" style={{ margin: 0 }}>
+                      {t.home.stockLabel}
+                    </p>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", border: "1px solid #1B3055", backgroundColor: "rgba(107,159,238,0.05)", padding: "9px 16px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#C4D8EE", whiteSpace: "nowrap" }}>
+                      <span className="ia-stock-dot" style={{ width: "7px", height: "7px", borderRadius: "50%", backgroundColor: "#34D399", flexShrink: 0 }} />
+                      <span style={{ color: "#C4D8EE", fontWeight: 900 }}>{formatNumber(stockCount)}</span>
+                      {t.home.stockAvailable}
+                    </span>
+                  </div>
                 </div>
                 <div className="ia-rail" style={{ marginTop: "1.8rem" }}>
                   <span className="ia-rail-beam" />
@@ -428,7 +441,7 @@ export default async function HomePage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: "1px", backgroundColor: "#1B3055", border: "1px solid #1B3055" }}>
+              <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: "1px", backgroundColor: "#1B3055", border: "1px solid #1B3055" }}>
                 {derniersVehicules.map((v) => {
                   const images = JSON.parse(v.images) as string[];
                   const img = images[0] ?? null;
@@ -464,24 +477,25 @@ export default async function HomePage() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.1rem", marginTop: "6vh" }}>
-                <Link href="/vehicules-2" className="ia-stock-cta ia-stock-link" style={{ display: "inline-flex", alignItems: "center", gap: "14px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "17px 40px" }}>
+                <Link href="/vehicules" className="ia-stock-cta ia-stock-link" style={{ display: "inline-flex", alignItems: "center", gap: "14px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "17px 40px" }}>
                   {t.home.stockCta}
                   <span className="ia-stock-arrow">→</span>
                 </Link>
-                <div className="ia-rail" style={{ width: "min(320px, 70%)" }}>
-                  <span className="ia-rail-beam" />
+                <div style={{ display: "flex", alignItems: "center", gap: "14px", color: "#6B9FEE" }}>
+                  <span style={{ width: "30px", height: "1px", background: "linear-gradient(to right, transparent, rgba(107,159,238,0.5))" }} />
+                  <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.34em", textTransform: "uppercase" }}>
+                    {t.home.stockInStock}
+                  </span>
+                  <span style={{ width: "30px", height: "1px", background: "linear-gradient(to left, transparent, rgba(107,159,238,0.5))" }} />
                 </div>
-                <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.32em", textTransform: "uppercase", color: "#6B9FEE", textAlign: "center" }}>
-                  {formatNumber(stockCount)} {t.home.stockInStock}
-                </p>
               </div>
             </div>
           </section>
         )}
 
         {/* 8. CTA FINAL */}
-        <section style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16", minHeight: "52vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "12vh 6vw" }}>
-          <p style={{ fontSize: "10px", letterSpacing: "0.45em", textTransform: "uppercase", color: "#6B9FEE", marginBottom: "2.4rem" }}>
+        <section style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16", minHeight: "40vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "6vh 6vw 10vh" }}>
+          <p className="ia-eyebrow" style={{ marginBottom: "2.4rem" }}>
             {t.home.ctaLabel}
           </p>
           <h2 style={{ fontWeight: 900, fontSize: "clamp(2.4rem, 6vw, 5.5rem)", letterSpacing: "-0.035em", lineHeight: 0.9, color: "#F0F5FF", maxWidth: "820px", marginBottom: "4rem" }}>
@@ -489,10 +503,10 @@ export default async function HomePage() {
             <br /><span style={{ color: "#6B9FEE" }}>{t.home.ctaTitle[1]}</span>
           </h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center" }}>
-            <Link href="/vehicules-2" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 40px" }}>
+            <Link href="/vehicules" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 40px" }}>
               {t.home.ctaBrowse}
             </Link>
-            <Link href="/contact-2" style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase", color: "#F0F5FF", border: "1px solid rgba(240,245,255,0.2)", padding: "16px 40px" }}>
+            <Link href="/contact" style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase", color: "#F0F5FF", border: "1px solid rgba(240,245,255,0.2)", padding: "16px 40px" }}>
               {t.home.ctaContact}
             </Link>
           </div>

@@ -657,7 +657,7 @@ export default function VehiculesList({
           {/* Pied : réinitialiser + appliquer */}
           <div className="flex items-center gap-3 px-6 py-4" style={{ borderTop: "1px solid #14243d" }}>
             {hasActiveFilters && (
-              <Link href="/vehicules-2" onClick={() => setFiltersOpen(false)} className="text-[11px] tracking-[0.2em] uppercase flex-shrink-0 px-2 py-3" style={{ color: "#6B9FEE" }}>
+              <Link href="/vehicules" onClick={() => setFiltersOpen(false)} className="text-[11px] tracking-[0.2em] uppercase flex-shrink-0 px-2 py-3" style={{ color: "#6B9FEE" }}>
                 {tv.clearFilters}
               </Link>
             )}

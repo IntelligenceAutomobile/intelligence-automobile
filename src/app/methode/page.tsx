@@ -1,407 +1,475 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
-  title: "Notre méthode — Intelligence Automobile",
-  description:
-    "Découvrez la méthode structurée d'Intelligence Automobile pour un import automobile sécurisé, transparent et maîtrisé.",
+  title: "Notre Méthode — Intelligence Automobile",
 };
 
-const steps = [
-  {
-    num: "01",
-    title: "Analyse du marché",
-    description:
-      "Nous suivons quotidiennement les marchés européens — AutoScout24 Allemagne, Mobile.de, 2ememain.be — pour identifier les opportunités présentant un différentiel de prix favorable par rapport au marché français, une fois tous les coûts d'import intégrés.",
-  },
-  {
-    num: "02",
-    title: "Sélection rigoureuse",
-    description:
-      "Chaque annonce sélectionnée est analysée selon des critères précis : historique d'entretien (carnet à jour, réseau officiel), cohérence du kilométrage, absence d'accident déclaré, configuration attractive et liquidité sur le marché français.",
-  },
-  {
-    num: "03",
-    title: "Vérification sur place",
-    description:
-      "Avant tout achat, le véhicule est inspecté directement ou via un expert certifié. Contrôle technique, lecture des données OBD, vérification des documents et de l'identité du vendeur. Aucune acquisition sans validation complète.",
-  },
-  {
-    num: "04",
-    title: "Acquisition sécurisée",
-    description:
-      "La transaction est réalisée dans un cadre légal sécurisé. Contrat de vente conforme, vérification de l'absence de gage ou de vol (HPI check pour les véhicules allemands), et paiement sécurisé.",
-  },
-  {
-    num: "05",
-    title: "Import & conformité",
-    description:
-      "Nous gérons l'intégralité des démarches : certificat de conformité européen, quitus fiscal si nécessaire, demande de carte grise française. Le véhicule est pris en charge dès son arrivée en France.",
-  },
-  {
-    num: "06",
-    title: "Préparation & remise",
-    description:
-      "Avant toute mise en vente ou remise au client, le véhicule est préparé : nettoyage intérieur/extérieur, petites remises en état esthétiques si nécessaire, photos professionnelles. Vous recevez un véhicule prêt à l'emploi.",
-  },
-];
+function rgba(hex: string, alpha: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
 
-const pillars = [
-  {
-    title: "Discipline financière",
-    desc: "Chaque acquisition est conditionnée à une marge minimale identifiée avant engagement. Pas d'achat coup de cœur, pas de prise de risque non mesurée.",
-  },
-  {
-    title: "Stock limité",
-    desc: "Nous maintenons volontairement un faible nombre de véhicules simultanément en stock, pour préserver notre capacité financière et garantir notre attention sur chaque dossier.",
-  },
-  {
-    title: "Rotation rapide",
-    desc: "L'objectif est de vendre chaque véhicule en moins de 30 jours. Une sélection pertinente et un prix juste permettent une liquidité rapide du stock.",
-  },
-  {
-    title: "Transparence client",
-    desc: "Tous les coûts sont communiqués : prix d'achat à l'étranger, transport, conformité, préparation. Rien n'est caché, tout est détaillé.",
-  },
-];
+const sectionCardStyle = {
+  background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
+  border: "1px solid rgba(107,159,238,0.12)",
+  borderRadius: "10px",
+  padding: "2rem",
+};
 
-export default function MethodePage() {
+function SectionHeader({ num, label }: { num: string; label: string }) {
+  return (
+    <div className="flex items-center gap-3 sm:gap-5 mb-10">
+      <span
+        className="font-black tabular-nums flex-shrink-0 leading-none flex items-center justify-center"
+        style={{
+          fontSize: "1.1rem",
+          color: "#6B9FEE",
+          letterSpacing: "-0.02em",
+          width: "2.75rem",
+          height: "2.75rem",
+          backgroundColor: "rgba(107,159,238,0.1)",
+          border: "1px solid rgba(107,159,238,0.3)",
+          borderRadius: "8px",
+        }}
+      >
+        {num}
+      </span>
+      <p
+        className="text-[11px] sm:text-sm tracking-[0.15em] sm:tracking-[0.5em] uppercase font-bold min-w-0"
+        style={{ color: "#F0F5FF" }}
+      >
+        {label}
+      </p>
+      <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
+    </div>
+  );
+}
+
+export default async function Methode2Page() {
+  const { t } = await getTranslations();
+  const s = t.method;
+
   return (
     <>
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* ── HERO ── */}
+        {/* ─── HERO ─────────────────────────────────────────────────────────────── */}
         <section
-          className="border-b"
-          style={{ borderColor: "#1B3055", paddingTop: "80px", backgroundColor: "#070F1E" }}
+          style={{
+            position: "relative",
+            height: "100vh",
+            minHeight: "600px",
+            backgroundColor: "#070F1E",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "flex-end",
+            paddingBottom: "8vh",
+            paddingLeft: "clamp(1.5rem, 6vw, 7rem)",
+            paddingRight: "clamp(1.5rem, 6vw, 7rem)",
+          }}
         >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 lg:py-28">
-            <p
-              className="text-xs tracking-[0.35em] uppercase mb-6"
-              style={{ color: "#6B9FEE" }}
-            >
-              Comment nous travaillons
-            </p>
-            <h1
-              className="font-black uppercase leading-[0.9] mb-8"
-              style={{
-                fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
-                letterSpacing: "-0.025em",
-              }}
-            >
-              Notre
-              <br />
-              <span style={{ color: "#6B9FEE" }}>méthode.</span>
-            </h1>
-            <p
-              className="text-base leading-relaxed max-w-lg"
-              style={{ color: "#C8D8EE", fontWeight: 400 }}
-            >
-              L&apos;import automobile peut être très rentable — ou très risqué.
-              Notre méthode transforme cette complexité en un processus structuré,
-              maîtrisé et reproductible.
-            </p>
-          </div>
-        </section>
-
-        {/* ── CHIFFRES CLÉS ── */}
-        <section className="border-b" style={{ borderColor: "#1B3055" }}>
           <div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-px"
-            style={{ backgroundColor: "#1B3055" }}
-          >
-            {[
-              { value: "6", label: "Étapes structurées, de la recherche à la remise" },
-              { value: "12–15h", label: "Temps moyen consacré par véhicule" },
-              { value: "< 30j", label: "Durée de détention objectif par véhicule" },
-              { value: "100%", label: "Des démarches administratives prises en charge" },
-            ].map((stat) => (
-              <div
-                key={stat.value}
-                className="p-8 lg:p-10"
-                style={{ backgroundColor: "#070F1E" }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage:
+                "url('/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center 68%",
+              opacity: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(to top, #070F1E 18%, rgba(7,15,30,0.40) 60%, rgba(7,15,30,0.15) 100%)",
+            }}
+          />
+
+          <div style={{ position: "relative", maxWidth: "900px" }}>
+            <h1
+              style={{
+                fontSize: "clamp(2.4rem, 4.5vw, 4.5rem)",
+                fontWeight: 900,
+                lineHeight: 0.95,
+                letterSpacing: "-0.02em",
+                color: "#F0F5FF",
+                margin: 0,
+                marginBottom: "2rem",
+              }}
+            >
+              {s.heroTitle[0]}
+              <br />
+              <span style={{ color: "#6B9FEE" }}>{s.heroTitle[1]}</span>
+            </h1>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+              <p
+                style={{
+                  color: "rgba(168,196,240,0.68)",
+                  fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
+                  lineHeight: 1.8,
+                  fontWeight: 300,
+                  maxWidth: "440px",
+                  fontStyle: "italic",
+                  letterSpacing: "0.01em",
+                }}
               >
-                <span
-                  className="block font-black leading-none mb-3"
-                  style={{
-                    fontSize: "clamp(2rem, 4vw, 3rem)",
-                    letterSpacing: "-0.02em",
-                    color: "#F0F5FF",
-                  }}
-                >
-                  {stat.value}
-                </span>
-                <span className="text-xs leading-snug" style={{ color: "#C8D8EE" }}>
-                  {stat.label}
-                </span>
-              </div>
-            ))}
+                {s.heroSubtitle}
+              </p>
+            </div>
+
+            <a
+              href="#processus"
+              style={{
+                display: "inline-block",
+                padding: "0.85rem 2rem",
+                border: "1px solid #F0F5FF",
+                color: "#F0F5FF",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                transition: "background 0.2s, color 0.2s",
+              }}
+            >
+              {s.heroCta}
+            </a>
           </div>
         </section>
 
-        {/* ── LES 6 ÉTAPES ── */}
-        <section
-          className="border-b"
-          style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
-        >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-20">
-            <p
-              className="text-xs tracking-[0.35em] uppercase mb-6"
-              style={{ color: "#6B9FEE" }}
-            >
-              Le processus
-            </p>
-            <h2
-              className="font-black uppercase leading-[0.9] mb-16"
+        {/* ─── CHIFFRES CLÉS ────────────────────────────────────────────────────── */}
+        <div className="px-6 lg:px-12 py-12" style={{ backgroundColor: "#040B16" }}>
+          <div className="max-w-6xl mx-auto">
+            <div
+              className="grid grid-cols-2 lg:grid-cols-4 gap-px"
               style={{
-                fontSize: "clamp(2.5rem, 5.5vw, 5rem)",
-                letterSpacing: "-0.025em",
-                maxWidth: "680px",
+                backgroundColor: "rgba(107,159,238,0.15)",
+                borderRadius: "10px",
+                overflow: "hidden",
               }}
             >
-              De la recherche
-              <br />
-              à la remise des clés.
-            </h2>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-6 lg:px-12">
-            {steps.map((step) => (
-              <div
-                key={step.num}
-                className="flex gap-8 lg:gap-20 py-10 items-start"
-                style={{ borderTop: "1px solid #1B3055" }}
-              >
-                <span
-                  className="font-black leading-none flex-shrink-0"
-                  style={{
-                    fontSize: "clamp(3rem, 7vw, 5.5rem)",
-                    color: "#1B3055",
-                    letterSpacing: "-0.04em",
-                    width: "clamp(4rem, 8vw, 7rem)",
-                  }}
+              {s.stats.map((stat, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col px-6 py-8"
+                  style={{ backgroundColor: "#0B1929" }}
                 >
-                  {step.num}
-                </span>
-                <div className="pt-1 lg:pt-3">
-                  <h3
-                    className="font-black uppercase mb-4"
+                  <span
+                    className="font-black leading-none mb-3"
                     style={{
-                      fontSize: "clamp(1rem, 1.8vw, 1.3rem)",
-                      letterSpacing: "0.03em",
+                      fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
+                      letterSpacing: "-0.03em",
                       color: "#F0F5FF",
                     }}
                   >
-                    {step.title}
-                  </h3>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: "#C8D8EE", maxWidth: "680px" }}
+                    {stat.value}
+                  </span>
+                  <span
+                    className="text-[11px] leading-snug"
+                    style={{ color: "#A8C6F4" }}
                   >
-                    {step.description}
-                  </p>
+                    {stat.label}
+                  </span>
                 </div>
-              </div>
-            ))}
-            <div className="pb-16" style={{ borderTop: "1px solid #1B3055" }} />
+              ))}
+            </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── POURQUOI ALL & BE ── */}
-        <section
-          className="border-b"
-          style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
+        {/* ─── CONTENU PRINCIPAL ────────────────────────────────────────────────── */}
+        <div
+          id="processus"
+          className="max-w-6xl mx-auto px-6 lg:px-12"
+          style={{ paddingTop: "5rem", paddingBottom: "5rem" }}
         >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-center">
 
-              {/* Texte */}
-              <div className="py-20 lg:pr-16">
-                <p
-                  className="text-xs tracking-[0.35em] uppercase mb-6"
-                  style={{ color: "#6B9FEE" }}
-                >
-                  Pourquoi l&apos;Allemagne et la Belgique ?
-                </p>
-                <h2
-                  className="font-black uppercase leading-none mb-10"
+          {/* ── 01 · LES 5 ÉTAPES ── */}
+          <div className="mb-20">
+            <SectionHeader num="01" label={s.processTitle.replace("\n", " ")} />
+            <div style={sectionCardStyle}>
+              {s.steps.map((step, i) => (
+                <div
+                  key={i}
+                  className="flex gap-6 lg:gap-10 items-start"
                   style={{
-                    fontSize: "clamp(2rem, 4vw, 3.2rem)",
-                    letterSpacing: "-0.025em",
+                    borderTop: i > 0 ? "1px solid rgba(107,159,238,0.1)" : "none",
+                    padding: "2rem 0",
                   }}
                 >
-                  Des marchés profonds
-                  <br />
-                  et bien entretenus.
-                </h2>
-                <div className="space-y-5">
-                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
-                    L&apos;Allemagne est le premier marché automobile d&apos;Europe.
-                    Les véhicules y sont souvent issus de flottes professionnelles
-                    ou de leasing, avec des carnets d&apos;entretien complets réalisés
-                    en réseau officiel. Le volume d&apos;annonces est sans équivalent,
-                    ce qui crée régulièrement des opportunités à des prix inférieurs
-                    au marché français.
-                  </p>
-                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
-                    La Belgique offre également un marché bien fourni en véhicules
-                    premium, avec une culture d&apos;entretien rigoureuse et des prix
-                    souvent compétitifs. Les démarches d&apos;import depuis ces deux pays
-                    sont parfaitement maîtrisées et s&apos;inscrivent dans la libre
-                    circulation au sein de l&apos;Union européenne.
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="lg:pl-16 pb-20 lg:pb-0" style={{ borderLeft: "1px solid #1B3055" }}>
-                {[
-                  { value: "N°1", label: "L'Allemagne, premier marché automobile en Europe" },
-                  { value: "+830k", label: "Véhicules d'occasion importés chaque année en France" },
-                  { value: "15%", label: "Des immatriculations françaises sont des imports EU" },
-                ].map((s, i) => (
-                  <div
-                    key={s.value}
-                    className="flex items-start gap-6 py-8 pl-8"
-                    style={{ borderTop: i === 0 ? "none" : "1px solid #1B3055" }}
+                  {/* Badge numéro */}
+                  <span
+                    className="font-black tabular-nums flex-shrink-0 flex items-center justify-center leading-none"
+                    style={{
+                      fontSize: "1rem",
+                      color: "#6B9FEE",
+                      width: "2.75rem",
+                      height: "2.75rem",
+                      minWidth: "2.75rem",
+                      backgroundColor: "rgba(107,159,238,0.1)",
+                      border: "1px solid rgba(107,159,238,0.3)",
+                      borderRadius: "8px",
+                    }}
                   >
-                    <span
-                      className="font-black leading-none flex-shrink-0"
+                    {step.num}
+                  </span>
+
+                  {/* Contenu */}
+                  <div style={{ flex: 1 }}>
+                    <h3
+                      className="font-black leading-tight mb-3"
                       style={{
-                        fontSize: "clamp(1.8rem, 3vw, 2.5rem)",
-                        color: "#F0F5FF",
+                        fontSize: "clamp(1.2rem, 2.2vw, 1.6rem)",
                         letterSpacing: "-0.02em",
+                        color: "#F0F5FF",
                       }}
                     >
-                      {s.value}
-                    </span>
-                    <span
-                      className="text-sm leading-relaxed pt-1"
-                      style={{ color: "#C8D8EE" }}
+                      {step.title}
+                    </h3>
+                    <p
+                      className="leading-relaxed mb-4"
+                      style={{
+                        fontSize: "14px",
+                        color: "#A8C6F4",
+                        maxWidth: "580px",
+                      }}
                     >
-                      {s.label}
+                      {step.description}
+                    </p>
+                    <p
+                      className="font-medium italic"
+                      style={{ fontSize: "13px", color: "#6B9FEE" }}
+                    >
+                      → {step.tagline}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── 02 · CE QUE NOUS SÉCURISONS ── */}
+          <div className="mb-20">
+            <SectionHeader num="02" label={s.secureTitle.replace("\n", " ")} />
+            <div style={sectionCardStyle}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {s.secureItems.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-4 px-5 py-5 transition-all duration-300 hover:-translate-y-0.5"
+                    style={{
+                      backgroundColor: "rgba(107,159,238,0.05)",
+                      border: "1px solid rgba(107,159,238,0.12)",
+                      borderLeft: "3px solid #6B9FEE",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <span
+                      className="flex items-center justify-center flex-shrink-0 font-bold mt-0.5"
+                      style={{
+                        color: "#5BD89A",
+                        fontSize: "10px",
+                        width: "1.25rem",
+                        height: "1.25rem",
+                        backgroundColor: "rgba(91,216,154,0.15)",
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                      }}
+                    >
+                      ✓
                     </span>
+                    <div>
+                      <p
+                        className="font-bold uppercase mb-1.5"
+                        style={{
+                          fontSize: "0.75rem",
+                          letterSpacing: "0.06em",
+                          color: "#F0F5FF",
+                        }}
+                      >
+                        {item.title}
+                      </p>
+                      <p
+                        className="text-[13px] leading-relaxed"
+                        style={{ color: "#A8C6F4" }}
+                      >
+                        {item.desc}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
-
             </div>
           </div>
-        </section>
 
-        {/* ── LES PILIERS ── */}
-        <section
-          className="border-b"
-          style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
-        >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-20 pb-0">
-            <p
-              className="text-xs tracking-[0.35em] uppercase mb-6"
-              style={{ color: "#6B9FEE" }}
-            >
-              Nos principes
-            </p>
-            <h2
-              className="font-black uppercase leading-[0.9] mb-0"
+          {/* ── 03 · NOS VALEURS ── */}
+          <div className="mb-20">
+            <SectionHeader num="03" label={s.pillarsTitle.replace("\n", " ")} />
+            <div
+              className="grid grid-cols-2 lg:grid-cols-4 gap-px"
               style={{
-                fontSize: "clamp(2.5rem, 5.5vw, 5rem)",
-                letterSpacing: "-0.025em",
-                maxWidth: "680px",
+                backgroundColor: "rgba(107,159,238,0.15)",
+                borderRadius: "10px",
+                overflow: "hidden",
               }}
             >
-              Les piliers
-              <br />
-              de notre approche.
-            </h2>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-6 lg:px-12">
-            <div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px mt-16"
-              style={{ backgroundColor: "#1B3055" }}
-            >
-              {pillars.map((p) => (
+              {s.pillars.map((pillar, i) => (
                 <div
-                  key={p.title}
-                  className="p-8 lg:p-10"
-                  style={{ backgroundColor: "#040B16" }}
+                  key={i}
+                  className="flex flex-col px-6 py-8"
+                  style={{ backgroundColor: "#0B1929" }}
                 >
                   <div
-                    className="w-8 h-0.5 mb-6"
-                    style={{ backgroundColor: "#6B9FEE" }}
-                  />
-                  <h3
-                    className="font-black uppercase mb-4"
                     style={{
-                      fontSize: "0.85rem",
-                      letterSpacing: "0.05em",
+                      width: "28px",
+                      height: "2px",
+                      backgroundColor: "#E8C36B",
+                      borderRadius: "1px",
+                      marginBottom: "1.2rem",
+                    }}
+                  />
+                  <p
+                    className="font-black uppercase mb-3"
+                    style={{
+                      fontSize: "0.78rem",
+                      letterSpacing: "0.08em",
                       color: "#F0F5FF",
                     }}
                   >
-                    {p.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE" }}>
-                    {p.desc}
+                    {pillar.title}
+                  </p>
+                  <p
+                    className="text-[13px] leading-relaxed"
+                    style={{ color: "#A8C6F4" }}
+                  >
+                    {pillar.desc}
                   </p>
                 </div>
               ))}
             </div>
-            <div className="pb-0" />
           </div>
-        </section>
 
-        {/* ── CTA FINAL ── */}
-        <section
-          className="relative overflow-hidden border-t"
-          style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
-        >
-          <div className="absolute inset-0">
-            <img
-              src="https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1600&q=70"
-              alt=""
-              className="w-full h-full object-cover object-center"
-              style={{ opacity: 0.07 }}
-            />
+          {/* ── 04 · POSITIONNEMENT ── */}
+          <div className="mb-20">
+            <SectionHeader num="04" label={s.cabinetLabel} />
+            <div style={sectionCardStyle}>
+              <h2
+                className="font-black uppercase leading-tight mb-5"
+                style={{
+                  fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+                  letterSpacing: "-0.025em",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {s.cabinetTitle}
+              </h2>
+              <p
+                className="text-[15px] leading-relaxed mb-8"
+                style={{ color: "#A8C6F4", maxWidth: "620px" }}
+              >
+                {s.cabinetText}
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                {s.cabinetPoints.map((point, i) => (
+                  <span
+                    key={i}
+                    className="flex items-center gap-2.5 px-4 py-3 text-[13px] font-medium"
+                    style={{
+                      backgroundColor: "rgba(107,159,238,0.08)",
+                      border: "1px solid rgba(107,159,238,0.25)",
+                      color: "#E8F0FC",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <span
+                      className="flex items-center justify-center flex-shrink-0 font-bold"
+                      style={{
+                        color: "#5BD89A",
+                        fontSize: "11px",
+                        width: "1.25rem",
+                        height: "1.25rem",
+                        backgroundColor: "rgba(91,216,154,0.15)",
+                        borderRadius: "50%",
+                      }}
+                    >
+                      ✓
+                    </span>
+                    {point}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-36 text-center">
+
+          {/* ── CTA FINAL ── */}
+          <div
+            className="text-center"
+            style={{ ...sectionCardStyle, padding: "4rem 2.5rem" }}
+          >
             <p
-              className="text-xs tracking-[0.35em] uppercase mb-6"
+              className="text-[11px] font-bold tracking-[0.5em] uppercase mb-5"
               style={{ color: "#6B9FEE" }}
             >
-              Prêt à démarrer ?
+              Intelligence Automobile
             </p>
             <h2
-              className="font-black uppercase leading-[0.92] mx-auto mb-12"
+              className="font-black uppercase leading-tight mb-5"
               style={{
-                fontSize: "clamp(2.8rem, 6.5vw, 5.5rem)",
+                fontSize: "clamp(1.8rem, 4vw, 3.2rem)",
                 letterSpacing: "-0.025em",
-                maxWidth: "900px",
+                whiteSpace: "pre-line",
               }}
             >
-              Votre projet,
-              <br />
-              <span style={{ color: "#6B9FEE" }}>notre méthode.</span>
+              {s.ctaTitle}
             </h2>
-            <div className="flex flex-wrap gap-4 justify-center">
+            <p
+              className="text-[14px] mb-12 mx-auto"
+              style={{ color: "#A8C6F4", maxWidth: "480px", lineHeight: 1.8 }}
+            >
+              {s.ctaSubtitle}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/contact"
-                className="px-10 py-4 text-sm font-semibold tracking-widest uppercase rounded-full border-2 transition-all duration-300"
-                style={{ borderColor: "#F0F5FF", color: "#F0F5FF" }}
+                className="px-10 py-5 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 hover:-translate-y-px hover:opacity-90"
+                style={{
+                  background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)",
+                  color: "#070F1E",
+                }}
               >
-                Nous contacter
+                {s.ctaContact}
               </Link>
               <Link
                 href="/vehicules"
-                className="px-10 py-4 text-sm font-semibold tracking-widest uppercase rounded-full transition-all duration-300"
-                style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
+                className="px-10 py-5 text-xs font-semibold tracking-widest uppercase border transition-all duration-300 hover:border-[#6B9FEE] hover:text-[#6B9FEE]"
+                style={{ borderColor: "rgba(107,159,238,0.4)", color: "#C8D8EE" }}
               >
-                Voir le stock
+                {s.ctaStock}
               </Link>
             </div>
           </div>
-        </section>
+
+          {/* Branding footer */}
+          <div className="flex items-center gap-4 mt-16">
+            <div style={{ width: "40px", height: "2px", backgroundColor: "#E8C36B", borderRadius: "1px" }} />
+            <span
+              className="text-[11px] tracking-[0.45em] uppercase font-semibold"
+              style={{ color: "#E8F0FC" }}
+            >
+              Intelligence Automobile · L&apos;import premium, autrement.
+            </span>
+            <div className="flex-1" style={{ height: "1px", backgroundColor: "rgba(107,159,238,0.15)" }} />
+          </div>
+
+        </div>
 
       </main>
       <Footer />
