@@ -101,18 +101,18 @@ export default function Header() {
           {/* Logo — centré (mobile : vrai centre ; desktop : compensation optique -30px) */}
           <Link
             href="/"
-            className="absolute left-1/2 flex-shrink-0 [transform:translateX(-50%)] md:[transform:translateX(calc(-50%_-_30px))]"
+            className="absolute left-1/2 flex-shrink-0 [transform:translateX(-50%)] lg:[transform:translateX(calc(-50%_-_30px))]"
           >
             <LogoFull markHeight={110} layout="row" textScale={0.82} />
           </Link>
 
           {/* Spacer gauche */}
-          <div className="hidden md:block" style={{ visibility: "hidden", pointerEvents: "none" }}>
+          <div className="hidden lg:block" style={{ visibility: "hidden", pointerEvents: "none" }}>
             <span className="text-[10px] tracking-[0.2em] px-5 py-2.5">{t.nav.contactCta}</span>
           </div>
 
           {/* Droite : CTA + LanguageSwitcher desktop */}
-          <div className="hidden md:flex items-center gap-5 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-5 flex-shrink-0">
             <LanguageSwitcher />
             <Link
               href="/contact-2"
@@ -136,7 +136,7 @@ export default function Header() {
 
           {/* Burger mobile */}
           <button
-            className="md:hidden ml-auto flex flex-col justify-center gap-[5px] p-2 -mr-2"
+            className="lg:hidden ml-auto flex flex-col justify-center gap-[5px] p-2 -mr-2"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
           >
@@ -152,10 +152,10 @@ export default function Header() {
 
       {/* ── Navigation V2 ── */}
       <div
-        className="hidden md:block"
+        className="hidden lg:block"
         style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto px-6">
           <nav className="flex items-center justify-evenly" style={{ height: "60px" }}>
             {NAV_LINKS_V2.map((link) => {
               const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
@@ -166,9 +166,9 @@ export default function Header() {
                   className="relative flex items-center h-full whitespace-nowrap transition-all duration-200"
                   style={{
                     color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.52)",
-                    fontSize: "13px",
+                    fontSize: "12px",
                     fontWeight: isActive ? 600 : 400,
-                    letterSpacing: "0.14em",
+                    letterSpacing: "0.08em",
                     textTransform: "uppercase",
                   }}
                   onMouseEnter={(e) => {
@@ -202,7 +202,7 @@ export default function Header() {
 
       {/* ── Menu mobile ── */}
       <div
-        className="md:hidden overflow-hidden"
+        className="lg:hidden overflow-hidden"
         style={{
           maxHeight: menuOpen ? "480px" : "0",
           transition: "max-height 0.35s ease",
