@@ -106,7 +106,7 @@ export default function Header() {
           {/* Logo — centré (mobile : vrai centre ; desktop : compensation optique -30px) */}
           <Link
             href="/"
-            className="absolute left-1/2 w-max flex-shrink-0 [transform:translateX(-50%)] lg:[transform:translateX(calc(-50%_-_30px))]"
+            className="absolute left-0 lg:left-1/2 w-max flex-shrink-0 lg:[transform:translateX(calc(-50%_-_30px))]"
           >
             {/* mobile : logo réduit pour tenir sur petit écran */}
             <span className="block lg:hidden">
