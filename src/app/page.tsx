@@ -223,20 +223,19 @@ export default async function HomePage() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF", overflowX: "hidden" }}>
 
-        {/* 1. HERO — mobile : bande photo (voiture entière, format 3:2 = aucun rognage) + titre dessous */}
-        <section className="md:hidden" style={{ position: "relative", backgroundColor: "#070F1E" }}>
-          <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 2", overflow: "hidden" }}>
-            <img
-              src="/Voiture Page Accueil/Porsche spyder 2 avec logo 2.png"
-              alt=""
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-            />
-            {/* assombrit le haut pour la lisibilité du logo posé dessus */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
-            {/* fondu bas qui fusionne la photo avec le fond sombre */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "55%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
-          </div>
-          <div style={{ padding: "0.25rem 6vw 2.75rem" }}>
+        {/* 1. HERO — mobile : photo plein écran en fond (cover) + titre superposé en bas */}
+        <section className="md:hidden" style={{ position: "relative", height: "100svh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
+          <img
+            src="/Voiture Page Accueil/Porsche spyder 2 avec logo 2.png"
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+          />
+          {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "32%", background: "linear-gradient(to bottom, rgba(7,15,30,0.9) 0%, transparent 100%)" }} />
+          {/* fondu bas : fusion avec le fond sombre + lisibilité du titre */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.82) 30%, transparent 100%)" }} />
+          {/* titre + CTA superposés en bas */}
+          <div style={{ position: "absolute", left: "6vw", right: "6vw", bottom: "7vh" }}>
             <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 11vw, 3.4rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
               {t.home.heroTitle[0]}
               <br />{t.home.heroTitle[1]}

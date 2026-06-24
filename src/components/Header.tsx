@@ -29,13 +29,17 @@ export function LogoFull({
   const isCol = layout === "col";
   const intelSize = Math.round(markHeight * (isCol ? 0.14 : 0.22) * textScale);
   const autoSize  = Math.round(markHeight * (isCol ? 0.10 : 0.15) * textScale);
+  // décalages optiques proportionnels à markHeight (valent 22 / 23 / -20 px à markHeight=110)
+  const markTop  = isCol ? undefined : markHeight * (22 / 110);
+  const markLeft = isCol ? undefined : markHeight * (23 / 110);
+  const textLeft = isCol ? undefined : markHeight * (-20 / 110);
 
   return (
     <div className={`flex ${isCol ? "flex-col items-center" : "flex-row items-center"}`} style={{ gap: isCol ? "12px" : "0px" }}>
-      <div style={{ marginTop: isCol ? undefined : "22px", position: isCol ? undefined : "relative", left: isCol ? undefined : "23px" }}>
+      <div style={{ marginTop: markTop, position: isCol ? undefined : "relative", left: markLeft, flexShrink: 0 }}>
         <LogoMark height={markHeight} />
       </div>
-      <div className="flex flex-col items-start leading-none" style={{ marginLeft: isCol ? undefined : "-20px" }}>
+      <div className="flex flex-col items-start leading-none" style={{ marginLeft: textLeft }}>
         <span
           className="font-light uppercase"
           style={{ color: "#F0F5FF", fontSize: `${intelSize}px`, letterSpacing: "0.45em" }}
@@ -102,9 +106,16 @@ export default function Header() {
           {/* Logo — centré (mobile : vrai centre ; desktop : compensation optique -30px) */}
           <Link
             href="/"
-            className="absolute left-1/2 flex-shrink-0 [transform:translateX(-50%)] lg:[transform:translateX(calc(-50%_-_30px))]"
+            className="absolute left-1/2 w-max flex-shrink-0 [transform:translateX(-50%)] lg:[transform:translateX(calc(-50%_-_30px))]"
           >
-            <LogoFull markHeight={110} layout="row" textScale={0.82} />
+            {/* mobile : logo réduit pour tenir sur petit écran */}
+            <span className="block lg:hidden">
+              <LogoFull markHeight={72} layout="row" textScale={0.82} />
+            </span>
+            {/* desktop : taille d'origine */}
+            <span className="hidden lg:block">
+              <LogoFull markHeight={110} layout="row" textScale={0.82} />
+            </span>
           </Link>
 
           {/* Spacer gauche */}
