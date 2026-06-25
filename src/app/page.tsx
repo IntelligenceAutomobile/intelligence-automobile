@@ -223,21 +223,21 @@ export default async function HomePage() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF", overflowX: "hidden" }}>
 
-        {/* 1. HERO — mobile : bandeau photo (ratio 3/2) + titre & CTA dessous (comme les autres pages) */}
-        <section className="md:hidden" style={{ position: "relative", backgroundColor: "#070F1E" }}>
-          <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 2", overflow: "hidden" }}>
+        {/* 1. HERO — photo affichée EN ENTIER, pleine largeur (conteneur au ratio exact de l'image = aucun rognage) + titre & CTA dessous. Identique sur toutes les tailles d'écran. */}
+        <section style={{ position: "relative", backgroundColor: "#070F1E" }}>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "9100 / 6336", overflow: "hidden" }}>
             <img
               src="/Photo du Site/Accueil.jpg"
               alt=""
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             />
             {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
             {/* fondu bas : fusion avec le fond sombre */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "55%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "28%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
           </div>
-          <div style={{ padding: "0.25rem 6vw 2.5rem" }}>
-            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 11vw, 3.4rem)", color: "#F0F5FF", marginBottom: "1.5rem" }}>
+          <div style={{ padding: "clamp(0.25rem, 1.5vw, 1.25rem) 6vw 6vh", maxWidth: "1400px", margin: "0 auto" }}>
+            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 6vw, 5rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
               {t.home.heroTitle[0]}
               <br />{t.home.heroTitle[1]}
               <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
@@ -248,39 +248,6 @@ export default async function HomePage() {
             >
               {t.home.heroCta}
             </Link>
-          </div>
-        </section>
-
-        {/* 1. HERO — desktop : plein écran immersif (inchangé) */}
-        <section className="hidden md:block" style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
-          <img
-            src="/Photo du Site/Accueil.jpg"
-            alt=""
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", opacity: 1.0 }}
-          />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg, rgba(7,15,30,0.78) 0%, rgba(7,15,30,0.18) 55%, transparent 100%)" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "38%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
-          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 55% 70% at 75% 44%, rgba(107,159,238,0.06) 0%, transparent 100%)" }} />
-
-          <div style={{ position: "absolute", bottom: "8vh", left: "6vw", right: "6vw" }}>
-            <h1 style={{ fontWeight: 900, lineHeight: 0.88, letterSpacing: "-0.04em", fontSize: "clamp(3rem, 5.5vw, 5.5rem)", color: "#F0F5FF", marginBottom: "3rem", maxWidth: "700px" }}>
-              {t.home.heroTitle[0]}
-              <br />{t.home.heroTitle[1]}
-              <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
-            </h1>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Link
-                href="/vehicules"
-                style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "14px 32px", transition: "opacity 0.2s" }}
-              >
-                {t.home.heroCta}
-              </Link>
-            </div>
-          </div>
-
-          <div style={{ position: "absolute", right: "3.5vw", bottom: "10vh", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-            <span style={{ fontSize: "9px", letterSpacing: "0.35em", textTransform: "uppercase", color: "#7A9CC8", writingMode: "vertical-rl" }}>{t.home.scrollIndicator}</span>
-            <div style={{ width: "1px", height: "56px", background: "linear-gradient(to bottom, #1B3055, transparent)" }} />
           </div>
         </section>
 
