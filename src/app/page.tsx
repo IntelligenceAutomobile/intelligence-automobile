@@ -226,7 +226,7 @@ export default async function HomePage() {
         {/* 1. HERO — mobile : photo plein écran en fond (cover) + titre superposé en bas */}
         <section className="md:hidden" style={{ position: "relative", height: "100svh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
           <img
-            src="/Voiture Page Accueil/Porsche spyder 2 avec logo 2.png"
+            src="/Photo du Site/Accueil.jpg"
             alt=""
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
           />
@@ -253,7 +253,7 @@ export default async function HomePage() {
         {/* 1. HERO — desktop : plein écran immersif (inchangé) */}
         <section className="hidden md:block" style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
           <img
-            src="/Voiture Page Accueil/Porsche spyder 2 avec logo 2.png"
+            src="/Photo du Site/Accueil.jpg"
             alt=""
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", opacity: 1.0 }}
           />

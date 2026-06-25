@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLocale } from "@/i18n/context";
+import YearField from "@/components/YearField";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -176,15 +177,14 @@ Notes : ${d.get("notes") || "Aucune"}`;
 
         <div>
           <label style={labelStyle}>{f.yearLabel}</label>
-          <select
+          <YearField
             name="annee"
-            style={{ ...fieldStyle, cursor: "pointer" }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
-          >
-            <option value="">{f.yearUnspecified}</option>
-            {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
+            years={ANNEES}
+            anyLabel={f.yearUnspecified}
+            otherLabel={f.yearOther}
+            manualPlaceholder={f.yearManual}
+            fieldStyle={fieldStyle}
+          />
         </div>
 
         <div>

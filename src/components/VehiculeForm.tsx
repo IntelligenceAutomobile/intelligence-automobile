@@ -89,6 +89,11 @@ const ORIGIN_OPTIONS = [
 const ORIGIN_DEFAULT = "Allemagne";
 const ORIGIN_OTHER = "Autre";
 
+// Année : scroller des années récentes ; « Autre » (en tête de liste) ouvre une saisie libre.
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OTHER = "Autre";
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1999 }, (_, i) => String(CURRENT_YEAR - i));
+
 const SECTIONS = [
   { id: "sec-identite", label: "Identité" },
   { id: "sec-presentation", label: "Présentation" },
@@ -183,6 +188,26 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
     } else {
       setOriginChoice(ORIGIN_OTHER);
       setOriginCustom(v);
+    }
+  }
+
+  // Année : select (scroller) + champ libre quand « Autre » est choisi (« Autre » en tête).
+  // Si l'année enregistrée n'est pas dans la liste, on bascule sur « Autre » pré-rempli.
+  const initialYearStr = data?.year != null ? String(data.year) : "";
+  const initialYearKnown = initialYearStr !== "" && YEAR_OPTIONS.includes(initialYearStr);
+  const [yearChoice, setYearChoice] = useState(initialYearKnown ? initialYearStr : YEAR_OTHER);
+  const [yearCustom, setYearCustom] = useState(initialYearKnown ? "" : initialYearStr);
+  const yearValue = yearChoice === YEAR_OTHER ? yearCustom.trim() : yearChoice;
+
+  // Réhydrate l'année depuis une valeur brute (restauration de brouillon).
+  function applyYear(value: string) {
+    const v = value ? String(value) : "";
+    if (v !== "" && YEAR_OPTIONS.includes(v)) {
+      setYearChoice(v);
+      setYearCustom("");
+    } else {
+      setYearChoice(YEAR_OTHER);
+      setYearCustom(v);
     }
   }
 
@@ -394,10 +419,11 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
         const el = f.elements.namedItem(n) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
         if (el) el.value = (v as string) ?? "";
       };
-      set("make", d.make); set("model", d.model); set("year", d.year); set("color", d.color);
+      set("make", d.make); set("model", d.model); set("color", d.color);
       set("fuel", d.fuel); set("transmission", d.transmission); set("power", d.power);
       set("status", d.status); set("description", d.description);
     }
+    applyYear(d.year != null ? String(d.year) : "");
     applyOrigin((d.origin as string) ?? "");
     setDraftAvailable(false);
   }
@@ -687,7 +713,30 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
               </div>
               <div>
                 <label className={labelClass} style={{ color: T.textDim }}>Année *</label>
-                <input name="year" required type="number" defaultValue={data?.year} placeholder="2014" className={fieldClass} style={fieldStyle} />
+                {/* Valeur réellement soumise (année choisie, ou saisie libre si « Autre »). */}
+                <input type="hidden" name="year" value={yearValue} />
+                <select
+                  value={yearChoice}
+                  onChange={(e) => setYearChoice(e.target.value)}
+                  className={fieldClass}
+                  style={fieldStyle}
+                >
+                  <option value={YEAR_OTHER}>Autre…</option>
+                  {YEAR_OPTIONS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+                {yearChoice === YEAR_OTHER && (
+                  <input
+                    type="number"
+                    required
+                    value={yearCustom}
+                    onChange={(e) => setYearCustom(e.target.value)}
+                    placeholder="Saisir l'année (ex : 2014)"
+                    className={fieldClass + " mt-2"}
+                    style={fieldStyle}
+                  />
+                )}
               </div>
               <div>
                 <label className={labelClass} style={{ color: T.textDim }}>Kilométrage *</label>

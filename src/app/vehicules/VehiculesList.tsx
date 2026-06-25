@@ -340,6 +340,14 @@ export default function VehiculesList({
     ? Array.from(new Set([...(MODELS_BY_MAKE[filters.make] ?? []), ...(modelsByMake[filters.make] ?? [])])).sort((a, b) => a.localeCompare(b))
     : [];
 
+  // Cases vides en fin de grille : on les comble par des cellules au fond du site (#070F1E)
+  // au lieu de laisser apparaître la couleur des séparateurs (#1B3055). Nombre de colonnes
+  // responsive (1 / 2 / 3), d'où la visibilité par breakpoint calculée à partir du total.
+  const vehCount = vehicules.length;
+  const fillerSm1 = vehCount % 2 === 1;   // 2 colonnes : 1 case à combler si total impair
+  const fillerLg1 = vehCount % 3 !== 0;   // 3 colonnes : au moins 1 case si non-multiple de 3
+  const fillerLg2 = vehCount % 3 === 1;   // 3 colonnes : 2 cases si reste = 1
+
   return (
     <section style={{ backgroundColor: "#070F1E" }}>
 
@@ -692,6 +700,9 @@ export default function VehiculesList({
             />
           );
         })}
+        {/* Cellules de remplissage — même fond que le site (#070F1E) au lieu du bleu des séparateurs ; les filets entre vraies cartes restent visibles */}
+        <div aria-hidden className={`hidden ${fillerSm1 ? "sm:block" : "sm:hidden"} ${fillerLg1 ? "lg:block" : "lg:hidden"}`} style={{ backgroundColor: "#070F1E" }} />
+        <div aria-hidden className={`hidden sm:hidden ${fillerLg2 ? "lg:block" : "lg:hidden"}`} style={{ backgroundColor: "#070F1E" }} />
       </div>
 
       {/* ── CTA RECHERCHE PERSONNALISÉE ── */}

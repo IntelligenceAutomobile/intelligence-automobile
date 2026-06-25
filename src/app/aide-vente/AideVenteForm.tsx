@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { upload } from "@vercel/blob/client";
 import { useLocale } from "@/i18n/context";
+import YearField from "@/components/YearField";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -136,13 +137,15 @@ export default function AideVenteForm() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
           <div>
             <label style={labelStyle}>{f.yearLabel}</label>
-            <select name="annee" required style={{ ...fieldStyle, cursor: "pointer" }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
-            >
-              <option value="">—</option>
-              {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
-            </select>
+            <YearField
+              name="annee"
+              years={ANNEES}
+              required
+              anyLabel="—"
+              otherLabel={f.yearOther}
+              manualPlaceholder={f.yearManual}
+              fieldStyle={fieldStyle}
+            />
           </div>
           <div>
             <label style={labelStyle}>{f.mileageLabel}</label>

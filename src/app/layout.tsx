@@ -18,8 +18,8 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Intelligence Automobile — Import Premium Européen",
   description:
-    "Importateur spécialisé dans la sélection et l'acquisition de véhicules premium en provenance d'Allemagne et de Belgique. Sécurité, transparence et accompagnement complet.",
-  keywords: "import automobile, véhicules premium, Allemagne, Belgique, BMW, Audi, Mercedes, Porsche",
+    "Importateur spécialisé dans la sélection et l'acquisition de véhicules premium en provenance de l'Union européenne. Sécurité, transparence et accompagnement complet.",
+  keywords: "import automobile, véhicules premium, Union européenne, BMW, Audi, Mercedes, Porsche",
 };
 
 export default async function RootLayout({
