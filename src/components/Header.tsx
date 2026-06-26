@@ -17,6 +17,40 @@ export function LogoMark({ height = 48 }: { height?: number }) {
   );
 }
 
+export function LogoText({
+  markHeight = 48,
+  layout = "row",
+  textScale = 1,
+  offsetLeft = true,
+}: {
+  markHeight?: number;
+  layout?: "row" | "col";
+  textScale?: number;
+  offsetLeft?: boolean;
+}) {
+  const isCol = layout === "col";
+  const intelSize = Math.round(markHeight * (isCol ? 0.14 : 0.22) * textScale);
+  const autoSize  = Math.round(markHeight * (isCol ? 0.10 : 0.15) * textScale);
+  // décalage optique vers la marque (vaut -20px à markHeight=110) — désactivable quand le texte est séparé
+  const textLeft = isCol || !offsetLeft ? undefined : markHeight * (-20 / 110);
+
+  return (
+    <div className="flex flex-col items-start leading-none" style={{ marginLeft: textLeft }}>
+      <span
+        className="font-light uppercase"
+        style={{ color: "#F0F5FF", fontSize: `${intelSize}px`, letterSpacing: "0.45em" }}
+      >
+        Intelligence
+      </span>
+      <div className={`flex items-center mt-[0.4em] ${isCol ? "justify-center" : ""}`}>
+        <span className="font-normal uppercase" style={{ color: "#6B9FEE", fontSize: `${autoSize}px`, letterSpacing: "0.38em" }}>
+          Automobile
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function LogoFull({
   markHeight = 48,
   layout = "row",
@@ -27,31 +61,16 @@ export function LogoFull({
   textScale?: number;
 }) {
   const isCol = layout === "col";
-  const intelSize = Math.round(markHeight * (isCol ? 0.14 : 0.22) * textScale);
-  const autoSize  = Math.round(markHeight * (isCol ? 0.10 : 0.15) * textScale);
-  // décalages optiques proportionnels à markHeight (valent 22 / 23 / -20 px à markHeight=110)
+  // décalages optiques proportionnels à markHeight (valent 22 / 23 px à markHeight=110)
   const markTop  = isCol ? undefined : markHeight * (22 / 110);
   const markLeft = isCol ? undefined : markHeight * (23 / 110);
-  const textLeft = isCol ? undefined : markHeight * (-20 / 110);
 
   return (
     <div className={`flex ${isCol ? "flex-col items-center" : "flex-row items-center"}`} style={{ gap: isCol ? "12px" : "0px" }}>
       <div style={{ marginTop: markTop, position: isCol ? undefined : "relative", left: markLeft, flexShrink: 0 }}>
         <LogoMark height={markHeight} />
       </div>
-      <div className="flex flex-col items-start leading-none" style={{ marginLeft: textLeft }}>
-        <span
-          className="font-light uppercase"
-          style={{ color: "#F0F5FF", fontSize: `${intelSize}px`, letterSpacing: "0.45em" }}
-        >
-          Intelligence
-        </span>
-        <div className={`flex items-center mt-[0.4em] ${isCol ? "justify-center" : ""}`}>
-          <span className="font-normal uppercase" style={{ color: "#6B9FEE", fontSize: `${autoSize}px`, letterSpacing: "0.38em" }}>
-            Automobile
-          </span>
-        </div>
-      </div>
+      <LogoText markHeight={markHeight} layout={layout} textScale={textScale} />
     </div>
   );
 }
@@ -103,19 +122,21 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="relative flex items-center justify-between" style={{ paddingTop: "18px", paddingBottom: "18px" }}>
 
-          {/* Logo — centré (mobile : vrai centre ; desktop : compensation optique -30px) */}
+          {/* Logo desktop — centré (compensation optique -30px) */}
           <Link
             href="/"
-            className="absolute left-0 lg:left-1/2 w-max flex-shrink-0 [transform:translateX(-80px)] lg:[transform:translateX(calc(-50%_-_30px))]"
+            className="hidden lg:block absolute left-1/2 w-max flex-shrink-0 [transform:translateX(calc(-50%_-_30px))]"
           >
-            {/* mobile : logo réduit pour tenir sur petit écran */}
-            <span className="block lg:hidden">
-              <LogoFull markHeight={72} layout="row" textScale={0.82} />
-            </span>
-            {/* desktop : taille d'origine */}
-            <span className="hidden lg:block">
-              <LogoFull markHeight={110} layout="row" textScale={0.82} />
-            </span>
+            <LogoFull markHeight={110} layout="row" textScale={0.82} />
+          </Link>
+
+          {/* Logo mobile — marque seule, collée au bord gauche (annule la marge transparente du PNG) */}
+          <Link href="/" className="lg:hidden flex-shrink-0 [transform:translateX(-54px)]">
+            <LogoMark height={56} />
+          </Link>
+          {/* Logo mobile — texte seul, poussé à droite (avant le burger) */}
+          <Link href="/" className="lg:hidden ml-auto mr-4 flex-shrink-0">
+            <LogoText markHeight={72} layout="row" textScale={0.82} offsetLeft={false} />
           </Link>
 
           {/* Spacer gauche */}
@@ -148,7 +169,7 @@ export default function Header() {
 
           {/* Burger mobile */}
           <button
-            className="lg:hidden ml-auto flex flex-col justify-center gap-[5px] p-2 -mr-2"
+            className="lg:hidden flex flex-col justify-center gap-[5px] p-2 -mr-2"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
           >
