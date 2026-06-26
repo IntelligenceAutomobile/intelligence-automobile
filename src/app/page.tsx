@@ -223,15 +223,23 @@ export default async function HomePage() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF", overflowX: "hidden" }}>
 
-        {/* 1. HERO — mobile : photo plein écran (cover) + titre & CTA superposés en bas */}
+        {/* 1. HERO — mobile : photo en ENTIER (plan large) sur fond flou plein écran + titre & CTA superposés */}
         <section className="md:hidden" style={{ position: "relative", height: "100svh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
+          {/* fond flou plein écran : remplit l'écran sans rogner la photo principale */}
           <img
             src="/Photo du Site/Accueil.jpg"
             alt=""
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+            aria-hidden="true"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
+          />
+          {/* photo nette, affichée en entier (plan large), légèrement remontée pour dégager le bas */}
+          <img
+            src="/Photo du Site/Accueil.jpg"
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", objectPosition: "center 42%" }}
           />
           {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "32%", background: "linear-gradient(to bottom, rgba(7,15,30,0.9) 0%, transparent 100%)" }} />
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
           {/* fondu bas : fusion avec le fond sombre + lisibilité du titre */}
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.82) 30%, transparent 100%)" }} />
           {/* titre + CTA superposés en bas */}
