@@ -223,8 +223,35 @@ export default async function HomePage() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF", overflowX: "hidden" }}>
 
-        {/* 1. HERO — photo affichée EN ENTIER, pleine largeur (conteneur au ratio exact de l'image = aucun rognage) + titre & CTA dessous. Identique sur toutes les tailles d'écran. */}
-        <section style={{ position: "relative", backgroundColor: "#070F1E" }}>
+        {/* 1. HERO — mobile : photo plein écran (cover) + titre & CTA superposés en bas */}
+        <section className="md:hidden" style={{ position: "relative", height: "100svh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
+          <img
+            src="/Photo du Site/Accueil.jpg"
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+          />
+          {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "32%", background: "linear-gradient(to bottom, rgba(7,15,30,0.9) 0%, transparent 100%)" }} />
+          {/* fondu bas : fusion avec le fond sombre + lisibilité du titre */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.82) 30%, transparent 100%)" }} />
+          {/* titre + CTA superposés en bas */}
+          <div style={{ position: "absolute", left: "6vw", right: "6vw", bottom: "7vh" }}>
+            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 11vw, 3.4rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
+              {t.home.heroTitle[0]}
+              <br />{t.home.heroTitle[1]}
+              <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
+            </h1>
+            <Link
+              href="/vehicules"
+              style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 32px", transition: "opacity 0.2s" }}
+            >
+              {t.home.heroCta}
+            </Link>
+          </div>
+        </section>
+
+        {/* 1. HERO — desktop : photo affichée en entier, pleine largeur + titre & CTA dessous */}
+        <section className="hidden md:block" style={{ position: "relative", backgroundColor: "#070F1E" }}>
           <div style={{ position: "relative", width: "100%", aspectRatio: "9100 / 6336", overflow: "hidden" }}>
             <img
               src="/Photo du Site/Accueil.jpg"
