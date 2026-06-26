@@ -22,11 +22,13 @@ export function LogoText({
   layout = "row",
   textScale = 1,
   offsetLeft = true,
+  widthScale = 1,
 }: {
   markHeight?: number;
   layout?: "row" | "col";
   textScale?: number;
   offsetLeft?: boolean;
+  widthScale?: number;
 }) {
   const isCol = layout === "col";
   const intelSize = Math.round(markHeight * (isCol ? 0.14 : 0.22) * textScale);
@@ -35,7 +37,14 @@ export function LogoText({
   const textLeft = isCol || !offsetLeft ? undefined : markHeight * (-20 / 110);
 
   return (
-    <div className="flex flex-col items-start leading-none" style={{ marginLeft: textLeft }}>
+    <div
+      className="flex flex-col items-start leading-none"
+      style={{
+        marginLeft: textLeft,
+        transform: widthScale !== 1 ? `scaleX(${widthScale})` : undefined,
+        transformOrigin: "right",
+      }}
+    >
       <span
         className="font-light uppercase"
         style={{ color: "#F0F5FF", fontSize: `${intelSize}px`, letterSpacing: "0.45em" }}
@@ -130,13 +139,13 @@ export default function Header() {
             <LogoFull markHeight={110} layout="row" textScale={0.82} />
           </Link>
 
-          {/* Logo mobile — marque seule, collée au bord gauche (annule la marge transparente du PNG) */}
-          <Link href="/" className="lg:hidden flex-shrink-0 [transform:translateX(-54px)]">
-            <LogoMark height={56} />
+          {/* Logo mobile — marque seule, à gauche (marge droite négative : récupère la zone transparente du PNG) */}
+          <Link href="/" className="lg:hidden flex-shrink-0 [transform:translateX(-34px)]" style={{ marginRight: -60 }}>
+            <LogoMark height={96} />
           </Link>
           {/* Logo mobile — texte seul, poussé à droite (avant le burger) */}
           <Link href="/" className="lg:hidden ml-auto mr-4 flex-shrink-0">
-            <LogoText markHeight={72} layout="row" textScale={0.82} offsetLeft={false} />
+            <LogoText markHeight={72} layout="row" textScale={1.0} offsetLeft={false} widthScale={1.15} />
           </Link>
 
           {/* Spacer gauche */}
