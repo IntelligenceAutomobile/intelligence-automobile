@@ -13,7 +13,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       body,
       request: req,
       onBeforeGenerateToken: async () => ({
-        allowedContentTypes: ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
+        allowedContentTypes: [
+          // Photos
+          "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/gif", "image/avif",
+          // Fichiers : PDF + bureautique
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/vnd.ms-excel",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ],
         maximumSizeInBytes: 50 * 1024 * 1024,
         addRandomSuffix: true,
       }),

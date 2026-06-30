@@ -60,6 +60,7 @@ model CollabNote {
   category  String          @default("général")
   imageUrl  String?
   images    String          @default("[]")
+  attachments String        @default("[]")
   deletedAt DateTime?
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
@@ -71,6 +72,7 @@ model CollabComment {
   noteId    String
   parentId  String?
   content   String
+  attachments String        @default("[]")
   author    String
   createdAt DateTime        @default(now())
   note      CollabNote      @relation(fields: [noteId], references: [id], onDelete: Cascade)

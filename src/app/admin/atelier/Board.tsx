@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { upload } from "@vercel/blob/client";
 import { T } from "@/app/admin/ui";
+import { parseAttachments, type Attachment, type AttachmentKind } from "@/lib/collab-attachments";
 
 type Status = "todo" | "doing" | "done";
 
 interface Reply {
   id: string;
   content: string;
+  attachments: string;
   author: string;
   createdAt: string;
 }
@@ -16,6 +18,7 @@ interface Reply {
 interface Comment {
   id: string;
   content: string;
+  attachments: string;
   author: string;
   createdAt: string;
   replies: Reply[];
@@ -44,6 +47,7 @@ interface Note {
   author: string;
   imageUrl: string | null;
   images: string;
+  attachments: string;
   comments: Comment[];
   createdAt: string;
   updatedAt: string;
@@ -104,11 +108,9 @@ export default function Board({ authorName }: { authorName: string }) {
   const [content, setContent]           = useState("");
   const [tag, setTag]                   = useState("général");
   const [urgency, setUrgency]           = useState("normale");
-  const [imageFiles, setImageFiles]     = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const att                             = useAttachments();
   const [adding, setAdding]             = useState(false);
   const [overlay, setOverlay]           = useState<{ urls: string[]; index: number } | null>(null);
-  const fileInputRef                    = useRef<HTMLInputElement>(null);
 
   // Load lastSeen from localStorage and mark initial category seen
   useEffect(() => {
@@ -175,18 +177,6 @@ export default function Board({ authorName }: { authorName: string }) {
       });
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    setImageFiles(prev => [...prev, ...files]);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = ev => setImagePreviews(prev => [...prev, ev.target?.result as string]);
-      reader.readAsDataURL(file);
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
   async function downloadImage(url: string) {
     try {
       const res = await fetch(url);
@@ -209,40 +199,17 @@ export default function Board({ authorName }: { authorName: string }) {
     }
   }
 
-  function removeImage(index: number) {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
-  }
-
-  function removeAllImages() {
-    setImageFiles([]);
-    setImagePreviews([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
   async function addNote(e: React.FormEvent) {
     e.preventDefault();
     if (!content.trim()) return;
     setAdding(true);
 
-    const images = (await Promise.all(
-      imageFiles.map(async file => {
-        try {
-          const blob = await upload(file.name, file, {
-            access: "public",
-            handleUploadUrl: "/api/collab/upload",
-          });
-          return blob.url;
-        } catch {
-          return null;
-        }
-      })
-    )).filter((u): u is string => u !== null);
+    const attachments = await att.uploadAll();
 
     const res = await fetch("/api/collab/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, tag, urgency, images, category: selectedCat }),
+      body: JSON.stringify({ content, tag, urgency, attachments, category: selectedCat }),
     });
 
     if (res.ok) {
@@ -250,7 +217,7 @@ export default function Board({ authorName }: { authorName: string }) {
       setNotes(prev => [{ ...note, comments: [] }, ...prev]);
       setContent("");
       setUrgency("normale");
-      removeAllImages();
+      att.clear();
     }
     setAdding(false);
   }
@@ -451,36 +418,10 @@ export default function Board({ authorName }: { authorName: string }) {
                 style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
                 onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) addNote(e as unknown as React.FormEvent); }}
               />
-              {imagePreviews.length > 0 && (
-                <div className="mt-2 flex flex-wrap items-start gap-2">
-                  {imagePreviews.map((src, i) => (
-                    <div key={i} className="relative">
-                      <img src={src} alt="aperçu" className="h-24 w-24 object-cover border" style={{ borderColor: "#1B3055" }} />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
-                        className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-xs"
-                        style={{ backgroundColor: "#0B1930", color: "#C8D8EE", border: "1px solid #1B3055" }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <AttachPreviews att={att} className="mt-3" size={96} />
             </div>
             <div className="flex items-center gap-3 px-4 pb-4">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-xs"
-                style={{ color: imageFiles.length > 0 ? "#6B9FEE" : "#1B3055" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#C8D8EE")}
-                onMouseLeave={e => (e.currentTarget.style.color = imageFiles.length > 0 ? "#6B9FEE" : "#1B3055")}
-              >
-                {imageFiles.length > 0 ? `📎 ${imageFiles.length} photo${imageFiles.length > 1 ? "s" : ""}` : "+ Joindre des photos"}
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+              <AttachBar att={att} />
               <div className="flex-1" />
               <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#C8D8EE" }}>
                 {TAGS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -608,13 +549,20 @@ function NoteCard({
   onDelete: (id: string) => void;
   onOpenImage: (urls: string[], index: number) => void;
 }) {
-  const images: string[] = (() => {
+  const noteAttachments = parseAttachments(note.attachments);
+  const legacyImages: string[] = (() => {
     try {
       const parsed = JSON.parse(note.images);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter((u): u is string => typeof u === "string");
     } catch {}
     return note.imageUrl ? [note.imageUrl] : [];
   })();
+  // Anciennes notes (champ legacy `images`/`imageUrl`) + nouvelles (`attachments`), sans doublon.
+  const images: string[] = Array.from(new Set([
+    ...legacyImages,
+    ...noteAttachments.filter(a => a.kind === "image").map(a => a.url),
+  ]));
+  const noteFiles = noteAttachments.filter(a => a.kind === "file");
 
   const [isEditing, setIsEditing]         = useState(false);
   const [editContent, setEditContent]     = useState(note.content);
@@ -623,6 +571,7 @@ function NoteCard({
   const [comments, setComments]           = useState<Comment[]>(note.comments);
   const [newComment, setNewComment]       = useState("");
   const [addingComment, setAddingComment] = useState(false);
+  const commentAtt                        = useAttachments();
 
   const tagStyle = TAG_STYLES[note.tag] ?? TAG_STYLES["général"];
   const urgencyStyle = URGENCY_STYLES[note.urgency] ?? URGENCY_STYLES["normale"];
@@ -638,17 +587,19 @@ function NoteCard({
 
   async function addComment(e: React.FormEvent) {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() && commentAtt.pending.length === 0) return;
     setAddingComment(true);
+    const attachments = await commentAtt.uploadAll();
     const res = await fetch(`/api/collab/notes/${note.id}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: newComment }),
+      body: JSON.stringify({ content: newComment, attachments }),
     });
     if (res.ok) {
       const c = await res.json();
       setComments(prev => [...prev, { ...c, replies: [] }]);
       setNewComment("");
+      commentAtt.clear();
     }
     setAddingComment(false);
   }
@@ -713,6 +664,8 @@ function NoteCard({
           )
         )}
 
+        {noteFiles.length > 0 && !isEditing && <FileChips files={noteFiles} className="mb-3" />}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs px-2 py-0.5" style={tagStyle}>{note.tag}</span>
@@ -768,17 +721,21 @@ function NoteCard({
         {showComments && (
           <div className="px-4 pb-4 space-y-3">
             {comments.map(c => (
-              <CommentItem key={c.id} comment={c} noteId={note.id} authorName={authorName} onDelete={deleteComment} />
+              <CommentItem key={c.id} comment={c} noteId={note.id} authorName={authorName} onDelete={deleteComment} onOpenImage={onOpenImage} />
             ))}
-            <form onSubmit={addComment} className="flex gap-2">
-              <input
-                value={newComment}
-                onChange={e => setNewComment(e.target.value)}
-                placeholder={`${authorName} — commenter...`}
-                className="flex-1 px-3 py-1.5 border text-xs outline-none"
-                style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
-              />
-              <button type="submit" disabled={addingComment || !newComment.trim()} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#C8D8EE" }}>→</button>
+            <form onSubmit={addComment} className="space-y-2">
+              <div className="flex gap-2">
+                <input
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                  placeholder={`${authorName} — commenter...`}
+                  className="flex-1 px-3 py-1.5 border text-xs outline-none"
+                  style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
+                />
+                <button type="submit" disabled={addingComment || (!newComment.trim() && commentAtt.pending.length === 0)} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#C8D8EE" }}>→</button>
+              </div>
+              <AttachPreviews att={commentAtt} size={64} />
+              <AttachBar att={commentAtt} small />
             </form>
           </div>
         )}
@@ -790,34 +747,38 @@ function NoteCard({
 /* ─── CommentItem ──────────────────────────────────────── */
 
 function CommentItem({
-  comment, noteId, authorName, onDelete,
+  comment, noteId, authorName, onDelete, onOpenImage,
 }: {
   comment: Comment;
   noteId: string;
   authorName: string;
   onDelete: (id: string) => void;
+  onOpenImage: (urls: string[], index: number) => void;
 }) {
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies]         = useState<Reply[]>(comment.replies);
   const [newReply, setNewReply]       = useState("");
   const [addingReply, setAddingReply] = useState(false);
+  const replyAtt                      = useAttachments();
 
   const replyCount = replies.length;
   const replyLabel = replyCount === 0 ? "Répondre" : `${replyCount} réponse${replyCount > 1 ? "s" : ""}`;
 
   async function addReply(e: React.FormEvent) {
     e.preventDefault();
-    if (!newReply.trim()) return;
+    if (!newReply.trim() && replyAtt.pending.length === 0) return;
     setAddingReply(true);
+    const attachments = await replyAtt.uploadAll();
     const res = await fetch(`/api/collab/notes/${noteId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: newReply, parentId: comment.id }),
+      body: JSON.stringify({ content: newReply, parentId: comment.id, attachments }),
     });
     if (res.ok) {
       const r = await res.json();
       setReplies(prev => [...prev, r]);
       setNewReply("");
+      replyAtt.clear();
     }
     setAddingReply(false);
   }
@@ -836,7 +797,8 @@ function CommentItem({
             <span className="text-xs" style={{ color: "#1B3055" }}>·</span>
             <span className="text-xs" style={{ color: "#1B3055" }}>{fmtDate(comment.createdAt)}</span>
           </div>
-          <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{comment.content}</p>
+          {comment.content && <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{comment.content}</p>}
+          <AttachmentView attachments={parseAttachments(comment.attachments)} onOpenImage={onOpenImage} />
         </div>
         <button onClick={() => onDelete(comment.id)} className="shrink-0 text-xs opacity-0 group-hover:opacity-100" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
       </div>
@@ -863,20 +825,25 @@ function CommentItem({
                     <span className="text-xs" style={{ color: "#1B3055" }}>·</span>
                     <span className="text-xs" style={{ color: "#1B3055" }}>{fmtDate(r.createdAt)}</span>
                   </div>
-                  <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{r.content}</p>
+                  {r.content && <p className="text-xs leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{r.content}</p>}
+                  <AttachmentView attachments={parseAttachments(r.attachments)} onOpenImage={onOpenImage} />
                 </div>
                 <button onClick={() => deleteReply(r.id)} className="shrink-0 text-xs opacity-0 group-hover:opacity-100" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
               </div>
             ))}
-            <form onSubmit={addReply} className="flex gap-2 mt-1">
-              <input
-                value={newReply}
-                onChange={e => setNewReply(e.target.value)}
-                placeholder={`${authorName} — répondre...`}
-                className="flex-1 px-3 py-1.5 border text-xs outline-none"
-                style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
-              />
-              <button type="submit" disabled={addingReply || !newReply.trim()} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#C8D8EE" }}>→</button>
+            <form onSubmit={addReply} className="space-y-2 mt-1">
+              <div className="flex gap-2">
+                <input
+                  value={newReply}
+                  onChange={e => setNewReply(e.target.value)}
+                  placeholder={`${authorName} — répondre...`}
+                  className="flex-1 px-3 py-1.5 border text-xs outline-none"
+                  style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#F0F5FF" }}
+                />
+                <button type="submit" disabled={addingReply || (!newReply.trim() && replyAtt.pending.length === 0)} className="px-3 py-1.5 text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "#1B3055", color: "#C8D8EE" }}>→</button>
+              </div>
+              <AttachPreviews att={replyAtt} size={56} />
+              <AttachBar att={replyAtt} small />
             </form>
           </div>
         )}
@@ -925,6 +892,190 @@ function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean })
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ─── Pièces jointes (photos + fichiers) ───────────────── */
+
+const FILE_ACCEPT =
+  ".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+interface Pending {
+  file: File;
+  kind: AttachmentKind;
+  preview: string | null;
+}
+
+type AttachApi = ReturnType<typeof useAttachments>;
+
+function useAttachments() {
+  const [pending, setPending] = useState<Pending[]>([]);
+
+  function addFiles(files: File[], kind: AttachmentKind) {
+    const entries: Pending[] = files.map(file => ({ file, kind, preview: null }));
+    setPending(prev => [...prev, ...entries]);
+    if (kind === "image") {
+      entries.forEach(entry => {
+        const reader = new FileReader();
+        reader.onload = ev =>
+          setPending(prev => prev.map(p => (p.file === entry.file ? { ...p, preview: ev.target?.result as string } : p)));
+        reader.readAsDataURL(entry.file);
+      });
+    }
+  }
+
+  function removeAt(index: number) {
+    setPending(prev => prev.filter((_, i) => i !== index));
+  }
+
+  // Les <input> sont vidés à chaque sélection (voir AttachBar.pick), donc rien à réinitialiser ici.
+  function clear() {
+    setPending([]);
+  }
+
+  async function uploadAll(): Promise<Attachment[]> {
+    const results = await Promise.all(
+      pending.map(async p => {
+        try {
+          const blob = await upload(p.file.name, p.file, {
+            access: "public",
+            handleUploadUrl: "/api/collab/upload",
+          });
+          return { url: blob.url, name: p.file.name, kind: p.kind } as Attachment;
+        } catch {
+          return null;
+        }
+      })
+    );
+    return results.filter((a): a is Attachment => a !== null);
+  }
+
+  return { pending, addFiles, removeAt, clear, uploadAll };
+}
+
+function AttachButton({ icon, label, count, small, onClick }: {
+  icon: string;
+  label: string;
+  count: number;
+  small?: boolean;
+  onClick: () => void;
+}) {
+  const active = count > 0;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 border ${small ? "px-2 py-1" : "px-3 py-1.5"} text-xs`}
+      style={{ borderColor: active ? "#6B9FEE" : "#2C4B7C", color: active ? "#6B9FEE" : "#C8D8EE", backgroundColor: "#0D1E38" }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = "#6B9FEE"; e.currentTarget.style.color = active ? "#9CC0FF" : "#F0F5FF"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = active ? "#6B9FEE" : "#2C4B7C"; e.currentTarget.style.color = active ? "#6B9FEE" : "#C8D8EE"; }}
+    >
+      <span>{icon}</span>
+      <span>{label}{active ? ` · ${count}` : ""}</span>
+    </button>
+  );
+}
+
+function AttachBar({ att, small }: { att: AttachApi; small?: boolean }) {
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageCount = att.pending.filter(p => p.kind === "image").length;
+  const fileCount = att.pending.filter(p => p.kind === "file").length;
+  function pick(e: React.ChangeEvent<HTMLInputElement>, kind: AttachmentKind) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length) att.addFiles(files, kind);
+    e.target.value = "";
+  }
+  return (
+    <div className="flex items-center gap-2">
+      <AttachButton icon="📷" label="Photos" count={imageCount} small={small} onClick={() => imageInputRef.current?.click()} />
+      <AttachButton icon="📎" label="Fichiers" count={fileCount} small={small} onClick={() => fileInputRef.current?.click()} />
+      <input ref={imageInputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => pick(e, "image")} />
+      <input ref={fileInputRef} type="file" accept={FILE_ACCEPT} multiple className="hidden" onChange={e => pick(e, "file")} />
+    </div>
+  );
+}
+
+function AttachPreviews({ att, size = 80, className = "" }: { att: AttachApi; size?: number; className?: string }) {
+  if (att.pending.length === 0) return null;
+  return (
+    <div className={`flex flex-wrap items-start gap-2 ${className}`}>
+      {att.pending.map((p, i) => (
+        <div key={i} className="relative">
+          {p.kind === "image" ? (
+            p.preview ? (
+              <img src={p.preview} alt="aperçu" className="object-cover border" style={{ width: size, height: size, borderColor: "#1B3055" }} />
+            ) : (
+              <div className="border flex items-center justify-center text-xs" style={{ width: size, height: size, borderColor: "#1B3055", color: "#1B3055" }}>…</div>
+            )
+          ) : (
+            <div className="border flex flex-col items-center justify-center gap-1 px-2 text-center" style={{ width: size, height: size, borderColor: "#2C4B7C", color: "#9CC0FF" }}>
+              <span style={{ fontSize: "18px" }}>📄</span>
+              <span className="leading-tight w-full truncate" style={{ fontSize: "10px" }}>{p.file.name}</span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => att.removeAt(i)}
+            className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-xs"
+            style={{ backgroundColor: "#0B1930", color: "#C8D8EE", border: "1px solid #1B3055" }}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FileChips({ files, className = "" }: { files: Attachment[]; className?: string }) {
+  if (files.length === 0) return null;
+  return (
+    <div className={`flex flex-wrap gap-1.5 ${className}`}>
+      {files.map((a, i) => (
+        <a
+          key={i}
+          href={a.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="inline-flex items-center gap-1.5 px-2 py-1 text-xs border"
+          style={{ borderColor: "#2C4B7C", color: "#9CC0FF" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = "#6B9FEE"; e.currentTarget.style.color = "#F0F5FF"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "#2C4B7C"; e.currentTarget.style.color = "#9CC0FF"; }}
+        >
+          <span>📄</span>
+          <span className="truncate" style={{ maxWidth: "180px" }}>{a.name}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function AttachmentView({ attachments, onOpenImage }: { attachments: Attachment[]; onOpenImage: (urls: string[], index: number) => void }) {
+  if (attachments.length === 0) return null;
+  const images = attachments.filter(a => a.kind === "image");
+  const files = attachments.filter(a => a.kind === "file");
+  const imageUrls = images.map(a => a.url);
+  return (
+    <div className="mt-1.5 space-y-1.5">
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {images.map((a, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onOpenImage(imageUrls, i)}
+              className="overflow-hidden border"
+              style={{ borderColor: "#1B3055" }}
+            >
+              <img src={a.url} alt="pièce jointe" className="object-cover" style={{ width: 64, height: 64 }} />
+            </button>
+          ))}
+        </div>
+      )}
+      <FileChips files={files} />
     </div>
   );
 }
