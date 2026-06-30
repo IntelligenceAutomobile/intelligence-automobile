@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte de visite — César Vachon · Intelligence Automobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --noir:#070F1E; --noir2:#040B16; --surface:#112240; --border:#1B3055;
+    --blanc:#F0F5FF; --gris:#C8D8EE; --bleu:#6B9FEE; --bleu-dark:#4B7FD8; --bleu-soft:#A8C4F0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:#0b1220;}
+  body{
+    font-family:'DM Sans',Arial,sans-serif; -webkit-font-smoothing:antialiased;
+    color:var(--blanc); text-rendering:geometricPrecision;
+  }
+
+  /* ───── Mise en page écran ───── */
+  .stage{display:flex; flex-direction:column; align-items:center; gap:13mm; padding:18mm 8mm 22mm;}
+  .cardwrap{display:flex; flex-direction:column; align-items:center; gap:3.5mm;}
+  .cap{font-size:2.7mm; letter-spacing:0.32em; text-transform:uppercase; color:#5d7398; font-weight:500;}
+
+  .toolbar{position:fixed; top:14px; right:16px; display:flex; gap:10px; z-index:10;}
+  .toolbar button{
+    font-family:inherit; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; font-weight:600;
+    color:var(--bleu-soft); background:rgba(7,15,30,0.7); border:1px solid rgba(107,159,238,0.35);
+    padding:9px 14px; cursor:pointer; transition:.2s; backdrop-filter:blur(8px);
+  }
+  .toolbar button:hover{color:var(--blanc); border-color:rgba(107,159,238,0.8);}
+
+  /* ───── La carte : zone d'art = 91×61 mm (rognage 85×55 + 3 mm de fond perdu) ───── */
+  .card{
+    position:relative; width:91mm; height:61mm; overflow:hidden;
+    background:var(--noir); color:var(--blanc);
+    box-shadow:0 5mm 22mm rgba(0,0,0,0.55);
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+
+  /* Repère de coupe (écran, sur demande) */
+  .trim{position:absolute; inset:3mm; border:0.2mm dashed rgba(107,159,238,0.45); pointer-events:none; display:none;}
+  body.guides .trim{display:block;}
+
+  /* ════════════ RECTO ════════════ */
+  .recto{display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .glow{
+    position:absolute; left:50%; top:44%; width:78mm; height:62mm; transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse at center,
+      rgba(107,159,238,0.22) 0%, rgba(107,159,238,0.07) 38%, transparent 68%);
+    filter:blur(1.5mm); pointer-events:none;
+  }
+  .brand{position:relative; display:flex; flex-direction:column; align-items:center; transform:translateY(-2.2mm);}
+  .mark{height:14.5mm; width:auto; display:block; filter:drop-shadow(0 1mm 3mm rgba(75,127,216,0.35));}
+  .word{display:flex; flex-direction:column; align-items:center; margin-top:3.4mm;}
+  .intel{
+    font-weight:300; text-transform:uppercase; color:var(--blanc);
+    font-size:3.35mm; letter-spacing:0.45em; text-indent:0.45em; line-height:1;
+  }
+  .autoline{display:flex; align-items:center; margin-top:1.7mm;}
+  .auto{
+    font-weight:400; text-transform:uppercase; color:var(--bleu);
+    font-size:2.3mm; letter-spacing:0.38em; text-indent:0.38em; line-height:1;
+  }
+  .dash{width:4.5mm; height:0.3mm; background:var(--bleu); opacity:0.7;}
+  .dash.l{margin-right:2.6mm;} .dash.r{margin-left:2.6mm;}
+  .filet{
+    width:42mm; height:0.35mm; margin-top:4.2mm;
+    background:linear-gradient(to right, transparent, var(--bleu) 30%, var(--bleu) 70%, transparent);
+    opacity:0.65;
+  }
+  .tagline{
+    position:absolute; left:0; right:0; bottom:6.4mm; text-align:center;
+    font-size:2.05mm; letter-spacing:0.24em; text-transform:uppercase; font-weight:400;
+    color:rgba(168,196,240,0.62);
+  }
+
+  /* ════════════ VERSO ════════════ */
+  .verso .wm{
+    position:absolute; right:-9mm; bottom:-13mm; height:44mm; width:auto;
+    opacity:0.05; pointer-events:none; filter:grayscale(0.12);
+  }
+  .vinner{position:absolute; inset:0; padding:6.6mm 7.2mm 6.8mm; display:flex; flex-direction:column;}
+  .vhead{display:flex; align-items:center; justify-content:space-between;}
+  .vmark{height:8mm; width:auto; display:block;}
+  .vhead-tag{
+    font-size:1.9mm; letter-spacing:0.26em; text-transform:uppercase; font-weight:500;
+    color:rgba(168,196,240,0.5); text-align:right;
+  }
+  .vname{margin-top:auto;}
+  .name{
+    font-weight:700; text-transform:uppercase; color:var(--blanc);
+    font-size:4mm; letter-spacing:0.1em; line-height:1;
+  }
+  .tick{width:7mm; height:0.55mm; background:var(--bleu); margin:2.1mm 0;}
+  .role{
+    font-weight:500; text-transform:uppercase; color:var(--bleu);
+    font-size:2.25mm; letter-spacing:0.3em; line-height:1;
+  }
+  .contacts{margin-top:3.6mm;}
+  .row{
+    display:flex; align-items:center; padding:1.45mm 0;
+    border-top:0.2mm solid var(--border);
+  }
+  .row:last-child{border-bottom:0.2mm solid var(--border);}
+  .lbl{
+    width:18.5mm; flex:none;
+    font-size:1.95mm; letter-spacing:0.2em; text-transform:uppercase; font-weight:600; color:var(--bleu);
+  }
+  .val{font-size:2.65mm; letter-spacing:0.004em; color:var(--blanc); font-weight:400; white-space:nowrap;}
+
+  /* ───── Impression ───── */
+  @media print{
+    html,body{background:#fff;}
+    .toolbar,.cap{display:none !important;}
+    .trim{display:none !important;}
+    .stage{gap:0; padding:0;}
+    .cardwrap{gap:0;}
+    .card{box-shadow:none; break-after:page; page-break-after:always;}
+    .card:last-child{break-after:auto; page-break-after:auto;}
+    @page{size:91mm 61mm; margin:0;}
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button onclick="document.body.classList.toggle('guides')">Repères de coupe</button>
+    <button onclick="window.print()">Imprimer / PDF</button>
+  </div>
+
+  <div class="stage">
+
+    <!-- ════════ RECTO ════════ -->
+    <div class="cardwrap">
+      <div class="card recto">
+        <div class="glow"></div>
+        <div class="brand">
+          <img class="mark" src="assets/ia-mark.png" alt="Intelligence Automobile">
+          <div class="word">
+            <div class="intel">Intelligence</div>
+            <div class="autoline">
+              <span class="dash l"></span>
+              <div class="auto">Automobile</div>
+              <span class="dash r"></span>
+            </div>
+          </div>
+          <div class="filet"></div>
+        </div>
+        <div class="tagline">Import premium · Allemagne · Belgique → France</div>
+        <div class="trim"></div>
+      </div>
+      <div class="cap">Recto — 85 × 55 mm + 3 mm fond perdu</div>
+    </div>
+
+    <!-- ════════ VERSO ════════ -->
+    <div class="cardwrap">
+      <div class="card verso">
+        <img class="wm" src="assets/ia-mark.png" alt="">
+        <div class="vinner">
+          <div class="vhead">
+            <img class="vmark" src="assets/ia-mark.png" alt="Intelligence Automobile">
+            <div class="vhead-tag">Import premium<br>européen</div>
+          </div>
+          <div class="vname">
+            <div class="name">César Vachon</div>
+            <div class="tick"></div>
+            <div class="role">Fondateur</div>
+          </div>
+          <div class="contacts">
+            <div class="row"><span class="lbl">Email</span><span class="val">contact@intelligenceautomobile.com</span></div>
+            <div class="row"><span class="lbl">Téléphone</span><span class="val">+33 6 17 17 26 00</span></div>
+            <div class="row"><span class="lbl">Site</span><span class="val">intelligenceautomobile.com</span></div>
+            <div class="row"><span class="lbl">Zone</span><span class="val">France · Import DE &amp; BE</span></div>
+          </div>
+        </div>
+        <div class="trim"></div>
+      </div>
+      <div class="cap">Verso — 85 × 55 mm + 3 mm fond perdu</div>
+    </div>
+
+  </div>
+</body>
+</html>

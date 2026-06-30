@@ -59,3 +59,7 @@ next-env.d.ts
 /tools/
 *.pt
 /public/Audi TT 3/
+
+# python (outils de génération de documents)
+__pycache__/
+*.pyc
