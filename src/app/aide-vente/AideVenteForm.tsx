@@ -7,7 +7,7 @@ import YearField from "@/components/YearField";
 
 type Status = "idle" | "sending" | "success" | "error";
 
-const ANNEES = Array.from({ length: 13 }, (_, i) => 2025 - i);
+const ANNEES = Array.from({ length: 13 }, (_, i) => new Date().getFullYear() - i);
 
 const fieldStyle: React.CSSProperties = {
   backgroundColor: "#071428",
