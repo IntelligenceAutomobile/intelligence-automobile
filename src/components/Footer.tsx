@@ -75,7 +75,7 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3.5 text-sm" style={{ color: "#D4E2F4", fontWeight: 400 }}>
               <li>contact@intelligenceautomobile.com</li>
-              <li>+33 (0)6 00 00 00 00</li>
+              <li>+33 6 20 24 38 79</li>
               <li>France</li>
             </ul>
           </div>

@@ -574,7 +574,7 @@ export const en: Translations = {
     sendMessage: "Send a message",
     info: [
       { label: "Email", value: "contact@intelligenceautomobile.com" },
-      { label: "Phone", value: "+33 (0)6 00 00 00 00" },
+      { label: "Phone", value: "+33 6 20 24 38 79" },
       { label: "Activity area", value: "France · Import DE & BE" },
       { label: "Response", value: "Within 24 business hours" },
     ],

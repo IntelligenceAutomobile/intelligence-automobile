@@ -577,7 +577,7 @@ export const fr = {
     sendMessage: "Envoyer un message",
     info: [
       { label: "Email", value: "contact@intelligenceautomobile.com" },
-      { label: "Téléphone", value: "+33 (0)6 00 00 00 00" },
+      { label: "Téléphone", value: "+33 6 20 24 38 79" },
       { label: "Zone d'activité", value: "France · Import DE & BE" },
       { label: "Réponse", value: "Sous 24h ouvrées" },
     ],

@@ -19,30 +19,33 @@ export default async function ConvoyagePage2() {
         {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
-          style={{ height: "100vh", minHeight: "600px" }}
+          style={{ height: "100svh", minHeight: "520px" }}
         >
+          {/* fond flou de secours (même scène) : évite tout vide sur les ratios d'écran extrêmes */}
           <img
-            src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png"
+            src="/Photo du Site/Convoyage 2.png"
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{ opacity: 0.92 }}
+            aria-hidden="true"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
           />
-
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(120deg, rgba(7,15,30,0.85) 0%, rgba(7,15,30,0.2) 60%, transparent 100%)",
-            }}
+          {/* MOBILE : version portrait, remplit tout le hero (cover), camion entier */}
+          <img
+            src="/Photo du Site/Convoyage.png"
+            alt=""
+            className="md:hidden"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
           />
-
-          <div
-            className="absolute left-0 right-0 bottom-0"
-            style={{
-              height: "40%",
-              background: "linear-gradient(to top, #070F1E, transparent)",
-            }}
+          {/* DESKTOP : version paysage, remplit tout le hero (cover), camion entier */}
+          <img
+            src="/Photo du Site/Convoyage 2.png"
+            alt=""
+            className="hidden md:block"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
           />
+          {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
+          {/* fondu bas : fusion avec le fond sombre + lisibilité du titre */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.82) 30%, transparent 100%)" }} />
 
           <div
             className="absolute z-10"

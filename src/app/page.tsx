@@ -218,61 +218,83 @@ export default async function HomePage() {
           .ia-step-num { animation: none; }
           .ia-step, .ia-step:hover { transition: none; transform: none; }
         }
+
+        /* 3. CHIFFRES — chiffre + label (rendu figé, 2 lignes max sur desktop) */
+        .ia-stat-row {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 4.5vh 6vw;
+          display: flex;
+          align-items: center;
+          gap: 3rem;
+        }
+        .ia-stat-num {
+          flex-shrink: 0;
+          min-width: 200px;
+          border-left: 2px solid #6B9FEE;
+          padding-left: 1.6rem;
+          font-weight: 900;
+          font-size: clamp(2.8rem, 5.5vw, 5rem);
+          letter-spacing: -0.04em;
+          line-height: 1;
+          color: #F0F5FF;
+        }
+        .ia-stat-label {
+          flex-shrink: 0;
+          width: 33rem;
+          font-size: 1.2rem;
+          line-height: 1.55;
+          font-weight: 500;
+          letter-spacing: 0.01em;
+          color: #DCE8F8;
+          text-wrap: balance;
+        }
+        @media (max-width: 1023px) {
+          .ia-stat-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.9rem;
+            padding: 4vh 7vw;
+          }
+          .ia-stat-num {
+            min-width: 0;
+            padding-left: 1.1rem;
+            font-size: clamp(2.6rem, 13vw, 3.6rem);
+          }
+          .ia-stat-label {
+            width: 100%;
+            max-width: 30rem;
+            font-size: 1.05rem;
+            line-height: 1.5;
+          }
+        }
       ` }} />
 
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF", overflowX: "hidden" }}>
 
-        {/* 1. HERO — mobile : photo en ENTIER (plan large) sur fond flou plein écran + titre & CTA superposés */}
-        <section className="md:hidden" style={{ position: "relative", height: "100svh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
+        {/* 1. HERO — unifié mobile + desktop : plein écran, photo en ENTIER (plan large) sur fond flou + titre & CTA superposés. Cadrage identique sur tous les formats. */}
+        <section style={{ position: "relative", height: "100svh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
           {/* fond flou plein écran : remplit l'écran sans rogner la photo principale */}
           <img
-            src="/Photo du Site/Accueil.jpg"
+            src="/Photo du Site/Voiture Accueil.jpg"
             alt=""
             aria-hidden="true"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
           />
-          {/* photo nette, affichée en entier (plan large), légèrement remontée pour dégager le bas */}
+          {/* photo nette, remplit tout le hero (cover) — recadrée sur le centre pour garder les voitures principales */}
           <img
-            src="/Photo du Site/Accueil.jpg"
+            src="/Photo du Site/Voiture Accueil.jpg"
             alt=""
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", objectPosition: "center 42%" }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "38% 50%" }}
           />
           {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
           {/* fondu bas : fusion avec le fond sombre + lisibilité du titre */}
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.82) 30%, transparent 100%)" }} />
           {/* titre + CTA superposés en bas */}
-          <div style={{ position: "absolute", left: "6vw", right: "6vw", bottom: "7vh" }}>
-            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 11vw, 3.4rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
-              {t.home.heroTitle[0]}
-              <br />{t.home.heroTitle[1]}
-              <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
-            </h1>
-            <Link
-              href="/vehicules"
-              style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 32px", transition: "opacity 0.2s" }}
-            >
-              {t.home.heroCta}
-            </Link>
-          </div>
-        </section>
-
-        {/* 1. HERO — desktop : photo affichée en entier, pleine largeur + titre & CTA dessous */}
-        <section className="hidden md:block" style={{ position: "relative", backgroundColor: "#070F1E" }}>
-          <div style={{ position: "relative", width: "100%", aspectRatio: "9100 / 6336", overflow: "hidden" }}>
-            <img
-              src="/Photo du Site/Accueil.jpg"
-              alt=""
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-            />
-            {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
-            {/* fondu bas : fusion avec le fond sombre */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "28%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
-          </div>
-          <div style={{ padding: "clamp(0.25rem, 1.5vw, 1.25rem) 6vw 6vh", maxWidth: "1400px", margin: "0 auto" }}>
-            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 6vw, 5rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
+          <div style={{ position: "absolute", left: "6vw", right: "6vw", bottom: "7vh", maxWidth: "1400px", margin: "0 auto" }}>
+            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 7vw, 5rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
               {t.home.heroTitle[0]}
               <br />{t.home.heroTitle[1]}
               <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
@@ -302,11 +324,11 @@ export default async function HomePage() {
           {t.home.stats.map((s) => (
             <div key={s.val}>
               <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%)" }} />
-              <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "4.5vh 6vw", display: "flex", alignItems: "center", gap: "5vw" }}>
-                <div style={{ fontWeight: 900, fontSize: "clamp(2.8rem, 5.5vw, 5rem)", letterSpacing: "-0.04em", color: "#F0F5FF", lineHeight: 1, flexShrink: 0, minWidth: "200px", borderLeft: "2px solid #6B9FEE", paddingLeft: "1.6rem" }}>
+              <div className="ia-stat-row">
+                <div className="ia-stat-num">
                   <CountUp value={s.val} />
                 </div>
-                <div style={{ fontSize: "clamp(1.05rem, 1.7vw, 1.5rem)", lineHeight: 1.5, fontWeight: 500, color: "#DCE8F8", letterSpacing: "0.01em", maxWidth: "560px" }}>
+                <div className="ia-stat-label">
                   {s.label}
                 </div>
               </div>

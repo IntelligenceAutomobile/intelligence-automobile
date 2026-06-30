@@ -10,7 +10,7 @@ export const COMPANY = {
   tvaNumber: "",
   rcs: "",
   email: "",
-  phone: "",
+  phone: "+33 6 20 24 38 79",
   website: "",
   // Logo affiché en haut du devis (sur fond blanc). Chemin public, espaces encodés.
   logoSrc: "/Logo/v9%20transparent.png",
