@@ -15,9 +15,10 @@ Avant toute modification de code, **toujours proposer la solution** et attendre 
 
 # Conventions de rédaction
 
-## Pas de tirets dans les phrases
-Ne **jamais** utiliser de tiret cadratin (—) ni de tiret demi-cadratin (–) comme ponctuation au milieu d'une phrase (incises, ruptures, mises en relief). Ça fait « écrit par une IA ».
-- Utiliser des **virgules**, des parenthèses ou deux phrases distinctes à la place.
+## Tirets : jamais en parenthèse
+Les tirets (cadratin `—`, demi-cadratin `–`) ne sont **pas** interdits. Ce qu'il ne faut **pas** faire : s'en servir de parenthèse (l'incise qui encadre une remarque au milieu d'une phrase). Ça fait « écrit par une IA ».
+- Pour une incise : de vraies parenthèses, des virgules, ou deux phrases distinctes.
+- Les autres usages (énumération, plage de valeurs, tirets déjà présents sur le site) restent acceptés.
 - Vaut pour tout le contenu rédactionnel du site (textes i18n, descriptions, etc.).
 
 # Conventions d'affichage
