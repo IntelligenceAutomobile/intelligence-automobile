@@ -22,7 +22,7 @@ export default async function VehiculesV2Page({
   const makeFilter = params.make;
   const fuelFilter = params.fuel;
   const maxPrice = params.maxPrice ? parseInt(params.maxPrice) : undefined;
-  const statusFilter = params.status ?? "tous";
+  const statusFilter = params.status ?? "disponible";
 
   const where: Record<string, unknown> = {};
   if (!isAdmin) where.isPublished = true;

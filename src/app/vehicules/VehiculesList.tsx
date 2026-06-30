@@ -95,7 +95,6 @@ function VehicleCard({
   };
 
   const specs = [
-    { label: tv.specModel, value: model },
     { label: tv.specYear, value: String(year) },
     { label: tv.specMileage, value: mileage },
     { label: tv.specFuel, value: fuelLabel },
@@ -186,40 +185,54 @@ function VehicleCard({
         </div>
       </div>
 
-      {/* ── BARRE UNIFIÉE : MARQUE · STATUT · CARACTÉRISTIQUES · PRIX ── */}
-      {/* Carte étroite (<29rem) : [marque+badge ··· prix] ligne 1, "Caractéristiques" ligne 2. Carte large : tout sur une seule ligne (inchangé). */}
+      {/* ── BLOC-TITRE PERMANENT : MARQUE · STATUT / MODÈLE · PRIX ── */}
+      {/* Toujours visible (avant dépliage). Cliquable → fiche détail, cohérent avec la photo. */}
+      <div
+        onClick={onClick}
+        className="cursor-pointer flex items-start justify-between gap-x-4 px-5 pt-4 pb-3.5 transition-opacity duration-200 hover:opacity-90"
+        style={{ backgroundColor: "#070F1E" }}
+      >
+        <div className="flex flex-col gap-1.5 min-w-0">
+          {/* Suréligne : marque + badge statut */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
+            <span
+              className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
+              style={{
+                color: isSold ? "#C8D8EE" : "#6B9FEE",
+                border: `1px solid ${isSold ? "#1B3055" : "rgba(107,159,238,0.3)"}`,
+                backgroundColor: isSold ? "transparent" : "rgba(107,159,238,0.08)",
+              }}
+            >
+              {isSold ? tv.soldBadge : tv.availableBadge}
+            </span>
+          </div>
+          {/* Modèle précis — mis en avant, casse respectée, peut passer sur 2 lignes */}
+          <h3 className="font-extrabold text-[15px] @[29rem]:text-[16px] leading-[1.2] break-words" style={{ color: "#F0F5FF", letterSpacing: "-0.01em" }}>
+            {model}
+          </h3>
+        </div>
+        {/* Prix calé en haut à droite */}
+        <span className="font-black text-base @[29rem]:text-[17px] flex-shrink-0" style={{ color: "#F0F5FF" }}>{price}</span>
+      </div>
+
+      {/* ── BARRE « CARACTÉRISTIQUES » (toggle de la grille dépliante) ── */}
       <button
         type="button"
         onClick={toggleInfo}
-        className="w-full flex flex-wrap @[29rem]:flex-nowrap items-center @[29rem]:justify-between gap-x-3 gap-y-2 px-5 py-3 transition-opacity duration-200 hover:opacity-80"
+        className="w-full flex items-center justify-between gap-2 px-5 py-3 transition-opacity duration-200 hover:opacity-80"
         style={{ borderTop: "1px solid #1B3055", borderBottom: "1px solid #1B3055", backgroundColor: "#070F1E" }}
       >
-        <div className="flex items-center gap-2.5 min-w-0 order-1">
-          <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
-          <span
-            className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
-            style={{
-              color: isSold ? "#C8D8EE" : "#6B9FEE",
-              border: `1px solid ${isSold ? "#1B3055" : "rgba(107,159,238,0.3)"}`,
-              backgroundColor: isSold ? "transparent" : "rgba(107,159,238,0.08)",
-            }}
-          >
-            {isSold ? tv.soldBadge : tv.availableBadge}
-          </span>
-        </div>
-        <span className="font-black text-base flex-shrink-0 ml-auto @[29rem]:ml-0 order-2 @[29rem]:order-3" style={{ color: "#F0F5FF" }}>{price}</span>
-        <div className="flex items-center justify-between gap-2 w-full @[29rem]:w-auto order-3 @[29rem]:order-2 pt-2.5 @[29rem]:pt-0 border-t @[29rem]:border-t-0" style={{ borderColor: "#13243B" }}>
-          <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
-            {tv.specs}
-          </span>
-          <svg
-            width="14" height="14" viewBox="0 0 14 14" fill="none"
-            className="transition-transform duration-300 flex-shrink-0"
-            style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", color: "#6B9FEE" }}
-          >
-            <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        <span className="text-[11px] font-semibold tracking-[0.3em] uppercase" style={{ color: "#6B9FEE" }}>
+          {tv.specs}
+        </span>
+        <svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none"
+          className="transition-transform duration-300 flex-shrink-0"
+          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", color: "#6B9FEE" }}
+        >
+          <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
       {/* ── GRILLE DÉROULANTE ── */}
@@ -326,7 +339,7 @@ export default function VehiculesList({
 
   const fuelOpts = tv.fuelOptions;
   const transOpts = tv.transmissionOptions;
-  const currentStatus = filters.status ?? "tous";
+  const currentStatus = filters.status ?? "disponible";
   const hasActiveFilters =
     filters.make || filters.model || filters.fuel || filters.transmission ||
     filters.maxPrice || filters.maxMileage || filters.minYear;
@@ -367,7 +380,7 @@ export default function VehiculesList({
               ].map((s) => (
                 <button
                   key={s.key}
-                  onClick={() => updateFilter("status", s.key === "tous" ? "" : s.key)}
+                  onClick={() => updateFilter("status", s.key)}
                   className="text-[11px] tracking-[0.3em] uppercase px-7 py-3.5 transition-all duration-200 flex-shrink-0 hover:-translate-y-px hover:opacity-90"
                   style={{
                     background: currentStatus === s.key ? "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)" : "rgba(107,159,238,0.04)",
@@ -540,7 +553,7 @@ export default function VehiculesList({
             ].map((s) => (
               <button
                 key={s.key}
-                onClick={() => updateFilter("status", s.key === "tous" ? "" : s.key)}
+                onClick={() => updateFilter("status", s.key)}
                 className="flex-1 text-[10px] tracking-[0.08em] uppercase px-1 py-2.5 transition-all duration-200"
                 style={{
                   background: currentStatus === s.key ? "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)" : "rgba(107,159,238,0.04)",

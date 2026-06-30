@@ -10,11 +10,11 @@ export default async function HomePage() {
   const [{ t }, derniersVehicules, stockCount] = await Promise.all([
     getTranslations(),
     prisma.vehicle.findMany({
-      where: { status: "disponible" },
+      where: { status: "disponible", isPublished: true },
       orderBy: { createdAt: "desc" },
       take: 3,
     }),
-    prisma.vehicle.count({ where: { status: "disponible" } }),
+    prisma.vehicle.count({ where: { status: "disponible", isPublished: true } }),
   ]);
 
   return (
@@ -306,7 +306,7 @@ export default async function HomePage() {
                 <div style={{ fontWeight: 900, fontSize: "clamp(2.8rem, 5.5vw, 5rem)", letterSpacing: "-0.04em", color: "#F0F5FF", lineHeight: 1, flexShrink: 0, minWidth: "200px", borderLeft: "2px solid #6B9FEE", paddingLeft: "1.6rem" }}>
                   <CountUp value={s.val} />
                 </div>
-                <div style={{ fontSize: "13px", lineHeight: 1.8, color: "#C8D8EE", letterSpacing: "0.03em" }}>
+                <div style={{ fontSize: "clamp(1.05rem, 1.7vw, 1.5rem)", lineHeight: 1.5, fontWeight: 500, color: "#DCE8F8", letterSpacing: "0.01em", maxWidth: "560px" }}>
                   {s.label}
                 </div>
               </div>
