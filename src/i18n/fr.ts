@@ -177,7 +177,7 @@ export const fr = {
     stepsLabel: "Comment ça marche",
     steps: [
       { num: "01", title: "Vous définissez", desc: "Marque, modèle, motorisation, budget, kilométrage, options. Le plus précis vous êtes, le mieux nous ciblons." },
-      { num: "02", title: "Nous cherchons", desc: "+2 000 annonces analysées chaque mois sur le marché de l'Union européenne. Nous filtrons, vérifions, comparons." },
+      { num: "02", title: "Nous cherchons", desc: "+2 000 annonces analysées chaque mois sur les marchés de l'Union européenne. Nous filtrons, vérifions, comparons." },
       { num: "03", title: "Vous validez", desc: "Sous 5 à 15 jours, vous recevez une sélection commentée avec photos, historique et rapport de prix. Aucun engagement avant votre accord." },
       { num: "04", title: "Nous livrons", desc: "Achat, contrôle technique, homologation, immatriculation française. Remise des clés en France." },
     ],
@@ -471,13 +471,13 @@ export const fr = {
         subtitle: "Roulez l'esprit tranquille.",
         paragraphs: [
           "Chaque véhicule est livré avec une garantie panne mécanique de 3 mois incluse, couvrant les organes essentiels — moteur, boîte de vitesses et transmission.",
-          "Pour aller plus loin, une extension de 12 à 24 mois est disponible en option, avec une prise en charge dans notre réseau de garages partenaires partout en France.",
+          "Pour aller plus loin, une extension jusqu'à 24 mois est disponible en option, avec assistance et véhicule de remplacement.",
         ],
         points: [
           "Garantie panne mécanique 3 mois incluse",
-          "Extension 12 à 24 mois en option",
+          "Extension jusqu'à 24 mois en option",
           "Moteur, boîte et transmission couverts",
-          "Réseau de garages partenaires en France",
+          "Assistance et véhicule de remplacement",
         ],
       },
       {
@@ -503,10 +503,10 @@ export const fr = {
         subtitle: "Assuré dès la remise des clés.",
         paragraphs: [
           "Pour rouler immédiatement, nous mettons en place l'assurance temporaire nécessaire à la circulation sous plaques provisoires WW, le temps que votre immatriculation définitive soit établie.",
-          "Nos partenaires assureurs, habitués aux véhicules premium et importés, vous proposent des devis comparatifs pour une couverture effective dès la livraison.",
+          "Au-delà de la phase temporaire, nos partenaires assureurs, habitués aux véhicules premium et importés, vous proposent des devis comparatifs pour votre assurance définitive, pour une couverture effective dès la livraison et sur le long terme.",
         ],
         points: [
-          "Assurance temporaire pour plaques WW",
+          "Assurance temporaire WW et assurance définitive",
           "Couverture effective dès la livraison",
           "Partenaires spécialisés premium & import",
           "Devis comparatifs sans engagement",

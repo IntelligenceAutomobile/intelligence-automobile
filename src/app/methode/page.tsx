@@ -438,7 +438,7 @@ export default async function Methode2Page() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href="/contact"
+                href="/recherche"
                 className="px-10 py-5 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 hover:-translate-y-px hover:opacity-90"
                 style={{
                   background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)",

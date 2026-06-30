@@ -13,6 +13,13 @@ Avant toute modification de code, **toujours proposer la solution** et attendre 
 - Attendre que l'utilisateur demande explicitement ("commit", "deploy", "pousse", etc.)
 - Ne pas commit ni pousser automatiquement après une modification, même si le travail est terminé
 
+# Conventions de rédaction
+
+## Pas de tirets dans les phrases
+Ne **jamais** utiliser de tiret cadratin (—) ni de tiret demi-cadratin (–) comme ponctuation au milieu d'une phrase (incises, ruptures, mises en relief). Ça fait « écrit par une IA ».
+- Utiliser des **virgules**, des parenthèses ou deux phrases distinctes à la place.
+- Vaut pour tout le contenu rédactionnel du site (textes i18n, descriptions, etc.).
+
 # Conventions d'affichage
 
 ## Format des nombres
