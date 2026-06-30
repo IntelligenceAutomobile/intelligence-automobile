@@ -25,9 +25,20 @@ export default function DocumentsSection({
   const [error, setError] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password === "Password123!") {
+    let valid = false;
+    try {
+      const res = await fetch("/api/verify-doc-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      valid = (await res.json()).valid === true;
+    } catch {
+      valid = false;
+    }
+    if (valid) {
       setUnlocked(true);
       setError(false);
     } else {

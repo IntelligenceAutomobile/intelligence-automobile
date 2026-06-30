@@ -509,9 +509,20 @@ export default function VehiculeModalV2({
                             {tm.documentsLocked}
                           </p>
                           <form
-                            onSubmit={(e) => {
+                            onSubmit={async (e) => {
                               e.preventDefault();
-                              if (facturesPassword === "Password123!") {
+                              let valid = false;
+                              try {
+                                const res = await fetch("/api/verify-doc-access", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ password: facturesPassword }),
+                                });
+                                valid = (await res.json()).valid === true;
+                              } catch {
+                                valid = false;
+                              }
+                              if (valid) {
                                 setFacturesUnlocked(true);
                                 setFacturesError(false);
                               } else {

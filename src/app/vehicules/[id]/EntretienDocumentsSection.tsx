@@ -86,9 +86,20 @@ export default function EntretienDocumentsSection({
       ? ` (${hiddenYears[hiddenYears.length - 1]} → ${hiddenYears[0]})`
       : "";
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password === "Password123!") {
+    let valid = false;
+    try {
+      const res = await fetch("/api/verify-doc-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      valid = (await res.json()).valid === true;
+    } catch {
+      valid = false;
+    }
+    if (valid) {
       setUnlocked(true);
       setError(false);
       // If user clicked a linked entry before unlocking, open it now
@@ -288,11 +299,6 @@ export default function EntretienDocumentsSection({
                         {entry.date}
                       </span>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        {entry.amount && entry.amount !== "—" && (
-                          <span className="text-[15px] font-semibold tabular-nums" style={{ color: "#C8D8EE" }}>
-                            {entry.amount}
-                          </span>
-                        )}
                         {isLinked && (
                           <span
                             className="flex items-center justify-center flex-shrink-0"
