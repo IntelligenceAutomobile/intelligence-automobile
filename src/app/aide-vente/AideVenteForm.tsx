@@ -26,7 +26,7 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: "0.2em",
   textTransform: "uppercase" as const,
   marginBottom: "12px",
-  color: "#AABFDA",
+  color: "#DCE8F8",
 };
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -104,7 +104,7 @@ export default function AideVenteForm() {
         <h3 className="font-black uppercase mb-4" style={{ fontSize: "1.4rem", letterSpacing: "-0.02em" }}>
           {f.successTitle}
         </h3>
-        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#AABFDA" }}>
+        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#DCE8F8" }}>
           {f.successMsg}
         </p>
       </div>
@@ -112,7 +112,8 @@ export default function AideVenteForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
+    <form onSubmit={handleSubmit} className="ia-resale-form space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
+      <style>{`.ia-resale-form ::placeholder { color: #9FB7D8; opacity: 1; }`}</style>
 
       <SectionCard title={f.vehicleSection}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -240,7 +241,7 @@ export default function AideVenteForm() {
             <span className="text-xs font-medium" style={{ color: "#C8D8EE" }}>
               {f.addPhotos}
             </span>
-            <span className="text-[10px]" style={{ color: "#AABFDA" }}>
+            <span className="text-[10px]" style={{ color: "#DCE8F8" }}>
               {f.photoHint}
             </span>
           </button>
@@ -318,12 +319,12 @@ export default function AideVenteForm() {
         {status === "sending" ? f.submittingBtn : f.submitBtn}
       </button>
 
-      <p className="text-center text-[11px]" style={{ color: "#AABFDA" }}>
+      <p className="text-center text-[11px]" style={{ color: "#DCE8F8" }}>
         {f.footer}
       </p>
 
       {status === "error" && (
-        <div className="p-5 text-sm" style={{ borderLeft: "2px solid #AABFDA", backgroundColor: "#071428", color: "#AABFDA" }}>
+        <div className="p-5 text-sm" style={{ borderLeft: "2px solid #DCE8F8", backgroundColor: "#071428", color: "#DCE8F8" }}>
           {f.errorMsg}
         </div>
       )}

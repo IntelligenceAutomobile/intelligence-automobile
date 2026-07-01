@@ -37,7 +37,7 @@ export default async function RecherchePage2() {
             </h1>
             <div style={{ marginBottom: "1.5rem" }}>
               <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
-              <p style={{ color: "rgba(168,196,240,0.68)", fontSize: "0.85rem", lineHeight: 1.8, fontWeight: 400, fontStyle: "italic", letterSpacing: "0.01em" }}>
+              <p style={{ color: "rgba(214,228,246,0.85)", fontSize: "0.85rem", lineHeight: 1.8, fontWeight: 400, fontStyle: "italic", letterSpacing: "0.01em" }}>
                 {s.heroSubtitle}
               </p>
             </div>
@@ -103,7 +103,7 @@ export default async function RecherchePage2() {
                 <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
                 <p
                   style={{
-                    color: "rgba(168,196,240,0.68)",
+                    color: "rgba(214,228,246,0.85)",
                     fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
                     lineHeight: 1.8,
                     fontWeight: 400,
@@ -142,21 +142,8 @@ export default async function RecherchePage2() {
         <section style={{ backgroundColor: "#040B16" }}>
           <div
             className="max-w-7xl mx-auto"
-            style={{ padding: "clamp(4rem, 8vw, 7rem) clamp(1.5rem, 6vw, 5rem)" }}
+            style={{ padding: "clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 6vw, 5rem) clamp(4rem, 8vw, 7rem)" }}
           >
-            <p
-              style={{
-                fontSize: "10px",
-                letterSpacing: "0.35em",
-                textTransform: "uppercase",
-                color: "#6B9FEE",
-                marginBottom: "clamp(2.5rem, 5vw, 4.5rem)",
-                fontWeight: 500,
-              }}
-            >
-              {s.stepsLabel}
-            </p>
-
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {s.steps.map((step) => (
                 <div
@@ -203,7 +190,7 @@ export default async function RecherchePage2() {
                     <p
                       style={{
                         fontSize: "13px",
-                        color: "#C4D8EE",
+                        color: "#DCE8F8",
                         lineHeight: 1.8,
                         fontWeight: 400,
                         borderTop: "1px solid rgba(107,159,238,0.35)",
@@ -243,6 +230,7 @@ export default async function RecherchePage2() {
                 <br />
                 <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
+              <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px" }} />
             </div>
 
             <div
@@ -265,7 +253,7 @@ export default async function RecherchePage2() {
                     >
                       <span
                         style={{
-                          color: "#6B9FEE",
+                          color: "#E8C36B",
                           fontSize: "11px",
                           flexShrink: 0,
                           fontWeight: 700,
@@ -276,7 +264,7 @@ export default async function RecherchePage2() {
                       <span
                         style={{
                           fontSize: "0.875rem",
-                          color: "#C4D8EE",
+                          color: "#DCE8F8",
                           fontWeight: 400,
                         }}
                       >
@@ -295,6 +283,9 @@ export default async function RecherchePage2() {
                 >
                   <p
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
                       fontSize: "11px",
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
@@ -303,12 +294,13 @@ export default async function RecherchePage2() {
                       fontWeight: 600,
                     }}
                   >
+                    <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#E8C36B", flexShrink: 0 }} />
                     {s.marketsLabel}
                   </p>
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "#C8D8EE",
+                      color: "#DCE8F8",
                       fontWeight: 400,
                       marginBottom: "16px",
                     }}
@@ -319,13 +311,16 @@ export default async function RecherchePage2() {
                   <div
                     style={{
                       height: "1px",
-                      backgroundColor: "rgba(107,159,238,0.18)",
+                      background: "linear-gradient(to right, rgba(232,195,107,0.45), transparent)",
                       marginBottom: "16px",
                     }}
                   />
 
                   <p
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
                       fontSize: "11px",
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
@@ -334,12 +329,13 @@ export default async function RecherchePage2() {
                       fontWeight: 600,
                     }}
                   >
+                    <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#E8C36B", flexShrink: 0 }} />
                     {s.brandsLabel}
                   </p>
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "#C8D8EE",
+                      color: "#DCE8F8",
                       fontWeight: 400,
                       lineHeight: 1.7,
                     }}

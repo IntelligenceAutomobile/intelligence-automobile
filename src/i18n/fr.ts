@@ -245,7 +245,7 @@ export const fr = {
   },
 
   resale: {
-    heroTitle: ["Votre véhicule", "vaut plus que", "ce qu'on propose."],
+    heroTitle: ["Votre véhicule", "mérite", "le meilleur prix."],
     heroSubtitle: "Estimation au prix du marché réel, diffusion ciblée, transaction sécurisée. Vous vendez mieux — sans vous en occuper.",
     heroCta: "Estimation gratuite →",
     comparativeLabel: "Pourquoi pas la reprise concessionnaire ?",

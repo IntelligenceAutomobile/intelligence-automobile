@@ -145,7 +145,7 @@ function VehicleCard({
               <span className="font-black uppercase" style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#F0F5FF", letterSpacing: "0.45em", textShadow: "0 2px 40px rgba(0,0,0,0.8)" }}>
                 {tv.soldBadge}
               </span>
-              <div style={{ width: "40px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.6 }} />
+              <div style={{ width: "48px", height: "1px", background: "linear-gradient(to right, transparent, #E8C36B, transparent)" }} />
               <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
                 {tv.soldBy}
               </span>
@@ -725,6 +725,7 @@ export default function VehiculesList({
             <p className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
               {tv.notFoundLabel}
             </p>
+            <div style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px", margin: "0 auto 0.9rem" }} />
             <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
               {tv.notFoundDesc}
             </p>

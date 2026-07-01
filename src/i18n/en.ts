@@ -242,7 +242,7 @@ export const en: Translations = {
   },
 
   resale: {
-    heroTitle: ["Your vehicle", "is worth more", "than they offer."],
+    heroTitle: ["Your vehicle", "deserves", "the best price."],
     heroSubtitle: "Valuation at real market price, targeted listing, secured transaction. Sell better — without the hassle.",
     heroCta: "Free valuation →",
     comparativeLabel: "Why not a dealer trade-in?",

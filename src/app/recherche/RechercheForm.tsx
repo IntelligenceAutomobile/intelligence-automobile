@@ -25,7 +25,7 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: "0.2em",
   textTransform: "uppercase" as const,
   marginBottom: "12px",
-  color: "#AABFDA",
+  color: "#DCE8F8",
 };
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -111,7 +111,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
         >
           {f.successTitle}
         </h3>
-        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#AABFDA" }}>
+        <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#DCE8F8" }}>
           {f.successMsg}
         </p>
       </div>
@@ -119,7 +119,8 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
+    <form onSubmit={handleSubmit} className="ia-search-form space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
+      <style>{`.ia-search-form ::placeholder { color: #9FB7D8; opacity: 1; }`}</style>
       <SectionCard title={f.vehicleSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
@@ -275,14 +276,14 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
         {status === "sending" ? f.submittingBtn : f.submitBtn}
       </button>
 
-      <p className="text-center text-[11px]" style={{ color: "#AABFDA" }}>
+      <p className="text-center text-[11px]" style={{ color: "#DCE8F8" }}>
         {f.footer}
       </p>
 
       {status === "error" && (
         <div
           className="p-5 text-sm"
-          style={{ borderLeft: "2px solid #AABFDA", backgroundColor: "#071428", color: "#AABFDA" }}
+          style={{ borderLeft: "2px solid #DCE8F8", backgroundColor: "#071428", color: "#DCE8F8" }}
         >
           {f.errorMsg}
         </div>

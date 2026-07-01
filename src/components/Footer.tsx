@@ -16,7 +16,7 @@ export default function Footer() {
         {/* Liens & contact */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
-            <div style={{ width: "24px", height: "2px", backgroundColor: "#6B9FEE", marginBottom: "0.75rem" }} />
+            <div style={{ width: "34px", height: "2px", background: "linear-gradient(to right, #E8C36B, rgba(232,195,107,0))", borderRadius: "2px", boxShadow: "0 0 8px rgba(232,195,107,0.35)", marginBottom: "0.9rem" }} />
             <h3
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
@@ -41,7 +41,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <div style={{ width: "24px", height: "2px", backgroundColor: "#6B9FEE", marginBottom: "0.75rem" }} />
+            <div style={{ width: "34px", height: "2px", background: "linear-gradient(to right, #E8C36B, rgba(232,195,107,0))", borderRadius: "2px", boxShadow: "0 0 8px rgba(232,195,107,0.35)", marginBottom: "0.9rem" }} />
             <h3
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
@@ -66,7 +66,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <div style={{ width: "24px", height: "2px", backgroundColor: "#6B9FEE", marginBottom: "0.75rem" }} />
+            <div style={{ width: "34px", height: "2px", background: "linear-gradient(to right, #E8C36B, rgba(232,195,107,0))", borderRadius: "2px", boxShadow: "0 0 8px rgba(232,195,107,0.35)", marginBottom: "0.9rem" }} />
             <h3
               className="text-[10px] font-semibold tracking-widest uppercase mb-5"
               style={{ color: "#6B9FEE" }}
@@ -88,7 +88,7 @@ export default function Footer() {
           <p className="text-xs" style={{ color: "#C8D8EE" }}>
             © {new Date().getFullYear()} Intelligence Automobile. {t.footer.rights}
           </p>
-          <p className="text-xs" style={{ color: "rgba(107,159,238,0.35)" }}>
+          <p className="text-xs" style={{ color: "#9DBFF2" }}>
             {t.footer.tagline}
           </p>
         </div>

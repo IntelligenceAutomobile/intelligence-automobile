@@ -68,7 +68,7 @@ export default async function AideVenteV2Page() {
                 <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
                 <p
                   style={{
-                    color: "rgba(168,196,240,0.68)",
+                    color: "rgba(214,228,246,0.85)",
                     fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
                     lineHeight: 1.8,
                     fontWeight: 300,
@@ -108,8 +108,8 @@ export default async function AideVenteV2Page() {
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
             <p
-              className="text-[10px] tracking-[0.38em] uppercase mb-4 text-center"
-              style={{ color: "#C8D8EE" }}
+              className="text-[10px] tracking-[0.32em] uppercase mb-4 text-center font-semibold"
+              style={{ color: "#DCE8F8" }}
             >
               {s.comparativeLabel}
             </p>
@@ -145,8 +145,8 @@ export default async function AideVenteV2Page() {
                       }}
                     >
                       <span
-                        className="text-[9px] tracking-[0.32em] uppercase font-semibold"
-                        style={{ color: i === 2 ? "#6B9FEE" : "#C8D8EE" }}
+                        className="text-[10px] tracking-[0.2em] uppercase font-bold"
+                        style={{ color: i === 2 ? "#6B9FEE" : "#DCE8F8" }}
                       >
                         {col}
                       </span>
@@ -165,19 +165,19 @@ export default async function AideVenteV2Page() {
                 >
                   <div className="px-6 py-5">
                     <span
-                      className="text-[10px] tracking-[0.25em] uppercase"
-                      style={{ color: "#C8D8EE" }}
+                      className="text-[11px] tracking-[0.18em] uppercase font-semibold"
+                      style={{ color: "#DCE8F8" }}
                     >
                       {row.critere}
                     </span>
                   </div>
                   <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 400 }}>
+                    <span className="text-sm" style={{ color: "#DCE8F8", fontWeight: 500 }}>
                       {row.dealer}
                     </span>
                   </div>
                   <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#C4D8EE", fontWeight: 400 }}>
+                    <span className="text-sm" style={{ color: "#DCE8F8", fontWeight: 500 }}>
                       {row.seul}
                     </span>
                   </div>
@@ -208,8 +208,8 @@ export default async function AideVenteV2Page() {
                     }}
                   >
                     <span
-                      className="text-[9px] tracking-[0.3em] uppercase"
-                      style={{ color: "#C8D8EE" }}
+                      className="text-[10px] tracking-[0.18em] uppercase font-bold"
+                      style={{ color: "#DCE8F8" }}
                     >
                       {row.critere}
                     </span>
@@ -231,7 +231,7 @@ export default async function AideVenteV2Page() {
                       >
                         <span
                           className="text-[10px]"
-                          style={{ color: item.highlight ? "#6B9FEE" : "#C8D8EE" }}
+                          style={{ color: item.highlight ? "#6B9FEE" : "#DCE8F8" }}
                         >
                           {item.label}
                         </span>
@@ -239,8 +239,8 @@ export default async function AideVenteV2Page() {
                           className="text-sm text-right"
                           style={{
                             maxWidth: "55%",
-                            color: item.highlight ? "#F0F5FF" : "#C4D8EE",
-                            fontWeight: item.highlight ? 500 : 300,
+                            color: item.highlight ? "#F0F5FF" : "#DCE8F8",
+                            fontWeight: item.highlight ? 600 : 500,
                           }}
                         >
                           {item.val}
@@ -259,14 +259,7 @@ export default async function AideVenteV2Page() {
           className="border-b"
           style={{ borderColor: "#1B3055", backgroundColor: "#070F1E" }}
         >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
-            <p
-              className="text-[10px] tracking-[0.38em] uppercase mb-20"
-              style={{ color: "#C8D8EE" }}
-            >
-              {s.stepsLabel}
-            </p>
-
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {s.steps.map((step, i) => (
                 <div key={step.num} className="relative">
@@ -314,7 +307,7 @@ export default async function AideVenteV2Page() {
                     </h3>
                     <p
                       className="text-sm leading-relaxed"
-                      style={{ color: "#C8D8EE", fontWeight: 400 }}
+                      style={{ color: "#DCE8F8", fontWeight: 400 }}
                     >
                       {step.desc}
                     </p>
@@ -350,6 +343,7 @@ export default async function AideVenteV2Page() {
                 <br />
                 {s.formTitle[1]}
               </h2>
+              <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px" }} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
@@ -363,13 +357,13 @@ export default async function AideVenteV2Page() {
                       style={{ borderBottom: "1px solid #1B3055" }}
                     >
                       <span
-                        style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}
+                        style={{ color: "#E8C36B", fontSize: "10px", flexShrink: 0 }}
                       >
                         ✓
                       </span>
                       <span
                         className="text-sm"
-                        style={{ color: "#C4D8EE", fontWeight: 400 }}
+                        style={{ color: "#DCE8F8", fontWeight: 400 }}
                       >
                         {g}
                       </span>
@@ -395,19 +389,20 @@ export default async function AideVenteV2Page() {
                         paddingBottom: i < arr.length - 1 ? "20px" : undefined,
                         borderBottom:
                           i < arr.length - 1
-                            ? "1px solid rgba(107,159,238,0.18)"
+                            ? "1px solid rgba(232,195,107,0.35)"
                             : "none",
                       }}
                     >
                       <p
                         className="text-[9px] tracking-[0.38em] uppercase mb-2"
-                        style={{ color: "#6B9FEE" }}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6B9FEE" }}
                       >
+                        <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#E8C36B", flexShrink: 0 }} />
                         {block.label}
                       </p>
                       <p
                         className="text-sm leading-relaxed"
-                        style={{ color: "#C8D8EE", fontWeight: 400 }}
+                        style={{ color: "#DCE8F8", fontWeight: 400 }}
                       >
                         {block.values.join(block.separator)}
                       </p>
