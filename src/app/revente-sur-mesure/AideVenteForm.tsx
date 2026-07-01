@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { upload } from "@vercel/blob/client";
 import { useLocale } from "@/i18n/context";
 import YearField from "@/components/YearField";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -72,7 +73,7 @@ export default function AideVenteForm() {
     try {
       const blobUrls = await Promise.all(
         photos.map((file) =>
-          upload(file.name, file, {
+          upload(`documents/${file.name}`, file, {
             access: "public",
             handleUploadUrl: "/api/upload",
           }).then((b) => b.url)
@@ -158,19 +159,21 @@ export default function AideVenteForm() {
           </div>
           <div>
             <label style={labelStyle}>{f.fuelLabel}</label>
-            <select name="carburant" style={{ ...fieldStyle, cursor: "pointer" }}
+            <select name="carburant" required defaultValue="" style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
+              <option value="" disabled>{f.selectPlaceholder}</option>
               {f.fuels.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           <div>
             <label style={labelStyle}>{f.gearboxLabel}</label>
-            <select name="boite" style={{ ...fieldStyle, cursor: "pointer" }}
+            <select name="boite" required defaultValue="" style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
+              <option value="" disabled>{f.selectPlaceholder}</option>
               {f.gearboxes.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
@@ -179,11 +182,11 @@ export default function AideVenteForm() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div>
             <label style={labelStyle}>{f.conditionLabel}</label>
-            <select name="etat" required style={{ ...fieldStyle, cursor: "pointer" }}
+            <select name="etat" required defaultValue="" style={{ ...fieldStyle, cursor: "pointer" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             >
-              <option value="">—</option>
+              <option value="" disabled>{f.selectPlaceholder}</option>
               {f.conditions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
@@ -223,7 +226,7 @@ export default function AideVenteForm() {
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*"
+          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
         />
@@ -237,11 +240,11 @@ export default function AideVenteForm() {
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
           >
-            <span style={{ color: "#6B9FEE", fontSize: "20px", lineHeight: 1 }}>↑</span>
-            <span className="text-xs font-medium" style={{ color: "#C8D8EE" }}>
+            <span style={{ color: "#6B9FEE", fontSize: "22px", lineHeight: 1 }}>↑</span>
+            <span className="text-sm font-semibold" style={{ color: "#F0F5FF" }}>
               {f.addPhotos}
             </span>
-            <span className="text-[10px]" style={{ color: "#DCE8F8" }}>
+            <span className="text-[12px] leading-relaxed text-center px-6" style={{ color: "#C8D8EE", maxWidth: "24rem" }}>
               {f.photoHint}
             </span>
           </button>
@@ -249,24 +252,40 @@ export default function AideVenteForm() {
 
         {previews.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {previews.map((src, i) => (
-              <div key={i} className="relative group" style={{ aspectRatio: "1" }}>
-                <img
-                  src={src}
-                  alt={`Photo ${i + 1}`}
-                  className="w-full h-full object-cover"
-                  style={{ border: "1px solid #2A4878" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => removePhoto(i)}
-                  className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                  style={{ backgroundColor: "#071428", border: "1px solid #2A4878", color: "#F0F5FF", fontSize: "11px", lineHeight: 1 }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+            {previews.map((src, i) => {
+              const file = photos[i];
+              const isImage = file?.type.startsWith("image/");
+              return (
+                <div key={i} className="relative group" style={{ aspectRatio: "1" }}>
+                  {isImage ? (
+                    <img
+                      src={src}
+                      alt={file?.name ?? `Fichier ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      style={{ border: "1px solid #2A4878" }}
+                    />
+                  ) : (
+                    <div
+                      className="w-full h-full flex flex-col items-center justify-center gap-1.5 px-1.5 text-center"
+                      style={{ border: "1px solid #2A4878", backgroundColor: "#071428" }}
+                    >
+                      <span style={{ fontSize: "22px", lineHeight: 1 }}>📄</span>
+                      <span className="text-[9px] leading-tight break-all" style={{ color: "#DCE8F8" }}>
+                        {file?.name}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                    style={{ backgroundColor: "#071428", border: "1px solid #2A4878", color: "#F0F5FF", fontSize: "11px", lineHeight: 1 }}
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </SectionCard>
@@ -309,6 +328,16 @@ export default function AideVenteForm() {
           </div>
         </div>
       </SectionCard>
+
+      <div
+        className="flex items-start gap-3 p-4"
+        style={{ backgroundColor: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.3)" }}
+      >
+        <WhatsAppIcon size={20} />
+        <p className="text-sm leading-relaxed" style={{ color: "#DCE8F8" }}>
+          {f.whatsappNote}
+        </p>
+      </div>
 
       <button
         type="submit"

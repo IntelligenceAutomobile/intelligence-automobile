@@ -85,7 +85,7 @@ export default async function ServicesPage() {
                 <h2 className="font-light leading-tight" style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)" }}>
                   {it.title}
                 </h2>
-                <div className="mt-4" style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px" }} />
+                <div className="mt-4" style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #C6CCD6, transparent)", borderRadius: "2px" }} />
                 <p className="mt-4 text-lg" style={{ color: "#8BB8F5" }}>{it.subtitle}</p>
               </div>
 
@@ -101,7 +101,7 @@ export default async function ServicesPage() {
                 <ul className="mt-8 grid sm:grid-cols-2 gap-x-8 gap-y-4">
                   {it.points.map((pt, i) => (
                     <li key={i} className="flex items-start gap-3 text-sm" style={{ color: "#D4E2F4" }}>
-                      <span className="mt-[7px] flex-shrink-0" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#E8C36B" }} />
+                      <span className="mt-[7px] flex-shrink-0" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#C6CCD6" }} />
                       <span>{pt}</span>
                     </li>
                   ))}

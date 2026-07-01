@@ -145,7 +145,7 @@ function VehicleCard({
               <span className="font-black uppercase" style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#F0F5FF", letterSpacing: "0.45em", textShadow: "0 2px 40px rgba(0,0,0,0.8)" }}>
                 {tv.soldBadge}
               </span>
-              <div style={{ width: "48px", height: "1px", background: "linear-gradient(to right, transparent, #E8C36B, transparent)" }} />
+              <div style={{ width: "48px", height: "1px", background: "linear-gradient(to right, transparent, #C6CCD6, transparent)" }} />
               <span className="text-[9px] tracking-[0.35em] uppercase" style={{ color: "#6B9FEE" }}>
                 {tv.soldBy}
               </span>
@@ -725,13 +725,13 @@ export default function VehiculesList({
             <p className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "#6B9FEE" }}>
               {tv.notFoundLabel}
             </p>
-            <div style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px", margin: "0 auto 0.9rem" }} />
+            <div style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #C6CCD6, transparent)", borderRadius: "2px", margin: "0 auto 0.9rem" }} />
             <p className="text-sm" style={{ color: "#C8D8EE", fontWeight: 400 }}>
               {tv.notFoundDesc}
             </p>
           </div>
           <Link
-            href="/recherche"
+            href="/recherche-personnalisee"
             className="flex-shrink-0 px-8 py-4 text-xs font-semibold tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
             style={{ backgroundColor: "#6B9FEE", color: "#070F1E" }}
           >

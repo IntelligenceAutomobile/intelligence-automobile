@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import RechercheForm from "@/app/recherche/RechercheForm";
+import RechercheForm from "@/app/recherche-personnalisee/RechercheForm";
 import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
@@ -230,7 +230,7 @@ export default async function RecherchePage2() {
                 <br />
                 <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
-              <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px" }} />
+              <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #C6CCD6, transparent)", borderRadius: "2px" }} />
             </div>
 
             <div
@@ -253,7 +253,7 @@ export default async function RecherchePage2() {
                     >
                       <span
                         style={{
-                          color: "#E8C36B",
+                          color: "#C6CCD6",
                           fontSize: "11px",
                           flexShrink: 0,
                           fontWeight: 700,
@@ -294,7 +294,7 @@ export default async function RecherchePage2() {
                       fontWeight: 600,
                     }}
                   >
-                    <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#E8C36B", flexShrink: 0 }} />
+                    <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#C6CCD6", flexShrink: 0 }} />
                     {s.marketsLabel}
                   </p>
                   <p
@@ -311,7 +311,7 @@ export default async function RecherchePage2() {
                   <div
                     style={{
                       height: "1px",
-                      background: "linear-gradient(to right, rgba(232,195,107,0.45), transparent)",
+                      background: "linear-gradient(to right, rgba(198,204,214,0.45), transparent)",
                       marginBottom: "16px",
                     }}
                   />
@@ -329,7 +329,7 @@ export default async function RecherchePage2() {
                       fontWeight: 600,
                     }}
                   >
-                    <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#E8C36B", flexShrink: 0 }} />
+                    <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#C6CCD6", flexShrink: 0 }} />
                     {s.brandsLabel}
                   </p>
                   <p

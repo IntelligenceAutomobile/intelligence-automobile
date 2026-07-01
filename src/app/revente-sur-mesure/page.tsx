@@ -1,10 +1,10 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AideVenteForm from "@/app/aide-vente/AideVenteForm";
+import AideVenteForm from "@/app/revente-sur-mesure/AideVenteForm";
 import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
-  title: "Aide à la Vente — Intelligence Automobile",
+  title: "Revente sur mesure — Intelligence Automobile",
 };
 
 export default async function AideVenteV2Page() {
@@ -343,7 +343,7 @@ export default async function AideVenteV2Page() {
                 <br />
                 {s.formTitle[1]}
               </h2>
-              <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px" }} />
+              <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #6B9FEE, transparent)", borderRadius: "2px" }} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
@@ -357,7 +357,7 @@ export default async function AideVenteV2Page() {
                       style={{ borderBottom: "1px solid #1B3055" }}
                     >
                       <span
-                        style={{ color: "#E8C36B", fontSize: "10px", flexShrink: 0 }}
+                        style={{ color: "#C0C8D4", fontSize: "10px", flexShrink: 0 }}
                       >
                         ✓
                       </span>
@@ -389,7 +389,7 @@ export default async function AideVenteV2Page() {
                         paddingBottom: i < arr.length - 1 ? "20px" : undefined,
                         borderBottom:
                           i < arr.length - 1
-                            ? "1px solid rgba(232,195,107,0.35)"
+                            ? "1px solid rgba(192,200,212,0.35)"
                             : "none",
                       }}
                     >
@@ -397,7 +397,7 @@ export default async function AideVenteV2Page() {
                         className="text-[9px] tracking-[0.38em] uppercase mb-2"
                         style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6B9FEE" }}
                       >
-                        <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#E8C36B", flexShrink: 0 }} />
+                        <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#C0C8D4", flexShrink: 0 }} />
                         {block.label}
                       </p>
                       <p

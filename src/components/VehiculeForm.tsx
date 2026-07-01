@@ -275,7 +275,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
     const fd = f ? new FormData(f) : null;
     const g = (n: string) => (fd ? String(fd.get(n) ?? "") : "");
     const { descParagraphs, etatFacts } = buildPresentation(g("description"), conditionFacts);
-    const HL_COLORS = ["#6B9FEE", "#E8C36B", "#5BD89A"];
+    const HL_COLORS = ["#6B9FEE", "#C6CCD6", "#5BD89A"];
     return {
       make: g("make"),
       model: g("model"),

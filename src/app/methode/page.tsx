@@ -146,45 +146,6 @@ export default async function Methode2Page() {
           </div>
         </section>
 
-        {/* ─── CHIFFRES CLÉS ────────────────────────────────────────────────────── */}
-        <div className="px-6 lg:px-12 py-12" style={{ backgroundColor: "#040B16" }}>
-          <div className="max-w-6xl mx-auto">
-            <div
-              className="grid grid-cols-2 lg:grid-cols-4 gap-px"
-              style={{
-                backgroundColor: "rgba(107,159,238,0.15)",
-                borderRadius: "10px",
-                overflow: "hidden",
-              }}
-            >
-              {s.stats.map((stat, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col px-6 py-8"
-                  style={{ backgroundColor: "#0B1929" }}
-                >
-                  <span
-                    className="font-black leading-none mb-3"
-                    style={{
-                      fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
-                      letterSpacing: "-0.03em",
-                      color: "#F0F5FF",
-                    }}
-                  >
-                    {stat.value}
-                  </span>
-                  <span
-                    className="text-[11px] leading-snug"
-                    style={{ color: "#A8C6F4" }}
-                  >
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* ─── CONTENU PRINCIPAL ────────────────────────────────────────────────── */}
         <div
           id="processus"
@@ -234,19 +195,53 @@ export default async function Methode2Page() {
                     >
                       {step.title}
                     </h3>
-                    <p
-                      className="leading-relaxed mb-4"
-                      style={{
-                        fontSize: "14px",
-                        color: "#A8C6F4",
-                        maxWidth: "580px",
-                      }}
-                    >
-                      {step.description}
-                    </p>
+                    <div className="mb-4" style={{ maxWidth: "580px" }}>
+                      {step.description.split("\n").map((line, j, arr) => (
+                        <p
+                          key={j}
+                          className="leading-relaxed"
+                          style={{
+                            fontSize: "14px",
+                            color: "#A8C6F4",
+                            marginBottom: j < arr.length - 1 ? "0.7rem" : 0,
+                          }}
+                        >
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                    {step.num === "04" && (
+                      <ul className="mb-4 space-y-2.5" style={{ maxWidth: "580px" }}>
+                        {s.importSteps.map((item, k) => (
+                          <li
+                            key={k}
+                            className="flex items-start gap-3"
+                            style={{ fontSize: "14px", color: "#A8C6F4", lineHeight: 1.5 }}
+                          >
+                            <span
+                              className="flex-shrink-0 font-bold"
+                              style={{ color: "#6B9FEE", marginTop: "1px" }}
+                            >
+                              —
+                            </span>
+                            <span>
+                              {item.split(/\[\[|\]\]/).map((part, j) =>
+                                j % 2 === 1 ? (
+                                  <span key={j} style={{ color: "#FF14E1", fontWeight: 700 }}>
+                                    {part}
+                                  </span>
+                                ) : (
+                                  <span key={j}>{part}</span>
+                                )
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <p
                       className="font-medium italic"
-                      style={{ fontSize: "13px", color: "#6B9FEE" }}
+                      style={{ fontSize: "13px", color: "#C6CCD6" }}
                     >
                       → {step.tagline}
                     </p>
@@ -331,7 +326,7 @@ export default async function Methode2Page() {
                     style={{
                       width: "28px",
                       height: "2px",
-                      backgroundColor: "#E8C36B",
+                      backgroundColor: "#C6CCD6",
                       borderRadius: "1px",
                       marginBottom: "1.2rem",
                     }}
@@ -377,11 +372,11 @@ export default async function Methode2Page() {
               >
                 {s.cabinetText}
               </p>
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-nowrap gap-2 overflow-x-auto">
                 {s.cabinetPoints.map((point, i) => (
                   <span
                     key={i}
-                    className="flex items-center gap-2.5 px-4 py-3 text-[13px] font-medium"
+                    className="flex items-center gap-2 px-3 py-3 text-[12px] font-medium whitespace-nowrap"
                     style={{
                       backgroundColor: "rgba(107,159,238,0.08)",
                       border: "1px solid rgba(107,159,238,0.25)",
@@ -438,7 +433,7 @@ export default async function Methode2Page() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href="/recherche"
+                href="/recherche-personnalisee"
                 className="px-10 py-5 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 hover:-translate-y-px hover:opacity-90"
                 style={{
                   background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)",
@@ -459,7 +454,7 @@ export default async function Methode2Page() {
 
           {/* Branding footer */}
           <div className="flex items-center gap-4 mt-16">
-            <div style={{ width: "40px", height: "2px", backgroundColor: "#E8C36B", borderRadius: "1px" }} />
+            <div style={{ width: "40px", height: "2px", backgroundColor: "#C6CCD6", borderRadius: "1px" }} />
             <span
               className="text-[11px] tracking-[0.45em] uppercase font-semibold"
               style={{ color: "#E8F0FC" }}

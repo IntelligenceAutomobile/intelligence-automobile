@@ -44,7 +44,7 @@ const MAINTENANCE_DATA: Record<string, MaintenanceEntry[]> = {
 const MAINTENANCE_HIGHLIGHTS: Record<string, MaintenanceHighlight[]> = {
   "audi-tt-mk2-sline-2010": [
     { icon: "📓", label: "Carnet d'origine", text: "Tampons de concessionnaires agréés Audi de mai 2010 à 2023", color: "#6B9FEE" },
-    { icon: "🧾", label: "Factures originales", text: "Interventions récentes documentées (Midas, Autodoc, ByMyCar)", color: "#E8C36B" },
+    { icon: "🧾", label: "Factures originales", text: "Interventions récentes documentées (Midas, Autodoc, ByMyCar)", color: "#C6CCD6" },
     { icon: "✓", label: "Contrôle technique", text: "2 CT favorables — dernier valide jusqu'au 28/01/2028", color: "#5BD89A" },
   ],
 };
@@ -93,7 +93,7 @@ export default async function VehiculeDetailPage({
   const maintenance = dbMaintenance.length > 0 ? dbMaintenance : (isLegacy ? (MAINTENANCE_DATA[id] ?? []) : []);
 
   // Badges de traçabilité : champ structuré (couleurs attribuées en cycle) sinon legacy
-  const HIGHLIGHT_COLORS = ["#6B9FEE", "#E8C36B", "#5BD89A"];
+  const HIGHLIGHT_COLORS = ["#6B9FEE", "#C6CCD6", "#5BD89A"];
   const dbHighlights = JSON.parse(v.maintenanceHighlights || "[]") as (Omit<MaintenanceHighlight, "color"> & { color?: string })[];
   const highlights: MaintenanceHighlight[] =
     dbHighlights.length > 0

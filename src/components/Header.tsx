@@ -94,9 +94,9 @@ export default function Header() {
   const NAV_LINKS_V2 = [
     { href: "/",           label: t.nav.home },
     { href: "/vehicules",  label: t.nav.vehicles },
-    { href: "/recherche",  label: t.nav.search },
-    { href: "/aide-vente", label: t.nav.resale },
-    { href: "/convoyage",  label: t.nav.transport },
+    { href: "/recherche-personnalisee",  label: t.nav.search },
+    { href: "/revente-sur-mesure", label: t.nav.resale },
+    { href: "/transport-livraison",  label: t.nav.transport },
     { href: "/methode",    label: t.nav.method },
     { href: "/services",   label: t.nav.services },
     { href: "/contact",    label: t.nav.contact },

@@ -339,7 +339,7 @@ export default async function HomePage() {
 
         {/* SERVICE 01 — Recherche */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/recherche" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/recherche-personnalisee" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
               <img className="ia-service-img" src="/Photo du Site/Photo IA/Recherche personnalisé.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
@@ -361,7 +361,7 @@ export default async function HomePage() {
 
         {/* SERVICE 02 — Revente */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/aide-vente" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/revente-sur-mesure" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: "-1.5rem", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>02</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
@@ -383,7 +383,7 @@ export default async function HomePage() {
 
         {/* SERVICE 03 — Transport */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/convoyage" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/transport-livraison" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
               <img className="ia-service-img" src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />

@@ -24,12 +24,175 @@ export const fr = {
       { href: "/contact", label: "Contact" },
     ],
     serviceLinks: [
-      { href: "/recherche", label: "Recherche personnalisée" },
-      { href: "/aide-vente", label: "Revente sur mesure" },
-      { href: "/convoyage", label: "Transport & Livraison" },
+      { href: "/recherche-personnalisee", label: "Recherche personnalisée" },
+      { href: "/revente-sur-mesure", label: "Revente sur mesure" },
+      { href: "/transport-livraison", label: "Transport & Livraison" },
     ],
     rights: "Tous droits réservés.",
     tagline: "Import premium · Union européenne → France",
+    legalLink: "Mentions légales",
+    cgvLink: "CGV",
+  },
+
+  cgv: {
+    metaTitle: "Conditions Générales de Prestation de Services — Intelligence Automobile",
+    title: "Conditions Générales de Prestation de Services",
+    updated: "Dernière mise à jour : 1ᵉʳ juillet 2026",
+    sections: [
+      {
+        heading: "Préambule",
+        blocks: [
+          { text: "SASU Intelligence Automobile, société par actions simplifiée unipersonnelle au capital de 1 000 €, dont le siège social est établi à Paris, France. SIRET, RCS et numéro de TVA intracommunautaire : en cours d'immatriculation. Courriel : contact@intelligenceautomobile.com — Téléphone : +33 6 20 24 38 79 — Site : intelligenceautomobile.com (ci-après « le Prestataire »)." },
+        ],
+      },
+      {
+        heading: "Article 1 — Champ d'application",
+        blocks: [
+          { text: "Les présentes Conditions Générales s'appliquent, sans restriction ni réserve, à toute prestation de services souscrite auprès du Prestataire par un client consommateur ou non-professionnel (« le Client »), à savoir :" },
+          { list: [
+            "Recherche et accompagnement à l'achat : mise en relation avec des vendeurs particuliers ou professionnels, en France et dans l'Union européenne, en vue de l'acquisition d'un véhicule ;",
+            "Accompagnement à la revente d'un véhicule appartenant au Client : mise en valeur, diffusion, filtrage des acheteurs, sécurisation de la transaction ;",
+            "Transport et livraison de véhicule.",
+          ] },
+          { text: "Le Client déclare avoir pris connaissance des présentes et les avoir acceptées avant la signature du devis. Elles prévalent sur tout autre document. La version applicable est celle en vigueur à la date de signature du devis." },
+        ],
+      },
+      {
+        heading: "Article 2 — Commandes",
+        blocks: [
+          { text: "Le Client transmet au Prestataire ses critères de recherche ou les informations relatives à son véhicule, ainsi que ses coordonnées (nom, prénom, adresse, téléphone, courriel). La prestation n'est définitive qu'après établissement d'un devis détaillé par le Prestataire (valable 30 jours), puis validation écrite du devis par le Client (courriel, courrier ou signature électronique). Cette validation forme un contrat conclu à distance. Une fois acceptée, la commande n'est ni modifiable ni annulable, hors force majeure et sous réserve du droit de rétractation prévu à l'article 7." },
+        ],
+      },
+      {
+        heading: "Article 3 — Tarifs et honoraires",
+        blocks: [
+          { text: "Les prestations sont fournies au tarif du devis en vigueur à la commande, exprimé en euros toutes taxes comprises (mention HT et TTC le cas échéant). Les honoraires du Prestataire sont annoncés avant tout engagement. Les prestations complémentaires (transport, immatriculation…) font l'objet d'une facturation distincte sur devis. Une facture est remise au Client." },
+        ],
+      },
+      {
+        heading: "Article 4 — Paiement",
+        blocks: [
+          { text: "Le prix comprend un acompte versé à la commande, au moment de la signature du devis, et le solde payable à la réception de la prestation (livraison du véhicule ou remise de la prestation), selon les modalités précisées au devis. Les paiements s'effectuent par virement, carte bancaire (lien de paiement sécurisé) ou tout autre moyen convenu. Le Prestataire n'est pas tenu de débuter la prestation avant encaissement de l'acompte. En cas de non-respect des conditions de paiement, le Prestataire peut suspendre ou annuler la prestation." },
+        ],
+      },
+      {
+        heading: "Article 5 — Fourniture des prestations",
+        blocks: [
+          { text: "Le Prestataire est tenu d'une obligation de moyens : il s'engage à mettre en œuvre ses meilleurs efforts pour fournir les prestations dans le délai indiqué au devis." },
+          { list: [
+            "Recherche et achat : recherche et proposition de véhicules correspondant aux critères, vérification de la disponibilité auprès du vendeur, tentative de négociation, contrôle documentaire et technique, transmission du contrat de vente édité par le vendeur. Sans résultat, sans frais : si aucun véhicule correspondant n'est trouvé, les honoraires de recherche ne sont pas dus, ou sont remboursés, sauf si un véhicule a été trouvé et a fait l'objet d'un contrat signé entre le Client et le vendeur.",
+            "Revente : estimation, mise en valeur, diffusion ciblée, filtrage des acheteurs, accompagnement de la transaction, dans le cadre d'une obligation de moyens sur le délai et le prix de vente.",
+            "Transport : acheminement du véhicule par conducteur professionnel assuré, état des lieux avant départ et à la livraison, au tarif fixe du devis.",
+          ] },
+        ],
+      },
+      {
+        heading: "Article 6 — Responsabilité du Prestataire",
+        blocks: [
+          { text: "Le Prestataire agit en qualité de courtier et mandataire, intermédiaire indépendant : il met en relation les parties sans être partie au contrat de vente et n'est pas revendeur des véhicules. En conséquence :" },
+          { list: [
+            "Le vendeur du véhicule est seul responsable de la conformité du descriptif, de la garantie légale de conformité et de la garantie des vices cachés ; toute réclamation portant sur le véhicule lui est adressée directement.",
+            "La négociation du prix relève d'une obligation de moyens, sans garantie de résultat.",
+            "Les prestations réalisées par des tiers (contrôle technique, transporteur, immatriculation) relèvent de la responsabilité de ces tiers.",
+          ] },
+          { text: "La responsabilité du Prestataire ne peut être engagée en cas d'inexécution imputable au vendeur, au Client ou à un tiers." },
+        ],
+      },
+      {
+        heading: "Article 7 — Droit de rétractation",
+        blocks: [
+          { text: "Conformément aux articles L221-18 et suivants du Code de la consommation, le Client dispose d'un délai de 14 jours à compter de la conclusion du contrat pour se rétracter, sans avoir à justifier de motif ni à payer de pénalité, au moyen du formulaire figurant en annexe ou de toute déclaration non ambiguë adressée à contact@intelligenceautomobile.com. Si, à sa demande expresse, l'exécution de la prestation a commencé avant la fin du délai, le Client reste redevable du service déjà fourni ; une prestation pleinement exécutée avant la fin du délai fait perdre le droit de rétractation. Le remboursement intervient dans un délai de 14 jours à compter de la notification." },
+        ],
+      },
+      {
+        heading: "Article 8 — Données personnelles",
+        blocks: [
+          { text: "Les données collectées (nom, prénom, courriel, téléphone, informations sur le projet ou le véhicule) sont nécessaires au traitement de la demande et à la facturation. Elles ne sont pas cédées à des tiers à des fins commerciales. Le Client dispose des droits d'accès, de rectification, d'effacement, d'opposition et de portabilité, exerçables à contact@intelligenceautomobile.com. Le détail des traitements figure dans nos mentions légales." },
+        ],
+      },
+      {
+        heading: "Article 9 — Propriété intellectuelle",
+        blocks: [
+          { text: "Le contenu du site (textes, photographies, logo, identité visuelle) est la propriété du Prestataire et protégé par le droit de la propriété intellectuelle. Toute reproduction, totale ou partielle, sans autorisation préalable est interdite." },
+        ],
+      },
+      {
+        heading: "Article 10 — Force majeure, imprévision, résolution",
+        blocks: [
+          { text: "Aucune Partie n'est responsable d'un manquement dû à un cas de force majeure au sens de l'article 1218 du Code civil. En cas de changement de circonstances imprévisible lors de la conclusion du contrat (article 1195), une renégociation peut être demandée. En cas d'inexécution suffisamment grave, la Partie lésée peut résoudre le contrat après une mise en demeure restée infructueuse pendant huit jours (article 1224)." },
+        ],
+      },
+      {
+        heading: "Article 11 — Droit applicable et langue",
+        blocks: [
+          { text: "Les présentes Conditions Générales sont régies par le droit français et rédigées en langue française. En cas de traduction, seule la version française fait foi en cas de litige." },
+        ],
+      },
+      {
+        heading: "Article 12 — Litiges et médiation",
+        blocks: [
+          { text: "En cas de litige non résolu à l'amiable, le Client peut recourir gratuitement à un médiateur de la consommation : [médiateur à désigner]. À défaut d'accord, les tribunaux compétents sont saisis dans les conditions du droit commun. Une plateforme européenne de règlement en ligne des litiges est disponible à l'adresse ec.europa.eu/consumers/odr." },
+        ],
+      },
+      {
+        heading: "Article 13 — Information précontractuelle",
+        blocks: [
+          { text: "Le Client reconnaît avoir reçu, préalablement à la commande et de manière lisible et compréhensible, les présentes Conditions Générales ainsi que les informations prévues à l'article L221-5 du Code de la consommation : caractéristiques et prix des prestations, frais annexes, délais, identité et coordonnées du Prestataire, garanties légales, droit de rétractation et formulaire type, médiation, et moyens de paiement acceptés." },
+        ],
+      },
+      {
+        heading: "Annexe — Formulaire de rétractation",
+        blocks: [
+          { text: "À compléter et renvoyer uniquement en cas de rétractation, à SASU Intelligence Automobile — contact@intelligenceautomobile.com." },
+          { text: "Je notifie par la présente la rétractation du contrat portant sur la prestation ci-dessous : Devis du … · Numéro de devis … · Nom du Client … · Adresse … · Date … · Signature du Client." },
+        ],
+      },
+    ],
+  },
+
+  legal: {
+    metaTitle: "Mentions légales & Confidentialité — Intelligence Automobile",
+    title: "Mentions légales & Confidentialité",
+    updated: "Dernière mise à jour : 1ᵉʳ juillet 2026",
+    sections: [
+      {
+        heading: "Éditeur du site",
+        paragraphs: [
+          "Le site intelligenceautomobile.fr est édité par SASU Intelligence Automobile, société par actions simplifiée unipersonnelle au capital de 1 000 €, dont le siège social est établi à Paris, France.",
+          "SIRET, RCS et numéro de TVA intracommunautaire : en cours d'immatriculation, communiqués dès leur attribution.",
+          "Contact : contact@intelligenceautomobile.com · +33 6 20 24 38 79",
+        ],
+      },
+      {
+        heading: "Directeur de la publication",
+        paragraphs: ["César Vachon, en qualité de fondateur."],
+      },
+      {
+        heading: "Hébergeur",
+        paragraphs: [
+          "Le site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis — vercel.com.",
+        ],
+      },
+      {
+        heading: "Propriété intellectuelle",
+        paragraphs: [
+          "L'ensemble des éléments du site (textes, photographies, logo, identité visuelle, structure) est protégé par le droit de la propriété intellectuelle et demeure la propriété d'Intelligence Automobile, sauf mention contraire. Toute reproduction ou réutilisation, totale ou partielle, sans autorisation préalable est interdite.",
+        ],
+      },
+      {
+        heading: "Données personnelles (RGPD)",
+        paragraphs: [
+          "Les formulaires du site (recherche personnalisée, revente, transport, contact) collectent uniquement les données que vous nous transmettez : nom, adresse e-mail, téléphone et informations relatives à votre projet automobile. Ces données servent exclusivement à traiter votre demande et à vous recontacter. Elles ne sont jamais revendues ni cédées à des tiers à des fins commerciales.",
+          "Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement et d'opposition sur vos données. Pour l'exercer, écrivez-nous à contact@intelligenceautomobile.com. Vos données sont conservées le temps nécessaire au traitement de votre demande, puis archivées ou supprimées.",
+        ],
+      },
+      {
+        heading: "Cookies",
+        paragraphs: [
+          "Le site n'utilise aucun cookie de suivi publicitaire ni outil de mesure d'audience. Seul un cookie technique de préférence de langue est déposé pour améliorer votre navigation. Vous pouvez le supprimer à tout moment via les réglages de votre navigateur.",
+        ],
+      },
+    ],
   },
 
   home: {
@@ -295,9 +458,9 @@ export const fr = {
       yearManual: "Saisir l'année",
       mileageLabel: "Kilométrage *",
       mileagePlaceholder: "Ex : 68 000",
+      selectPlaceholder: "Sélectionnez",
       fuelLabel: "Carburant",
       fuels: [
-        { value: "Peu importe", label: "Peu importe" },
         { value: "Essence", label: "Essence" },
         { value: "Diesel", label: "Diesel" },
         { value: "Hybride", label: "Hybride" },
@@ -305,16 +468,16 @@ export const fr = {
       ],
       gearboxLabel: "Boîte",
       gearboxes: [
-        { value: "Peu importe", label: "Peu importe" },
         { value: "Automatique", label: "Automatique" },
         { value: "Manuelle", label: "Manuelle" },
       ],
       conditionLabel: "État général *",
       conditions: [
-        { value: "Excellent", label: "Excellent" },
-        { value: "Très bon", label: "Très bon" },
-        { value: "Bon", label: "Bon" },
-        { value: "Quelques défauts", label: "Quelques défauts" },
+        { value: "Excellent état", label: "Excellent état" },
+        { value: "Bon état général", label: "Bon état général" },
+        { value: "Traces d'usure normales", label: "Traces d'usure normales" },
+        { value: "Réparation à prévoir", label: "Réparation à prévoir" },
+        { value: "Endommagé", label: "Endommagé" },
       ],
       maintenanceLabel: "Entretien",
       maintenances: [
@@ -326,9 +489,9 @@ export const fr = {
       pricePlaceholder: "Ex : 28 000 €",
       detailsLabel: "Précisions",
       detailsPlaceholder: "Seconde main, options, historique, raison de la vente...",
-      photosSection: "Photos",
-      addPhotos: "Cliquez pour ajouter des photos",
-      photoHint: "Extérieur · Intérieur · Compteur · Carnet d'entretien",
+      photosSection: "Photos & documents",
+      addPhotos: "Cliquez pour ajouter photos et documents",
+      photoHint: "Extérieur, intérieur, compteur, carnet d'entretien, factures. Formats acceptés : JPG, PNG, PDF.",
       firstNameLabel: "Prénom *",
       firstNamePlaceholder: "Votre prénom",
       lastNameLabel: "Nom *",
@@ -337,6 +500,7 @@ export const fr = {
       emailPlaceholder: "votre@email.fr",
       phoneLabel: "Téléphone",
       phonePlaceholder: "+33 6 00 00 00 00",
+      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp. Pensez à indiquer un numéro joignable sur WhatsApp.",
       submitBtn: "Demander mon estimation gratuite",
       submittingBtn: "Envoi en cours...",
       footer: "Estimation gratuite et sans engagement · Honoraires annoncés avant tout accord",
@@ -358,12 +522,12 @@ export const fr = {
       { num: "04", title: "Livraison", desc: "Le véhicule vous est remis à destination dans l'état convenu. Photos de livraison transmises. Tarif inchangé." },
     ],
     guarantees: [
-      "Conducteurs professionnels assurés RC",
+      "Conducteurs professionnels",
       "Photos d'état avant départ et à la livraison",
-      "Couverture RC pendant tout le transport",
+      "Véhicule couvert pendant tout le transport",
       "Tarif fixe annoncé avant accord, sans supplément",
       "France entière + Union européenne",
-      "Interlocuteur direct tout au long de la mission",
+      "Interlocuteur dédié tout au long de la mission",
     ],
     formTitle: ["Dites-nous", "où livrer."],
     zonesLabel: "Zones couvertes",
@@ -378,7 +542,7 @@ export const fr = {
       pickupPlaceholder: "Ville ou code postal",
       deliveryLabel: "Lieu de livraison *",
       deliveryPlaceholder: "Ville ou code postal",
-      dateLabel: "Date souhaitée",
+      dateLabel: "Date de livraison souhaitée",
       datePlaceholder: "Ex : à partir du 15 juin, semaine du 23...",
       makeLabel: "Marque *",
       makePlaceholder: "BMW, Audi, Mercedes...",
@@ -398,6 +562,7 @@ export const fr = {
       emailPlaceholder: "votre@email.fr",
       phoneLabel: "Téléphone",
       phonePlaceholder: "+33 6 00 00 00 00",
+      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp. Pensez à indiquer un numéro joignable sur WhatsApp.",
       submitBtn: "Demander un devis",
       submittingBtn: "Envoi en cours...",
       footer: "Devis gratuit sous 24h · Tarif fixe, sans surprise",
@@ -419,36 +584,43 @@ export const fr = {
       { value: "0", label: "Mauvaise surprise : chaque point de vigilance signalé avant la vente" },
     ],
     processLabel: "Le processus",
-    processTitle: "Une méthode\nen cinq étapes.",
+    processTitle: "Une méthode\nen six étapes.",
     steps: [
-      { num: "01", title: "Comprendre votre recherche", description: "Nous définissons avec vous le modèle, le budget, la configuration, l'usage et les critères essentiels.", tagline: "Objectif : chercher juste, dès le départ." },
-      { num: "02", title: "Sélectionner les bons véhicules", description: "Nous analysons les opportunités en Europe selon des critères stricts : historique, kilométrage, entretien, configuration, prix et potentiel de revente.", tagline: "Nous ne cherchons pas une voiture disponible. Nous cherchons le bon exemplaire." },
-      { num: "03", title: "Vérifier avant d'acheter", description: "Documents, historique, entretien, cohérence du kilométrage, conformité et points mécaniques connus du modèle sont contrôlés avant toute décision.", tagline: "Ce que nous savons, vous le savez aussi." },
-      { num: "04", title: "Gérer l'import pour vous", description: "Transport, démarches administratives, certificat de conformité, immatriculation et dossier complet : nous simplifions chaque étape.", tagline: "Vous décidez. Nous exécutons." },
-      { num: "05", title: "Livrer une expérience premium", description: "Le véhicule est préparé, documenté et remis avec soin. L'accompagnement continue après la livraison si vous en avez besoin.", tagline: "La remise des clés n'est pas une fin. C'est le début de la relation." },
+      { num: "01", title: "Comprendre votre recherche", description: "Tout commence par un échange. On cerne ensemble votre projet : le modèle, le budget, la configuration et l'usage que vous en ferez.\nQuelques questions bien ciblées suffisent pour viser juste dès le départ.", tagline: "Objectif : chercher juste, dès le départ." },
+      { num: "02", title: "Rechercher et vous présenter les véhicules", description: "On passe l'Europe au crible, selon des critères stricts : historique, kilométrage, entretien, configuration et prix compétitif.\nVous recevez une sélection resserrée et commentée, photos et rapport à l'appui. À vous de choisir.", tagline: "Nous ne cherchons pas une voiture disponible. Nous cherchons le bon exemplaire." },
+      { num: "03", title: "Enquêter en profondeur", description: "Vos favoris identifiés, on enquête pour de vrai : documents, historique complet, entretien, cohérence du kilométrage, conformité et points sensibles du modèle.\nVous tranchez en toute connaissance de cause, sans angle mort.", tagline: "Ce que nous savons, vous le savez aussi." },
+      { num: "04", title: "Gérer l'import pour vous", description: "Importer seul, c'est une vraie galère : les démarches sont nombreuses et complexes. Nous nous en occupons de A à Z, vous ne touchez à rien.", tagline: "Notre métier : rendre l'achat d'un véhicule importé aussi simple qu'un achat en France, voire plus simple encore." },
+      { num: "05", title: "Livrer une expérience premium", description: "Le véhicule est préparé, documenté et remis avec soin, comme il se doit.\nEt l'accompagnement ne s'arrête pas à la remise des clés : on reste là si vous en avez besoin.", tagline: "La remise des clés n'est pas une fin. C'est le début de la relation." },
+      { num: "06", title: "Accompagnement après-vente", description: "On reste disponibles bien après la livraison.\nLe jour où vous voudrez revendre, on s'en occupe. Et pour l'entretien, un conseil est toujours à portée de message.", tagline: "Une relation qui dure, pas une simple transaction." },
+    ],
+    importSteps: [
+      "Certificat de conformité européen, obtenu auprès de la marque.",
+      "Certificat provisoire d'immatriculation : les [[fameuses plaques WW]].",
+      "Quitus fiscal, dès l'arrivée en France.",
+      "Immatriculation définitive à l'ANTS, près de 20 pièces à réunir.",
     ],
     secureLabel: "Nos garanties",
     secureTitle: "Ce que nous\nsécurisons.",
     secureItems: [
       { icon: "📓", color: "#6B9FEE", title: "Historique clair", desc: "Entretien, factures, kilométrage et traçabilité." },
       { icon: "📊", color: "#5BD89A", title: "Prix cohérent", desc: "Analyse du marché européen et français." },
-      { icon: "🔧", color: "#E8C36B", title: "Points mécaniques vérifiés", desc: "Contrôle des faiblesses connues selon le modèle." },
+      { icon: "🔧", color: "#C6CCD6", title: "Points mécaniques vérifiés", desc: "Contrôles esthétiques et mécaniques complets et documentés." },
       { icon: "🧾", color: "#6B9FEE", title: "Documents complets", desc: "Import, conformité, immatriculation, dossier administratif." },
-      { icon: "💶", color: "#5BD89A", title: "Transparence des coûts", desc: "Prix, frais, marge et prestations expliqués clairement." },
-      { icon: "🛡️", color: "#E8C36B", title: "Garantie et suivi", desc: "Accompagnement avant, pendant et après l'achat." },
+      { icon: "💶", color: "#5BD89A", title: "Transparence des coûts", desc: "Prix, frais, commissions et prestations expliqués clairement." },
+      { icon: "🛡️", color: "#C6CCD6", title: "Garantie et suivi", desc: "Accompagnement avant, pendant et après l'achat." },
     ],
     pillarsLabel: "Notre ADN",
     pillarsTitle: "Nos valeurs.",
     pillars: [
       { icon: "🎯", color: "#6B9FEE", title: "Exigence", desc: "Nous préférons refuser un véhicule plutôt que de compromettre la qualité." },
       { icon: "🔍", color: "#5BD89A", title: "Transparence", desc: "Chaque information importante est partagée clairement." },
-      { icon: "🧠", color: "#E8C36B", title: "Intelligence", desc: "La donnée, les outils digitaux et l'expertise humaine guident nos décisions." },
+      { icon: "🧠", color: "#C6CCD6", title: "Intelligence", desc: "La donnée, les outils digitaux et l'expertise humaine guident nos décisions." },
       { icon: "🤝", color: "#6B9FEE", title: "Discrétion", desc: "Un accompagnement sobre, direct et confidentiel." },
     ],
     cabinetLabel: "Notre positionnement",
     cabinetTitle: "Un cabinet automobile\npremium.",
-    cabinetText: "Nous ne sommes ni un mandataire généraliste, ni une marketplace, ni un simple revendeur. Intelligence Automobile est un cabinet spécialisé, pensé pour accompagner les passionnés vers le bon véhicule premium.",
-    cabinetPoints: ["Peu de stock.", "Une sélection exigeante.", "Une relation personnalisée.", "Une transparence totale.", "Une expérience maîtrisée."],
+    cabinetText: "Nous ne sommes ni un mandataire généraliste, ni une marketplace, ni un simple revendeur. Intelligence Automobile est un cabinet spécialisé, pensé pour accompagner ses clients dans leur projet automobile.",
+    cabinetPoints: ["Une sélection exigeante.", "Une relation personnalisée.", "Une transparence totale.", "Une expérience maîtrisée."],
     ctaTitle: "Vous avez le projet.\nNous avons la méthode.",
     ctaSubtitle: "Audi TT, TTS, TT RS, Porsche 718 ou un autre véhicule premium ciblé : nous vous accompagnons avec rigueur, clarté et discrétion.",
     ctaContact: "Confier ma recherche",
@@ -585,9 +757,9 @@ export const fr = {
     firstContactText: "Pas besoin de préparer un dossier complet. Un message suffit : dites-nous ce que vous cherchez — acheter, importer ou vendre — et nous prendrons le temps de vous orienter.",
     servicesLabel: "Nos services",
     services: [
-      { label: "Recherche personnalisée", href: "/recherche" },
-      { label: "Revente sur mesure", href: "/aide-vente" },
-      { label: "Transport & Livraison", href: "/convoyage" },
+      { label: "Recherche personnalisée", href: "/recherche-personnalisee" },
+      { label: "Revente sur mesure", href: "/revente-sur-mesure" },
+      { label: "Transport & Livraison", href: "/transport-livraison" },
     ],
     form: {
       nameLabel: "Nom *",

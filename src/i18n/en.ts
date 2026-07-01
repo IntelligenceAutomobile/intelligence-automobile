@@ -26,12 +26,175 @@ export const en: Translations = {
       { href: "/contact", label: "Contact" },
     ],
     serviceLinks: [
-      { href: "/recherche", label: "Personalised search" },
-      { href: "/aide-vente", label: "Tailored resale" },
-      { href: "/convoyage", label: "Transport & Delivery" },
+      { href: "/recherche-personnalisee", label: "Personalised search" },
+      { href: "/revente-sur-mesure", label: "Tailored resale" },
+      { href: "/transport-livraison", label: "Transport & Delivery" },
     ],
     rights: "All rights reserved.",
     tagline: "Premium imports · European Union → France",
+    legalLink: "Legal notice",
+    cgvLink: "Terms",
+  },
+
+  cgv: {
+    metaTitle: "General Terms of Service — Intelligence Automobile",
+    title: "General Terms of Service",
+    updated: "Last updated: July 1, 2026",
+    sections: [
+      {
+        heading: "Preamble",
+        blocks: [
+          { text: "SASU Intelligence Automobile, a simplified single-shareholder company with share capital of €1,000, whose registered office is located in Paris, France. SIRET, RCS and intra-community VAT number: registration in progress. Email: contact@intelligenceautomobile.com — Phone: +33 6 20 24 38 79 — Website: intelligenceautomobile.com (hereinafter “the Provider”)." },
+        ],
+      },
+      {
+        heading: "Article 1 — Scope",
+        blocks: [
+          { text: "These General Terms apply, without restriction or reservation, to any service subscribed with the Provider by a consumer or non-professional client (“the Client”), namely:" },
+          { list: [
+            "Vehicle search and purchase assistance: connecting the Client with private or professional sellers, in France and within the European Union, with a view to acquiring a vehicle;",
+            "Resale assistance for a vehicle owned by the Client: enhancement, listing, buyer screening, securing the transaction;",
+            "Vehicle transport and delivery.",
+          ] },
+          { text: "The Client declares having read and accepted these Terms before signing the quote. They prevail over any other document. The applicable version is the one in force on the date the quote is signed." },
+        ],
+      },
+      {
+        heading: "Article 2 — Orders",
+        blocks: [
+          { text: "The Client provides the Provider with search criteria or information about their vehicle, along with their contact details (name, address, phone, email). The service becomes final only after the Provider issues a detailed quote (valid for 30 days), then the Client validates the quote in writing (email, mail or electronic signature). This validation forms a contract concluded at a distance. Once accepted, the order can neither be modified nor cancelled, except in cases of force majeure and subject to the right of withdrawal set out in Article 7." },
+        ],
+      },
+      {
+        heading: "Article 3 — Prices and fees",
+        blocks: [
+          { text: "Services are provided at the price of the quote in force at the time of the order, expressed in euros including all taxes (excl./incl. tax where applicable). The Provider's fees are announced before any commitment. Additional services (transport, registration, etc.) are invoiced separately by quote. An invoice is issued to the Client." },
+        ],
+      },
+      {
+        heading: "Article 4 — Payment",
+        blocks: [
+          { text: "The price includes a deposit paid at the time of the order, when the quote is signed, and the balance payable upon delivery of the service (vehicle delivery or handover of the service), according to the terms set out in the quote. Payments are made by bank transfer, credit card (secure payment link) or any other agreed means. The Provider is not required to begin the service before the deposit is received. In the event of non-compliance with the payment terms, the Provider may suspend or cancel the service." },
+        ],
+      },
+      {
+        heading: "Article 5 — Provision of services",
+        blocks: [
+          { text: "The Provider is bound by an obligation of means: it undertakes to use its best efforts to provide the services within the timeframe indicated in the quote." },
+          { list: [
+            "Search and purchase: searching for and proposing vehicles matching the criteria, checking availability with the seller, attempting to negotiate, documentary and technical checks, forwarding the sales contract issued by the seller. No result, no fee: if no matching vehicle is found, the search fees are not due, or are refunded, unless a vehicle was found and a contract was signed between the Client and the seller.",
+            "Resale: valuation, enhancement, targeted listing, buyer screening, transaction support, within an obligation of means as to timeframe and sale price.",
+            "Transport: transport of the vehicle by an insured professional driver, condition report before departure and on delivery, at the fixed price of the quote.",
+          ] },
+        ],
+      },
+      {
+        heading: "Article 6 — Liability of the Provider",
+        blocks: [
+          { text: "The Provider acts as a broker and agent, an independent intermediary: it connects the parties without being a party to the sales contract and is not a reseller of the vehicles. Consequently:" },
+          { list: [
+            "The seller of the vehicle is solely responsible for the accuracy of the description, the legal guarantee of conformity and the guarantee against hidden defects; any claim regarding the vehicle is addressed directly to the seller.",
+            "Price negotiation is an obligation of means, with no guarantee of result.",
+            "Services performed by third parties (technical inspection, carrier, registration) are the responsibility of those third parties.",
+          ] },
+          { text: "The Provider's liability cannot be engaged in the event of non-performance attributable to the seller, the Client or a third party." },
+        ],
+      },
+      {
+        heading: "Article 7 — Right of withdrawal",
+        blocks: [
+          { text: "In accordance with Articles L221-18 et seq. of the French Consumer Code, the Client has a period of 14 days from the conclusion of the contract to withdraw, without giving reasons or paying a penalty, using the form provided in the appendix or any unambiguous statement sent to contact@intelligenceautomobile.com. If, at the Client's express request, performance of the service began before the end of the period, the Client remains liable for the service already provided; a service fully performed before the end of the period causes the right of withdrawal to be lost. Reimbursement is made within 14 days of notification." },
+        ],
+      },
+      {
+        heading: "Article 8 — Personal data",
+        blocks: [
+          { text: "The data collected (name, email, phone, information about the project or vehicle) is necessary to process the request and for invoicing. It is not transferred to third parties for commercial purposes. The Client has the rights of access, rectification, erasure, objection and portability, which can be exercised at contact@intelligenceautomobile.com. Details of the processing are set out in our legal notice." },
+        ],
+      },
+      {
+        heading: "Article 9 — Intellectual property",
+        blocks: [
+          { text: "The content of the site (text, photographs, logo, visual identity) is the property of the Provider and protected by intellectual property law. Any reproduction, in whole or in part, without prior authorisation is prohibited." },
+        ],
+      },
+      {
+        heading: "Article 10 — Force majeure, hardship, termination",
+        blocks: [
+          { text: "Neither Party is liable for a breach caused by an event of force majeure within the meaning of Article 1218 of the French Civil Code. In the event of an unforeseeable change of circumstances at the conclusion of the contract (Article 1195), a renegotiation may be requested. In the event of a sufficiently serious non-performance, the aggrieved Party may terminate the contract after a formal notice that has remained unsatisfied for eight days (Article 1224)." },
+        ],
+      },
+      {
+        heading: "Article 11 — Governing law and language",
+        blocks: [
+          { text: "These General Terms are governed by French law and drafted in French. In the event of translation, only the French version shall prevail in the event of a dispute." },
+        ],
+      },
+      {
+        heading: "Article 12 — Disputes and mediation",
+        blocks: [
+          { text: "In the event of a dispute not resolved amicably, the Client may use, free of charge, a consumer mediator: [mediator to be designated]. Failing agreement, the competent courts are seised under ordinary law. A European online dispute resolution platform is available at ec.europa.eu/consumers/odr." },
+        ],
+      },
+      {
+        heading: "Article 13 — Pre-contractual information",
+        blocks: [
+          { text: "The Client acknowledges having received, prior to the order and in a legible and comprehensible manner, these General Terms as well as the information provided for in Article L221-5 of the French Consumer Code: essential characteristics and price of the services, additional costs, timeframes, identity and contact details of the Provider, legal guarantees, right of withdrawal and standard form, mediation, and accepted means of payment." },
+        ],
+      },
+      {
+        heading: "Appendix — Withdrawal form",
+        blocks: [
+          { text: "To be completed and returned only in the event of withdrawal, to SASU Intelligence Automobile — contact@intelligenceautomobile.com." },
+          { text: "I hereby give notice of withdrawal from the contract for the service below: Quote dated … · Quote number … · Client name … · Address … · Date … · Client signature." },
+        ],
+      },
+    ],
+  },
+
+  legal: {
+    metaTitle: "Legal Notice & Privacy — Intelligence Automobile",
+    title: "Legal Notice & Privacy",
+    updated: "Last updated: July 1, 2026",
+    sections: [
+      {
+        heading: "Site publisher",
+        paragraphs: [
+          "The website intelligenceautomobile.fr is published by SASU Intelligence Automobile, a simplified single-shareholder company with share capital of €1,000, whose registered office is located in Paris, France.",
+          "SIRET, RCS and intra-community VAT number: registration in progress, provided as soon as they are issued.",
+          "Contact: contact@intelligenceautomobile.com · +33 6 20 24 38 79",
+        ],
+      },
+      {
+        heading: "Publication director",
+        paragraphs: ["César Vachon, as founder."],
+      },
+      {
+        heading: "Hosting provider",
+        paragraphs: [
+          "The website is hosted by Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA — vercel.com.",
+        ],
+      },
+      {
+        heading: "Intellectual property",
+        paragraphs: [
+          "All elements of the site (text, photographs, logo, visual identity, structure) are protected by intellectual property law and remain the property of Intelligence Automobile, unless otherwise stated. Any reproduction or reuse, in whole or in part, without prior authorisation is prohibited.",
+        ],
+      },
+      {
+        heading: "Personal data (GDPR)",
+        paragraphs: [
+          "The site's forms (custom search, resale, transport, contact) only collect the data you provide: name, email address, phone number and information about your automotive project. This data is used solely to process your request and get back to you. It is never sold or transferred to third parties for commercial purposes.",
+          "In accordance with the GDPR, you have the right to access, rectify, erase and object to the processing of your data. To exercise it, email us at contact@intelligenceautomobile.com. Your data is kept for as long as necessary to process your request, then archived or deleted.",
+        ],
+      },
+      {
+        heading: "Cookies",
+        paragraphs: [
+          "The site uses no advertising or analytics cookies. Only a technical language-preference cookie is stored to improve your browsing. You can delete it at any time via your browser settings.",
+        ],
+      },
+    ],
   },
 
   home: {
@@ -292,9 +455,9 @@ export const en: Translations = {
       yearManual: "Enter the year",
       mileageLabel: "Mileage *",
       mileagePlaceholder: "E.g.: 68,000",
+      selectPlaceholder: "Select",
       fuelLabel: "Fuel type",
       fuels: [
-        { value: "Peu importe", label: "Any" },
         { value: "Essence", label: "Petrol" },
         { value: "Diesel", label: "Diesel" },
         { value: "Hybride", label: "Hybrid" },
@@ -302,16 +465,16 @@ export const en: Translations = {
       ],
       gearboxLabel: "Gearbox",
       gearboxes: [
-        { value: "Peu importe", label: "Any" },
         { value: "Automatique", label: "Automatic" },
         { value: "Manuelle", label: "Manual" },
       ],
       conditionLabel: "Overall condition *",
       conditions: [
-        { value: "Excellent", label: "Excellent" },
-        { value: "Très bon", label: "Very good" },
-        { value: "Bon", label: "Good" },
-        { value: "Quelques défauts", label: "Some defects" },
+        { value: "Excellent état", label: "Excellent condition" },
+        { value: "Bon état général", label: "Good overall condition" },
+        { value: "Traces d'usure normales", label: "Normal wear and tear" },
+        { value: "Réparation à prévoir", label: "Repairs needed" },
+        { value: "Endommagé", label: "Damaged" },
       ],
       maintenanceLabel: "Service history",
       maintenances: [
@@ -323,9 +486,9 @@ export const en: Translations = {
       pricePlaceholder: "E.g.: €28,000",
       detailsLabel: "Details",
       detailsPlaceholder: "Second owner, options, history, reason for selling...",
-      photosSection: "Photos",
-      addPhotos: "Click to add photos",
-      photoHint: "Exterior · Interior · Dashboard · Service book",
+      photosSection: "Photos & documents",
+      addPhotos: "Click to add photos and documents",
+      photoHint: "Exterior, interior, odometer, service book, invoices. Accepted formats: JPG, PNG, PDF.",
       firstNameLabel: "First name *",
       firstNamePlaceholder: "Your first name",
       lastNameLabel: "Last name *",
@@ -334,6 +497,7 @@ export const en: Translations = {
       emailPlaceholder: "your@email.com",
       phoneLabel: "Phone",
       phonePlaceholder: "+33 6 00 00 00 00",
+      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp. Please share a number reachable on WhatsApp.",
       submitBtn: "Request my free valuation",
       submittingBtn: "Sending...",
       footer: "Free and non-binding valuation · Fees disclosed before any agreement",
@@ -355,12 +519,12 @@ export const en: Translations = {
       { num: "04", title: "Delivery", desc: "The vehicle is handed over at destination in the agreed condition. Delivery photos transmitted. Price unchanged." },
     ],
     guarantees: [
-      "Professionally insured drivers (RC)",
+      "Professional drivers",
       "Condition photos before departure and at delivery",
-      "Full RC insurance coverage during transport",
+      "Vehicle covered throughout transport",
       "Fixed price announced before agreement, no surcharges",
       "All of France + European Union",
-      "Direct point of contact throughout the mission",
+      "Dedicated point of contact throughout the mission",
     ],
     formTitle: ["Tell us", "where to deliver."],
     zonesLabel: "Coverage area",
@@ -375,7 +539,7 @@ export const en: Translations = {
       pickupPlaceholder: "City or postcode",
       deliveryLabel: "Delivery location *",
       deliveryPlaceholder: "City or postcode",
-      dateLabel: "Desired date",
+      dateLabel: "Desired delivery date",
       datePlaceholder: "E.g.: from June 15, week of the 23rd...",
       makeLabel: "Make *",
       makePlaceholder: "BMW, Audi, Mercedes...",
@@ -395,6 +559,7 @@ export const en: Translations = {
       emailPlaceholder: "your@email.com",
       phoneLabel: "Phone",
       phonePlaceholder: "+33 6 00 00 00 00",
+      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp. Please share a number reachable on WhatsApp.",
       submitBtn: "Request a quote",
       submittingBtn: "Sending...",
       footer: "Free quote within 24h · Fixed price, no surprises",
@@ -416,36 +581,43 @@ export const en: Translations = {
       { value: "0", label: "Bad surprises: every point of attention disclosed before the sale" },
     ],
     processLabel: "The process",
-    processTitle: "A method\nin five steps.",
+    processTitle: "A method\nin six steps.",
     steps: [
-      { num: "01", title: "Understanding your search", description: "Together we define the model, budget, specification, intended use and essential criteria.", tagline: "Goal: search right, from the start." },
-      { num: "02", title: "Selecting the right vehicles", description: "We analyse opportunities across Europe against strict criteria: history, mileage, maintenance, specification, price and resale potential.", tagline: "We don't look for an available car. We look for the right example." },
-      { num: "03", title: "Verifying before buying", description: "Documents, history, maintenance, mileage consistency, compliance and the model's known mechanical points are all checked before any decision.", tagline: "What we know, you know too." },
-      { num: "04", title: "Handling the import for you", description: "Transport, administrative procedures, certificate of conformity, registration and complete file: we simplify every step.", tagline: "You decide. We execute." },
-      { num: "05", title: "Delivering a premium experience", description: "The vehicle is prepared, documented and handed over with care. Support continues after delivery whenever you need it.", tagline: "The key handover is not an end. It's the start of the relationship." },
+      { num: "01", title: "Understanding your search", description: "It all starts with a conversation. Together we map out your project: the model, the budget, the specification and how you'll actually use it.\nA few well-aimed questions are enough to search right from the start.", tagline: "Goal: search right, from the start." },
+      { num: "02", title: "Sourcing and presenting the vehicles", description: "We comb through Europe against strict criteria: history, mileage, maintenance, specification and competitive price.\nYou get a tight, annotated shortlist, backed by photos and a report. The choice is yours.", tagline: "We don't look for an available car. We look for the right example." },
+      { num: "03", title: "Investigating in depth", description: "Once your favourites are picked, we investigate for real: documents, full history, maintenance, mileage consistency, compliance and the model's sensitive points.\nYou decide with full confidence, no blind spots.", tagline: "What we know, you know too." },
+      { num: "04", title: "Handling the import for you", description: "Importing on your own is a real headache: the procedures are many and complex. We handle it from A to Z, you don't lift a finger.", tagline: "Our job: making the purchase of an imported vehicle as simple as buying one in France, if not simpler." },
+      { num: "05", title: "Delivering a premium experience", description: "The vehicle is prepared, documented and handed over with care, as it should be.\nAnd the support doesn't stop at the key handover: we stay around whenever you need us.", tagline: "The key handover is not an end. It's the start of the relationship." },
+      { num: "06", title: "After-sales support", description: "We stay available long after delivery.\nThe day you want to sell, we take care of it. And for maintenance, advice is always one message away.", tagline: "A lasting relationship, not just a transaction." },
+    ],
+    importSteps: [
+      "European certificate of conformity, obtained from the brand.",
+      "Temporary registration certificate: the [[well-known WW plates]].",
+      "Tax clearance (quitus fiscal), as soon as the car reaches France.",
+      "Definitive registration with the ANTS, nearly 20 documents to gather.",
     ],
     secureLabel: "Our guarantees",
     secureTitle: "What we\nsecure.",
     secureItems: [
       { icon: "📓", color: "#6B9FEE", title: "Clear history", desc: "Maintenance, invoices, mileage and traceability." },
       { icon: "📊", color: "#5BD89A", title: "Fair price", desc: "Analysis of the European and French markets." },
-      { icon: "🔧", color: "#E8C36B", title: "Verified mechanics", desc: "Review of the model's known weak points." },
+      { icon: "🔧", color: "#C6CCD6", title: "Verified mechanics", desc: "Full cosmetic and mechanical checks, documented." },
       { icon: "🧾", color: "#6B9FEE", title: "Complete documents", desc: "Import, compliance, registration, full administrative file." },
-      { icon: "💶", color: "#5BD89A", title: "Transparent costs", desc: "Price, fees, margin and services explained clearly." },
-      { icon: "🛡️", color: "#E8C36B", title: "Warranty & follow-up", desc: "Support before, during and after the purchase." },
+      { icon: "💶", color: "#5BD89A", title: "Transparent costs", desc: "Price, fees, commissions and services explained clearly." },
+      { icon: "🛡️", color: "#C6CCD6", title: "Warranty & follow-up", desc: "Support before, during and after the purchase." },
     ],
     pillarsLabel: "Our DNA",
     pillarsTitle: "Our values.",
     pillars: [
       { icon: "🎯", color: "#6B9FEE", title: "Rigour", desc: "We would rather turn down a vehicle than compromise on quality." },
       { icon: "🔍", color: "#5BD89A", title: "Transparency", desc: "Every important piece of information is shared clearly." },
-      { icon: "🧠", color: "#E8C36B", title: "Intelligence", desc: "Data, digital tools and human expertise guide our decisions." },
+      { icon: "🧠", color: "#C6CCD6", title: "Intelligence", desc: "Data, digital tools and human expertise guide our decisions." },
       { icon: "🤝", color: "#6B9FEE", title: "Discretion", desc: "Understated, direct and confidential support." },
     ],
     cabinetLabel: "Our positioning",
     cabinetTitle: "A premium automotive\nconsultancy.",
-    cabinetText: "We are neither a generalist broker, nor a marketplace, nor a mere reseller. Intelligence Automobile is a specialised consultancy, built to guide enthusiasts to the right premium vehicle.",
-    cabinetPoints: ["Limited stock.", "A demanding selection.", "A personal relationship.", "Total transparency.", "A mastered experience."],
+    cabinetText: "We are neither a generalist broker, nor a marketplace, nor a mere reseller. Intelligence Automobile is a specialised consultancy, built to support its clients in their automotive project.",
+    cabinetPoints: ["A demanding selection.", "A personal relationship.", "Total transparency.", "A mastered experience."],
     ctaTitle: "You have the project.\nWe have the method.",
     ctaSubtitle: "Audi TT, TTS, TT RS, Porsche 718 or another targeted premium vehicle: we support you with rigour, clarity and discretion.",
     ctaContact: "Entrust my search",
@@ -582,9 +754,9 @@ export const en: Translations = {
     firstContactText: "No need to prepare a complete file. A message is enough: tell us what you're looking for — buying, importing or selling — and we will take the time to guide you.",
     servicesLabel: "Our services",
     services: [
-      { label: "Custom search", href: "/recherche" },
-      { label: "Tailored resale", href: "/aide-vente" },
-      { label: "Transport & delivery", href: "/convoyage" },
+      { label: "Custom search", href: "/recherche-personnalisee" },
+      { label: "Tailored resale", href: "/revente-sur-mesure" },
+      { label: "Transport & delivery", href: "/transport-livraison" },
     ],
     form: {
       nameLabel: "Name *",

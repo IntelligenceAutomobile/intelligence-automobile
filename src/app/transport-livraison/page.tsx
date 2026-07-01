@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ConvoyageForm from "@/app/convoyage/ConvoyageForm";
+import ConvoyageForm from "@/app/transport-livraison/ConvoyageForm";
 import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
@@ -160,7 +160,7 @@ export default async function ConvoyagePage2() {
                 <br />
                 <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
-              <div className="mt-6" style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px" }} />
+              <div className="mt-6" style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #6B9FEE, transparent)", borderRadius: "2px" }} />
             </div>
 
             <div
@@ -179,7 +179,7 @@ export default async function ConvoyagePage2() {
                         padding: "0.9rem 0",
                       }}
                     >
-                      <span style={{ color: "#E8C36B", fontSize: "10px", flexShrink: 0 }}>
+                      <span style={{ color: "#C0C8D4", fontSize: "10px", flexShrink: 0 }}>
                         ✓
                       </span>
                       <span

@@ -225,7 +225,7 @@ export default function VehiculeDetailView({
                   >
                     {td.presentationSection}
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(198,204,214,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
@@ -291,7 +291,7 @@ export default function VehiculeDetailView({
                   >
                     {tm.highlights}
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(198,204,214,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
@@ -343,7 +343,7 @@ export default function VehiculeDetailView({
                   >
                     {tm.equipmentTitle}
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(198,204,214,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
@@ -378,7 +378,7 @@ export default function VehiculeDetailView({
                   >
                     Entretien &amp; Documents
                   </p>
-                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(232,195,107,0.35)" }} />
+                  <div className="flex-1 h-px self-center" style={{ backgroundColor: "rgba(198,204,214,0.35)" }} />
                 </div>
 
                 <div style={sectionCardStyle}>
@@ -397,7 +397,7 @@ export default function VehiculeDetailView({
 
             {/* Branding */}
             <div className="flex items-center gap-4 mt-8">
-              <div style={{ width: "40px", height: "2px", backgroundColor: "#E8C36B", borderRadius: "1px" }} />
+              <div style={{ width: "40px", height: "2px", backgroundColor: "#C6CCD6", borderRadius: "1px" }} />
               <span className="text-[11px] tracking-[0.45em] uppercase font-semibold" style={{ color: "#E8F0FC" }}>
                 {tm.branding}
               </span>
@@ -424,17 +424,17 @@ export default function VehiculeDetailView({
                   className="flex items-center gap-2.5 px-6 py-3.5"
                   style={{
                     borderBottom: "1px solid rgba(107,159,238,0.12)",
-                    backgroundColor: "rgba(232,195,107,0.06)",
+                    backgroundColor: "rgba(198,204,214,0.06)",
                   }}
                 >
                   <span
                     className="flex items-center justify-center flex-shrink-0 font-bold"
                     style={{
-                      color: "#E8C36B",
+                      color: "#C6CCD6",
                       fontSize: "10px",
                       width: "1.25rem",
                       height: "1.25rem",
-                      backgroundColor: "rgba(232,195,107,0.15)",
+                      backgroundColor: "rgba(198,204,214,0.15)",
                       borderRadius: "50%",
                     }}
                   >
