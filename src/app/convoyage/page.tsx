@@ -63,16 +63,14 @@ export default async function ConvoyagePage2() {
               >
                 {s.heroTitle[0]}
                 <br />
-                {s.heroTitle[1]}
-                <br />
-                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[2]}</span>
+                <span style={{ color: "#6B9FEE" }}>{s.heroTitle[1]}</span>
               </h1>
 
               <div style={{ marginBottom: "1.5rem" }}>
                 <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
                 <p
                   style={{
-                    color: "rgba(168,196,240,0.68)",
+                    color: "rgba(214,228,246,0.85)",
                     fontSize: "clamp(0.78rem, 1.1vw, 0.88rem)",
                     lineHeight: 1.8,
                     fontWeight: 300,
@@ -111,12 +109,6 @@ export default async function ConvoyagePage2() {
           style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
-            <p
-              className="text-xs tracking-[0.35em] uppercase mb-16 text-center"
-              style={{ color: "#C8D8EE" }}
-            >
-              {s.stepsLabel}
-            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
               {s.steps.map((step, i) => (
                 <div
@@ -140,7 +132,7 @@ export default async function ConvoyagePage2() {
                   >
                     {step.title}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#C8D8EE", fontWeight: 400 }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "#DCE8F8", fontWeight: 400 }}>
                     {step.desc}
                   </p>
                 </div>
@@ -168,6 +160,7 @@ export default async function ConvoyagePage2() {
                 <br />
                 <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
+              <div className="mt-6" style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #E8C36B, transparent)", borderRadius: "2px" }} />
             </div>
 
             <div
@@ -186,13 +179,13 @@ export default async function ConvoyagePage2() {
                         padding: "0.9rem 0",
                       }}
                     >
-                      <span style={{ color: "#6B9FEE", fontSize: "10px", flexShrink: 0 }}>
+                      <span style={{ color: "#E8C36B", fontSize: "10px", flexShrink: 0 }}>
                         ✓
                       </span>
                       <span
                         style={{
                           fontSize: "0.85rem",
-                          color: "#C4D8EE",
+                          color: "#DCE8F8",
                           fontWeight: 400,
                         }}
                       >
@@ -215,7 +208,7 @@ export default async function ConvoyagePage2() {
                   >
                     {s.zonesLabel}
                   </p>
-                  <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
+                  <p style={{ fontSize: "0.85rem", color: "#DCE8F8", fontWeight: 400 }}>
                     {s.zones}
                   </p>
 
@@ -233,7 +226,7 @@ export default async function ConvoyagePage2() {
                   >
                     {s.delayLabel}
                   </p>
-                  <p style={{ fontSize: "0.85rem", color: "#C8D8EE", fontWeight: 400 }}>
+                  <p style={{ fontSize: "0.85rem", color: "#DCE8F8", fontWeight: 400 }}>
                     {s.delay}
                   </p>
                 </div>

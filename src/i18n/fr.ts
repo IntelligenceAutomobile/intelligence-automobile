@@ -347,7 +347,7 @@ export const fr = {
   },
 
   transport: {
-    heroTitle: ["Votre véhicule", "livré, sans", "vous déplacer."],
+    heroTitle: ["Livré chez vous,", "en toute sérénité."],
     heroSubtitle: "Conducteur professionnel, couverture assurance complète, photos avant et après. Nous acheminons votre véhicule en toute sécurité.",
     heroCta: "Demander un devis →",
     stepsLabel: "Comment ça marche",
