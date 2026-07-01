@@ -592,7 +592,7 @@ export const en: Translations = {
     ],
     importSteps: [
       "European certificate of conformity, obtained from the brand.",
-      "Temporary registration certificate: the [[well-known WW plates]].",
+      "Temporary registration certificate: [[the well-known WW plates]].",
       "Tax clearance (quitus fiscal), as soon as the car reaches France.",
       "Definitive registration with the ANTS, nearly 20 documents to gather.",
     ],

@@ -7,11 +7,6 @@ export const metadata = {
   title: "Notre Méthode — Intelligence Automobile",
 };
 
-function rgba(hex: string, alpha: number) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
-}
-
 const sectionCardStyle = {
   background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
   border: "1px solid rgba(107,159,238,0.12)",
@@ -153,98 +148,117 @@ export default async function Methode2Page() {
           style={{ paddingTop: "5rem", paddingBottom: "5rem" }}
         >
 
-          {/* ── 01 · LES 5 ÉTAPES ── */}
+          {/* ── 01 · LES 6 ÉTAPES ── */}
           <div className="mb-20">
             <SectionHeader num="01" label={s.processTitle.replace("\n", " ")} />
-            <div style={sectionCardStyle}>
+            <div style={{ display: "grid", gap: "1.25rem" }}>
               {s.steps.map((step, i) => (
                 <div
                   key={i}
-                  className="flex gap-6 lg:gap-10 items-start"
+                  className="transition-transform duration-300 hover:-translate-y-1"
                   style={{
-                    borderTop: i > 0 ? "1px solid rgba(107,159,238,0.1)" : "none",
-                    padding: "2rem 0",
+                    background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
+                    border: "1px solid rgba(107,159,238,0.12)",
+                    borderRadius: "10px",
+                    overflow: "hidden",
                   }}
                 >
-                  {/* Badge numéro */}
-                  <span
-                    className="font-black tabular-nums flex-shrink-0 flex items-center justify-center leading-none"
-                    style={{
-                      fontSize: "1rem",
-                      color: "#6B9FEE",
-                      width: "2.75rem",
-                      height: "2.75rem",
-                      minWidth: "2.75rem",
-                      backgroundColor: "rgba(107,159,238,0.1)",
-                      border: "1px solid rgba(107,159,238,0.3)",
-                      borderRadius: "8px",
-                    }}
-                  >
-                    {step.num}
-                  </span>
-
-                  {/* Contenu */}
-                  <div style={{ flex: 1 }}>
-                    <h3
-                      className="font-black leading-tight mb-3"
+                  <div className="grid grid-cols-[110px_1fr] sm:grid-cols-[170px_1fr]">
+                    {/* Panneau gauche : grand chiffre dégradé */}
+                    <div
                       style={{
-                        fontSize: "clamp(1.2rem, 2.2vw, 1.6rem)",
-                        letterSpacing: "-0.02em",
-                        color: "#F0F5FF",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        padding: "1.1rem 0.5rem",
+                        background:
+                          "linear-gradient(160deg, rgba(107,159,238,0.16) 0%, rgba(107,159,238,0.03) 100%)",
+                        borderRight: "1px solid rgba(107,159,238,0.18)",
                       }}
                     >
-                      {step.title}
-                    </h3>
-                    <div className="mb-4" style={{ maxWidth: "580px" }}>
-                      {step.description.split("\n").map((line, j, arr) => (
-                        <p
-                          key={j}
-                          className="leading-relaxed"
-                          style={{
-                            fontSize: "14px",
-                            color: "#A8C6F4",
-                            marginBottom: j < arr.length - 1 ? "0.7rem" : 0,
-                          }}
-                        >
-                          {line}
-                        </p>
-                      ))}
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          fontSize: "clamp(3.4rem, 8vw, 6rem)",
+                          fontWeight: 900,
+                          lineHeight: 1,
+                          letterSpacing: "-0.04em",
+                          backgroundImage: "linear-gradient(150deg, #6B9FEE 0%, #C6CCD6 100%)",
+                          WebkitBackgroundClip: "text",
+                          backgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          color: "transparent",
+                        }}
+                      >
+                        {step.num}
+                      </span>
                     </div>
-                    {step.num === "04" && (
-                      <ul className="mb-4 space-y-2.5" style={{ maxWidth: "580px" }}>
-                        {s.importSteps.map((item, k) => (
-                          <li
-                            key={k}
-                            className="flex items-start gap-3"
-                            style={{ fontSize: "14px", color: "#A8C6F4", lineHeight: 1.5 }}
+
+                    {/* Contenu */}
+                    <div style={{ padding: "1.35rem clamp(1.25rem, 3vw, 2rem)" }}>
+                      <h3
+                        className="font-black leading-tight"
+                        style={{
+                          fontSize: "clamp(1.2rem, 2.2vw, 1.6rem)",
+                          letterSpacing: "-0.02em",
+                          color: "#F0F5FF",
+                          marginBottom: "0.8rem",
+                        }}
+                      >
+                        {step.title}
+                      </h3>
+                      <div className="mb-4" style={{ maxWidth: "580px" }}>
+                        {step.description.split("\n").map((line, j, arr) => (
+                          <p
+                            key={j}
+                            className="leading-relaxed"
+                            style={{
+                              fontSize: "14px",
+                              color: "#A8C6F4",
+                              marginBottom: j < arr.length - 1 ? "0.7rem" : 0,
+                            }}
                           >
-                            <span
-                              className="flex-shrink-0 font-bold"
-                              style={{ color: "#6B9FEE", marginTop: "1px" }}
-                            >
-                              —
-                            </span>
-                            <span>
-                              {item.split(/\[\[|\]\]/).map((part, j) =>
-                                j % 2 === 1 ? (
-                                  <span key={j} style={{ color: "#FF14E1", fontWeight: 700 }}>
-                                    {part}
-                                  </span>
-                                ) : (
-                                  <span key={j}>{part}</span>
-                                )
-                              )}
-                            </span>
-                          </li>
+                            {line}
+                          </p>
                         ))}
-                      </ul>
-                    )}
-                    <p
-                      className="font-medium italic"
-                      style={{ fontSize: "13px", color: "#C6CCD6" }}
-                    >
-                      → {step.tagline}
-                    </p>
+                      </div>
+                      {step.num === "04" && (
+                        <ul className="mb-4 space-y-2.5" style={{ maxWidth: "580px" }}>
+                          {s.importSteps.map((item, k) => (
+                            <li
+                              key={k}
+                              className="flex items-start gap-3"
+                              style={{ fontSize: "14px", color: "#A8C6F4", lineHeight: 1.5 }}
+                            >
+                              <span
+                                className="flex-shrink-0 font-bold"
+                                style={{ color: "#6B9FEE", marginTop: "1px" }}
+                              >
+                                —
+                              </span>
+                              <span>
+                                {item.split(/\[\[|\]\]/).map((part, j) =>
+                                  j % 2 === 1 ? (
+                                    <span key={j} style={{ color: "#FF14E1", fontWeight: 700 }}>
+                                      {part}
+                                    </span>
+                                  ) : (
+                                    <span key={j}>{part}</span>
+                                  )
+                                )}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <p
+                        className="font-medium italic"
+                        style={{ fontSize: "13px", color: "#C6CCD6" }}
+                      >
+                        → {step.tagline}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -595,7 +595,7 @@ export const fr = {
     ],
     importSteps: [
       "Certificat de conformité européen, obtenu auprès de la marque.",
-      "Certificat provisoire d'immatriculation : les [[fameuses plaques WW]].",
+      "Certificat provisoire d'immatriculation : [[les fameuses plaques WW]].",
       "Quitus fiscal, dès l'arrivée en France.",
       "Immatriculation définitive à l'ANTS, près de 20 pièces à réunir.",
     ],
