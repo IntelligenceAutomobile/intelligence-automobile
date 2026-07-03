@@ -260,7 +260,7 @@ export default async function AdminDashboard() {
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-5">
           <KpiTile index={0} label="Valeur du stock" value={stockValue} euro icon="banknote" hint="Annonces disponibles" />
           <KpiTile
             index={1}
@@ -271,8 +271,9 @@ export default async function AdminDashboard() {
             hint={entriesThisMonth === 0 ? "Aucune entrée ce mois" : undefined}
             spark={entriesSeries}
           />
+          <KpiTile index={2} label="Vendus" value={vendus} icon="handshake" hint="Au total" />
           <KpiTile
-            index={2}
+            index={3}
             label="Devis en cours"
             value={devisEnCours}
             icon="file-text"
@@ -280,10 +281,10 @@ export default async function AdminDashboard() {
             spark={quotesSeries12}
           />
           <KpiTile
-            index={3}
+            index={4}
             label="Leads actifs"
             value={leadsActifs}
-            icon="handshake"
+            icon="users"
             delta={leadsThisMonth > 0 ? { value: leadsThisMonth, label: "ce mois" } : null}
             hint={leadsThisMonth === 0 ? (leadsGagnes > 0 ? `${leadsGagnes} gagné${leadsGagnes > 1 ? "s" : ""} au total` : "Aucun lead ce mois") : undefined}
             spark={leadsSeries}
@@ -332,7 +333,7 @@ export default async function AdminDashboard() {
           <div className="adm-card adm-enter xl:col-span-2 p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "700ms" }}>
             <div className="adm-hairline" />
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium" style={{ color: T.text }}>Activité récente</h3>
+              <h3 className="text-[15px] font-semibold" style={{ color: T.text }}>Activité récente</h3>
             </div>
             {activity.length === 0 ? (
               <p className="text-sm" style={{ color: T.muted }}>Aucune activité pour l&apos;instant.</p>

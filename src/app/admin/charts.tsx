@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight, ArrowDownRight, Banknote, BadgeCheck, Clock3, Handshake,
-  FileText, Table2, ChartArea, type LucideIcon,
+  FileText, Users, Table2, ChartArea, type LucideIcon,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { T, CHART } from "./ui";
@@ -71,6 +71,7 @@ const KPI_ICONS: Record<string, LucideIcon> = {
   clock: Clock3,
   handshake: Handshake,
   "file-text": FileText,
+  users: Users,
 };
 
 export function KpiTile({
@@ -96,10 +97,10 @@ export function KpiTile({
     >
       <div className="adm-hairline" />
       <div className="flex items-start justify-between gap-3">
-        <span className="text-[11px] tracking-[0.16em] uppercase" style={{ color: T.muted }}>{label}</span>
+        <span className="text-[11px] tracking-[0.1em] uppercase font-semibold" style={{ color: "#C3D2EC" }}>{label}</span>
         <Icon size={16} style={{ color: "#C7D3E8", opacity: 0.75, flexShrink: 0 }} />
       </div>
-      <div className="text-[28px] leading-none font-light whitespace-nowrap mt-3" style={{ color: T.text }}>
+      <div className="text-[31px] leading-none font-normal whitespace-nowrap mt-3" style={{ color: T.text, letterSpacing: "-0.01em" }}>
         {euro ? `${formatNumber(n)} €` : formatNumber(n)}
       </div>
       <div className="mt-2.5 min-h-[16px] relative z-[1]">
@@ -158,7 +159,7 @@ export function AreaChart({
     <div>
       <div className="flex items-center justify-between mb-1">
         <div>
-          <h3 className="text-sm font-medium" style={{ color: T.text }}>{title}</h3>
+          <h3 className="text-[15px] font-semibold" style={{ color: T.text }}>{title}</h3>
           {subtitle && <p className="text-[11px] mt-0.5" style={{ color: T.muted }}>{subtitle}</p>}
         </div>
         <button
@@ -285,7 +286,7 @@ export function Donut({ title, subtitle, segments, centerLabel }: {
 
   return (
     <div>
-      <h3 className="text-sm font-medium" style={{ color: T.text }}>{title}</h3>
+      <h3 className="text-[15px] font-semibold" style={{ color: T.text }}>{title}</h3>
       {subtitle && <p className="text-[11px] mt-0.5 mb-2" style={{ color: T.muted }}>{subtitle}</p>}
       <div className="flex items-center gap-5">
         <div className="relative flex-shrink-0">
@@ -357,7 +358,7 @@ export function Bars({ title, subtitle, data, labels, format }: {
 
   return (
     <div>
-      <h3 className="text-sm font-medium" style={{ color: T.text }}>{title}</h3>
+      <h3 className="text-[15px] font-semibold" style={{ color: T.text }}>{title}</h3>
       {subtitle && <p className="text-[11px] mt-0.5 mb-2" style={{ color: T.muted }}>{subtitle}</p>}
       <div className="relative">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ display: "block" }}>
