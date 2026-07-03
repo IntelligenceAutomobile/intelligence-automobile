@@ -28,7 +28,7 @@ export default async function DevisListPage() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
 
-  const rows = await prisma.quote.findMany({ orderBy: { updatedAt: "desc" } });
+  const rows = await prisma.quote.findMany({ where: { docType: { not: "facture" } }, orderBy: { updatedAt: "desc" } });
 
   const quotes = rows.map((r) => {
     let items: QuoteItem[] = [];

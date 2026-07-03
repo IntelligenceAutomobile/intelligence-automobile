@@ -87,6 +87,13 @@ model Quote {
   kind   String @default("vehicule")  // vehicule | prestation
   status String @default("brouillon") // brouillon | envoye | accepte | refuse
 
+  // Type de document et facturation
+  docType       String  @default("devis")    // devis | facture
+  factureKind   String  @default("complete") // complete | acompte | solde (si docType = facture)
+  paymentStatus String  @default("impayee")  // impayee | payee (si docType = facture)
+  paidDate      String  @default("")         // YYYY-MM-DD de paiement
+  sourceQuoteId String?                        // devis d'origine (conversion)
+
   // Client (destinataire)
   clientName    String @default("")
   clientCompany String @default("")

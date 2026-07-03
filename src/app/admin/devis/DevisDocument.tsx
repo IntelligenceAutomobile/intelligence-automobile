@@ -7,6 +7,7 @@ import {
   formatEuro,
   formatDateFr,
   validUntilFr,
+  docTitle,
   lineTotal,
   lineGross,
   lineDiscount,
@@ -56,6 +57,16 @@ export default function DevisDocument({
   const b = quote.branding;
   const addrLines = b.emitterAddress.split("\n").map((l) => l.trim()).filter(Boolean);
   const showHT = t.showTva;
+
+  // Type de document (facture vs devis) et libellés associés.
+  const docType = quote.docType ?? "devis";
+  const factureKind = quote.factureKind ?? "complete";
+  const isFacture = docType === "facture";
+  const isSolde = isFacture && factureKind === "solde";
+  const paid = isFacture && quote.paymentStatus === "payee";
+  const title = docTitle(docType, factureKind);
+  const titleFont = title.length > 8 ? "12.5pt" : "20pt"; // « FACTURE D'ACOMPTE » tient sur une ligne
+  const titleSpacing = title.length > 8 ? "0.08em" : "0.18em";
   const logoJustify = b.logoAlign === "center" ? "center" : b.logoAlign === "right" ? "flex-end" : "flex-start";
   const logoFree = b.logoX != null && b.logoY != null;
   const logoCursor = onLogoPointerDown ? "move" : "default";
@@ -157,9 +168,9 @@ export default function DevisDocument({
           {resizeHandle("emitter")}
         </div>
 
-        {/* Bloc DEVIS + métadonnées */}
+        {/* Bloc titre + métadonnées */}
         <div style={{ ...blockWrap("meta"), textAlign: "right" }} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("meta", e) : undefined}>
-          <div style={{ fontSize: "20pt", fontWeight: 300, letterSpacing: "0.18em", color: accent }}>DEVIS</div>
+          <div style={{ fontSize: titleFont, fontWeight: 300, letterSpacing: titleSpacing, color: accent }}>{title}</div>
           <div style={{ width: 38, height: 2, backgroundColor: accent, marginLeft: "auto", marginTop: "2mm", marginBottom: "3mm" }} />
           <table style={{ marginLeft: "auto", fontSize: "8.5pt", borderCollapse: "collapse" }}>
             <tbody>
@@ -173,12 +184,19 @@ export default function DevisDocument({
                 <td style={{ ...labelMini, paddingRight: "4mm", textAlign: "right" }}>Date</td>
                 <td>{formatDateFr(quote.issueDate)}</td>
               </tr>
-              <tr>
-                <td style={{ ...labelMini, paddingRight: "4mm", textAlign: "right" }}>Validité</td>
-                <td>{validUntilFr(quote.issueDate, quote.validityDays)}</td>
-              </tr>
+              {!isFacture && (
+                <tr>
+                  <td style={{ ...labelMini, paddingRight: "4mm", textAlign: "right" }}>Validité</td>
+                  <td>{validUntilFr(quote.issueDate, quote.validityDays)}</td>
+                </tr>
+              )}
             </tbody>
           </table>
+          {paid && (
+            <div style={{ display: "inline-block", marginTop: "3mm", padding: "1mm 3mm", border: "1.5px solid #0F8A6A", color: "#0F8A6A", fontSize: "9pt", fontWeight: 700, letterSpacing: "0.12em", transform: "rotate(-4deg)" }}>
+              PAYÉE{quote.paidDate ? ` — ${formatDateFr(quote.paidDate)}` : ""}
+            </div>
+          )}
           {resizeHandle("meta")}
         </div>
 
@@ -275,11 +293,17 @@ export default function DevisDocument({
             {t.deposit > 0 && (
               <>
                 <TotalRow
-                  label={quote.depositMode === "percent" ? `Acompte (${quote.depositValue} %)` : "Acompte"}
-                  value={formatEuro(t.deposit)}
+                  label={
+                    isSolde
+                      ? "Acompte déjà facturé"
+                      : quote.depositMode === "percent"
+                        ? `Acompte (${quote.depositValue} %)`
+                        : "Acompte"
+                  }
+                  value={isSolde ? `− ${formatEuro(t.deposit)}` : formatEuro(t.deposit)}
                   spaced
                 />
-                <TotalRow label="Solde" value={formatEuro(t.balance)} />
+                <TotalRow label={isSolde ? "Solde à payer" : isFacture ? "Net à payer" : "Solde"} value={formatEuro(t.balance)} grand={isSolde} barColor={accent} />
               </>
             )}
           </tbody>
@@ -305,11 +329,13 @@ export default function DevisDocument({
         </div>
       )}
 
-      {/* ── Signatures ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "12mm", marginTop: "14mm" }}>
-        <SignatureBox title={`Pour ${b.emitterName}`} name={b.emitterRepresentative} />
-        <SignatureBox title="Bon pour accord — Le client" hint="Date, signature et cachet" />
-      </div>
+      {/* ── Signatures (devis uniquement : une facture ne se signe pas) ── */}
+      {!isFacture && (
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "12mm", marginTop: "14mm" }}>
+          <SignatureBox title={`Pour ${b.emitterName}`} name={b.emitterRepresentative} />
+          <SignatureBox title="Bon pour accord — Le client" hint="Date, signature et cachet" />
+        </div>
+      )}
 
       {/* ── Pied de page légal ── */}
       <div

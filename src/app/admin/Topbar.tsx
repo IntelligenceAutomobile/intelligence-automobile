@@ -10,6 +10,7 @@ import CommandPalette from "./CommandPalette";
 const SEGMENT_LABELS: Record<string, string> = {
   vehicules: "Stock",
   devis: "Devis",
+  factures: "Factures",
   clients: "Clients & leads",
   planning: "Planning atelier",
   diffusion: "Diffusion",

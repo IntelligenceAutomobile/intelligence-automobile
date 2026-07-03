@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { mergeBranding, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind } from "@/lib/devis";
+import { mergeBranding, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
 import DevisDocument from "../../DevisDocument";
 import PrintToolbar from "./PrintToolbar";
 
@@ -19,10 +19,11 @@ const PRINT_CSS = `
 // Titre de l'onglet = nom de fichier proposé par le navigateur pour le PDF.
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const row = await prisma.quote.findUnique({ where: { id }, select: { number: true, clientCompany: true, clientName: true } });
+  const row = await prisma.quote.findUnique({ where: { id }, select: { number: true, clientCompany: true, clientName: true, docType: true } });
   const client = row?.clientCompany || row?.clientName || "";
-  const title = `Devis ${row?.number ?? ""}${client ? ` - ${client}` : ""}`.trim();
-  return { title: title || "Devis" };
+  const doc = row?.docType === "facture" ? "Facture" : "Devis";
+  const title = `${doc} ${row?.number ?? ""}${client ? ` - ${client}` : ""}`.trim();
+  return { title: title || doc };
 }
 
 export default async function ImprimerDevisPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,6 +53,11 @@ export default async function ImprimerDevisPage({ params }: { params: Promise<{ 
     number: row.number,
     kind: row.kind as QuoteKind,
     status: row.status as QuoteStatus,
+    docType: row.docType as DocType,
+    factureKind: row.factureKind as FactureKind,
+    paymentStatus: row.paymentStatus as PaymentStatus,
+    paidDate: row.paidDate,
+    sourceQuoteId: row.sourceQuoteId,
     clientName: row.clientName,
     clientCompany: row.clientCompany,
     clientAddress: row.clientAddress,

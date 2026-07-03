@@ -5,6 +5,9 @@ import { COMPANY } from "./company";
 export type TvaMode = "marge" | "tva20" | "exonere";
 export type DepositMode = "percent" | "amount" | "none";
 export type QuoteStatus = "brouillon" | "envoye" | "accepte" | "refuse";
+export type DocType = "devis" | "facture";
+export type FactureKind = "complete" | "acompte" | "solde";
+export type PaymentStatus = "impayee" | "payee";
 export type LogoAlign = "left" | "center" | "right";
 export type QuoteKind = "vehicule" | "prestation";
 export type DocTheme = "classic" | "colored" | "minimal";
@@ -157,6 +160,11 @@ export type QuoteData = {
   number: string;
   kind: QuoteKind;
   status: QuoteStatus;
+  docType: DocType;
+  factureKind: FactureKind;
+  paymentStatus: PaymentStatus;
+  paidDate: string;
+  sourceQuoteId?: string | null;
   clientId?: string | null; // lien CRM optionnel
   clientName: string;
   clientCompany: string;
@@ -263,6 +271,25 @@ export const STATUS_LABEL: Record<QuoteStatus, string> = {
   refuse: "Refusé",
 };
 
+// Titre du document A4 selon le type.
+export function docTitle(docType: DocType, factureKind: FactureKind): string {
+  if (docType === "devis") return "DEVIS";
+  if (factureKind === "acompte") return "FACTURE D'ACOMPTE";
+  if (factureKind === "solde") return "FACTURE DE SOLDE";
+  return "FACTURE";
+}
+
+export const FACTURE_KIND_LABEL: Record<FactureKind, string> = {
+  complete: "Facture",
+  acompte: "Facture d'acompte",
+  solde: "Facture de solde",
+};
+
+// Numéro de facture continu par année : FAC-2026-001.
+export function factureNumber(year: number, countThisYear: number): string {
+  return `FAC-${year}-${String(countThisYear + 1).padStart(3, "0")}`;
+}
+
 // Date YYYY-MM-DD -> "11 juin 2026"
 const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 export function formatDateFr(iso: string): string {
@@ -302,6 +329,11 @@ export function emptyQuote(number: string, issueDate: string, branding?: Brandin
     number,
     kind,
     status: "brouillon",
+    docType: "devis",
+    factureKind: "complete",
+    paymentStatus: "impayee",
+    paidDate: "",
+    sourceQuoteId: null,
     clientName: "",
     clientCompany: "",
     clientAddress: "",

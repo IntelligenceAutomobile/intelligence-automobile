@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, MessagesSquare, XCircle, Send, Users } from "lucide-react";
+import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, ReceiptText, MessagesSquare, XCircle, Send, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
+import { computeTotals, formatEuro, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
 import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, type AppointmentType } from "@/lib/planning";
@@ -118,7 +119,7 @@ export default async function AdminDashboard() {
   const cookieStore = await cookies();
   const name = cookieStore.get("ia_collab_name")?.value?.trim() || session.admin.email.split("@")[0];
 
-  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv] =
+  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -133,6 +134,7 @@ export default async function AdminDashboard() {
       prisma.vehicle.findMany({ where: { isPublished: false }, orderBy: { createdAt: "desc" }, take: 5 }),
       prisma.vehicle.findMany({ select: { createdAt: true } }),
       prisma.quote.findMany({
+        where: { docType: { not: "facture" } },
         select: { id: true, number: true, clientName: true, clientCompany: true, status: true, createdAt: true, updatedAt: true },
       }),
       prisma.collabNote.findMany({
@@ -153,6 +155,7 @@ export default async function AdminDashboard() {
         orderBy: [{ date: "asc" }, { startMin: "asc" }],
         take: 4,
       }),
+      prisma.quote.findMany({ where: { docType: "facture", paymentStatus: "impayee" } }),
     ]);
 
   const stockValue = valueAgg._sum.price ?? 0;
@@ -173,6 +176,26 @@ export default async function AdminDashboard() {
   const leadsActifs = allLeads.filter((l) => PIPELINE_STAGES.includes(l.stage as Stage)).length;
   const leadsThisMonth = leadsSeries[months12.findIndex((m) => m.key === thisMonthKey)] ?? 0;
   const leadsGagnes = allLeads.filter((l) => l.stage === "gagne").length;
+
+  // Encours des factures impayées.
+  const encours = unpaidInvoices.reduce((sum, r) => {
+    let fItems: QuoteItem[] = [];
+    try {
+      const p = JSON.parse(r.items);
+      if (Array.isArray(p)) fItems = p;
+    } catch {
+      /* ignore */
+    }
+    const tot = computeTotals({
+      items: fItems,
+      tvaMode: r.tvaMode as TvaMode,
+      tvaRate: r.tvaRate,
+      depositMode: r.depositMode as DepositMode,
+      depositValue: r.depositValue,
+    });
+    return sum + (r.factureKind === "solde" ? tot.balance : tot.totalTTC);
+  }, 0);
+  const impayeesCount = unpaidInvoices.length;
 
   /* Activité récente : fiches créées + devis + notes atelier, fusionnés */
   const QUOTE_EVENT: Record<string, { text: (n: string) => string; color: string; icon: "accept" | "send" | "refuse" | "file" }> = {
@@ -290,6 +313,28 @@ export default async function AdminDashboard() {
             spark={leadsSeries}
           />
         </div>
+
+        {/* Alerte factures impayées */}
+        {impayeesCount > 0 && (
+          <Link
+            href="/admin/factures"
+            className="adm-enter flex items-center gap-3 px-5 py-3 mb-5"
+            style={{ backgroundColor: T.surface, border: "1px solid rgba(240,180,90,0.4)" }}
+          >
+            <ReceiptText size={16} style={{ color: T.warning }} />
+            <span className="text-sm" style={{ color: T.textDim }}>
+              <span className="font-semibold" style={{ color: T.warning }}>
+                {impayeesCount} facture{impayeesCount > 1 ? "s" : ""} impayée{impayeesCount > 1 ? "s" : ""}
+              </span>
+              {" · encours "}
+              <span className="font-semibold" style={{ color: T.text }}>{formatEuro(encours)}</span>
+            </span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Voir les factures
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        )}
 
         {/* Graphiques rangée 1 */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">

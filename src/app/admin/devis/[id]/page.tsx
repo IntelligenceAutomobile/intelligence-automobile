@@ -2,9 +2,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { mergeBranding, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind } from "@/lib/devis";
+import { mergeBranding, computeTotals, FACTURE_KIND_LABEL, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
+import ConvertActions from "../ConvertActions";
 
 export default async function EditDevisPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin();
@@ -38,6 +39,11 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
     number: row.number,
     kind: row.kind as QuoteKind,
     status: row.status as QuoteStatus,
+    docType: row.docType as DocType,
+    factureKind: row.factureKind as FactureKind,
+    paymentStatus: row.paymentStatus as PaymentStatus,
+    paidDate: row.paidDate,
+    sourceQuoteId: row.sourceQuoteId,
     clientName: row.clientName,
     clientCompany: row.clientCompany,
     clientAddress: row.clientAddress,
@@ -56,12 +62,28 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
     branding: mergeBranding(brandingRaw),
   };
 
+  const isFacture = row.docType === "facture";
+  const backHref = isFacture ? "/admin/factures" : "/admin/devis";
+  const docLabel = isFacture ? (FACTURE_KIND_LABEL[row.factureKind as FactureKind] ?? "Facture") : "Devis";
+
+  const totals = computeTotals({
+    items,
+    tvaMode: row.tvaMode as TvaMode,
+    tvaRate: row.tvaRate,
+    depositMode: row.depositMode as DepositMode,
+    depositValue: row.depositValue,
+  });
+
   return (
     <AdminPage>
-      <Link href="/admin/devis" className="inline-block text-[11px] tracking-widest uppercase mb-6 transition-colors hover:text-[#F0F5FF]" style={{ color: T.muted }}>
-        ← Devis
+      <Link href={backHref} className="inline-block text-[11px] tracking-widest uppercase mb-6 transition-colors hover:text-[#F0F5FF]" style={{ color: T.muted }}>
+        ← {isFacture ? "Factures" : "Devis"}
       </Link>
-      <PageHeader title={`Devis ${row.number}`} subtitle={row.clientCompany || row.clientName || "Sans client"} />
+      <PageHeader
+        title={`${docLabel} ${row.number}`}
+        subtitle={row.clientCompany || row.clientName || "Sans client"}
+        action={isFacture ? undefined : <ConvertActions quoteId={row.id} hasDeposit={totals.deposit > 0} />}
+      />
       <DevisEditor initial={initial} vehicles={vehicles} isEdit />
     </AdminPage>
   );

@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search, Car, FileText, Plus, LayoutDashboard, Wallet, MessagesSquare,
+  Search, Car, FileText, ReceiptText, Plus, LayoutDashboard, Wallet, MessagesSquare,
   Users, CalendarClock, Radio, CornerDownLeft, type LucideIcon,
 } from "lucide-react";
 import { T } from "./ui";
@@ -18,6 +18,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: LayoutDashboard, label: "Tableau de bord", hint: "Page", href: "/admin" },
   { icon: Car, label: "Stock", hint: "Page", href: "/admin/vehicules" },
   { icon: FileText, label: "Devis", hint: "Page", href: "/admin/devis" },
+  { icon: ReceiptText, label: "Factures", hint: "Page", href: "/admin/factures" },
   { icon: Users, label: "Clients & leads", hint: "Page", href: "/admin/clients" },
   { icon: CalendarClock, label: "Planning atelier", hint: "Page", href: "/admin/planning" },
   { icon: Radio, label: "Diffusion", hint: "Page", href: "/admin/diffusion" },
@@ -88,12 +89,15 @@ export default function CommandPalette() {
     const qts: Item[] = (quotes ?? [])
       .filter((d) => q && `${d.number} ${d.clientName ?? ""} ${d.clientCompany ?? ""}`.toLowerCase().includes(q))
       .slice(0, 5)
-      .map((d) => ({
-        icon: FileText,
-        label: `Devis ${d.number}${d.clientCompany || d.clientName ? ` — ${d.clientCompany || d.clientName}` : ""}`,
-        hint: d.status,
-        href: `/admin/devis/${d.id}`,
-      }));
+      .map((d) => {
+        const isFac = d.number.startsWith("FAC-");
+        return {
+          icon: isFac ? ReceiptText : FileText,
+          label: `${isFac ? "Facture" : "Devis"} ${d.number}${d.clientCompany || d.clientName ? ` — ${d.clientCompany || d.clientName}` : ""}`,
+          hint: isFac ? "Facture" : d.status,
+          href: `/admin/devis/${d.id}`,
+        };
+      });
     const cls: Item[] = (clients ?? [])
       .filter((c) => q && `${c.name} ${c.company} ${c.email}`.toLowerCase().includes(q))
       .slice(0, 5)

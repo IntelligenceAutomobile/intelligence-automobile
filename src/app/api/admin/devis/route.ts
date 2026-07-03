@@ -3,11 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { quoteToData, quoteFromRow } from "@/lib/quote-serialize";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const rows = await prisma.quote.findMany({ orderBy: { updatedAt: "desc" } });
+  // ?type=devis|facture pour restreindre (défaut : tout).
+  const type = req.nextUrl.searchParams.get("type");
+  const where = type === "facture" ? { docType: "facture" } : type === "devis" ? { docType: { not: "facture" } } : undefined;
+
+  const rows = await prisma.quote.findMany({ where, orderBy: { updatedAt: "desc" } });
   return NextResponse.json(rows.map(quoteFromRow));
 }
 

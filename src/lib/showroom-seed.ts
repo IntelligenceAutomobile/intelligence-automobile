@@ -206,6 +206,56 @@ export async function seedShowroom(prisma: PrismaClient) {
     },
   });
 
+  /* ── Factures : une payée (vente conclue), une facture d'acompte impayée ── */
+  const veh5Price = veh5 ? veh5.price : 15490;
+  const transTotal = (veh3 ? veh3.price : 20990) + 490;
+  await prisma.quote.create({
+    data: {
+      ...quoteBase,
+      number: `FAC-${year}-001`,
+      status: "envoye",
+      docType: "facture",
+      factureKind: "complete",
+      paymentStatus: "payee",
+      paidDate: dayKey(-7),
+      depositMode: "none",
+      depositValue: 0,
+      clientId: clientIds[4],
+      clientName: "Karim Benali",
+      clientEmail: "k.benali@gmail.com",
+      issueDate: dayKey(-8),
+      vehicleId: vehicleIds[5] ?? null,
+      paymentTerms: "Réglé par virement.",
+      items: JSON.stringify([
+        veh5
+          ? { id: "it1", designation: `${veh5.make} ${veh5.model}`, detail: `${veh5.year} · ${veh5.mileage} km`, qty: 1, unitPrice: veh5Price }
+          : { id: "it1", designation: "Véhicule d'occasion", qty: 1, unitPrice: veh5Price },
+      ]),
+    },
+  });
+  await prisma.quote.create({
+    data: {
+      ...quoteBase,
+      number: `FAC-${year}-002`,
+      status: "envoye",
+      docType: "facture",
+      factureKind: "acompte",
+      paymentStatus: "impayee",
+      depositMode: "none",
+      depositValue: 0,
+      clientId: clientIds[3],
+      clientName: "Marc Dubois",
+      clientCompany: "TransCar SPRL",
+      clientEmail: "m.dubois@transcar.be",
+      issueDate: dayKey(-1),
+      vehicleId: vehicleIds[3] ?? null,
+      paymentTerms: "Facture d'acompte. Le solde fera l'objet d'une facture ultérieure.",
+      items: JSON.stringify([
+        { id: "acompte", designation: `Acompte sur commande — ${veh3 ? `${veh3.make} ${veh3.model}` : "véhicule"}`, detail: `Acompte 30 % sur devis ${year}-041`, qty: 1, unitPrice: Math.round(transTotal * 0.3) },
+      ]),
+    },
+  });
+
   /* ── Diffusion : deux annonces déjà publiées ── */
   const portals = ["lacentrale", "leboncoin", "autoscout24", "facebook"];
   await prisma.listing.createMany({
