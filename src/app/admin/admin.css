@@ -1,6 +1,23 @@
 /* Effets visuels du back-office : entrées en cascade, halos, relief.
    Préfixe adm- pour éviter toute collision avec la vitrine. */
 
+/* Thème marque blanche : seule --adm-accent est surchargée par BrandTheme,
+   les déclinaisons sont dérivées automatiquement via color-mix. */
+.adm-root {
+  --adm-accent: #6b9fee;
+  --adm-accent-dark: color-mix(in srgb, var(--adm-accent) 78%, #0a1628);
+  --adm-accent-light: color-mix(in srgb, var(--adm-accent) 70%, #f0f5ff);
+  --adm-accent-soft: color-mix(in srgb, var(--adm-accent) 12%, transparent);
+  --adm-accent-border: color-mix(in srgb, var(--adm-accent) 38%, transparent);
+}
+
+/* Focus des champs : suit l'accent du thème (remplace les focus:border bleus figés). */
+.adm-root input:focus,
+.adm-root select:focus,
+.adm-root textarea:focus {
+  border-color: var(--adm-accent) !important;
+}
+
 @keyframes adm-in {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: none; }

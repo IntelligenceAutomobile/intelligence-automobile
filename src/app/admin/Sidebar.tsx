@@ -1,15 +1,17 @@
 "use client";
 
-// Colonne de navigation du back-office (desktop). Les modules "Bientôt"
-// annoncent la roadmap (CRM, planning, diffusion) sans être cliquables.
+// Colonne de navigation du back-office (desktop).
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, Wallet, MessagesSquare, Users,
-  CalendarClock, Radio, ExternalLink, type LucideIcon,
+  CalendarClock, Radio, ExternalLink, Palette, RotateCcw, type LucideIcon,
 } from "lucide-react";
 import { T } from "./ui";
 import AdminLogout from "./AdminLogout";
+import { ConfirmDialog } from "./confirm";
+import { useToast } from "./toast";
 
 type NavItem = { icon: LucideIcon; label: string; href?: string; exact?: boolean; soon?: boolean };
 
@@ -32,10 +34,44 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: Wallet, label: "Comptes", href: "/admin/comptes" },
     ],
   },
+  {
+    section: "Réglages",
+    items: [{ icon: Palette, label: "Marque blanche", href: "/admin/marque" }],
+  },
 ];
 
-export default function Sidebar({ name }: { name: string }) {
+export default function Sidebar({
+  name,
+  brandName,
+  brandTagline,
+  showroom = false,
+}: {
+  name: string;
+  brandName: string;
+  brandTagline: string;
+  showroom?: boolean;
+}) {
   const pathname = usePathname();
+  const router = useRouter();
+  const toast = useToast();
+  const [, startTransition] = useTransition();
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  async function resetDemo() {
+    setResetting(true);
+    try {
+      const res = await fetch("/api/admin/showroom-reset", { method: "POST" });
+      if (!res.ok) throw new Error();
+      setConfirmReset(false);
+      toast.success("Démo réinitialisée : données remises à neuf.");
+      startTransition(() => router.refresh());
+    } catch {
+      toast.error("La réinitialisation a échoué.");
+    } finally {
+      setResetting(false);
+    }
+  }
   const initials = name
     .split(/\s+/)
     .map((p) => p[0])
@@ -49,11 +85,11 @@ export default function Sidebar({ name }: { name: string }) {
       style={{ backgroundColor: T.surfaceAlt, borderRight: `1px solid ${T.border}` }}
     >
       <Link href="/admin" className="block px-5 pt-6 pb-5" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span className="block text-[13px] tracking-[0.3em] uppercase font-semibold" style={{ color: T.text }}>
-          Intelligence
+        <span className="block text-[13px] tracking-[0.24em] uppercase font-semibold leading-snug" style={{ color: T.text }}>
+          {brandName}
         </span>
-        <span className="block text-[9px] tracking-[0.42em] uppercase mt-1" style={{ color: "#C7D3E8" }}>
-          Automobile
+        <span className="block text-[9px] tracking-[0.38em] uppercase mt-1 truncate" style={{ color: "#C7D3E8" }}>
+          {brandTagline}
         </span>
       </Link>
 
@@ -112,6 +148,17 @@ export default function Sidebar({ name }: { name: string }) {
       </nav>
 
       <div className="px-4 py-3" style={{ borderTop: `1px solid ${T.border}` }}>
+        {showroom && (
+          <button
+            type="button"
+            onClick={() => setConfirmReset(true)}
+            className="adm-nav-item flex items-center gap-2.5 px-2.5 py-2 text-[12.5px] w-full text-left"
+            style={{ color: "#F0B45A" }}
+          >
+            <RotateCcw size={14} />
+            Réinitialiser la démo
+          </button>
+        )}
         <Link
           href="/"
           target="_blank"
@@ -135,6 +182,16 @@ export default function Sidebar({ name }: { name: string }) {
           <AdminLogout />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmReset}
+        title="Réinitialiser la démo ?"
+        description="Toutes les données de démonstration (clients, leads, RDV, devis, diffusion) seront remises à leur état d'origine."
+        confirmLabel="Réinitialiser"
+        busy={resetting}
+        onConfirm={resetDemo}
+        onCancel={() => setConfirmReset(false)}
+      />
     </aside>
   );
 }

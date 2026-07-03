@@ -158,6 +158,43 @@ model Lead {
   @@index([stage])
 }
 
+// Suivi par véhicule : frais engagés (pour la marge) et journal d'enquête
+// (problèmes constatés, solutions, administratif). Pas de suivi de réparation.
+model VehicleCost {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  category    String   @default("autre") // achat | transport | preparation | controle | carrosserie | administratif | autre
+  label       String   @default("")
+  amountCents Int
+  date        String                       // jour YYYY-MM-DD (saisi tel quel)
+  createdAt   DateTime @default(now())
+
+  @@index([vehicleId])
+}
+
+model VehicleNote {
+  id        String   @id @default(cuid())
+  vehicleId String
+  type      String   @default("info") // probleme | solution | info | admin
+  content   String
+  resolved  Boolean  @default(false)   // pour les problèmes : réglé ou non
+  author    String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vehicleId])
+}
+
+// Marque blanche : thème visuel de l'instance (une seule ligne, id "default").
+model BrandTheme {
+  id        String   @id @default("default")
+  name      String   @default("Intelligence Automobile")
+  tagline   String   @default("Back-office")
+  accent    String   @default("#6B9FEE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // Diffusion multi-portails (module de démonstration : la publication est
 // simulée ; le flux d'export XML, lui, est réel — voir /api/admin/diffusion/flux).
 model Listing {

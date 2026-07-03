@@ -4,18 +4,20 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 
-/* ── Jetons de couleur, alignés sur le site public ── */
+/* ── Jetons de couleur, alignés sur le site public ──
+   L'accent passe par des variables CSS (marque blanche) : la valeur par défaut
+   vit dans admin.css (.adm-root) et le thème BrandTheme la surcharge. */
 export const T = {
   bg: "#070F1E",
   surface: "#112240",
   surfaceAlt: "#0A1628",
   float: "#040B16",
   border: "#1B3055",
-  text: "#F0F5FF",
-  textDim: "#C8D8EE",
-  muted: "#7C92B5",
-  accent: "#6B9FEE",
-  accentDark: "#4B7FD8",
+  text: "#FFFFFF",
+  textDim: "#E7EFFC",
+  muted: "#9FB3D4",
+  accent: "var(--adm-accent)",
+  accentDark: "var(--adm-accent-dark)",
   danger: "#FF6B35",
   success: "#4ED1A1",
   warning: "#F0B45A",
@@ -26,7 +28,7 @@ export const CHART = { blue: "#4B7FD8", amber: "#C08428", green: "#2FA97D", spar
 
 /* ── Teintes translucides par tonalité (badges, tags, alertes) ── */
 export const TONE = {
-  accent: { bg: "rgba(107,159,238,0.10)", bd: "rgba(107,159,238,0.35)", fg: T.accent },
+  accent: { bg: "var(--adm-accent-soft)", bd: "var(--adm-accent-border)", fg: T.accent },
   success: { bg: "rgba(78,209,161,0.10)", bd: "rgba(78,209,161,0.40)", fg: T.success },
   warning: { bg: "rgba(240,180,90,0.10)", bd: "rgba(240,180,90,0.38)", fg: T.warning },
   danger: { bg: "rgba(255,107,53,0.08)", bd: "rgba(255,107,53,0.35)", fg: T.danger },
@@ -62,7 +64,7 @@ export function AccentLine() {
     <div
       style={{
         height: "1px",
-        background: "linear-gradient(to right, transparent, #6B9FEE, transparent)",
+        background: "linear-gradient(to right, transparent, var(--adm-accent), transparent)",
         opacity: 0.45,
       }}
     />
@@ -131,7 +133,7 @@ export function SectionCard({ title, id, children }: { title?: string; id?: stri
 
 /* ── Badge de statut ── */
 const STATUS_MAP: Record<string, { bg: string; bd: string; fg: string; label: string }> = {
-  disponible: { bg: "rgba(107,159,238,0.10)", bd: "rgba(107,159,238,0.35)", fg: "#6B9FEE", label: "Disponible" },
+  disponible: { bg: "var(--adm-accent-soft)", bd: "var(--adm-accent-border)", fg: "var(--adm-accent)", label: "Disponible" },
   reserve: { bg: "rgba(240,180,90,0.10)", bd: "rgba(240,180,90,0.38)", fg: "#F0B45A", label: "Réservé" },
   vendu: { bg: "rgba(200,216,238,0.05)", bd: T.border, fg: T.textDim, label: "Vendu" },
 };

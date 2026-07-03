@@ -37,7 +37,7 @@ export default function AdminNav() {
               style={{
                 bottom: 2,
                 height: "2px",
-                background: "linear-gradient(to right, transparent, #8BB8F5, transparent)",
+                background: "linear-gradient(to right, transparent, var(--adm-accent-light), transparent)",
                 transform: active ? "scaleX(1)" : "scaleX(0)",
                 transition: "transform 0.3s ease",
               }}

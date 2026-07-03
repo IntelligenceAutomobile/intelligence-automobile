@@ -7,7 +7,9 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx tsx prisma/seed.ts"
+    "seed": "npx tsx prisma/seed.ts",
+    "showroom:setup": "npx tsx scripts/setup-showroom.mts",
+    "showroom": "node scripts/showroom.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
