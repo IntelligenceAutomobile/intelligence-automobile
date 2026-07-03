@@ -337,11 +337,11 @@ export default async function HomePage() {
           <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%)" }} />
         </section>
 
-        {/* SERVICE 01 — Recherche */}
+        {/* SERVICE 01 — Nos véhicules */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/recherche-personnalisee" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/vehicules" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Photo IA/Recherche personnalisé.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Image Nos véhicules.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
@@ -359,9 +359,9 @@ export default async function HomePage() {
           </Link>
         </section>
 
-        {/* SERVICE 02 — Revente */}
+        {/* SERVICE 02 — Recherche */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/revente-sur-mesure" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/recherche-personnalisee" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: "-1.5rem", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>02</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
@@ -374,18 +374,18 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Photo IA/Revente sur mesure 4.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Recherche personnalisé.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
           </Link>
         </section>
 
-        {/* SERVICE 03 — Transport */}
+        {/* SERVICE 03 — Revente */}
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
-          <Link href="/transport-livraison" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+          <Link href="/revente-sur-mesure" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Revente sur mesure 4.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
@@ -399,6 +399,72 @@ export default async function HomePage() {
                   {t.home.service03Desc}
                 </p>
               </div>
+            </div>
+          </Link>
+        </section>
+
+        {/* SERVICE 04 — Transport */}
+        <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
+          <Link href="/transport-livraison" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+            <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: "-1.5rem", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>04</div>
+              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
+                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                  {t.home.service04Title[0]}<br />{t.home.service04Title[1]}
+                </h3>
+                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
+                  {t.home.service04Desc}
+                </p>
+              </div>
+            </div>
+            <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
+            </div>
+          </Link>
+        </section>
+
+        {/* SERVICE 05 — Notre méthode */}
+        <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
+          <Link href="/methode" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+            <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
+              <img className="ia-service-img" src="/Photo du Site/Photo Notre méthode.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
+            </div>
+            <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: "-1.5rem", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>05</div>
+              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
+                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                  {t.home.service05Title[0]}<br />{t.home.service05Title[1]}
+                </h3>
+                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
+                  {t.home.service05Desc}
+                </p>
+              </div>
+            </div>
+          </Link>
+        </section>
+
+        {/* SERVICE 06 — Nos services */}
+        <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
+          <Link href="/services" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
+            <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: "-1.5rem", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>06</div>
+              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
+                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                  {t.home.service06Title[0]}<br />{t.home.service06Title[1]}
+                </h3>
+                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
+                  {t.home.service06Desc}
+                </p>
+              </div>
+            </div>
+            <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
+              <img className="ia-service-img" src="/Photo du Site/Photo IA/Garage 3 voitures.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
           </Link>
         </section>

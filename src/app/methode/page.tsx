@@ -72,9 +72,9 @@ export default async function Methode2Page() {
               position: "absolute",
               inset: 0,
               backgroundImage:
-                "url('/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg')",
+                "url('/Photo%20du%20Site/Photo%20Notre%20m%C3%A9thode.png')",
               backgroundSize: "cover",
-              backgroundPosition: "center 68%",
+              backgroundPosition: "center 45%",
               opacity: 1,
             }}
           />
@@ -151,7 +151,7 @@ export default async function Methode2Page() {
           {/* ── 01 · LES 6 ÉTAPES ── */}
           <div className="mb-20">
             <SectionHeader num="01" label={s.processTitle.replace("\n", " ")} />
-            <div style={{ display: "grid", gap: "1.25rem" }}>
+            <div style={{ display: "grid", gap: "1rem" }}>
               {s.steps.map((step, i) => (
                 <div
                   key={i}
@@ -163,15 +163,15 @@ export default async function Methode2Page() {
                     overflow: "hidden",
                   }}
                 >
-                  <div className="grid grid-cols-[110px_1fr] sm:grid-cols-[170px_1fr]">
-                    {/* Panneau gauche : grand chiffre dégradé */}
+                  <div className="grid grid-cols-[70px_1fr] sm:grid-cols-[108px_1fr]">
+                    {/* Panneau gauche : chiffre dégradé + filet */}
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
-                        padding: "1.1rem 0.5rem",
+                        padding: "0.9rem 0.5rem",
                         background:
                           "linear-gradient(160deg, rgba(107,159,238,0.16) 0%, rgba(107,159,238,0.03) 100%)",
                         borderRight: "1px solid rgba(107,159,238,0.18)",
@@ -179,44 +179,56 @@ export default async function Methode2Page() {
                     >
                       <span
                         aria-hidden="true"
-                        style={{
-                          fontSize: "clamp(3.4rem, 8vw, 6rem)",
-                          fontWeight: 900,
-                          lineHeight: 1,
-                          letterSpacing: "-0.04em",
-                          backgroundImage: "linear-gradient(150deg, #6B9FEE 0%, #C6CCD6 100%)",
-                          WebkitBackgroundClip: "text",
-                          backgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                          color: "transparent",
-                        }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem" }}
                       >
-                        {step.num}
+                        <span
+                          style={{
+                            fontSize: "clamp(1.8rem, 4vw, 2.75rem)",
+                            fontWeight: 800,
+                            lineHeight: 1,
+                            letterSpacing: "-0.03em",
+                            backgroundImage: "linear-gradient(150deg, #6B9FEE 0%, #C6CCD6 100%)",
+                            WebkitBackgroundClip: "text",
+                            backgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            color: "transparent",
+                          }}
+                        >
+                          {step.num}
+                        </span>
+                        <span
+                          style={{
+                            width: "24px",
+                            height: "2px",
+                            borderRadius: "1px",
+                            background: "linear-gradient(to right, #6B9FEE, transparent)",
+                          }}
+                        />
                       </span>
                     </div>
 
                     {/* Contenu */}
-                    <div style={{ padding: "1.35rem clamp(1.25rem, 3vw, 2rem)" }}>
+                    <div style={{ padding: "1.1rem clamp(1rem, 2.5vw, 1.5rem)" }}>
                       <h3
                         className="font-black leading-tight"
                         style={{
-                          fontSize: "clamp(1.2rem, 2.2vw, 1.6rem)",
-                          letterSpacing: "-0.02em",
+                          fontSize: "clamp(1rem, 1.7vw, 1.2rem)",
+                          letterSpacing: "-0.01em",
                           color: "#F0F5FF",
-                          marginBottom: "0.8rem",
+                          marginBottom: "0.55rem",
                         }}
                       >
                         {step.title}
                       </h3>
-                      <div className="mb-4" style={{ maxWidth: "580px" }}>
+                      <div className="mb-3" style={{ maxWidth: "560px" }}>
                         {step.description.split("\n").map((line, j, arr) => (
                           <p
                             key={j}
-                            className="leading-relaxed"
                             style={{
-                              fontSize: "14px",
+                              fontSize: "12px",
                               color: "#A8C6F4",
-                              marginBottom: j < arr.length - 1 ? "0.7rem" : 0,
+                              lineHeight: 1.65,
+                              marginBottom: j < arr.length - 1 ? "0.5rem" : 0,
                             }}
                           >
                             {line}
@@ -224,12 +236,12 @@ export default async function Methode2Page() {
                         ))}
                       </div>
                       {step.num === "04" && (
-                        <ul className="mb-4 space-y-2.5" style={{ maxWidth: "580px" }}>
+                        <ul className="mb-3 space-y-2" style={{ maxWidth: "560px" }}>
                           {s.importSteps.map((item, k) => (
                             <li
                               key={k}
-                              className="flex items-start gap-3"
-                              style={{ fontSize: "14px", color: "#A8C6F4", lineHeight: 1.5 }}
+                              className="flex items-start gap-2.5"
+                              style={{ fontSize: "12px", color: "#A8C6F4", lineHeight: 1.5 }}
                             >
                               <span
                                 className="flex-shrink-0 font-bold"
@@ -254,7 +266,7 @@ export default async function Methode2Page() {
                       )}
                       <p
                         className="font-medium italic"
-                        style={{ fontSize: "13px", color: "#C6CCD6" }}
+                        style={{ fontSize: "11px", color: "#C6CCD6" }}
                       >
                         → {step.tagline}
                       </p>
@@ -268,99 +280,74 @@ export default async function Methode2Page() {
           {/* ── 02 · CE QUE NOUS SÉCURISONS ── */}
           <div className="mb-20">
             <SectionHeader num="02" label={s.secureTitle.replace("\n", " ")} />
-            <div style={sectionCardStyle}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {s.secureItems.map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-4 px-5 py-5 transition-all duration-300 hover:-translate-y-0.5"
-                    style={{
-                      backgroundColor: "rgba(107,159,238,0.05)",
-                      border: "1px solid rgba(107,159,238,0.12)",
-                      borderLeft: "3px solid #6B9FEE",
-                      borderRadius: "6px",
-                    }}
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "1rem" }}>
+              {s.secureItems.map((item, i) => (
+                <div
+                  key={i}
+                  className="transition-transform duration-300 hover:-translate-y-1"
+                  style={{
+                    background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
+                    border: "1px solid rgba(107,159,238,0.12)",
+                    borderLeft: `3px solid ${item.color}`,
+                    borderRadius: "10px",
+                    padding: "1.4rem 1.5rem",
+                  }}
+                >
+                  <h3
+                    style={{ fontSize: "0.95rem", fontWeight: 800, color: "#F0F5FF", marginBottom: "0.4rem" }}
                   >
-                    <span
-                      className="flex items-center justify-center flex-shrink-0 font-bold mt-0.5"
-                      style={{
-                        color: "#5BD89A",
-                        fontSize: "10px",
-                        width: "1.25rem",
-                        height: "1.25rem",
-                        backgroundColor: "rgba(91,216,154,0.15)",
-                        borderRadius: "50%",
-                        flexShrink: 0,
-                      }}
-                    >
-                      ✓
-                    </span>
-                    <div>
-                      <p
-                        className="font-bold uppercase mb-1.5"
-                        style={{
-                          fontSize: "0.75rem",
-                          letterSpacing: "0.06em",
-                          color: "#F0F5FF",
-                        }}
-                      >
-                        {item.title}
-                      </p>
-                      <p
-                        className="text-[13px] leading-relaxed"
-                        style={{ color: "#A8C6F4" }}
-                      >
-                        {item.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    {item.title}
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "#A8C6F4", lineHeight: 1.6 }}>{item.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* ── 03 · NOS VALEURS ── */}
           <div className="mb-20">
             <SectionHeader num="03" label={s.pillarsTitle.replace("\n", " ")} />
-            <div
-              className="grid grid-cols-2 lg:grid-cols-4 gap-px"
-              style={{
-                backgroundColor: "rgba(107,159,238,0.15)",
-                borderRadius: "10px",
-                overflow: "hidden",
-              }}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "1rem" }}>
               {s.pillars.map((pillar, i) => (
                 <div
                   key={i}
-                  className="flex flex-col px-6 py-8"
-                  style={{ backgroundColor: "#0B1929" }}
+                  className="transition-transform duration-300 hover:-translate-y-1"
+                  style={{
+                    background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
+                    border: "1px solid rgba(107,159,238,0.12)",
+                    borderRadius: "10px",
+                    padding: "1.5rem",
+                  }}
                 >
-                  <div
+                  <h3
                     style={{
-                      width: "28px",
-                      height: "2px",
-                      backgroundColor: "#C6CCD6",
-                      borderRadius: "1px",
-                      marginBottom: "1.2rem",
-                    }}
-                  />
-                  <p
-                    className="font-black uppercase mb-3"
-                    style={{
-                      fontSize: "0.78rem",
-                      letterSpacing: "0.08em",
+                      display: "flex",
+                      alignItems: "baseline",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.12em",
+                      fontSize: "0.85rem",
+                      fontWeight: 800,
                       color: "#F0F5FF",
+                      marginBottom: "0.6rem",
                     }}
                   >
-                    {pillar.title}
-                  </p>
-                  <p
-                    className="text-[13px] leading-relaxed"
-                    style={{ color: "#A8C6F4" }}
-                  >
-                    {pillar.desc}
-                  </p>
+                    <span
+                      style={{
+                        fontSize: "2.2em",
+                        letterSpacing: "0",
+                        lineHeight: 1,
+                        backgroundImage: "linear-gradient(150deg, #6B9FEE 0%, #C6CCD6 100%)",
+                        WebkitBackgroundClip: "text",
+                        backgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        color: "transparent",
+                      }}
+                    >
+                      {pillar.title.charAt(0)}
+                    </span>
+                    <span>{pillar.title.slice(1)}</span>
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "#A8C6F4", lineHeight: 1.6 }}>{pillar.desc}</p>
                 </div>
               ))}
             </div>
@@ -369,100 +356,100 @@ export default async function Methode2Page() {
           {/* ── 04 · POSITIONNEMENT ── */}
           <div className="mb-20">
             <SectionHeader num="04" label={s.cabinetLabel} />
-            <div style={sectionCardStyle}>
+            <div style={{ ...sectionCardStyle, padding: "clamp(1.75rem, 4vw, 3rem)" }}>
               <h2
-                className="font-black uppercase leading-tight mb-5"
+                className="font-black leading-tight"
                 style={{
-                  fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
-                  letterSpacing: "-0.025em",
+                  fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
+                  color: "#F0F5FF",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.05,
+                  marginBottom: "1rem",
                   whiteSpace: "pre-line",
+                  textAlign: "center",
                 }}
               >
                 {s.cabinetTitle}
               </h2>
               <p
-                className="text-[15px] leading-relaxed mb-8"
-                style={{ color: "#A8C6F4", maxWidth: "620px" }}
+                style={{
+                  fontSize: "14px",
+                  color: "#A8C6F4",
+                  lineHeight: 1.75,
+                  maxWidth: "620px",
+                  margin: "0 auto 2rem",
+                  textAlign: "center",
+                }}
               >
                 {s.cabinetText}
               </p>
-              <div className="flex flex-nowrap gap-2 overflow-x-auto">
+              <div
+                className="grid grid-cols-2 lg:grid-cols-4"
+                style={{ gap: "1px", backgroundColor: "rgba(107,159,238,0.15)", borderRadius: "8px", overflow: "hidden" }}
+              >
                 {s.cabinetPoints.map((point, i) => (
-                  <span
-                    key={i}
-                    className="flex items-center gap-2 px-3 py-3 text-[12px] font-medium whitespace-nowrap"
-                    style={{
-                      backgroundColor: "rgba(107,159,238,0.08)",
-                      border: "1px solid rgba(107,159,238,0.25)",
-                      color: "#E8F0FC",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    <span
-                      className="flex items-center justify-center flex-shrink-0 font-bold"
+                  <div key={i} style={{ backgroundColor: "#0B1929", padding: "1.25rem 1rem" }}>
+                    <div
                       style={{
-                        color: "#5BD89A",
-                        fontSize: "11px",
-                        width: "1.25rem",
-                        height: "1.25rem",
-                        backgroundColor: "rgba(91,216,154,0.15)",
-                        borderRadius: "50%",
+                        width: "22px",
+                        height: "2px",
+                        borderRadius: "1px",
+                        background: `linear-gradient(to right, ${["#6B9FEE", "#5BD89A", "#C6CCD6"][i % 3]}, transparent)`,
+                        marginBottom: "0.7rem",
                       }}
-                    >
-                      ✓
-                    </span>
-                    {point}
-                  </span>
+                    />
+                    <p style={{ fontSize: "13px", fontWeight: 700, color: "#F0F5FF", lineHeight: 1.4 }}>{point}</p>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
 
           {/* ── CTA FINAL ── */}
-          <div
-            className="text-center"
-            style={{ ...sectionCardStyle, padding: "4rem 2.5rem" }}
-          >
-            <p
-              className="text-[11px] font-bold tracking-[0.5em] uppercase mb-5"
-              style={{ color: "#6B9FEE" }}
-            >
-              Intelligence Automobile
-            </p>
-            <h2
-              className="font-black uppercase leading-tight mb-5"
-              style={{
-                fontSize: "clamp(1.8rem, 4vw, 3.2rem)",
-                letterSpacing: "-0.025em",
-                whiteSpace: "pre-line",
-              }}
-            >
-              {s.ctaTitle}
-            </h2>
-            <p
-              className="text-[14px] mb-12 mx-auto"
-              style={{ color: "#A8C6F4", maxWidth: "480px", lineHeight: 1.8 }}
-            >
-              {s.ctaSubtitle}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/recherche-personnalisee"
-                className="px-10 py-5 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 hover:-translate-y-px hover:opacity-90"
-                style={{
-                  background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)",
-                  color: "#070F1E",
-                }}
-              >
-                {s.ctaContact}
-              </Link>
-              <Link
-                href="/vehicules"
-                className="px-10 py-5 text-xs font-semibold tracking-widest uppercase border transition-all duration-300 hover:border-[#6B9FEE] hover:text-[#6B9FEE]"
-                style={{ borderColor: "rgba(107,159,238,0.4)", color: "#C8D8EE" }}
-              >
-                {s.ctaStock}
-              </Link>
+          <div style={{ ...sectionCardStyle, padding: "clamp(2rem, 5vw, 3.5rem)" }}>
+            <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "clamp(2rem, 4vw, 3rem)", alignItems: "center" }}>
+              <div>
+                <p
+                  className="uppercase"
+                  style={{ fontSize: "0.65rem", letterSpacing: "0.4em", color: "#6B9FEE", marginBottom: "1.1rem" }}
+                >
+                  Intelligence Automobile
+                </p>
+                <h2
+                  className="font-black leading-tight"
+                  style={{
+                    fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+                    color: "#F0F5FF",
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.05,
+                    marginBottom: "1.1rem",
+                    whiteSpace: "pre-line",
+                  }}
+                >
+                  {s.ctaTitle}
+                </h2>
+                <p style={{ fontSize: "14px", color: "#A8C6F4", lineHeight: 1.75, maxWidth: "440px" }}>
+                  {s.ctaSubtitle}
+                </p>
+              </div>
+              <div className="flex md:justify-end">
+                <div className="flex flex-col gap-3 w-full sm:w-auto" style={{ minWidth: "240px" }}>
+                  <Link
+                    href="/recherche-personnalisee"
+                    className="text-center px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase transition-transform duration-300 hover:-translate-y-px"
+                    style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
+                  >
+                    {s.ctaContact}
+                  </Link>
+                  <Link
+                    href="/vehicules"
+                    className="text-center px-8 py-4 text-xs font-semibold tracking-widest uppercase border transition-colors duration-300 hover:border-[#6B9FEE] hover:text-[#6B9FEE]"
+                    style={{ borderColor: "rgba(107,159,238,0.4)", color: "#C8D8EE" }}
+                  >
+                    {s.ctaStock}
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
 
