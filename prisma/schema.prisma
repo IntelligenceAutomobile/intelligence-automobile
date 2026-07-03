@@ -158,6 +158,39 @@ model Lead {
   @@index([stage])
 }
 
+// Diffusion multi-portails (module de démonstration : la publication est
+// simulée ; le flux d'export XML, lui, est réel — voir /api/admin/diffusion/flux).
+model Listing {
+  id          String    @id @default(cuid())
+  vehicleId   String
+  portal      String                        // lacentrale | leboncoin | autoscout24 | facebook
+  status      String    @default("non_diffuse") // publie | non_diffuse
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([vehicleId, portal])
+  @@index([vehicleId])
+}
+
+// Planning atelier : RDV clients, interventions véhicules, indisponibilités équipe.
+model Appointment {
+  id         String   @id @default(cuid())
+  date       String                        // jour YYYY-MM-DD (saisi tel quel)
+  startMin   Int                           // début en minutes depuis minuit
+  durationMin Int     @default(60)
+  type       String   @default("essai")    // essai | livraison | preparation | ct | mecanique | indispo | autre
+  title      String   @default("")
+  person     String   @default("")         // qui est concerné (obligatoire pour indispo)
+  clientId   String?                        // client CRM (optionnel)
+  vehicleId  String?                        // véhicule du stock (optionnel)
+  notes      String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([date])
+}
+
 model LeadEvent {
   id        String   @id @default(cuid())
   leadId    String

@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, Car, ChevronRight, FileText, MessagesSquare, XCircle, Send, Users } from "lucide-react";
+import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, MessagesSquare, XCircle, Send, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
+import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, type AppointmentType } from "@/lib/planning";
 import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
 import { KpiTile, AreaChart, Donut, Bars } from "./charts";
 
@@ -117,7 +118,7 @@ export default async function AdminDashboard() {
   const cookieStore = await cookies();
   const name = cookieStore.get("ia_collab_name")?.value?.trim() || session.admin.email.split("@")[0];
 
-  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents] =
+  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -146,6 +147,11 @@ export default async function AdminDashboard() {
         orderBy: { createdAt: "desc" },
         take: 4,
         include: { lead: { include: { client: { select: { id: true, name: true, company: true } } } } },
+      }),
+      prisma.appointment.findMany({
+        where: { date: { gte: toDateKey(new Date()) } },
+        orderBy: [{ date: "asc" }, { startMin: "asc" }],
+        take: 4,
       }),
     ]);
 
@@ -361,9 +367,53 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* Alertes + comptes associés */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-          <InsightPanel title="À compléter" items={aCompleter} emptyLabel="Tout est complet ✓" showReasons delay={780} />
+        {/* RDV + alertes + comptes associés */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+          <div className="adm-card adm-enter p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "760ms" }}>
+            <div className="adm-hairline" />
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs tracking-widest uppercase" style={{ color: T.textDim }}>Prochains RDV</h3>
+              <Link href="/admin/planning" className="inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]" style={{ color: T.accent }}>
+                Planning
+                <ChevronRight size={12} />
+              </Link>
+            </div>
+            {upcomingRdv.length === 0 ? (
+              <p className="text-sm" style={{ color: T.muted }}>
+                Rien de planifié.{" "}
+                <Link href="/admin/planning" style={{ color: T.accent }}>Ouvrir le planning.</Link>
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {upcomingRdv.map((r) => {
+                  const c = TYPE_COLOR[(r.type as AppointmentType) ?? "autre"] ?? TYPE_COLOR.autre;
+                  const todayK = toDateKey(new Date());
+                  const tomorrow = new Date();
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  const dayLabel =
+                    r.date === todayK
+                      ? "Aujourd'hui"
+                      : r.date === toDateKey(tomorrow)
+                        ? "Demain"
+                        : new Date(`${r.date}T00:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                  return (
+                    <li key={r.id} className="flex items-center gap-2.5 min-w-0">
+                      <span style={{ width: 8, height: 8, backgroundColor: c.bd, flexShrink: 0 }} />
+                      <span className="text-[12px] truncate" style={{ color: T.textDim }}>
+                        {r.type === "indispo" && r.person ? `${r.person} — ` : ""}
+                        {r.title || TYPE_LABEL[(r.type as AppointmentType) ?? "autre"]}
+                      </span>
+                      <span className="text-[10px] ml-auto flex-shrink-0 flex items-center gap-1" style={{ color: T.muted }}>
+                        <CalendarClock size={10} />
+                        {dayLabel} · {formatMin(r.startMin)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          <InsightPanel title="À compléter" items={aCompleter} emptyLabel="Tout est complet ✓" showReasons delay={800} />
           <InsightPanel title="Masquées du public" items={masquees} emptyLabel="Aucune annonce masquée." delay={840} />
           <Link
             href="/admin/comptes"
