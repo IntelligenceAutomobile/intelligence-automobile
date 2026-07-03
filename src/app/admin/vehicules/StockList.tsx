@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Search, List, LayoutGrid, Eye, Pencil } from "lucide-react";
+import { Search, List, LayoutGrid, Eye, Pencil, ClipboardList } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { T, Tag, StatusBadge, Thumb, fieldStyle } from "../ui";
 import DeleteVehiculeButton from "./DeleteVehiculeButton";
@@ -73,6 +73,14 @@ function RowActions({ v }: { v: StockItem }) {
       >
         <Pencil size={13} />
         Modifier
+      </Link>
+      <Link
+        href={`/admin/vehicules/${v.id}/suivi`}
+        className="inline-flex items-center gap-1.5 py-2 -my-2 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
+        style={{ color: T.textDim }}
+      >
+        <ClipboardList size={13} />
+        Suivi
       </Link>
       <DeleteVehiculeButton id={v.id} />
     </>

@@ -1,9 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import VehiculeForm from "@/components/VehiculeForm";
-import { T, AdminPage, PageHeader } from "../../ui";
+import { T, AdminPage, PageHeader, btnGhostClass, btnGhostStyle } from "../../ui";
 
 export default async function EditVehiculePage({
   params,
@@ -49,7 +50,16 @@ export default async function EditVehiculePage({
       >
         ← Stock
       </Link>
-      <PageHeader title={`${v.make} ${v.model}`} subtitle="Modifier la fiche du véhicule." />
+      <PageHeader
+        title={`${v.make} ${v.model}`}
+        subtitle="Modifier la fiche du véhicule."
+        action={
+          <Link href={`/admin/vehicules/${v.id}/suivi`} className={btnGhostClass} style={btnGhostStyle}>
+            <ClipboardList size={14} />
+            Suivi du véhicule
+          </Link>
+        }
+      />
       <VehiculeForm data={vehiculeData} />
     </AdminPage>
   );

@@ -1,0 +1,50 @@
+import { redirect, notFound } from "next/navigation";
+import { requireAdmin } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { firstImage } from "../../../ui";
+import SuiviClient, { type CostRow, type NoteRow } from "./SuiviClient";
+
+export default async function SuiviPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await requireAdmin();
+  if (!session) redirect("/admin/login");
+
+  const { id } = await params;
+  const [vehicle, costs, notes] = await Promise.all([
+    prisma.vehicle.findUnique({ where: { id } }),
+    prisma.vehicleCost.findMany({ where: { vehicleId: id }, orderBy: { date: "desc" } }),
+    prisma.vehicleNote.findMany({ where: { vehicleId: id }, orderBy: { createdAt: "desc" } }),
+  ]);
+  if (!vehicle) notFound();
+
+  const costRows: CostRow[] = costs.map((c) => ({
+    id: c.id,
+    category: c.category,
+    label: c.label,
+    amountCents: c.amountCents,
+    date: c.date,
+  }));
+  const noteRows: NoteRow[] = notes.map((n) => ({
+    id: n.id,
+    type: n.type,
+    content: n.content,
+    resolved: n.resolved,
+    author: n.author,
+    createdAt: n.createdAt.toISOString(),
+  }));
+
+  return (
+    <SuiviClient
+      vehicle={{
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        price: vehicle.price,
+        status: vehicle.status,
+        image: firstImage(vehicle.images),
+      }}
+      costs={costRows}
+      notes={noteRows}
+    />
+  );
+}
