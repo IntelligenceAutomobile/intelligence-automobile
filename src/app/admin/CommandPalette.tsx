@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, Plus, LayoutDashboard, Wallet, MessagesSquare,
-  Users, CornerDownLeft, type LucideIcon,
+  Users, CalendarClock, Radio, CornerDownLeft, type LucideIcon,
 } from "lucide-react";
 import { T } from "./ui";
 
@@ -19,6 +19,8 @@ const STATIC_ITEMS: Item[] = [
   { icon: Car, label: "Stock", hint: "Page", href: "/admin/vehicules" },
   { icon: FileText, label: "Devis", hint: "Page", href: "/admin/devis" },
   { icon: Users, label: "Clients & leads", hint: "Page", href: "/admin/clients" },
+  { icon: CalendarClock, label: "Planning atelier", hint: "Page", href: "/admin/planning" },
+  { icon: Radio, label: "Diffusion", hint: "Page", href: "/admin/diffusion" },
   { icon: MessagesSquare, label: "Atelier", hint: "Page", href: "/admin/atelier" },
   { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes" },
 ];

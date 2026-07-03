@@ -21,8 +21,8 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: Car, label: "Stock", href: "/admin/vehicules" },
       { icon: FileText, label: "Devis", href: "/admin/devis" },
       { icon: Users, label: "Clients & leads", href: "/admin/clients" },
-      { icon: CalendarClock, label: "Planning atelier", soon: true },
-      { icon: Radio, label: "Diffusion", soon: true },
+      { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning" },
+      { icon: Radio, label: "Diffusion", href: "/admin/diffusion" },
     ],
   },
   {
