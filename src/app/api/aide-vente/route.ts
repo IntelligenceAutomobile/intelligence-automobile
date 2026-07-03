@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createLeadFromSite } from "@/lib/crm-intake";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -30,6 +31,25 @@ export async function POST(req: NextRequest) {
     }
 
     const photoUrls = (data.getAll("photoUrls") as string[]).filter(Boolean);
+
+    // Lead CRM (en plus de l'email) : silencieux en cas d'échec.
+    try {
+      await createLeadFromSite({
+        name: `${prenom} ${nom}`.trim(),
+        email,
+        phone: telephone,
+        source: "aide-vente",
+        title: `Vente ${marque} ${modele} (${annee})`,
+        message: [
+          `${marque} ${modele} · ${annee} · ${kilometrage} km · ${carburant} · ${boite}`,
+          `État : ${etat} · Entretien : ${entretien}`,
+          prix ? `Prix espéré : ${prix}` : "",
+          precisions || "",
+        ].filter(Boolean).join("\n"),
+      });
+    } catch (e) {
+      console.error("[CRM] Échec création lead (aide-vente):", e);
+    }
 
     const row = (label: string, value: string) =>
       `<tr>

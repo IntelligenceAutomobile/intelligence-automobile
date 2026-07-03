@@ -27,6 +27,7 @@ export function quoteToData(body: Record<string, unknown>) {
     paymentTerms: s(body.paymentTerms),
     notes: s(body.notes),
     vehicleId: body.vehicleId ? String(body.vehicleId) : null,
+    clientId: body.clientId ? String(body.clientId) : null,
     branding: JSON.stringify(body.branding && typeof body.branding === "object" ? body.branding : {}),
   };
 }

@@ -6,9 +6,15 @@ import { emptyQuote, mergeBranding, type QuoteKind } from "@/lib/devis";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
 
-export default async function NouveauDevisPage() {
+export default async function NouveauDevisPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string }>;
+}) {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
+
+  const { client: clientIdParam } = await searchParams;
 
   const year = new Date().getFullYear();
   const [vehicles, count, last] = await Promise.all([
@@ -32,6 +38,18 @@ export default async function NouveauDevisPage() {
   const number = `${year}-${String(count + 1).padStart(3, "0")}`;
   const issueDate = new Date().toISOString().slice(0, 10);
   const initial = emptyQuote(number, issueDate, mergeBranding(lastBranding), lastKind);
+
+  // Pré-remplissage depuis la fiche client CRM (?client=<id>).
+  if (clientIdParam) {
+    const crmClient = await prisma.client.findUnique({ where: { id: clientIdParam } });
+    if (crmClient) {
+      initial.clientId = crmClient.id;
+      initial.clientName = crmClient.name;
+      initial.clientCompany = crmClient.company;
+      initial.clientEmail = crmClient.email;
+      initial.clientPhone = crmClient.phone;
+    }
+  }
 
   return (
     <AdminPage>

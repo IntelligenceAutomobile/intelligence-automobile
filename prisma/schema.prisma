@@ -120,8 +120,54 @@ model Quote {
   // Lien véhicule principal (optionnel)
   vehicleId String?
 
+  // Lien client CRM (optionnel)
+  clientId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ── CRM : clients et opportunités de vente ──
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  company   String   @default("")
+  email     String   @default("")
+  phone     String   @default("")
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leads     Lead[]
+}
+
+model Lead {
+  id        String      @id @default(cuid())
+  clientId  String
+  stage     String      @default("nouveau") // nouveau | contacte | rdv | devis_envoye | gagne | perdu
+  source    String      @default("manuel")  // site-contact | recherche-perso | aide-vente | manuel | telephone | autre
+  title     String      @default("")        // objet (ex: "Recherche SUV hybride")
+  vehicleId String?                          // véhicule du stock concerné (optionnel)
+  budget    Int?                             // budget indicatif en euros
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  events    LeadEvent[]
+
+  @@index([clientId])
+  @@index([stage])
+}
+
+model LeadEvent {
+  id        String   @id @default(cuid())
+  leadId    String
+  type      String   @default("note") // note | appel | email | rdv | etape | creation
+  content   String   @default("")
+  author    String   @default("")
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
 }
 
 // Comptes entre associés (César / Fab) : dépenses communes, avances, règlements.

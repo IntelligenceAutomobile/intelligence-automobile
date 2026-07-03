@@ -1,10 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { BadgeCheck, Car, ChevronRight, FileText, MessagesSquare, XCircle, Send, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
-import { T, AdminPage, PageHeader, StatCard, StatusBadge, Thumb, firstImage } from "./ui";
+import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
+import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
+import { KpiTile, AreaChart, Donut, Bars } from "./charts";
 
 type VehLite = { id: string; make: string; model: string; images: string; price: number };
 
@@ -15,19 +19,53 @@ function reasons(v: VehLite): string[] {
   return r;
 }
 
+/* ── Mois glissants ── */
+function lastMonths(n: number): { key: string; label: string }[] {
+  const now = new Date();
+  const out: { key: string; label: string }[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const raw = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+    out.push({ key, label: raw.charAt(0).toUpperCase() + raw.slice(1) });
+  }
+  return out;
+}
+
+function monthKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function countByMonth(dates: Date[], months: { key: string }[]): number[] {
+  const map = new Map<string, number>();
+  for (const d of dates) map.set(monthKey(d), (map.get(monthKey(d)) ?? 0) + 1);
+  return months.map((m) => map.get(m.key) ?? 0);
+}
+
+function timeAgo(d: Date): string {
+  const s = (Date.now() - d.getTime()) / 1000;
+  if (s < 3600) return `il y a ${Math.max(1, Math.floor(s / 60))} min`;
+  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
+  if (s < 172800) return "hier";
+  return `il y a ${Math.floor(s / 86400)} j`;
+}
+
 function InsightPanel({
   title,
   items,
   emptyLabel,
   showReasons = false,
+  delay,
 }: {
   title: string;
   items: VehLite[];
   emptyLabel: string;
   showReasons?: boolean;
+  delay: number;
 }) {
   return (
-    <div className="p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+    <div className="adm-card adm-enter p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: `${delay}ms` }}>
+      <div className="adm-hairline" />
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs tracking-widest uppercase" style={{ color: T.textDim }}>{title}</h3>
         <span className="text-xs" style={{ color: T.muted }}>{items.length}</span>
@@ -53,12 +91,15 @@ function InsightPanel({
                       <span
                         key={r}
                         className="text-[10px] uppercase tracking-widest px-2 py-0.5 whitespace-nowrap"
-                        style={{ border: "1px solid rgba(240,180,90,0.38)", color: "#F0B45A" }}
+                        style={{ border: "1px solid rgba(240,180,90,0.38)", color: T.warning }}
                       >
                         {r}
                       </span>
                     ))}
-                  <span className="text-[11px] uppercase tracking-widest" style={{ color: T.accent }}>Compléter →</span>
+                  <span className="inline-flex items-center gap-0.5 text-[11px] uppercase tracking-widest" style={{ color: T.accent }}>
+                    Compléter
+                    <ChevronRight size={12} />
+                  </span>
                 </span>
               </Link>
             </li>
@@ -73,24 +114,115 @@ export default async function AdminDashboard() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
 
-  const [total, disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, quotesCount, ledgerRows] = await Promise.all([
-    prisma.vehicle.count(),
-    prisma.vehicle.count({ where: { status: "disponible" } }),
-    prisma.vehicle.count({ where: { status: "reserve" } }),
-    prisma.vehicle.count({ where: { status: "vendu" } }),
-    prisma.vehicle.aggregate({ _sum: { price: true }, where: { status: "disponible" } }),
-    prisma.vehicle.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
-    prisma.vehicle.findMany({
-      where: { OR: [{ images: "[]" }, { price: { lte: 0 } }] },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
-    prisma.vehicle.findMany({ where: { isPublished: false }, orderBy: { createdAt: "desc" }, take: 6 }),
-    prisma.quote.count(),
-    prisma.ledgerEntry.findMany(),
-  ]);
+  const cookieStore = await cookies();
+  const name = cookieStore.get("ia_collab_name")?.value?.trim() || session.admin.email.split("@")[0];
+
+  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents] =
+    await Promise.all([
+      prisma.vehicle.count({ where: { status: "disponible" } }),
+      prisma.vehicle.count({ where: { status: "reserve" } }),
+      prisma.vehicle.count({ where: { status: "vendu" } }),
+      prisma.vehicle.aggregate({ _sum: { price: true }, where: { status: "disponible" } }),
+      prisma.vehicle.findMany({ orderBy: { createdAt: "desc" }, take: 4 }),
+      prisma.vehicle.findMany({
+        where: { OR: [{ images: "[]" }, { price: { lte: 0 } }] },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      }),
+      prisma.vehicle.findMany({ where: { isPublished: false }, orderBy: { createdAt: "desc" }, take: 5 }),
+      prisma.vehicle.findMany({ select: { createdAt: true } }),
+      prisma.quote.findMany({
+        select: { id: true, number: true, clientName: true, clientCompany: true, status: true, createdAt: true, updatedAt: true },
+      }),
+      prisma.collabNote.findMany({
+        where: { deletedAt: null },
+        orderBy: { createdAt: "desc" },
+        take: 3,
+        select: { id: true, author: true, content: true, createdAt: true },
+      }),
+      prisma.ledgerEntry.findMany(),
+      prisma.lead.findMany({ select: { createdAt: true, stage: true } }),
+      prisma.leadEvent.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 4,
+        include: { lead: { include: { client: { select: { id: true, name: true, company: true } } } } },
+      }),
+    ]);
 
   const stockValue = valueAgg._sum.price ?? 0;
+
+  /* Séries mensuelles réelles */
+  const months12 = lastMonths(12);
+  const months6 = lastMonths(6);
+  const entriesSeries = countByMonth(allVehicleDates.map((v) => v.createdAt), months12);
+  const quotesSeries6 = countByMonth(allQuotes.map((q) => q.createdAt), months6);
+  const quotesSeries12 = countByMonth(allQuotes.map((q) => q.createdAt), months12);
+
+  const thisMonthKey = monthKey(new Date());
+  const entriesThisMonth = entriesSeries[months12.findIndex((m) => m.key === thisMonthKey)] ?? 0;
+  const devisEnCours = allQuotes.filter((q) => q.status === "brouillon" || q.status === "envoye").length;
+  const devisEnvoyes = allQuotes.filter((q) => q.status === "envoye").length;
+
+  const leadsSeries = countByMonth(allLeads.map((l) => l.createdAt), months12);
+  const leadsActifs = allLeads.filter((l) => PIPELINE_STAGES.includes(l.stage as Stage)).length;
+  const leadsThisMonth = leadsSeries[months12.findIndex((m) => m.key === thisMonthKey)] ?? 0;
+  const leadsGagnes = allLeads.filter((l) => l.stage === "gagne").length;
+
+  /* Activité récente : fiches créées + devis + notes atelier, fusionnés */
+  const QUOTE_EVENT: Record<string, { text: (n: string) => string; color: string; icon: "accept" | "send" | "refuse" | "file" }> = {
+    accepte: { text: (n) => `Devis ${n} accepté`, color: T.success, icon: "accept" },
+    envoye: { text: (n) => `Devis ${n} envoyé`, color: T.accent, icon: "send" },
+    refuse: { text: (n) => `Devis ${n} refusé`, color: T.danger, icon: "refuse" },
+    brouillon: { text: (n) => `Devis ${n} créé`, color: T.muted, icon: "file" },
+  };
+  const ACTIVITY_ICON = { accept: BadgeCheck, send: Send, refuse: XCircle, file: FileText, car: Car, note: MessagesSquare, lead: Users };
+
+  const activity = [
+    ...recent.map((v) => ({
+      date: v.createdAt,
+      icon: "car" as const,
+      color: T.accent,
+      text: `Fiche créée — ${v.make} ${v.model}`,
+      detail: `${v.year} · ${formatNumber(v.mileage)} km`,
+      href: `/admin/vehicules/${v.id}`,
+    })),
+    ...allQuotes
+      .slice()
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .slice(0, 4)
+      .map((q) => {
+        const ev = QUOTE_EVENT[q.status] ?? QUOTE_EVENT.brouillon;
+        return {
+          date: q.updatedAt,
+          icon: ev.icon,
+          color: ev.color,
+          text: ev.text(q.number),
+          detail: q.clientCompany || q.clientName || "Sans client",
+          href: `/admin/devis/${q.id}`,
+        };
+      }),
+    ...recentNotes.map((n) => ({
+      date: n.createdAt,
+      icon: "note" as const,
+      color: "#C7D3E8",
+      text: `Note atelier — ${n.author}`,
+      detail: n.content.length > 60 ? n.content.slice(0, 60) + "…" : n.content,
+      href: "/admin/atelier",
+    })),
+    ...recentLeadEvents.map((e) => {
+      const who = e.lead.client.company || e.lead.client.name;
+      return {
+        date: e.createdAt,
+        icon: "lead" as const,
+        color: e.type === "creation" ? T.accent : "#C7D3E8",
+        text: e.type === "creation" ? `Nouveau lead — ${who}` : `${EVENT_LABEL[e.type as EventType] ?? e.type} — ${who}`,
+        detail: e.content.length > 60 ? e.content.slice(0, 60) + "…" : e.content,
+        href: `/admin/clients/${e.lead.client.id}`,
+      };
+    }),
+  ]
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, 6);
 
   const balance = computeBalance(
     ledgerRows.map((r) => ({
@@ -106,105 +238,209 @@ export default async function AdminDashboard() {
     })),
   );
 
+  const today = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+
   return (
-    <AdminPage>
-      <PageHeader title="Tableau de bord" subtitle={`${total} véhicule${total > 1 ? "s" : ""} au total.`} />
+    <div className="relative">
+      <div className="adm-halos" />
+      <AdminPage>
+        {/* En-tête */}
+        <div className="adm-enter mb-7" style={{ animationDelay: "0ms" }}>
+          <div style={{ width: 24, height: 2, background: `linear-gradient(to right, ${T.accent}, transparent)` }} className="mb-3" />
+          <h1 className="text-[26px] font-light" style={{ color: T.text, letterSpacing: "-0.01em" }}>
+            Bonjour {name}
+            <span className="ml-3 text-sm align-middle" style={{ color: T.muted }}>{today}</span>
+          </h1>
+        </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Disponibles" value={disponibles} href="/admin/vehicules?statut=disponible" />
-        <StatCard label="Réservés" value={reserves} href="/admin/vehicules?statut=reserve" />
-        <StatCard label="Vendus" value={vendus} href="/admin/vehicules?statut=vendu" />
-        <StatCard label="Valeur du stock" value={`${formatNumber(stockValue)} €`} hint="Annonces disponibles" />
-      </div>
+        {/* KPIs */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+          <KpiTile index={0} label="Valeur du stock" value={stockValue} euro icon="banknote" hint="Annonces disponibles" />
+          <KpiTile
+            index={1}
+            label="Disponibles"
+            value={disponibles}
+            icon="badge-check"
+            delta={entriesThisMonth > 0 ? { value: entriesThisMonth, label: "entrée(s) ce mois" } : null}
+            hint={entriesThisMonth === 0 ? "Aucune entrée ce mois" : undefined}
+            spark={entriesSeries}
+          />
+          <KpiTile
+            index={2}
+            label="Devis en cours"
+            value={devisEnCours}
+            icon="file-text"
+            hint={devisEnvoyes > 0 ? `${devisEnvoyes} en attente de réponse` : "Aucun devis envoyé"}
+            spark={quotesSeries12}
+          />
+          <KpiTile
+            index={3}
+            label="Leads actifs"
+            value={leadsActifs}
+            icon="handshake"
+            delta={leadsThisMonth > 0 ? { value: leadsThisMonth, label: "ce mois" } : null}
+            hint={leadsThisMonth === 0 ? (leadsGagnes > 0 ? `${leadsGagnes} gagné${leadsGagnes > 1 ? "s" : ""} au total` : "Aucun lead ce mois") : undefined}
+            spark={leadsSeries}
+          />
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-        <Link
-          href="/admin/devis"
-          className="flex items-center justify-between p-5 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
-          style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
-        >
-          <div>
-            <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
-            <span className="text-sm" style={{ color: T.text }}>
-              <span className="text-2xl font-light mr-2" style={{ color: T.accent }}>{quotesCount}</span>
-              devis enregistré{quotesCount > 1 ? "s" : ""}
-            </span>
+        {/* Graphiques rangée 1 */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
+          <div className="adm-card adm-enter xl:col-span-2 p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "460ms" }}>
+            <div className="adm-hairline" />
+            <AreaChart
+              title="Entrées en stock"
+              subtitle="Fiches créées sur les 12 derniers mois"
+              data={entriesSeries}
+              labels={months12.map((m) => m.label)}
+              format={{ unit: "fiche" }}
+            />
           </div>
-          <span className="text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>Gérer les devis →</span>
-        </Link>
+          <div className="adm-card adm-enter p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "540ms" }}>
+            <div className="adm-hairline" />
+            <Donut
+              title="Répartition du stock"
+              subtitle="État actuel des annonces"
+              centerLabel="véhicules"
+              segments={[
+                { label: "Disponibles", value: disponibles, color: CHART.blue },
+                { label: "Réservés", value: reserves, color: CHART.amber },
+                { label: "Vendus", value: vendus, color: CHART.green },
+              ]}
+            />
+          </div>
+        </div>
 
-        <Link
-          href="/admin/comptes"
-          className="flex items-center justify-between p-5 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
-          style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
-        >
-          <div className="min-w-0">
-            <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
+        {/* Graphiques rangée 2 */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
+          <div className="adm-card adm-enter p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "620ms" }}>
+            <div className="adm-hairline" />
+            <Bars
+              title="Devis créés"
+              subtitle="6 derniers mois"
+              data={quotesSeries6}
+              labels={months6.map((m) => m.label)}
+              format={{ unit: "devis" }}
+            />
+          </div>
+          <div className="adm-card adm-enter xl:col-span-2 p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "700ms" }}>
+            <div className="adm-hairline" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium" style={{ color: T.text }}>Activité récente</h3>
+            </div>
+            {activity.length === 0 ? (
+              <p className="text-sm" style={{ color: T.muted }}>Aucune activité pour l&apos;instant.</p>
+            ) : (
+              <ul>
+                {activity.map((a, i) => {
+                  const Icon = ACTIVITY_ICON[a.icon];
+                  return (
+                    <li key={i}>
+                      <Link
+                        href={a.href}
+                        className="flex items-center gap-3.5 py-2 transition-colors hover:text-[#F0F5FF]"
+                        style={{ borderTop: i === 0 ? "none" : `1px solid ${T.surfaceAlt}` }}
+                      >
+                        <span
+                          className="flex items-center justify-center w-7 h-7 flex-shrink-0"
+                          style={{ backgroundColor: "rgba(107,159,238,0.07)", border: `1px solid ${T.border}` }}
+                        >
+                          <Icon size={14} style={{ color: a.color }} />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-[13px] truncate" style={{ color: T.textDim }}>{a.text}</span>
+                          <span className="block text-[11px] truncate" style={{ color: T.muted }}>{a.detail}</span>
+                        </span>
+                        <span className="text-[10px] ml-auto flex-shrink-0" style={{ color: T.muted }}>{timeAgo(a.date)}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* Alertes + comptes associés */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+          <InsightPanel title="À compléter" items={aCompleter} emptyLabel="Tout est complet ✓" showReasons delay={780} />
+          <InsightPanel title="Masquées du public" items={masquees} emptyLabel="Aucune annonce masquée." delay={840} />
+          <Link
+            href="/admin/comptes"
+            className="adm-card adm-enter p-5 flex flex-col justify-between"
+            style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "900ms" }}
+          >
+            <div className="adm-hairline" />
+            <h3 className="text-xs tracking-widest uppercase mb-3" style={{ color: T.textDim }}>Comptes associés</h3>
             <span className="text-sm" style={{ color: T.text }}>
               {balance.settled ? (
-                <>Comptes associés <span style={{ color: "#4ED1A1" }}>équilibrés ✓</span></>
+                <>Comptes <span style={{ color: T.success }}>équilibrés ✓</span></>
               ) : (
                 <>
                   <span style={{ color: PARTNER_COLOR[balance.debtor!] }}>{balance.debtor}</span> doit{" "}
-                  <span className="text-2xl font-light" style={{ color: T.accent }}>{formatEuroCents(balance.amountCents)}</span> à{" "}
+                  <span className="text-xl font-light" style={{ color: T.accent }}>{formatEuroCents(balance.amountCents)}</span> à{" "}
                   <span style={{ color: PARTNER_COLOR[balance.creditor!] }}>{balance.creditor}</span>
                 </>
               )}
             </span>
-          </div>
-          <span className="text-[11px] tracking-widest uppercase flex-shrink-0 ml-3" style={{ color: T.accent }}>Comptes →</span>
-        </Link>
-      </div>
+            <span className="inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase mt-3" style={{ color: T.accent }}>
+              Ouvrir les comptes
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
-        <InsightPanel title="À compléter" items={aCompleter} emptyLabel="Tout est complet ✓" showReasons />
-        <InsightPanel title="Masquées du public" items={masquees} emptyLabel="Aucune annonce masquée." />
-      </div>
-
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm tracking-widest uppercase" style={{ color: T.textDim }}>Dernières entrées</h2>
-        <Link href="/admin/vehicules" className="text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]" style={{ color: T.textDim }}>
-          Tout le stock →
-        </Link>
-      </div>
-
-      <div style={{ border: `1px solid ${T.border}` }}>
+        {/* Dernières entrées : photo d'abord */}
+        <div className="adm-enter flex items-center justify-between mb-3" style={{ animationDelay: "940ms" }}>
+          <h2 className="text-[11px] tracking-[0.2em] uppercase" style={{ color: T.muted }}>Dernières entrées</h2>
+          <Link
+            href="/admin/vehicules"
+            className="inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
+            style={{ color: T.textDim }}
+          >
+            Tout le stock
+            <ChevronRight size={12} />
+          </Link>
+        </div>
         {recent.length === 0 ? (
-          <div className="p-10 text-center text-sm" style={{ color: T.textDim }}>
+          <div className="p-10 text-center text-sm" style={{ border: `1px solid ${T.border}`, color: T.textDim }}>
             Aucun véhicule pour l&apos;instant.{" "}
-            <Link href="/admin/vehicules/nouveau" style={{ color: T.accent }}>
-              Ajouter le premier.
-            </Link>
+            <Link href="/admin/vehicules/nouveau" style={{ color: T.accent }}>Ajouter le premier.</Link>
           </div>
         ) : (
-          recent.map((v, i) => (
-            <Link
-              key={v.id}
-              href={`/admin/vehicules/${v.id}`}
-              className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[#0A1628]"
-              style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
-            >
-              <Thumb src={firstImage(v.images)} alt={`${v.make} ${v.model}`} w={64} h={48} />
-              <div className="flex items-baseline gap-2 min-w-0">
-                <span className="text-xs tracking-widest uppercase" style={{ color: T.accent }}>{v.make}</span>
-                <span className="text-sm truncate" style={{ color: T.text }}>{v.model}</span>
-                <span className="text-xs hidden sm:inline" style={{ color: T.muted }}>
-                  {v.year} · {formatNumber(v.mileage)} km
-                </span>
-              </div>
-              <div className="flex items-center gap-3 ml-auto flex-shrink-0">
-                <span className="text-sm font-semibold hidden sm:inline" style={{ color: T.text }}>{formatNumber(v.price)} €</span>
-                {!v.isPublished && (
-                  <span className="text-[10px] tracking-[0.15em] uppercase px-2 py-0.5" style={{ border: `1px solid ${T.border}`, color: T.muted }}>
-                    Masqué
-                  </span>
-                )}
-                <StatusBadge status={v.status} />
-              </div>
-            </Link>
-          ))
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            {recent.map((v, i) => (
+              <Link
+                key={v.id}
+                href={`/admin/vehicules/${v.id}`}
+                className="adm-veh adm-card adm-enter block min-w-0"
+                style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: `${1000 + i * 80}ms` }}
+              >
+                <div className="overflow-hidden" style={{ aspectRatio: "16 / 10", backgroundColor: T.float }}>
+                  {firstImage(v.images) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={firstImage(v.images)!} alt={`${v.make} ${v.model}`} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Car size={22} style={{ color: T.muted }} />
+                    </div>
+                  )}
+                </div>
+                <div className="p-3.5">
+                  <div className="flex items-baseline gap-2 min-w-0">
+                    <span className="text-[10px] tracking-widest uppercase flex-shrink-0" style={{ color: T.accent }}>{v.make}</span>
+                    <span className="text-[13px] font-medium truncate" style={{ color: T.text }}>{v.model}</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 gap-2">
+                    <span className="text-sm font-semibold" style={{ color: T.text }}>{formatNumber(v.price)} €</span>
+                    <StatusBadge status={v.status} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         )}
-      </div>
-    </AdminPage>
+      </AdminPage>
+    </div>
   );
 }

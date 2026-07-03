@@ -157,6 +157,7 @@ export type QuoteData = {
   number: string;
   kind: QuoteKind;
   status: QuoteStatus;
+  clientId?: string | null; // lien CRM optionnel
   clientName: string;
   clientCompany: string;
   clientAddress: string;
