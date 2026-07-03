@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { Search, List, LayoutGrid, Eye, Pencil } from "lucide-react";
 import { formatNumber } from "@/lib/format";
-import { T, StatusBadge, Thumb, fieldStyle } from "../ui";
+import { T, Tag, StatusBadge, Thumb, fieldStyle } from "../ui";
 import DeleteVehiculeButton from "./DeleteVehiculeButton";
 
 export type StockItem = {
@@ -35,19 +36,22 @@ const SORTS = [
   { value: "km-desc", label: "Km décroissant" },
 ];
 
-function Tag({ children, tone }: { children: React.ReactNode; tone: "muted" | "warn" }) {
-  const c =
-    tone === "warn"
-      ? { bg: "rgba(240,180,90,0.10)", bd: "rgba(240,180,90,0.38)", fg: "#F0B45A" }
-      : { bg: "transparent", bd: T.border, fg: T.muted };
-  return (
-    <span
-      className="inline-block text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap"
-      style={{ backgroundColor: c.bg, border: `1px solid ${c.bd}`, color: c.fg }}
-    >
-      {children}
-    </span>
-  );
+/* Préférence de vue persistée, lue via useSyncExternalStore : le serveur rend
+   toujours "list", le client se synchronise sur localStorage sans effet. */
+const VIEW_KEY = "admin_stock_view";
+let viewListeners: Array<() => void> = [];
+function subscribeView(cb: () => void) {
+  viewListeners.push(cb);
+  return () => {
+    viewListeners = viewListeners.filter((l) => l !== cb);
+  };
+}
+function readView(): "list" | "grid" {
+  return localStorage.getItem(VIEW_KEY) === "grid" ? "grid" : "list";
+}
+function changeView(v: "list" | "grid") {
+  localStorage.setItem(VIEW_KEY, v);
+  viewListeners.forEach((cb) => cb());
 }
 
 function RowActions({ v }: { v: StockItem }) {
@@ -56,16 +60,18 @@ function RowActions({ v }: { v: StockItem }) {
       <Link
         href={`/vehicules/${v.id}`}
         target="_blank"
-        className="inline-block py-2 -my-2 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
+        className="inline-flex items-center gap-1.5 py-2 -my-2 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
         style={{ color: T.textDim }}
       >
+        <Eye size={13} />
         Voir
       </Link>
       <Link
         href={`/admin/vehicules/${v.id}`}
-        className="inline-block py-2 -my-2 text-[11px] tracking-widest uppercase transition-colors hover:opacity-80"
+        className="inline-flex items-center gap-1.5 py-2 -my-2 text-[11px] tracking-widest uppercase transition-colors hover:opacity-80"
         style={{ color: T.accent }}
       >
+        <Pencil size={13} />
         Modifier
       </Link>
       <DeleteVehiculeButton id={v.id} />
@@ -83,18 +89,13 @@ export default function StockList({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState(initialFilter);
   const [sort, setSort] = useState("recent");
-  const [view, setView] = useState<"list" | "grid">("list");
+  const view = useSyncExternalStore(subscribeView, readView, () => "list");
 
-  useEffect(() => {
-    const v = localStorage.getItem("admin_stock_view");
-    if (v === "grid" || v === "list") setView(v);
-  }, []);
-  useEffect(() => {
+  // Suit le filtre venu de l'URL quand il change (ajustement pendant le rendu).
+  const [prevInitialFilter, setPrevInitialFilter] = useState(initialFilter);
+  if (prevInitialFilter !== initialFilter) {
+    setPrevInitialFilter(initialFilter);
     setFilter(initialFilter);
-  }, [initialFilter]);
-  function changeView(v: "list" | "grid") {
-    setView(v);
-    localStorage.setItem("admin_stock_view", v);
   }
 
   const filtered = useMemo(() => {
@@ -114,16 +115,17 @@ export default function StockList({
     return list;
   }, [vehicles, query, filter, sort]);
 
-  const viewBtn = (v: "list" | "grid", label: string) => (
+  const viewBtn = (v: "list" | "grid", label: string, Icon: typeof List) => (
     <button
       type="button"
       onClick={() => changeView(v)}
-      className="text-[11px] tracking-widest uppercase px-3 py-2 transition-colors"
+      className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase px-3 py-2 transition-colors"
       style={{
         backgroundColor: view === v ? T.accent : "transparent",
         color: view === v ? T.bg : T.textDim,
       }}
     >
+      <Icon size={13} />
       {label}
     </button>
   );
@@ -132,13 +134,16 @@ export default function StockList({
     <div>
       {/* Recherche + filtres de statut */}
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-4">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher une marque, un modèle…"
-          className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] sm:max-w-xs w-full"
-          style={fieldStyle}
-        />
+        <div className="relative sm:max-w-xs w-full">
+          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: T.muted }} />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher une marque, un modèle…"
+            className="pl-11 pr-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full"
+            style={fieldStyle}
+          />
+        </div>
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => {
             const active = filter === f.value;
@@ -181,8 +186,8 @@ export default function StockList({
             ))}
           </select>
           <div className="flex flex-shrink-0" style={{ border: `1px solid ${T.border}` }}>
-            {viewBtn("list", "Liste")}
-            {viewBtn("grid", "Grille")}
+            {viewBtn("list", "Liste", List)}
+            {viewBtn("grid", "Grille", LayoutGrid)}
           </div>
         </div>
       </div>
@@ -229,7 +234,7 @@ export default function StockList({
                   <span className="flex flex-wrap items-center gap-2 justify-end">
                     <StatusBadge status={v.status} />
                     {!v.isPublished && <Tag tone="muted">Masqué</Tag>}
-                    {!v.image && <Tag tone="warn">Sans photo</Tag>}
+                    {!v.image && <Tag tone="warning">Sans photo</Tag>}
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 pt-3" style={{ borderTop: `1px solid ${T.border}` }}>
@@ -265,7 +270,7 @@ export default function StockList({
                 <span className="text-sm font-semibold" style={{ color: T.text }}>{formatNumber(v.price)} €</span>
                 <StatusBadge status={v.status} />
                 {!v.isPublished && <Tag tone="muted">Masqué</Tag>}
-                {!v.image && <Tag tone="warn">Sans photo</Tag>}
+                {!v.image && <Tag tone="warning">Sans photo</Tag>}
                 <RowActions v={v} />
               </div>
             </div>

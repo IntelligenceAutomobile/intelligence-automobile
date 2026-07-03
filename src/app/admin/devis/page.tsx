@@ -1,21 +1,22 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Plus, Printer } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeTotals, formatEuro, formatDateFr, STATUS_LABEL, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus } from "@/lib/devis";
-import { T, AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle } from "../ui";
+import { T, TONE, type Tone, AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle } from "../ui";
 import DeleteQuoteButton from "./DeleteQuoteButton";
 
-const STATUS_STYLE: Record<QuoteStatus, { bg: string; bd: string; fg: string }> = {
-  brouillon: { bg: "transparent", bd: T.border, fg: T.muted },
-  envoye: { bg: "rgba(107,159,238,0.10)", bd: "rgba(107,159,238,0.35)", fg: "#6B9FEE" },
-  accepte: { bg: "rgba(78,209,161,0.10)", bd: "rgba(78,209,161,0.40)", fg: "#4ED1A1" },
-  refuse: { bg: "rgba(255,107,53,0.08)", bd: "rgba(255,107,53,0.35)", fg: "#FF6B35" },
+const STATUS_TONE: Record<QuoteStatus, Tone> = {
+  brouillon: "muted",
+  envoye: "accent",
+  accepte: "success",
+  refuse: "danger",
 };
 
 function QuoteStatusBadge({ status }: { status: string }) {
-  const k = (status in STATUS_STYLE ? status : "brouillon") as QuoteStatus;
-  const s = STATUS_STYLE[k];
+  const k = (status in STATUS_TONE ? status : "brouillon") as QuoteStatus;
+  const s = TONE[STATUS_TONE[k]];
   return (
     <span className="inline-block text-[10px] tracking-[0.15em] uppercase px-2.5 py-1 whitespace-nowrap" style={{ backgroundColor: s.bg, border: `1px solid ${s.bd}`, color: s.fg }}>
       {STATUS_LABEL[k]}
@@ -54,7 +55,8 @@ export default async function DevisListPage() {
         subtitle={`${rows.length} devis au total.`}
         action={
           <Link href="/admin/devis/nouveau" className={btnPrimaryClass} style={btnPrimaryStyle}>
-            + Nouveau devis
+            <Plus size={14} />
+            Nouveau devis
           </Link>
         }
       />
@@ -77,7 +79,8 @@ export default async function DevisListPage() {
               </Link>
               <span className="text-sm font-semibold hidden sm:inline flex-shrink-0" style={{ color: T.text }}>{formatEuro(qte.totalTTC)}</span>
               <QuoteStatusBadge status={qte.status} />
-              <Link href={`/admin/devis/${qte.id}/imprimer`} target="_blank" className="text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF] hidden md:inline" style={{ color: T.muted }}>
+              <Link href={`/admin/devis/${qte.id}/imprimer`} target="_blank" className="items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF] hidden md:inline-flex" style={{ color: T.muted }}>
+                <Printer size={13} />
                 PDF
               </Link>
               <DeleteQuoteButton id={qte.id} />

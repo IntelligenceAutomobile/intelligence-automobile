@@ -1,9 +1,14 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getAdminSession } from "@/lib/auth";
 import { LogoFull } from "@/components/Header";
 import AdminNav from "./AdminNav";
 import AdminLogout from "./AdminLogout";
-import { T, AccentLine, btnPrimaryClass, btnPrimaryStyle } from "./ui";
+import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
+import { ToastProvider } from "./toast";
+import { T } from "./ui";
+import "./admin.css";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getAdminSession();
@@ -11,45 +16,33 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Non connecté (page de login) : aucun habillage, la page gère son plein écran.
   if (!session) return <>{children}</>;
 
-  return (
-    <div className="min-h-screen" style={{ backgroundColor: T.bg, color: T.text }}>
-      <header
-        className="sticky top-0 z-40"
-        style={{
-          backgroundColor: "rgba(7,15,30,0.82)",
-          backdropFilter: "blur(28px)",
-          WebkitBackdropFilter: "blur(28px)",
-        }}
-      >
-        <AccentLine />
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center gap-3 sm:gap-5 flex-wrap" style={{ paddingTop: 14, paddingBottom: 14 }}>
-            <Link href="/admin" className="flex-shrink-0">
-              <LogoFull markHeight={40} layout="row" textScale={0.78} />
-            </Link>
-            <div className="h-5 w-px hidden sm:block" style={{ backgroundColor: T.border }} />
-            <AdminNav />
+  const cookieStore = await cookies();
+  const name = cookieStore.get("ia_collab_name")?.value?.trim() || session.admin.email.split("@")[0];
 
-            <div className="ml-auto flex items-center gap-3 sm:gap-5 flex-shrink-0">
-              <Link href="/admin/vehicules/nouveau" className={btnPrimaryClass} style={btnPrimaryStyle}>
-                + Ajouter
-              </Link>
-              <Link
-                href="/"
-                target="_blank"
-                className="hidden sm:inline text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
-                style={{ color: T.textDim }}
-              >
-                Voir le site →
+  return (
+    <ToastProvider>
+      <div className="min-h-screen flex" style={{ backgroundColor: T.bg, color: T.text }}>
+        <Sidebar name={name} />
+
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile : logo + nav horizontale (la sidebar est masquée sous lg) */}
+          <div className="lg:hidden" style={{ borderBottom: `1px solid ${T.border}`, backgroundColor: T.surfaceAlt }}>
+            <div className="flex items-center justify-between px-4 pt-3">
+              <Link href="/admin">
+                <LogoFull markHeight={32} layout="row" textScale={0.66} />
               </Link>
               <AdminLogout />
             </div>
+            <div className="px-2 overflow-x-auto">
+              <AdminNav />
+            </div>
           </div>
-        </div>
-        <div style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent)" }} />
-      </header>
 
-      <main>{children}</main>
-    </div>
+          <Topbar />
+
+          <main className="flex-1 min-w-0">{children}</main>
+        </div>
+      </div>
+    </ToastProvider>
   );
 }

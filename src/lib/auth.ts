@@ -13,7 +13,8 @@ export async function getAdminSession() {
 
   if (!session) return null;
   if (session.expiresAt < new Date()) {
-    await prisma.session.delete({ where: { id: sessionId } });
+    // deleteMany : idempotent si deux requêtes concurrentes purgent la même session expirée.
+    await prisma.session.deleteMany({ where: { id: sessionId } });
     return null;
   }
 

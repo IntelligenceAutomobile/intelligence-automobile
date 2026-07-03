@@ -17,7 +17,22 @@ export const T = {
   accent: "#6B9FEE",
   accentDark: "#4B7FD8",
   danger: "#FF6B35",
+  success: "#4ED1A1",
+  warning: "#F0B45A",
 } as const;
+
+/* ── Couleurs de remplissage des graphiques (validées daltonisme sur surface sombre) ── */
+export const CHART = { blue: "#4B7FD8", amber: "#C08428", green: "#2FA97D", spark: "#566B93" } as const;
+
+/* ── Teintes translucides par tonalité (badges, tags, alertes) ── */
+export const TONE = {
+  accent: { bg: "rgba(107,159,238,0.10)", bd: "rgba(107,159,238,0.35)", fg: T.accent },
+  success: { bg: "rgba(78,209,161,0.10)", bd: "rgba(78,209,161,0.40)", fg: T.success },
+  warning: { bg: "rgba(240,180,90,0.10)", bd: "rgba(240,180,90,0.38)", fg: T.warning },
+  danger: { bg: "rgba(255,107,53,0.08)", bd: "rgba(255,107,53,0.35)", fg: T.danger },
+  muted: { bg: "transparent", bd: T.border, fg: T.muted },
+} as const;
+export type Tone = keyof typeof TONE;
 
 /* ── Champs de formulaire ── */
 export const fieldStyle: CSSProperties = {
@@ -166,11 +181,13 @@ export function StatCard({
   value,
   href,
   hint,
+  icon,
 }: {
   label: string;
   value: number | string;
   href?: string;
   hint?: string;
+  icon?: ReactNode;
 }) {
   const cls = "block p-6 transition-all duration-200" + (href ? " hover:-translate-y-px hover:border-[#6B9FEE]" : "");
   const style: CSSProperties = { backgroundColor: T.surface, border: `1px solid ${T.border}` };
@@ -178,7 +195,7 @@ export function StatCard({
     <>
       <div className="flex items-start justify-between">
         <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-4" />
-        {href && <span className="text-sm" style={{ color: T.muted }}>→</span>}
+        {icon ? <span style={{ color: T.muted }}>{icon}</span> : href && <span className="text-sm" style={{ color: T.muted }}>→</span>}
       </div>
       <div className="text-3xl sm:text-4xl font-light mb-1 break-words" style={{ color: T.accent }}>
         {value}
@@ -203,6 +220,60 @@ export function StatCard({
   return (
     <div className={cls} style={style}>
       {inner}
+    </div>
+  );
+}
+
+/* ── Étiquette générique par tonalité ── */
+export function Tag({ children, tone = "muted" }: { children: ReactNode; tone?: Tone }) {
+  const c = TONE[tone];
+  return (
+    <span
+      className="inline-block text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap"
+      style={{ backgroundColor: c.bg, border: `1px solid ${c.bd}`, color: c.fg }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* ── Squelettes de chargement (pages loading.tsx) ── */
+export function Skeleton({ w, h = 14, className = "" }: { w?: number | string; h?: number; className?: string }) {
+  return (
+    <span
+      className={`block animate-pulse ${className}`}
+      style={{ width: w ?? "100%", height: h, backgroundColor: T.border, opacity: 0.55 }}
+    />
+  );
+}
+
+export function SkeletonStatCard() {
+  return (
+    <div className="p-6" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+      <div style={{ width: 24, height: 2, backgroundColor: T.border }} className="mb-4" />
+      <Skeleton w={90} h={34} className="mb-2" />
+      <Skeleton w={110} h={10} />
+    </div>
+  );
+}
+
+export function SkeletonRows({ count = 5 }: { count?: number }) {
+  return (
+    <div style={{ border: `1px solid ${T.border}` }}>
+      {Array.from({ length: count }, (_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-4 px-4 py-4"
+          style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
+        >
+          <Skeleton w={64} h={48} />
+          <div className="flex-1 space-y-2">
+            <Skeleton w={180} h={12} />
+            <Skeleton w={120} h={10} />
+          </div>
+          <Skeleton w={70} h={12} />
+        </div>
+      ))}
     </div>
   );
 }

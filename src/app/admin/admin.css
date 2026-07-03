@@ -1,0 +1,58 @@
+/* Effets visuels du back-office : entrées en cascade, halos, relief.
+   Préfixe adm- pour éviter toute collision avec la vitrine. */
+
+@keyframes adm-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.adm-enter {
+  animation: adm-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.adm-card {
+  position: relative;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.adm-card:hover {
+  border-color: rgba(199, 211, 232, 0.28) !important;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(199, 211, 232, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Filet argenté en tête de carte (parent en position relative) */
+.adm-hairline {
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(199, 211, 232, 0.35), transparent);
+}
+
+/* Halos de profondeur en tête de page */
+.adm-halos {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 420px;
+  pointer-events: none;
+  background:
+    radial-gradient(640px 300px at 18% -5%, rgba(107, 159, 238, 0.13), transparent 70%),
+    radial-gradient(560px 280px at 85% 0%, rgba(199, 211, 232, 0.07), transparent 70%);
+}
+
+.adm-nav-item {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.adm-nav-item:hover {
+  color: #f0f5ff !important;
+  background-color: rgba(107, 159, 238, 0.06);
+}
+
+/* Zoom doux des photos véhicules */
+.adm-veh img {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.adm-veh:hover img {
+  transform: scale(1.06);
+}
