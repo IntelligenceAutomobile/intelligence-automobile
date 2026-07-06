@@ -110,31 +110,41 @@ export default async function ConvoyagePage2() {
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-              {s.steps.map((step, i) => (
-                <div
-                  key={step.num}
-                  className="px-8 py-6"
-                  style={{ borderLeft: i === 0 ? "none" : "1px solid #1B3055" }}
-                >
-                  <span
-                    className="block font-black leading-none mb-6"
-                    style={{
-                      fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
-                      color: "#6B9FEE",
-                      letterSpacing: "-0.04em",
-                    }}
+              {s.steps.map((step) => (
+                <div key={step.num} className="relative">
+                  <div
+                    className="px-8 py-6"
+                    style={{ borderLeft: "2px solid #6B9FEE" }}
                   >
-                    {step.num}
-                  </span>
-                  <h3
-                    className="font-black uppercase mb-4"
-                    style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}
-                  >
-                    {step.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#DCE8F8", fontWeight: 400 }}>
-                    {step.desc}
-                  </p>
+                    <div
+                      style={{
+                        borderLeft: "2px solid #6B9FEE",
+                        paddingLeft: "16px",
+                        marginBottom: "1.5rem",
+                      }}
+                    >
+                      <span
+                        className="font-black leading-none"
+                        style={{
+                          fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
+                          color: "#6B9FEE",
+                          letterSpacing: "-0.04em",
+                          display: "block",
+                        }}
+                      >
+                        {step.num}
+                      </span>
+                    </div>
+                    <h3
+                      className="font-black uppercase mb-4"
+                      style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: "#DCE8F8", fontWeight: 400 }}>
+                      {step.desc}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
