@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "@/i18n/context";
 import YearField from "@/components/YearField";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -266,6 +267,16 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
           />
         </div>
       </SectionCard>
+
+      <div
+        className="flex items-start gap-3 p-4"
+        style={{ backgroundColor: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.3)" }}
+      >
+        <WhatsAppIcon size={20} />
+        <p className="text-sm leading-relaxed" style={{ color: "#DCE8F8" }}>
+          {f.whatsappNote}
+        </p>
+      </div>
 
       <button
         type="submit"
