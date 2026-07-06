@@ -178,7 +178,7 @@ export async function seedShowroom(prisma: PrismaClient) {
       clientCompany: "TransCar SPRL",
       clientEmail: "m.dubois@transcar.be",
       clientPhone: "+32 475 11 22 33",
-      issueDate: dayKey(-1),
+      issueDate: dayKey(-12), // sans réponse depuis 12 j → apparaît dans les relances
       vehicleId: vehicleIds[3] ?? null,
       items: JSON.stringify([
         veh3
@@ -247,7 +247,7 @@ export async function seedShowroom(prisma: PrismaClient) {
       clientName: "Marc Dubois",
       clientCompany: "TransCar SPRL",
       clientEmail: "m.dubois@transcar.be",
-      issueDate: dayKey(-1),
+      issueDate: dayKey(-18), // impayée depuis 18 j → apparaît dans les relances
       vehicleId: vehicleIds[3] ?? null,
       paymentTerms: "Facture d'acompte. Le solde fera l'objet d'une facture ultérieure.",
       items: JSON.stringify([

@@ -94,6 +94,11 @@ model Quote {
   paidDate      String  @default("")         // YYYY-MM-DD de paiement
   sourceQuoteId String?                        // devis d'origine (conversion)
 
+  // Relances (suivi commercial / paiement)
+  relanceCount       Int    @default(0)
+  lastRelanceDate    String @default("")      // YYYY-MM-DD de la dernière relance
+  relanceSnoozeUntil String @default("")      // YYYY-MM-DD : masqué du centre de relances jusqu'à
+
   // Client (destinataire)
   clientName    String @default("")
   clientCompany String @default("")
