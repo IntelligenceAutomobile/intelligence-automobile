@@ -101,159 +101,6 @@ export default async function AideVenteV2Page() {
           </div>
         </section>
 
-        {/* ── COMPARATIF ── */}
-        <section
-          className="border-t border-b"
-          style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}
-        >
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
-            <p
-              className="text-[10px] tracking-[0.32em] uppercase mb-4 text-center font-semibold"
-              style={{ color: "#DCE8F8" }}
-            >
-              {s.comparativeLabel}
-            </p>
-            <h2
-              className="font-black uppercase leading-[0.9] text-center mb-20"
-              style={{
-                fontSize: "clamp(2rem, 3.8vw, 3.4rem)",
-                letterSpacing: "-0.03em",
-              }}
-            >
-              {s.comparativeTitle}
-            </h2>
-
-            {/* Table desktop */}
-            <div
-              className="hidden md:block overflow-hidden"
-              style={{ border: "1px solid #1B3055" }}
-            >
-              <div
-                className="grid grid-cols-4"
-                style={{ backgroundColor: "#080F1C", borderBottom: "1px solid #1B3055" }}
-              >
-                <div className="px-6 py-5" />
-                {[s.colDealer, s.colSolo, s.colIA].map(
-                  (col, i) => (
-                    <div
-                      key={col}
-                      className="px-6 py-5"
-                      style={{
-                        borderLeft: "1px solid #1B3055",
-                        backgroundColor:
-                          i === 2 ? "rgba(107,159,238,0.04)" : undefined,
-                      }}
-                    >
-                      <span
-                        className="text-[10px] tracking-[0.2em] uppercase font-bold"
-                        style={{ color: i === 2 ? "#6B9FEE" : "#DCE8F8" }}
-                      >
-                        {col}
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
-
-              {s.comparatif.map((row, i) => (
-                <div
-                  key={row.critere}
-                  className="grid grid-cols-4"
-                  style={{
-                    borderBottom: i < s.comparatif.length - 1 ? "1px solid #1B3055" : "none",
-                  }}
-                >
-                  <div className="px-6 py-5">
-                    <span
-                      className="text-[11px] tracking-[0.18em] uppercase font-semibold"
-                      style={{ color: "#DCE8F8" }}
-                    >
-                      {row.critere}
-                    </span>
-                  </div>
-                  <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#DCE8F8", fontWeight: 500 }}>
-                      {row.dealer}
-                    </span>
-                  </div>
-                  <div className="px-6 py-5" style={{ borderLeft: "1px solid #1B3055" }}>
-                    <span className="text-sm" style={{ color: "#DCE8F8", fontWeight: 500 }}>
-                      {row.seul}
-                    </span>
-                  </div>
-                  <div
-                    className="px-6 py-5"
-                    style={{
-                      borderLeft: "1px solid #1B3055",
-                      backgroundColor: "rgba(107,159,238,0.04)",
-                    }}
-                  >
-                    <span className="text-sm font-medium" style={{ color: "#F0F5FF" }}>
-                      {row.ia}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Table mobile */}
-            <div className="md:hidden space-y-4">
-              {s.comparatif.map((row) => (
-                <div key={row.critere} style={{ border: "1px solid #1B3055" }}>
-                  <div
-                    className="px-4 py-3"
-                    style={{
-                      backgroundColor: "#080F1C",
-                      borderBottom: "1px solid #1B3055",
-                    }}
-                  >
-                    <span
-                      className="text-[10px] tracking-[0.18em] uppercase font-bold"
-                      style={{ color: "#DCE8F8" }}
-                    >
-                      {row.critere}
-                    </span>
-                  </div>
-                  <div className="divide-y" style={{ borderColor: "#1B3055" }}>
-                    {[
-                      { label: s.colDealer, val: row.dealer, highlight: false },
-                      { label: s.colSolo, val: row.seul, highlight: false },
-                      { label: s.colIA, val: row.ia, highlight: true },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className="flex justify-between items-center px-4 py-3"
-                        style={{
-                          backgroundColor: item.highlight
-                            ? "rgba(107,159,238,0.04)"
-                            : undefined,
-                        }}
-                      >
-                        <span
-                          className="text-[10px]"
-                          style={{ color: item.highlight ? "#6B9FEE" : "#DCE8F8" }}
-                        >
-                          {item.label}
-                        </span>
-                        <span
-                          className="text-sm text-right"
-                          style={{
-                            maxWidth: "55%",
-                            color: item.highlight ? "#F0F5FF" : "#DCE8F8",
-                            fontWeight: item.highlight ? 600 : 500,
-                          }}
-                        >
-                          {item.val}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ── ÉTAPES ── */}
         <section
           className="border-b"
@@ -261,24 +108,11 @@ export default async function AideVenteV2Page() {
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              {s.steps.map((step, i) => (
+              {s.steps.map((step) => (
                 <div key={step.num} className="relative">
-                  {i > 0 && (
-                    <div
-                      className="hidden lg:block absolute left-0 top-0 bottom-0 w-px"
-                      style={{
-                        background:
-                          "linear-gradient(to bottom, transparent 0%, #1B3055 20%, #1B3055 80%, transparent 100%)",
-                      }}
-                    />
-                  )}
                   <div
                     className="px-8 py-6"
-                    style={{
-                      borderLeft:
-                        i > 0 ? "2px solid #6B9FEE" : undefined,
-                      ...(i > 0 && { borderLeftColor: "#6B9FEE" }),
-                    }}
+                    style={{ borderLeft: "2px solid #6B9FEE" }}
                   >
                     <div
                       style={{

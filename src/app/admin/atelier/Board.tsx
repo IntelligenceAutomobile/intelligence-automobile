@@ -33,6 +33,8 @@ interface TrashNote {
   category: string;
   author: string;
   imageUrl: string | null;
+  images: string;
+  attachments: string;
   deletedAt: string;
   createdAt: string;
 }
@@ -52,6 +54,11 @@ interface Note {
   createdAt: string;
   updatedAt: string;
 }
+
+// Actions annulables par le bouton « Annuler » de l'atelier (pile en mémoire de session).
+type UndoAction =
+  | { kind: "delete"; note: Note }
+  | { kind: "move"; id: string; from: Status; to: Status };
 
 const CATEGORIES = [
   { id: "général",       label: "Général",       color: "#C8D8EE" },
@@ -119,6 +126,7 @@ export default function Board({ authorName }: { authorName: string }) {
   const att                             = useAttachments();
   const [adding, setAdding]             = useState(false);
   const [overlay, setOverlay]           = useState<{ urls: string[]; index: number } | null>(null);
+  const [undoStack, setUndoStack]       = useState<UndoAction[]>([]);
 
   // Load lastSeen from localStorage and mark initial category seen
   useEffect(() => {
@@ -230,7 +238,8 @@ export default function Board({ authorName }: { authorName: string }) {
     setAdding(false);
   }
 
-  async function moveNote(id: string, newStatus: Status) {
+  // Applique un changement de statut sans l'empiler dans « Annuler » (réutilisé par l'annulation).
+  async function applyMove(id: string, newStatus: Status) {
     setNotes(prev => prev.map(n =>
       n.id === id ? { ...n, status: newStatus, updatedAt: new Date().toISOString() } : n
     ));
@@ -239,6 +248,12 @@ export default function Board({ authorName }: { authorName: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
+  }
+
+  async function moveNote(id: string, newStatus: Status) {
+    const from = notes.find(n => n.id === id)?.status;
+    await applyMove(id, newStatus);
+    if (from && from !== newStatus) pushUndo({ kind: "move", id, from, to: newStatus });
   }
 
   async function editNote(id: string, newContent: string) {
@@ -260,12 +275,50 @@ export default function Board({ authorName }: { authorName: string }) {
   }
 
   async function deleteNote(id: string) {
+    const note = notes.find(n => n.id === id);
     setNotes(prev => prev.filter(n => n.id !== id));
     const res = await fetch(`/api/collab/notes/${id}`, { method: "DELETE" });
     if (res.ok) {
       const deleted: TrashNote = await res.json();
       setTrashNotes(prev => prev ? [deleted, ...prev] : [deleted]);
+      if (note) pushUndo({ kind: "delete", note });
     }
+  }
+
+  // Restaure une note supprimée : elle quitte la corbeille et revient sur le tableau.
+  async function restoreNote(note: Note) {
+    setTrashNotes(prev => (prev ? prev.filter(n => n.id !== note.id) : prev));
+    setNotes(prev => (prev.some(n => n.id === note.id) ? prev : [note, ...prev]));
+    await fetch(`/api/collab/notes/${note.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ restore: true }),
+    });
+  }
+
+  // Restauration directe depuis la corbeille (« faire le contraire »). Recharge le
+  // tableau pour récupérer la note complète, commentaires inclus.
+  async function restoreFromTrash(id: string) {
+    setTrashNotes(prev => (prev ? prev.filter(n => n.id !== id) : prev));
+    await fetch(`/api/collab/notes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ restore: true }),
+    });
+    await fetchNotes();
+  }
+
+  function pushUndo(action: UndoAction) {
+    setUndoStack(prev => [...prev, action].slice(-25)); // borne mémoire (dernières actions)
+  }
+
+  // Annule la dernière action (suppression ou changement de statut). Un clic = une action.
+  async function undo() {
+    const action = undoStack[undoStack.length - 1];
+    if (!action) return;
+    setUndoStack(prev => prev.slice(0, -1));
+    if (action.kind === "delete") await restoreNote(action.note);
+    else await applyMove(action.id, action.from);
   }
 
   async function changeName() {
@@ -275,6 +328,13 @@ export default function Board({ authorName }: { authorName: string }) {
 
   const activeCat = CATEGORIES.find(c => c.id === selectedCat)!;
   const visibleNotes = notes.filter(n => n.category === selectedCat);
+
+  const lastUndo = undoStack[undoStack.length - 1];
+  const undoLabel = !lastUndo
+    ? ""
+    : lastUndo.kind === "delete"
+    ? "Annuler la suppression"
+    : `Annuler le déplacement vers « ${COLUMNS.find(c => c.status === lastUndo.to)?.label ?? ""} »`;
 
   return (
     <div className="flex flex-col md:flex-row md:h-[calc(100vh-70px)]" style={{ backgroundColor: T.bg, color: T.text }}>
@@ -458,11 +518,26 @@ export default function Board({ authorName }: { authorName: string }) {
               </span>
             </>
           )}
+
+          <div className="flex-1" />
+          {lastUndo && (
+            <button
+              onClick={undo}
+              title={undoLabel}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs whitespace-nowrap flex-shrink-0"
+              style={{ border: "1px solid #2C4B7C", color: "#9CC0FF", backgroundColor: "#0D1E38" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#6B9FEE"; e.currentTarget.style.color = "#F0F5FF"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#2C4B7C"; e.currentTarget.style.color = "#9CC0FF"; }}
+            >
+              <span style={{ fontSize: "13px" }}>↩</span>
+              <span>Annuler</span>
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 p-4 md:px-6 md:py-7">
           {selectedCat === "__trash__" && (
-            <TrashView notes={trashNotes ?? []} loading={loadingTrash} />
+            <TrashView notes={trashNotes ?? []} loading={loadingTrash} onOpenImage={(urls, index) => setOverlay({ urls, index })} onRestore={restoreFromTrash} />
           )}
           {selectedCat !== "__trash__" && <>
           {/* Formulaire */}
@@ -596,6 +671,66 @@ export default function Board({ authorName }: { authorName: string }) {
 
 /* ─── NoteCard ─────────────────────────────────────────── */
 
+// Extrait photos (URL) et fichiers d'une note, en fusionnant l'ancien format
+// (imageUrl / images) et le nouveau (attachments), sans doublon. Partagé entre
+// le tableau (NoteCard) et la corbeille (TrashView).
+function extractMedia(note: { attachments: string; images: string; imageUrl: string | null }) {
+  const parsed = parseAttachments(note.attachments);
+  const legacyImages: string[] = (() => {
+    try {
+      const arr = JSON.parse(note.images);
+      if (Array.isArray(arr) && arr.length > 0) return arr.filter((u): u is string => typeof u === "string");
+    } catch {}
+    return note.imageUrl ? [note.imageUrl] : [];
+  })();
+  const images = Array.from(new Set([
+    ...legacyImages,
+    ...parsed.filter(a => a.kind === "image").map(a => a.url),
+  ]));
+  const files = parsed.filter(a => a.kind === "file");
+  return { images, files };
+}
+
+// Rendu partagé des pièces jointes : grille de photos cliquables + fichiers.
+function NoteMedia({ images, files, onOpenImage }: {
+  images: string[];
+  files: Attachment[];
+  onOpenImage: (urls: string[], index: number) => void;
+}) {
+  if (images.length === 0 && files.length === 0) return null;
+  return (
+    <>
+      {images.length > 0 && (
+        images.length === 1 ? (
+          <button type="button" onClick={() => onOpenImage(images, 0)} className="block w-full mb-3 overflow-hidden border" style={{ borderColor: "#1B3055" }}>
+            <img src={images[0]} alt="photo" className="w-full object-cover" style={{ maxHeight: "120px", objectPosition: "top" }} />
+          </button>
+        ) : (
+          <div className="grid grid-cols-3 gap-1 mb-3">
+            {images.slice(0, 6).map((url, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onOpenImage(images, i)}
+                className="relative overflow-hidden border"
+                style={{ borderColor: "#1B3055", aspectRatio: "1 / 1" }}
+              >
+                <img src={url} alt="photo" className="w-full h-full object-cover" />
+                {i === 5 && images.length > 6 && (
+                  <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold" style={{ backgroundColor: "rgba(11,25,48,0.75)", color: "#F0F5FF" }}>
+                    +{images.length - 6}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )
+      )}
+      {files.length > 0 && <FileChips files={files} className="mb-3" />}
+    </>
+  );
+}
+
 function NoteCard({
   note, catColor, authorName, onMove, onEdit, onEditUrgency, onDelete, onOpenImage,
 }: {
@@ -608,20 +743,7 @@ function NoteCard({
   onDelete: (id: string) => void;
   onOpenImage: (urls: string[], index: number) => void;
 }) {
-  const noteAttachments = parseAttachments(note.attachments);
-  const legacyImages: string[] = (() => {
-    try {
-      const parsed = JSON.parse(note.images);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter((u): u is string => typeof u === "string");
-    } catch {}
-    return note.imageUrl ? [note.imageUrl] : [];
-  })();
-  // Anciennes notes (champ legacy `images`/`imageUrl`) + nouvelles (`attachments`), sans doublon.
-  const images: string[] = Array.from(new Set([
-    ...legacyImages,
-    ...noteAttachments.filter(a => a.kind === "image").map(a => a.url),
-  ]));
-  const noteFiles = noteAttachments.filter(a => a.kind === "file");
+  const { images, files: noteFiles } = extractMedia(note);
 
   const [isEditing, setIsEditing]         = useState(false);
   const [editContent, setEditContent]     = useState(note.content);
@@ -696,34 +818,7 @@ function NoteCard({
           <p className="text-sm mb-3 leading-relaxed" style={{ color: "#F0F5FF", whiteSpace: "pre-wrap" }}>{note.content}</p>
         )}
 
-        {images.length > 0 && !isEditing && (
-          images.length === 1 ? (
-            <button type="button" onClick={() => onOpenImage(images, 0)} className="block w-full mb-3 overflow-hidden border" style={{ borderColor: "#1B3055" }}>
-              <img src={images[0]} alt="photo" className="w-full object-cover" style={{ maxHeight: "120px", objectPosition: "top" }} />
-            </button>
-          ) : (
-            <div className="grid grid-cols-3 gap-1 mb-3">
-              {images.slice(0, 6).map((url, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => onOpenImage(images, i)}
-                  className="relative overflow-hidden border"
-                  style={{ borderColor: "#1B3055", aspectRatio: "1 / 1" }}
-                >
-                  <img src={url} alt="photo" className="w-full h-full object-cover" />
-                  {i === 5 && images.length > 6 && (
-                    <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold" style={{ backgroundColor: "rgba(11,25,48,0.75)", color: "#F0F5FF" }}>
-                      +{images.length - 6}
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )
-        )}
-
-        {noteFiles.length > 0 && !isEditing && <FileChips files={noteFiles} className="mb-3" />}
+        {!isEditing && <NoteMedia images={images} files={noteFiles} onOpenImage={onOpenImage} />}
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">
@@ -911,7 +1006,12 @@ function CommentItem({
 
 /* ─── TrashView ────────────────────────────────────────── */
 
-function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean }) {
+function TrashView({ notes, loading, onOpenImage, onRestore }: {
+  notes: TrashNote[];
+  loading: boolean;
+  onOpenImage: (urls: string[], index: number) => void;
+  onRestore: (id: string) => void;
+}) {
   if (loading) {
     return <div className="text-sm text-center py-16" style={{ color: "#1B3055" }}>Chargement...</div>;
   }
@@ -953,7 +1053,9 @@ function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean })
               <span className="text-xs px-2 py-0.5" style={{ backgroundColor: "#1B3055", color: "#7C92B5" }}>{group.items.length}</span>
             </div>
             <div className="space-y-3">
-              {group.items.map(note => (
+              {group.items.map(note => {
+                const { images, files } = extractMedia(note);
+                return (
                 <div
                   key={note.id}
                   style={{
@@ -967,17 +1069,32 @@ function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean })
                   <p className="text-sm leading-relaxed mb-3" style={{ color: "#C8D8EE", whiteSpace: "pre-wrap" }}>
                     {note.content}
                   </p>
+                  <NoteMedia images={images} files={files} onOpenImage={onOpenImage} />
                   <div className="flex items-center gap-2 flex-wrap text-xs">
                     <span style={{ color: getCatColor(note.category) }}>{note.category}</span>
                     <span style={{ color: "#1B3055" }}>·</span>
                     <span style={{ color: "#7C92B5" }}>{note.author}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs mt-2" style={{ color: "#9CC0FF" }}>
-                    <span style={{ fontSize: "11px" }}>🗑</span>
-                    <span>Supprimé le {fmtDeletedAt(note.deletedAt)}</span>
+                  <div className="flex items-center justify-between gap-3 mt-2">
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CC0FF" }}>
+                      <span style={{ fontSize: "11px" }}>🗑</span>
+                      <span>Supprimé le {fmtDeletedAt(note.deletedAt)}</span>
+                    </div>
+                    <button
+                      onClick={() => onRestore(note.id)}
+                      title="Restaurer sur le tableau"
+                      className="flex items-center gap-1.5 px-2.5 py-1 text-xs whitespace-nowrap flex-shrink-0"
+                      style={{ border: "1px solid #2C4B7C", color: "#9CC0FF", backgroundColor: "#0D1E38" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "#6B9FEE"; e.currentTarget.style.color = "#F0F5FF"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "#2C4B7C"; e.currentTarget.style.color = "#9CC0FF"; }}
+                    >
+                      <span style={{ fontSize: "12px" }}>↩</span>
+                      <span>Restaurer</span>
+                    </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}

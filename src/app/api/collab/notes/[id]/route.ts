@@ -14,6 +14,12 @@ export async function PATCH(
   const { id } = await params;
   const body = await req.json();
 
+  // Restauration depuis la corbeille (annulation d'une suppression) : un clic « Annuler ».
+  if (body.restore === true) {
+    const restored = await prisma.collabNote.update({ where: { id }, data: { deletedAt: null } });
+    return NextResponse.json(restored);
+  }
+
   const data = Object.fromEntries(
     Object.entries(body).filter(([k]) => ALLOWED_FIELDS.includes(k))
   );
