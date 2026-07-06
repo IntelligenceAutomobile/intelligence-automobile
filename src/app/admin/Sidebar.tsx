@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
-  CalendarClock, Radio, ExternalLink, Palette, RotateCcw, type LucideIcon,
+  CalendarClock, Radio, HandCoins, ExternalLink, Palette, RotateCcw, type LucideIcon,
 } from "lucide-react";
 import { T } from "./ui";
 import AdminLogout from "./AdminLogout";
@@ -25,6 +25,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: ReceiptText, label: "Factures", href: "/admin/factures" },
       { icon: BellRing, label: "Relances", href: "/admin/relances" },
       { icon: Users, label: "Clients & leads", href: "/admin/clients" },
+      { icon: HandCoins, label: "Reprises", href: "/admin/reprises" },
       { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning" },
       { icon: Radio, label: "Diffusion", href: "/admin/diffusion" },
     ],

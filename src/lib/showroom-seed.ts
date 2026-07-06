@@ -144,6 +144,31 @@ export async function seedShowroom(prisma: PrismaClient) {
     clientIds.push(created.id);
   }
 
+  /* ── Reprise : estimation d'un véhicule client (lead source=reprise) ── */
+  if (clientIds[0]) {
+    await prisma.lead.create({
+      data: {
+        clientId: clientIds[0],
+        source: "reprise",
+        stage: "nouveau",
+        title: "Reprise Peugeot 3008 (2019)",
+        budget: 16500,
+        createdAt: daysAgo(3),
+        events: {
+          create: [
+            { type: "creation", content: "Estimation de reprise créée", author: "Julie", createdAt: daysAgo(3) },
+            {
+              type: "note",
+              content: "Peugeot 3008 (2019)\n78 000 km · Diesel · Automatique\nÉtat : bon état général, léger impact pare-chocs arrière\nEstimation proposée : 16 500 €",
+              author: "Julie",
+              createdAt: daysAgo(3),
+            },
+          ],
+        },
+      },
+    });
+  }
+
   /* ── Planning : semaine vivante ── */
   await prisma.appointment.createMany({
     data: [
