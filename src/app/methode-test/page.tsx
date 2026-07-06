@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getTranslations } from "@/lib/i18n-server";
+import Link from "next/link";
 
 export const metadata = {
   title: "Méthode — page de test (3 concepts)",
@@ -305,13 +306,13 @@ function CtaButtons({ contact, stock, center, stack }: { contact: string; stock:
       >
         {contact}
       </a>
-      <a
+      <Link
         href="/vehicules"
         className="inline-block text-center px-8 py-4 text-xs font-semibold tracking-widest uppercase border transition-colors duration-300"
         style={{ borderColor: "rgba(107,159,238,0.4)", color: "#C8D8EE" }}
       >
         {stock}
-      </a>
+      </Link>
     </div>
   );
 }
@@ -1834,7 +1835,7 @@ export default async function MethodeTestPage() {
               <p style={{ fontSize: "15px", color: "#A8C6F4", lineHeight: 1.8, maxWidth: "520px", marginBottom: "1.8rem" }}>{s.ctaSubtitle}</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "1.75rem", alignItems: "center" }}>
                 <a href="/recherche-personnalisee" className="uppercase" style={{ color: "#6B9FEE", fontWeight: 700, fontSize: "0.85rem", letterSpacing: "0.1em" }}>{s.ctaContact} →</a>
-                <a href="/vehicules" className="uppercase" style={{ color: "#C8D8EE", fontWeight: 600, fontSize: "0.85rem", letterSpacing: "0.1em" }}>{s.ctaStock} →</a>
+                <Link href="/vehicules" className="uppercase" style={{ color: "#C8D8EE", fontWeight: 600, fontSize: "0.85rem", letterSpacing: "0.1em" }}>{s.ctaStock} →</Link>
               </div>
             </div>
           </section>
