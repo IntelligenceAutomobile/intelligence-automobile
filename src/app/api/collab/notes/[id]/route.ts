@@ -33,10 +33,9 @@ export async function DELETE(
 
   const note = await prisma.collabNote.findUnique({ where: { id } });
   if (!note) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
-  if (note.author !== session.name) {
-    return NextResponse.json({ error: "Seul l'auteur peut supprimer cette note" }, { status: 403 });
-  }
 
+  // Tout membre de l'équipe peut envoyer une note à la corbeille (soft-delete).
+  // La corbeille conserve l'historique : aucune suppression définitive n'est exposée.
   const deleted = await prisma.collabNote.update({
     where: { id },
     data: { deletedAt: new Date() },

@@ -96,6 +96,14 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
+// Date de suppression complète et lisible pour la corbeille : « 6 juillet 2026 à 14:32 ».
+function fmtDeletedAt(iso: string) {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const heure = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return `${date} à ${heure}`;
+}
+
 const LS_KEY = "ia_collab_seen";
 
 export default function Board({ authorName }: { authorName: string }) {
@@ -747,9 +755,7 @@ function NoteCard({
                 )}
                 {prev && <button onClick={() => onMove(note.id, prev)} title="Reculer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#C8D8EE" }}>←</button>}
                 {next && <button onClick={() => onMove(note.id, next)} title="Avancer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#6B9FEE" }}>→</button>}
-                {note.author === authorName && (
-                  <button onClick={() => setConfirmDelete(true)} title="Supprimer" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
-                )}
+                <button onClick={() => setConfirmDelete(true)} title="Envoyer à la corbeille" className="w-7 h-7 flex items-center justify-center text-xs" style={{ color: "#1B3055" }} onMouseEnter={e => (e.currentTarget.style.color = "#E5635A")} onMouseLeave={e => (e.currentTarget.style.color = "#1B3055")}>✕</button>
               </>
             )}
           </div>
@@ -961,12 +967,14 @@ function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean })
                   <p className="text-sm leading-relaxed mb-3" style={{ color: "#C8D8EE", whiteSpace: "pre-wrap" }}>
                     {note.content}
                   </p>
-                  <div className="flex items-center gap-2 flex-wrap text-xs" style={{ color: "#1B3055" }}>
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
                     <span style={{ color: getCatColor(note.category) }}>{note.category}</span>
-                    <span>·</span>
-                    <span>{note.author}</span>
-                    <span>·</span>
-                    <span>Supprimé le {fmtDate(note.deletedAt)}</span>
+                    <span style={{ color: "#1B3055" }}>·</span>
+                    <span style={{ color: "#7C92B5" }}>{note.author}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs mt-2" style={{ color: "#9CC0FF" }}>
+                    <span style={{ fontSize: "11px" }}>🗑</span>
+                    <span>Supprimé le {fmtDeletedAt(note.deletedAt)}</span>
                   </div>
                 </div>
               ))}
