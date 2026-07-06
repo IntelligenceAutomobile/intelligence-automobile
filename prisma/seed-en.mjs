@@ -3,22 +3,33 @@
  * Run with: node prisma/seed-en.mjs
  */
 import { createClient } from '@libsql/client';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { config } from 'dotenv';
 
-const db = createClient({
-  url: 'libsql://intelligence-automobile-intelligenceautomobile.aws-eu-west-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Nzk5NjQ1NjAsImlkIjoiMDE5ZTZlMjctM2UwMS03NTQxLThlMWQtZmU0MzMzNzA3MmIwIiwicmlkIjoiMWY5MWEzNzctNTI0Yy00YTI1LTlkYzEtZmYwMjM0YTIzNjM0In0.W1qf2kXXDts5K7RHUq0UsUjVoCdSUtEKvgwbEzcWDozzDjnn3KmWlOIEnrLRHxWulZSK6tbG3QTPCdKhM_t2BA',
-});
+const __dirname = dirname(fileURLToPath(import.meta.url));
+config({ path: resolve(__dirname, '../.env') });
+
+const url = process.env.DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!url || url.startsWith('file:')) {
+  console.error('DATABASE_URL must be a Turso libsql:// URL');
+  process.exit(1);
+}
+
+const db = createClient({ url, authToken });
 
 const translations = [
   {
     id: 'audi-tt-mk3-sline-2014',
-    descriptionEn: `Third generation of the Audi TT Coupé — 8S generation, produced from 2014 to 2023. This 2.0 TFSI 230 hp paired with quattro all-wheel drive and the 7-speed S tronic gearbox represents the most accomplished configuration in the range. The Virtual Cockpit (12.3" fully digital instrument cluster) made its debut on this generation.
+    descriptionEn: `Third generation of the Audi TT Coupé (8S generation), produced from 2014 to 2023. This 2.0 TFSI 230 hp paired with quattro all-wheel drive and the 7-speed S tronic gearbox represents the most accomplished configuration in the range. The Virtual Cockpit (12.3" fully digital instrument cluster) made its debut on this generation.
 
 First registered on 17/11/2014 in Belgium. Mileage at Belgian MOT (24/04/2026): 147,005 km. S line trim with aluminium door sills, 19" multi-spoke alloy wheels and Alcantara/leather upholstery. Belgian MOT valid until 24/04/2027. Belgian Car-Pass available.
 
 MOT valid until 24/04/2027. No accident on record. Belgian Car-Pass with full mileage history.`,
     featuresEn: JSON.stringify([
-      'Virtual Cockpit — 12.3" fully digital instrument cluster',
+      'Virtual Cockpit: 12.3" fully digital instrument cluster',
       'Apple CarPlay integrated',
       'Full S line exterior pack',
       'S line aluminium door sills',
@@ -83,9 +94,9 @@ Brakes fully renewed: new front and rear discs and pads, recent front tyres. No 
   },
   {
     id: 'cmpqmqrnk0000f4vvwbr2z3dq',
-    descriptionEn: `Audi A3 Sportback e-tron imported from Belgium — excellent overall condition, S line trim, plug-in hybrid drivetrain.
+    descriptionEn: `Audi A3 Sportback e-tron imported from Belgium, excellent overall condition, S line trim, plug-in hybrid drivetrain.
 
-e-tron powertrain: 1.4 TFSI paired with an electric motor — 204 hp system output, 6-speed S tronic gearbox. Full electric range: 50 km. Fuel consumption in hybrid mode: 4.8 L/100 km on the combined cycle.
+e-tron powertrain: 1.4 TFSI paired with an electric motor, 204 hp system output, 6-speed S tronic gearbox. Full electric range: 50 km. Fuel consumption in hybrid mode: 4.8 L/100 km on the combined cycle.
 
 No accident on record. MOT valid until 11/2025. Full service history. 2 previous owners.
 
@@ -95,7 +106,7 @@ All administrative procedures fully handled: French registration, financing, ins
       '100% electric mode (~50 km range)',
       'On-board charger + charging cable included',
       '6-speed S tronic gearbox',
-      'Euro 6d standard — 4.8 L/100 km (combined)',
+      'Euro 6d standard: 4.8 L/100 km (combined)',
       'S line exterior pack',
       '18" anthracite S line alloy wheels',
       'S line front/rear bumpers',
@@ -118,9 +129,9 @@ All administrative procedures fully handled: French registration, financing, ins
   },
   {
     id: 'cmppu3mt30000y8vvqdrmj12s',
-    descriptionEn: `Outstanding Audi A3 Sportback e-tron 1.4 PHEV 204 hp S line imported from Belgium, in excellent condition. Finished in Metallic Grey, it combines the elegance of the S line trim with the modernity of a plug-in hybrid drivetrain — a rare and compelling pairing.
+    descriptionEn: `Outstanding Audi A3 Sportback e-tron 1.4 PHEV 204 hp S line imported from Belgium, in excellent condition. Finished in Metallic Grey, it combines the elegance of the S line trim with the modernity of a plug-in hybrid drivetrain, a rare and compelling pairing.
 
-The e-tron powertrain combines a 1.4 TFSI four-cylinder with an electric motor for a system output of 204 horsepower, delivered via the S tronic gearbox. In full electric mode, it offers up to 50 km of zero-emission range — ideal for daily driving. In hybrid mode, fuel consumption drops to 4.8 L/100 km on the combined cycle.
+The e-tron powertrain combines a 1.4 TFSI four-cylinder with an electric motor for a system output of 204 horsepower, delivered via the S tronic gearbox. In full electric mode, it offers up to 50 km of zero-emission range, ideal for daily driving. In hybrid mode, fuel consumption drops to 4.8 L/100 km on the combined cycle.
 
 The S line trim delivers a boldly sporting stance from first glance: specific bumpers, 18" anthracite alloy wheels, side skirts and sport partial leather black interior with contrast stitching.
 
@@ -132,7 +143,7 @@ Intelligence Automobile handles all administrative procedures in full: French re
       '100% electric mode (~50 km range)',
       'On-board charger + charging cable included',
       '6-speed S tronic gearbox',
-      'Euro 6d standard — 4.8 L/100 km (combined)',
+      'Euro 6d standard: 4.8 L/100 km (combined)',
       'S line exterior pack',
       '18" anthracite S line alloy wheels',
       'S line front/rear bumpers',
@@ -155,9 +166,9 @@ Intelligence Automobile handles all administrative procedures in full: French re
   },
   {
     id: 'cmppfcv2u00002cvvmr6dkxaw',
-    descriptionEn: `Audi TT Coupé 2.0 TFSI imported from Germany — excellent condition, S line Competition trim, Daytona Grey Pearl finish. Iconic design, uncompromising stylistic coherence.
+    descriptionEn: `Audi TT Coupé 2.0 TFSI imported from Germany, excellent condition, S line Competition trim, Daytona Grey Pearl finish. Iconic design, uncompromising stylistic coherence.
 
-2.0 TFSI four-cylinder — 230 hp, 6-speed S tronic gearbox. Sharp performance and everyday driving pleasure. Fully digital Virtual Cockpit, MMI navigation, Alcantara upholstery.
+2.0 TFSI four-cylinder, 230 hp, 6-speed S tronic gearbox. Sharp performance and everyday driving pleasure. Fully digital Virtual Cockpit, MMI navigation, Alcantara upholstery.
 
 MOT valid. Full service history. No accident on record. 2 previous owners.
 
