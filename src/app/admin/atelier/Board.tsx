@@ -240,9 +240,14 @@ export default function Board({ authorName }: { authorName: string }) {
 
   // Applique un changement de statut sans l'empiler dans « Annuler » (réutilisé par l'annulation).
   async function applyMove(id: string, newStatus: Status) {
-    setNotes(prev => prev.map(n =>
-      n.id === id ? { ...n, status: newStatus, updatedAt: new Date().toISOString() } : n
-    ));
+    // Remonte la note en tête : elle apparaît tout en haut de sa nouvelle colonne,
+    // cohérent avec l'ordre « modifiée le plus récemment » (updatedAt desc) de l'API.
+    setNotes(prev => {
+      const target = prev.find(n => n.id === id);
+      if (!target) return prev;
+      const moved = { ...target, status: newStatus, updatedAt: new Date().toISOString() };
+      return [moved, ...prev.filter(n => n.id !== id)];
+    });
     await fetch(`/api/collab/notes/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
