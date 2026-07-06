@@ -19,17 +19,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* CSS global : marquee + transitions */}
+      {/* CSS global : transitions */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes ia-marquee {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        .ia-marquee-track {
-          display: flex;
-          width: max-content;
-          animation: ia-marquee 32s linear infinite;
-        }
         .ia-service-img {
           transition: transform 0.9s cubic-bezier(0.25,0.46,0.45,0.94);
         }
@@ -307,17 +298,6 @@ export default async function HomePage() {
             </Link>
           </div>
         </section>
-
-        {/* 2. MARQUEE */}
-        <div style={{ borderTop: "1px solid #1B3055", borderBottom: "1px solid #1B3055", backgroundColor: "#040B16", overflow: "hidden", height: "54px", display: "flex", alignItems: "center" }}>
-          <div className="ia-marquee-track">
-            {[1, 2].map((n) => (
-              <span key={n} style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.4em", textTransform: "uppercase", color: "#C4D8EE", whiteSpace: "nowrap", paddingRight: "4rem" }}>
-                PORSCHE &nbsp;·&nbsp; BMW M &nbsp;·&nbsp; MERCEDES AMG &nbsp;·&nbsp; AUDI RS &nbsp;·&nbsp; FERRARI &nbsp;·&nbsp; ALPINE &nbsp;·&nbsp; MASERATI &nbsp;·&nbsp; ALFA ROMEO &nbsp;·&nbsp; LAMBORGHINI &nbsp;·&nbsp;
-              </span>
-            ))}
-          </div>
-        </div>
 
         {/* 3. CHIFFRES */}
         <section style={{ backgroundColor: "#040B16" }}>
