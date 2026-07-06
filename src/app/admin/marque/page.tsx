@@ -17,6 +17,7 @@ export default async function MarquePage() {
         name: theme?.name ?? "Intelligence Automobile",
         tagline: theme?.tagline ?? "Back-office",
         accent: theme?.accent ?? "#6B9FEE",
+        reviewLink: theme?.reviewLink ?? "",
       }}
     />
   );

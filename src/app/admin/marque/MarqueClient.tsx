@@ -4,11 +4,11 @@
 // L'aperçu applique la couleur localement ; l'enregistrement rebrande tout l'admin.
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Palette, RotateCcw, BadgeCheck, ChevronRight } from "lucide-react";
+import { Palette, RotateCcw, BadgeCheck, ChevronRight, Star } from "lucide-react";
 import { T, AdminPage, PageHeader, SectionCard, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../ui";
 import { useToast } from "../toast";
 
-const DEFAULTS = { name: "Intelligence Automobile", tagline: "Back-office", accent: "#6B9FEE" };
+const DEFAULTS = { name: "Intelligence Automobile", tagline: "Back-office", accent: "#6B9FEE", reviewLink: "" };
 
 const PRESETS = [
   { accent: "#6B9FEE", label: "Bleu" },
@@ -19,7 +19,7 @@ const PRESETS = [
   { accent: "#EC5E7B", label: "Rose" },
 ];
 
-type Theme = { name: string; tagline: string; accent: string };
+type Theme = { name: string; tagline: string; accent: string; reviewLink: string };
 
 export default function MarqueClient({ initial }: { initial: Theme }) {
   const router = useRouter();
@@ -109,6 +109,23 @@ export default function MarqueClient({ initial }: { initial: Theme }) {
           </div>
         </SectionCard>
 
+        <SectionCard title="Avis clients">
+          <div>
+            <label className={labelClass} style={{ color: T.textDim }}>Lien Google « laisser un avis »</label>
+            <input
+              value={form.reviewLink}
+              onChange={(e) => setForm((f) => ({ ...f, reviewLink: e.target.value }))}
+              placeholder="https://g.page/r/…/review"
+              className="px-4 py-3 text-sm outline-none w-full"
+              style={fieldStyle}
+            />
+          </div>
+          <p className="text-[12px] flex items-start gap-2" style={{ color: T.muted }}>
+            <Star size={14} style={{ color: T.warning, flexShrink: 0, marginTop: 1 }} />
+            Ce lien est utilisé par la page « Avis clients » pour inviter vos acheteurs à vous noter sur Google. Récupérez-le dans votre fiche d&apos;établissement Google (bouton « Demander des avis »).
+          </p>
+        </SectionCard>
+
         {/* Aperçu : la variable est surchargée localement sur ce bloc */}
         <div style={{ ["--adm-accent" as never]: form.accent }}>
           <SectionCard title="Aperçu en direct">
@@ -165,8 +182,9 @@ export default function MarqueClient({ initial }: { initial: Theme }) {
           <button
             type="button"
             onClick={() => {
-              setForm(DEFAULTS);
-              save(DEFAULTS);
+              const reset = { ...DEFAULTS, reviewLink: form.reviewLink };
+              setForm(reset);
+              save(reset);
             }}
             disabled={busy}
             className={btnGhostClass}

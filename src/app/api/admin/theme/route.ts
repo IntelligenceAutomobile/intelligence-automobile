@@ -27,6 +27,7 @@ export async function PUT(req: NextRequest) {
     const name = String(body.name ?? "").trim().slice(0, 40);
     const tagline = String(body.tagline ?? "").trim().slice(0, 40);
     const accent = String(body.accent ?? "").trim();
+    const reviewLink = String(body.reviewLink ?? "").trim().slice(0, 300);
     if (!name) return NextResponse.json({ error: "Le nom de marque est requis." }, { status: 400 });
     if (!/^#[0-9a-fA-F]{6}$/.test(accent)) {
       return NextResponse.json({ error: "Couleur invalide (format #RRGGBB)." }, { status: 400 });
@@ -34,8 +35,8 @@ export async function PUT(req: NextRequest) {
 
     const theme = await prisma.brandTheme.upsert({
       where: { id: "default" },
-      create: { id: "default", name, tagline, accent },
-      update: { name, tagline, accent },
+      create: { id: "default", name, tagline, accent, reviewLink },
+      update: { name, tagline, accent, reviewLink },
     });
     return NextResponse.json(theme);
   } catch {

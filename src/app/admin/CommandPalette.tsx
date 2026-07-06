@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
-  Users, HandCoins, ShieldCheck, UserCog, CalendarClock, Radio, CornerDownLeft, type LucideIcon,
+  Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -26,6 +26,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: CalendarClock, label: "Planning atelier", hint: "Page", href: "/admin/planning" },
   { icon: Radio, label: "Diffusion", hint: "Page", href: "/admin/diffusion" },
   { icon: ShieldCheck, label: "Garanties", hint: "Page", href: "/admin/garanties" },
+  { icon: Star, label: "Avis clients", hint: "Page", href: "/admin/avis" },
   { icon: MessagesSquare, label: "Atelier", hint: "Page", href: "/admin/atelier" },
   { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes", cap: "finances" },
   { icon: UserCog, label: "Utilisateurs", hint: "Réglages", href: "/admin/utilisateurs", cap: "users" },

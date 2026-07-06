@@ -143,15 +143,16 @@ model Quote {
 // ── CRM : clients et opportunités de vente ──
 
 model Client {
-  id        String   @id @default(cuid())
-  name      String
-  company   String   @default("")
-  email     String   @default("")
-  phone     String   @default("")
-  notes     String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  leads     Lead[]
+  id               String   @id @default(cuid())
+  name             String
+  company          String   @default("")
+  email            String   @default("")
+  phone            String   @default("")
+  notes            String   @default("")
+  reviewRequestedAt String  @default("") // YYYY-MM-DD : demande d'avis Google envoyée
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  leads            Lead[]
 }
 
 model Lead {
@@ -216,12 +217,13 @@ model Warranty {
 
 // Marque blanche : thème visuel de l'instance (une seule ligne, id "default").
 model BrandTheme {
-  id        String   @id @default("default")
-  name      String   @default("Intelligence Automobile")
-  tagline   String   @default("Back-office")
-  accent    String   @default("#6B9FEE")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default("default")
+  name       String   @default("Intelligence Automobile")
+  tagline    String   @default("Back-office")
+  accent     String   @default("#6B9FEE")
+  reviewLink String   @default("") // lien Google « laisser un avis »
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // Diffusion multi-portails (module de démonstration : la publication est

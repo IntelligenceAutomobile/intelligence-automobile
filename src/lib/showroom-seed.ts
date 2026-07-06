@@ -52,6 +52,13 @@ export async function seedShowroom(prisma: PrismaClient) {
     });
   }
 
+  /* ── Thème : lien Google de démo (pour les invitations d'avis) ── */
+  await prisma.brandTheme.upsert({
+    where: { id: "default" },
+    create: { id: "default", reviewLink: "https://g.page/r/intelligence-automobile-demo/review" },
+    update: { reviewLink: "https://g.page/r/intelligence-automobile-demo/review" },
+  });
+
   /* ── Stock : catalogue réaliste issu des fixtures ── */
   const statuses = ["disponible", "disponible", "disponible", "disponible", "reserve", "vendu"];
   const vehicleIds: string[] = [];

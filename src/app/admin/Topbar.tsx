@@ -18,6 +18,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   planning: "Planning atelier",
   diffusion: "Diffusion",
   garanties: "Garanties",
+  avis: "Avis clients",
   marque: "Marque blanche",
   comptes: "Comptes",
   utilisateurs: "Utilisateurs",

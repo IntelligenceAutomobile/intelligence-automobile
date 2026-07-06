@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
-  CalendarClock, Radio, HandCoins, ShieldCheck, UserCog, ExternalLink, Palette, RotateCcw, type LucideIcon,
+  CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -30,6 +30,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning" },
       { icon: Radio, label: "Diffusion", href: "/admin/diffusion" },
       { icon: ShieldCheck, label: "Garanties", href: "/admin/garanties" },
+      { icon: Star, label: "Avis clients", href: "/admin/avis" },
     ],
   },
   {
