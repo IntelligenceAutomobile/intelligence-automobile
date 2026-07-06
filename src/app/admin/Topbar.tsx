@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Plus } from "lucide-react";
+import type { Role } from "@/lib/roles";
 import { T, btnPrimaryClass, btnPrimaryStyle } from "./ui";
 import CommandPalette from "./CommandPalette";
 
@@ -18,6 +19,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   diffusion: "Diffusion",
   marque: "Marque blanche",
   comptes: "Comptes",
+  utilisateurs: "Utilisateurs",
   atelier: "Atelier",
   nouveau: "Nouveau",
   imprimer: "Impression",
@@ -39,7 +41,7 @@ function crumbsFrom(pathname: string): { label: string; href?: string }[] {
   return crumbs;
 }
 
-export default function Topbar() {
+export default function Topbar({ role }: { role: Role }) {
   const pathname = usePathname();
   const crumbs = crumbsFrom(pathname);
 
@@ -68,7 +70,7 @@ export default function Topbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-3 min-w-0">
-        <CommandPalette />
+        <CommandPalette role={role} />
         <Link href="/admin/vehicules/nouveau" className={btnPrimaryClass + " flex-shrink-0"} style={btnPrimaryStyle}>
           <Plus size={14} />
           <span className="hidden sm:inline">Ajouter</span>

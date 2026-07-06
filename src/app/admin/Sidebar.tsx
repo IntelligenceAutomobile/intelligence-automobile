@@ -6,14 +6,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
-  CalendarClock, Radio, HandCoins, ExternalLink, Palette, RotateCcw, type LucideIcon,
+  CalendarClock, Radio, HandCoins, UserCog, ExternalLink, Palette, RotateCcw, type LucideIcon,
 } from "lucide-react";
+import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
 import AdminLogout from "./AdminLogout";
 import { ConfirmDialog } from "./confirm";
 import { useToast } from "./toast";
 
-type NavItem = { icon: LucideIcon; label: string; href?: string; exact?: boolean; soon?: boolean };
+type NavItem = { icon: LucideIcon; label: string; href?: string; exact?: boolean; soon?: boolean; cap?: Capability };
 
 const NAV: { section: string; items: NavItem[] }[] = [
   { section: "Pilotage", items: [{ icon: LayoutDashboard, label: "Tableau de bord", href: "/admin", exact: true }] },
@@ -34,27 +35,34 @@ const NAV: { section: string; items: NavItem[] }[] = [
     section: "Équipe",
     items: [
       { icon: MessagesSquare, label: "Atelier", href: "/admin/atelier" },
-      { icon: Wallet, label: "Comptes", href: "/admin/comptes" },
+      { icon: Wallet, label: "Comptes", href: "/admin/comptes", cap: "finances" },
     ],
   },
   {
     section: "Réglages",
-    items: [{ icon: Palette, label: "Marque blanche", href: "/admin/marque" }],
+    items: [
+      { icon: UserCog, label: "Utilisateurs", href: "/admin/utilisateurs", cap: "users" },
+      { icon: Palette, label: "Marque blanche", href: "/admin/marque", cap: "settings" },
+    ],
   },
 ];
 
 export default function Sidebar({
   name,
+  role,
   brandName,
   brandTagline,
   showroom = false,
 }: {
   name: string;
+  role: Role;
   brandName: string;
   brandTagline: string;
   showroom?: boolean;
 }) {
   const pathname = usePathname();
+  // Filtre la navigation selon les capacités du rôle ; retire les sections vides.
+  const nav = NAV.map((g) => ({ ...g, items: g.items.filter((it) => !it.cap || can(role, it.cap)) })).filter((g) => g.items.length > 0);
   const router = useRouter();
   const toast = useToast();
   const [, startTransition] = useTransition();
@@ -97,7 +105,7 @@ export default function Sidebar({
       </Link>
 
       <nav className="flex-1 px-3 py-5 space-y-6 overflow-y-auto">
-        {NAV.map((group) => (
+        {nav.map((group) => (
           <div key={group.section}>
             <div className="px-2 mb-2 text-[9px] tracking-[0.28em] uppercase" style={{ color: T.muted }}>
               {group.section}
@@ -151,7 +159,7 @@ export default function Sidebar({
       </nav>
 
       <div className="px-4 py-3" style={{ borderTop: `1px solid ${T.border}` }}>
-        {showroom && (
+        {showroom && can(role, "settings") && (
           <button
             type="button"
             onClick={() => setConfirmReset(true)}
@@ -181,7 +189,10 @@ export default function Sidebar({
           {initials}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-medium truncate" style={{ color: T.textDim }}>{name}</div>
+          <div className="text-xs font-medium truncate" style={{ color: T.textDim }}>
+            {name}
+            <span className="ml-1.5 text-[9px] tracking-widest uppercase" style={{ color: T.muted }}>· {ROLE_LABEL[role]}</span>
+          </div>
           <AdminLogout />
         </div>
       </div>

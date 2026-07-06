@@ -4,6 +4,7 @@ import { Plus, Printer } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeTotals, formatEuro, formatDateFr, STATUS_LABEL, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus } from "@/lib/devis";
+import { can, asRole } from "@/lib/roles";
 import { T, TONE, type Tone, AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle } from "../ui";
 import DeleteQuoteButton from "./DeleteQuoteButton";
 
@@ -27,6 +28,7 @@ function QuoteStatusBadge({ status }: { status: string }) {
 export default async function DevisListPage() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
+  const canDelete = can(asRole(session.admin.role), "delete");
 
   const rows = await prisma.quote.findMany({ where: { docType: { not: "facture" } }, orderBy: { updatedAt: "desc" } });
 
@@ -83,7 +85,7 @@ export default async function DevisListPage() {
                 <Printer size={13} />
                 PDF
               </Link>
-              <DeleteQuoteButton id={qte.id} />
+              {canDelete && <DeleteQuoteButton id={qte.id} />}
             </div>
           ))}
         </div>

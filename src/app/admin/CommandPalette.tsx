@@ -6,11 +6,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
-  Users, HandCoins, CalendarClock, Radio, CornerDownLeft, type LucideIcon,
+  Users, HandCoins, UserCog, CalendarClock, Radio, CornerDownLeft, type LucideIcon,
 } from "lucide-react";
+import { can, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
 
-type Item = { icon: LucideIcon; label: string; hint: string; href: string };
+type Item = { icon: LucideIcon; label: string; hint: string; href: string; cap?: Capability };
 
 const STATIC_ITEMS: Item[] = [
   { icon: Plus, label: "Ajouter un véhicule", hint: "Action", href: "/admin/vehicules/nouveau" },
@@ -25,14 +26,15 @@ const STATIC_ITEMS: Item[] = [
   { icon: CalendarClock, label: "Planning atelier", hint: "Page", href: "/admin/planning" },
   { icon: Radio, label: "Diffusion", hint: "Page", href: "/admin/diffusion" },
   { icon: MessagesSquare, label: "Atelier", hint: "Page", href: "/admin/atelier" },
-  { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes" },
+  { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes", cap: "finances" },
+  { icon: UserCog, label: "Utilisateurs", hint: "Réglages", href: "/admin/utilisateurs", cap: "users" },
 ];
 
 type VehicleLite = { id: string; make: string; model: string; year: number; status: string };
 type QuoteLite = { id: string; number: string; clientName?: string | null; clientCompany?: string | null; status: string };
 type ClientLite = { id: string; name: string; company: string; email: string };
 
-export default function CommandPalette() {
+export default function CommandPalette({ role }: { role: Role }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -83,7 +85,7 @@ export default function CommandPalette() {
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const stat = STATIC_ITEMS.filter((i) => !q || i.label.toLowerCase().includes(q));
+    const stat = STATIC_ITEMS.filter((i) => (!i.cap || can(role, i.cap)) && (!q || i.label.toLowerCase().includes(q)));
     const veh: Item[] = (vehicles ?? [])
       .filter((v) => q && `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(q))
       .slice(0, 5)
@@ -109,8 +111,8 @@ export default function CommandPalette() {
         hint: "Client",
         href: `/admin/clients/${c.id}`,
       }));
-    return [...stat.slice(0, q ? 4 : 8), ...veh, ...cls, ...qts];
-  }, [query, vehicles, quotes, clients]);
+    return [...stat.slice(0, q ? 4 : 9), ...veh, ...cls, ...qts];
+  }, [query, vehicles, quotes, clients, role]);
 
   function go(item: Item) {
     setOpen(false);

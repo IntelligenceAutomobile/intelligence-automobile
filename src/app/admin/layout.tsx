@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { asRole } from "@/lib/roles";
 import { LogoFull } from "@/components/Header";
 import AdminNav from "./AdminNav";
 import AdminLogout from "./AdminLogout";
@@ -26,6 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const brandTagline = theme?.tagline || "Back-office";
   const accent = theme?.accent || "#6B9FEE";
   const isShowroom = process.env.SHOWROOM === "1";
+  const role = asRole(session.admin.role);
 
   return (
     <ToastProvider>
@@ -33,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         className="adm-root min-h-screen flex"
         style={{ backgroundColor: T.bg, color: T.text, ["--adm-accent" as never]: accent }}
       >
-        <Sidebar name={name} brandName={brandName} brandTagline={brandTagline} showroom={isShowroom} />
+        <Sidebar name={name} role={role} brandName={brandName} brandTagline={brandTagline} showroom={isShowroom} />
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile : logo + nav horizontale (la sidebar est masquée sous lg) */}
@@ -49,7 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
           </div>
 
-          <Topbar />
+          <Topbar role={role} />
 
           <main className="flex-1 min-w-0">{children}</main>
         </div>

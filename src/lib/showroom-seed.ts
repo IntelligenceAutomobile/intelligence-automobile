@@ -33,13 +33,23 @@ export async function seedShowroom(prisma: PrismaClient) {
   await prisma.vehicleNote.deleteMany();
   await prisma.vehicle.deleteMany();
 
-  /* ── Compte de démonstration ── */
+  /* ── Comptes de démonstration : un patron + un gestionnaire + un vendeur ── */
   const passwordHash = await bcrypt.hash(SHOWROOM_ADMIN.password, 10);
   await prisma.adminUser.upsert({
     where: { email: SHOWROOM_ADMIN.email },
-    create: { email: SHOWROOM_ADMIN.email, passwordHash },
-    update: { passwordHash },
+    create: { email: SHOWROOM_ADMIN.email, passwordHash, role: "patron" },
+    update: { passwordHash, role: "patron" },
   });
+  for (const u of [
+    { email: "gestion@showroom.fr", role: "gestionnaire" },
+    { email: "vendeur@showroom.fr", role: "vendeur" },
+  ]) {
+    await prisma.adminUser.upsert({
+      where: { email: u.email },
+      create: { email: u.email, passwordHash, role: u.role },
+      update: { role: u.role },
+    });
+  }
 
   /* ── Stock : catalogue réaliste issu des fixtures ── */
   const statuses = ["disponible", "disponible", "disponible", "disponible", "reserve", "vendu"];

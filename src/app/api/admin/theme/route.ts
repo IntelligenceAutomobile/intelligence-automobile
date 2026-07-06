@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { can, asRole } from "@/lib/roles";
 
 export const THEME_DEFAULTS = {
   name: "Intelligence Automobile",
@@ -19,6 +20,7 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!can(asRole(session.admin.role), "settings")) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 
   try {
     const body = await req.json();

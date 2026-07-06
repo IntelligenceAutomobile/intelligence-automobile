@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { can, asRole } from "@/lib/roles";
 import { seedShowroom } from "@/lib/showroom-seed";
 
 // Réinitialisation des données de démonstration. Garde-fou absolu : ne
@@ -12,6 +13,7 @@ export async function POST() {
   }
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!can(asRole(session.admin.role), "settings")) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 
   try {
     await seedShowroom(prisma);

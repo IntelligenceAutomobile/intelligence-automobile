@@ -54,7 +54,7 @@ function changeView(v: "list" | "grid") {
   viewListeners.forEach((cb) => cb());
 }
 
-function RowActions({ v }: { v: StockItem }) {
+function RowActions({ v, canDelete }: { v: StockItem; canDelete: boolean }) {
   return (
     <>
       <Link
@@ -82,7 +82,7 @@ function RowActions({ v }: { v: StockItem }) {
         <ClipboardList size={13} />
         Suivi
       </Link>
-      <DeleteVehiculeButton id={v.id} />
+      {canDelete && <DeleteVehiculeButton id={v.id} />}
     </>
   );
 }
@@ -90,9 +90,11 @@ function RowActions({ v }: { v: StockItem }) {
 export default function StockList({
   vehicles,
   initialFilter = "all",
+  canDelete = false,
 }: {
   vehicles: StockItem[];
   initialFilter?: string;
+  canDelete?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState(initialFilter);
@@ -246,7 +248,7 @@ export default function StockList({
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 pt-3" style={{ borderTop: `1px solid ${T.border}` }}>
-                  <RowActions v={v} />
+                  <RowActions v={v} canDelete={canDelete} />
                 </div>
               </div>
             </div>
@@ -279,7 +281,7 @@ export default function StockList({
                 <StatusBadge status={v.status} />
                 {!v.isPublished && <Tag tone="muted">Masqué</Tag>}
                 {!v.image && <Tag tone="warning">Sans photo</Tag>}
-                <RowActions v={v} />
+                <RowActions v={v} canDelete={canDelete} />
               </div>
             </div>
           ))}

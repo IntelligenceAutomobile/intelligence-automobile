@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can, asRole } from "@/lib/roles";
 import { AdminPage, PageHeader } from "../ui";
 import { isPartner, type LedgerEntry, type Partner, type Scope } from "@/lib/comptes";
 import ComptesClient from "./ComptesClient";
@@ -9,6 +10,7 @@ import ComptesClient from "./ComptesClient";
 export default async function ComptesPage() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
+  if (!can(asRole(session.admin.role), "finances")) redirect("/admin");
 
   const [rows, cookieStore] = await Promise.all([
     prisma.ledgerEntry.findMany({ orderBy: [{ date: "desc" }, { createdAt: "desc" }] }),

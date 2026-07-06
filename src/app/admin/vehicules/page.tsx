@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can, asRole } from "@/lib/roles";
 import { AdminPage, PageHeader, firstImage, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../ui";
 import StockList, { type StockItem } from "./StockList";
 
@@ -14,6 +15,7 @@ export default async function AdminVehiculesList({
 }) {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
+  const canDelete = can(asRole(session.admin.role), "delete");
 
   const { statut } = await searchParams;
   const initialFilter = statut && VALID_FILTERS.includes(statut) ? statut : "all";
@@ -52,7 +54,7 @@ export default async function AdminVehiculesList({
           </div>
         }
       />
-      <StockList vehicles={items} initialFilter={initialFilter} />
+      <StockList vehicles={items} initialFilter={initialFilter} canDelete={canDelete} />
     </AdminPage>
   );
 }
