@@ -31,6 +31,7 @@ export async function seedShowroom(prisma: PrismaClient) {
   await prisma.ledgerEntry.deleteMany();
   await prisma.vehicleCost.deleteMany();
   await prisma.vehicleNote.deleteMany();
+  await prisma.warranty.deleteMany();
   await prisma.vehicle.deleteMany();
 
   /* ── Comptes de démonstration : un patron + un gestionnaire + un vendeur ── */
@@ -289,6 +290,14 @@ export async function seedShowroom(prisma: PrismaClient) {
         { id: "acompte", designation: `Acompte sur commande — ${veh3 ? `${veh3.make} ${veh3.model}` : "véhicule"}`, detail: `Acompte 30 % sur devis ${year}-041`, qty: 1, unitPrice: Math.round(transTotal * 0.3) },
       ]),
     },
+  });
+
+  /* ── Garanties : une active, une à échéance ── */
+  await prisma.warranty.createMany({
+    data: [
+      { clientName: "Karim Benali", clientEmail: "k.benali@gmail.com", vehicleLabel: "Renault Megane 3 RS", type: "constructeur", startDate: dayKey(-695), endDate: dayKey(35), notes: "Garantie constructeur 24 mois." },
+      { clientName: "Amélie Rousseau", clientEmail: "amelie.rousseau@outlook.fr", vehicleLabel: "Audi TT 2.0 TFSI Coupé", type: "extension", startDate: dayKey(-120), endDate: dayKey(605), notes: "Extension 24 mois souscrite à la vente." },
+    ],
   });
 
   /* ── Diffusion : deux annonces déjà publiées ── */

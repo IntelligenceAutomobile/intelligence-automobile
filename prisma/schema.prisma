@@ -198,6 +198,22 @@ model VehicleNote {
   @@index([vehicleId])
 }
 
+// SAV & garanties : garanties vendues, suivi des échéances.
+model Warranty {
+  id           String   @id @default(cuid())
+  clientName   String   @default("")
+  clientEmail  String   @default("")
+  vehicleLabel String   @default("")
+  type         String   @default("constructeur") // constructeur | extension | garage
+  startDate    String                              // YYYY-MM-DD
+  endDate      String                              // YYYY-MM-DD (calculée à la création)
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([endDate])
+}
+
 // Marque blanche : thème visuel de l'instance (une seule ligne, id "default").
 model BrandTheme {
   id        String   @id @default("default")

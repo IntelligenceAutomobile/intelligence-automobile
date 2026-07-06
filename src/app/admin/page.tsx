@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, ReceiptText, MessagesSquare, XCircle, Send, Users } from "lucide-react";
+import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, ReceiptText, ShieldCheck, MessagesSquare, XCircle, Send, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
@@ -119,7 +119,13 @@ export default async function AdminDashboard() {
   const cookieStore = await cookies();
   const name = cookieStore.get("ia_collab_name")?.value?.trim() || session.admin.email.split("@")[0];
 
-  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices] =
+  // Fenêtre « garanties à échéance » : de aujourd'hui à +60 jours.
+  const warrantyFrom = new Date().toISOString().slice(0, 10);
+  const warrantyToDate = new Date();
+  warrantyToDate.setDate(warrantyToDate.getDate() + 60);
+  const warrantyTo = warrantyToDate.toISOString().slice(0, 10);
+
+  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -156,6 +162,7 @@ export default async function AdminDashboard() {
         take: 4,
       }),
       prisma.quote.findMany({ where: { docType: "facture", paymentStatus: "impayee" } }),
+      prisma.warranty.count({ where: { endDate: { gte: warrantyFrom, lte: warrantyTo } } }),
     ]);
 
   const stockValue = valueAgg._sum.price ?? 0;
@@ -331,6 +338,27 @@ export default async function AdminDashboard() {
             </span>
             <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
               Voir les factures
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        )}
+
+        {/* Alerte garanties à échéance */}
+        {expiringWarranties > 0 && (
+          <Link
+            href="/admin/garanties"
+            className="adm-enter flex items-center gap-3 px-5 py-3 mb-5"
+            style={{ backgroundColor: T.surface, border: "1px solid rgba(240,180,90,0.4)" }}
+          >
+            <ShieldCheck size={16} style={{ color: T.warning }} />
+            <span className="text-sm" style={{ color: T.textDim }}>
+              <span className="font-semibold" style={{ color: T.warning }}>
+                {expiringWarranties} garantie{expiringWarranties > 1 ? "s" : ""} à échéance
+              </span>
+              {" sous 60 jours · pensez à recontacter le client"}
+            </span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Voir les garanties
               <ChevronRight size={12} />
             </span>
           </Link>
