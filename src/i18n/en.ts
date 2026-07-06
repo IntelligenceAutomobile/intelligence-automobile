@@ -44,7 +44,7 @@ export const en: Translations = {
       {
         heading: "Preamble",
         blocks: [
-          { text: "SASU Intelligence Automobile, a simplified single-shareholder company with share capital of €1,000, whose registered office is located in Paris, France. SIRET, RCS and intra-community VAT number: registration in progress. Email: contact@intelligenceautomobile.com — Phone: +33 6 20 24 38 79 — Website: intelligenceautomobile.com (hereinafter “the Provider”)." },
+          { text: "SASU Intelligence Automobile, a simplified single-shareholder company with share capital of €1,000, whose registered office is located in Paris, France. SIRET, RCS and intra-community VAT number: registration in progress. Email: contact@intelligenceautomobile.com · Phone: +33 6 20 24 38 79 · Website: intelligenceautomobile.com (hereinafter “the Provider”)." },
         ],
       },
       {
@@ -145,7 +145,7 @@ export const en: Translations = {
       {
         heading: "Appendix — Withdrawal form",
         blocks: [
-          { text: "To be completed and returned only in the event of withdrawal, to SASU Intelligence Automobile — contact@intelligenceautomobile.com." },
+          { text: "To be completed and returned only in the event of withdrawal, to SASU Intelligence Automobile (contact@intelligenceautomobile.com)." },
           { text: "I hereby give notice of withdrawal from the contract for the service below: Quote dated … · Quote number … · Client name … · Address … · Date … · Client signature." },
         ],
       },
@@ -172,7 +172,7 @@ export const en: Translations = {
       {
         heading: "Hosting provider",
         paragraphs: [
-          "The website is hosted by Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA — vercel.com.",
+          "The website is hosted by Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA (vercel.com).",
         ],
       },
       {
@@ -204,7 +204,7 @@ export const en: Translations = {
     stats: [
       { val: "+2,000", label: "listings analysed every month by our automated market-watch system across European markets" },
       { val: "15–30%", label: "documented gap versus the French market on the imported premium segment" },
-      { val: "100%", label: "transparent — no hidden fees, every cost detailed before any commitment" },
+      { val: "100%", label: "transparent, no hidden fees, every cost detailed before any commitment" },
     ],
     service01Title: ["Our", "Vehicles"],
     service01Desc: "Every vehicle carefully selected from European partners, inspected, documented, ready to deliver.",
@@ -359,7 +359,7 @@ export const en: Translations = {
     marketsLabel: "Markets covered",
     markets: "European Union",
     brandsLabel: "Brands handled",
-    brands: "Audi · BMW · Mercedes · Porsche · Volkswagen · Lexus · Volvo · and more",
+    brands: "All premium and upmarket mainstream brands",
     form: {
       vehicleSection: "The vehicle",
       coordsSection: "Your details",
@@ -401,7 +401,7 @@ export const en: Translations = {
       phonePlaceholder: "+33 6 00 00 00 00",
       detailsLabel: "Additional details",
       detailsPlaceholder: "Anything that would help us target your search better...",
-      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp. Please share a number where we can reach you there.",
+      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp.",
       submitBtn: "Submit my search",
       submittingBtn: "Sending...",
       footer: "Fixed commission announced before any commitment · No fees if we don't find it",
@@ -420,7 +420,7 @@ export const en: Translations = {
     comparatif: [
       { critere: "Price obtained", dealer: "−20 to −35% of market", seul: "Market price − friction", ia: "Real market price" },
       { critere: "Average timeframe", dealer: "Immediate", seul: "6 to 16 weeks", ia: "2 to 4 weeks" },
-      { critere: "Contacts to manage", dealer: "None", seul: "100+, 80% unqualified", ia: "None — we filter everything" },
+      { critere: "Contacts to manage", dealer: "None", seul: "100+, 80% unqualified", ia: "None: we filter everything" },
       { critere: "Paperwork", dealer: "Dealer handles it", seul: "You", ia: "Us" },
       { critere: "Payment security", dealer: "✓", seul: "Variable", ia: "✓ verified" },
     ],
@@ -445,9 +445,9 @@ export const en: Translations = {
       "Transparent fees, disclosed before agreement",
     ],
     vehicleTypesLabel: "Vehicle types",
-    vehicleTypes: ["Premium saloons", "SUVs", "Coupés", "Sports cars", "Convertibles"],
+    vehicleTypes: ["Premium saloons", "SUVs", "Coupés", "Sports cars", "Convertibles", "and more"],
     vehicleBrandsLabel: "Brands handled",
-    vehicleBrands: ["Audi", "BMW", "Mercedes", "Porsche", "Volkswagen", "Lexus", "Volvo"],
+    vehicleBrands: ["All premium and upmarket mainstream brands"],
     vehicleCriteriaLabel: "Criteria",
     vehicleCriteria: ["Under 12 years old", "Up to 180,000 km", "Documented service history"],
     form: {
@@ -504,7 +504,7 @@ export const en: Translations = {
       emailPlaceholder: "your@email.com",
       phoneLabel: "Phone",
       phonePlaceholder: "+33 6 00 00 00 00",
-      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp. Please share a number where we can reach you there.",
+      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp.",
       submitBtn: "Request my free valuation",
       submittingBtn: "Sending...",
       footer: "Free and non-binding valuation · Fees disclosed before any agreement",
@@ -523,7 +523,7 @@ export const en: Translations = {
       { num: "01", title: "Your request", desc: "Provide the pickup location, destination, vehicle and desired date. We get back to you within 24h with a clear quote." },
       { num: "02", title: "Agreement & preparation", desc: "You confirm the quote. We coordinate the pickup and document the vehicle's condition before departure." },
       { num: "03", title: "Pickup", desc: "A professional insured driver collects the vehicle. Joint condition report, signature, departure." },
-      { num: "04", title: "Delivery", desc: "The vehicle is handed over at destination in the agreed condition. Delivery photos transmitted. Price unchanged." },
+      { num: "04", title: "Delivery", desc: "The vehicle is handed over at destination in the agreed condition. Delivery photos transmitted." },
     ],
     guarantees: [
       "Professional drivers",
@@ -566,7 +566,7 @@ export const en: Translations = {
       emailPlaceholder: "your@email.com",
       phoneLabel: "Phone",
       phonePlaceholder: "+33 6 00 00 00 00",
-      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp. Please share a number where we can reach you there.",
+      whatsappNote: "For a faster exchange, we prefer to be in touch via WhatsApp.",
       submitBtn: "Request a quote",
       submittingBtn: "Sending...",
       footer: "Free quote within 24h · Fixed price, no surprises",
@@ -646,7 +646,7 @@ export const en: Translations = {
         title: "Warranty",
         subtitle: "Drive with peace of mind.",
         paragraphs: [
-          "Every vehicle is delivered with a 3-month mechanical breakdown warranty included, covering the essential components — engine, gearbox and transmission.",
+          "Every vehicle is delivered with a 3-month mechanical breakdown warranty included, covering the essential components: engine, gearbox and transmission.",
           "To go further, a 12 to 24-month extension is available as an option, with coverage through our network of partner garages across France.",
         ],
         points: [
@@ -663,7 +663,7 @@ export const en: Translations = {
         subtitle: "A solution tailored to your project.",
         paragraphs: [
           "Standard car loan, lease with purchase option (LOA) or long-term lease (LLD): we guide you to the formula best suited to your budget and your use.",
-          "Our banking partners, specialised in premium vehicles, review your application within 48 hours — including on imported vehicles.",
+          "Our banking partners, specialised in premium vehicles, review your application within 48 hours, including on imported vehicles.",
         ],
         points: [
           "Car loan, LOA, LLD",
@@ -711,7 +711,7 @@ export const en: Translations = {
         subtitle: "Your vehicle, registered in France.",
         paragraphs: [
           "Once the file is complete, we obtain your final French registration certificate and have your definitive number plates fitted.",
-          "You follow every step until you receive your document — with nothing to handle yourself.",
+          "You follow every step until you receive your document, with nothing to handle yourself.",
         ],
         points: [
           "Final French registration",
@@ -736,7 +736,7 @@ export const en: Translations = {
     dossierCta: "Receive the full file",
     testDriveLabel: "Test drive available by appointment",
     ctaTitle: "Contact Intelligence Automobile for a full presentation.",
-    ctaSubtitle: "Inspection, financing, registration — we handle everything.",
+    ctaSubtitle: "Inspection, financing, registration: we handle everything.",
     soldMsg: "This vehicle has already found a buyer. Browse our stock or entrust us with an import mandate.",
     viewStock: "View available stock",
     mandatCta: "Custom import mandate",
@@ -758,7 +758,7 @@ export const en: Translations = {
       { label: "Response", value: "Within 24 business hours" },
     ],
     firstContactTitle: "First contact",
-    firstContactText: "No need to prepare a complete file. A message is enough: tell us what you're looking for — buying, importing or selling — and we will take the time to guide you.",
+    firstContactText: "No need to prepare a complete file. A message is enough: tell us what you're looking for (buying, importing or selling) and we will take the time to guide you.",
     servicesLabel: "Our services",
     services: [
       { label: "Custom search", href: "/recherche-personnalisee" },

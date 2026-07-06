@@ -42,7 +42,7 @@ export const fr = {
       {
         heading: "Préambule",
         blocks: [
-          { text: "SASU Intelligence Automobile, société par actions simplifiée unipersonnelle au capital de 1 000 €, dont le siège social est établi à Paris, France. SIRET, RCS et numéro de TVA intracommunautaire : en cours d'immatriculation. Courriel : contact@intelligenceautomobile.com — Téléphone : +33 6 20 24 38 79 — Site : intelligenceautomobile.com (ci-après « le Prestataire »)." },
+          { text: "SASU Intelligence Automobile, société par actions simplifiée unipersonnelle au capital de 1 000 €, dont le siège social est établi à Paris, France. SIRET, RCS et numéro de TVA intracommunautaire : en cours d'immatriculation. Courriel : contact@intelligenceautomobile.com · Téléphone : +33 6 20 24 38 79 · Site : intelligenceautomobile.com (ci-après « le Prestataire »)." },
         ],
       },
       {
@@ -143,7 +143,7 @@ export const fr = {
       {
         heading: "Annexe — Formulaire de rétractation",
         blocks: [
-          { text: "À compléter et renvoyer uniquement en cas de rétractation, à SASU Intelligence Automobile — contact@intelligenceautomobile.com." },
+          { text: "À compléter et renvoyer uniquement en cas de rétractation, à SASU Intelligence Automobile (contact@intelligenceautomobile.com)." },
           { text: "Je notifie par la présente la rétractation du contrat portant sur la prestation ci-dessous : Devis du … · Numéro de devis … · Nom du Client … · Adresse … · Date … · Signature du Client." },
         ],
       },
@@ -170,7 +170,7 @@ export const fr = {
       {
         heading: "Hébergeur",
         paragraphs: [
-          "Le site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis — vercel.com.",
+          "Le site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis (vercel.com).",
         ],
       },
       {
@@ -362,7 +362,7 @@ export const fr = {
     marketsLabel: "Marchés couverts",
     markets: "Union européenne",
     brandsLabel: "Marques traitées",
-    brands: "Audi · BMW · Mercedes · Porsche · Volkswagen · Lexus · Volvo · et plus",
+    brands: "Toutes marques premium et généralistes haut de gamme",
     form: {
       vehicleSection: "Le véhicule",
       coordsSection: "Vos coordonnées",
@@ -404,7 +404,7 @@ export const fr = {
       phonePlaceholder: "+33 6 00 00 00 00",
       detailsLabel: "Précisions supplémentaires",
       detailsPlaceholder: "Tout élément qui nous aiderait à mieux cibler votre recherche...",
-      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp. Pensez à indiquer un numéro sur lequel vous y êtes joignable.",
+      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp.",
       submitBtn: "Soumettre ma recherche",
       submittingBtn: "Envoi en cours...",
       footer: "Commission fixe annoncée avant tout engagement · Aucun frais si nous ne trouvons pas",
@@ -423,7 +423,7 @@ export const fr = {
     comparatif: [
       { critere: "Prix obtenu", dealer: "−20 à −35 % du marché", seul: "Prix marché − friction", ia: "Prix marché réel" },
       { critere: "Délai moyen", dealer: "Immédiat", seul: "6 à 16 semaines", ia: "2 à 4 semaines" },
-      { critere: "Contacts à gérer", dealer: "Aucun", seul: "100+, dont 80 % non qualifiés", ia: "Aucun — nous filtrons tout" },
+      { critere: "Contacts à gérer", dealer: "Aucun", seul: "100+, dont 80 % non qualifiés", ia: "Aucun : nous filtrons tout" },
       { critere: "Paperwork", dealer: "Dealer s'en occupe", seul: "Vous", ia: "Nous" },
       { critere: "Sécurité paiement", dealer: "✓", seul: "Variable", ia: "✓ vérifiée" },
     ],
@@ -448,9 +448,9 @@ export const fr = {
       "Honoraires transparents, annoncés avant accord",
     ],
     vehicleTypesLabel: "Types de véhicules",
-    vehicleTypes: ["Berlines premium", "SUV", "Coupés", "Sportives", "Cabriolets"],
+    vehicleTypes: ["Berlines premium", "SUV", "Coupés", "Sportives", "Cabriolets", "et plus"],
     vehicleBrandsLabel: "Marques traitées",
-    vehicleBrands: ["Audi", "BMW", "Mercedes", "Porsche", "Volkswagen", "Lexus", "Volvo"],
+    vehicleBrands: ["Toutes marques premium et généralistes haut de gamme"],
     vehicleCriteriaLabel: "Critères",
     vehicleCriteria: ["Moins de 12 ans", "Jusqu'à 180 000 km", "Entretien documenté"],
     form: {
@@ -507,7 +507,7 @@ export const fr = {
       emailPlaceholder: "votre@email.fr",
       phoneLabel: "Téléphone",
       phonePlaceholder: "+33 6 00 00 00 00",
-      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp. Pensez à indiquer un numéro sur lequel vous y êtes joignable.",
+      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp.",
       submitBtn: "Demander mon estimation gratuite",
       submittingBtn: "Envoi en cours...",
       footer: "Estimation gratuite et sans engagement · Honoraires annoncés avant tout accord",
@@ -526,7 +526,7 @@ export const fr = {
       { num: "01", title: "Votre demande", desc: "Indiquez le point de départ, la destination, le véhicule et la date souhaitée. Nous revenons sous 24h avec un devis clair." },
       { num: "02", title: "Accord & préparation", desc: "Vous validez le devis. Nous coordonnons la prise en charge et documentons l'état du véhicule avant départ." },
       { num: "03", title: "Prise en charge", desc: "Un conducteur professionnel et assuré récupère le véhicule. État des lieux contradictoire, signature, départ." },
-      { num: "04", title: "Livraison", desc: "Le véhicule vous est remis à destination dans l'état convenu. Photos de livraison transmises. Tarif inchangé." },
+      { num: "04", title: "Livraison", desc: "Le véhicule vous est remis à destination dans l'état convenu. Photos de livraison transmises." },
     ],
     guarantees: [
       "Conducteurs professionnels",
@@ -569,7 +569,7 @@ export const fr = {
       emailPlaceholder: "votre@email.fr",
       phoneLabel: "Téléphone",
       phonePlaceholder: "+33 6 00 00 00 00",
-      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp. Pensez à indiquer un numéro sur lequel vous y êtes joignable.",
+      whatsappNote: "Pour un échange plus rapide, nous privilégions le contact par WhatsApp.",
       submitBtn: "Demander un devis",
       submittingBtn: "Envoi en cours...",
       footer: "Devis gratuit sous 24h · Tarif fixe, sans surprise",
@@ -595,7 +595,7 @@ export const fr = {
     steps: [
       { num: "01", title: "Comprendre votre recherche", description: "Tout commence par un échange. On cerne ensemble votre projet : le modèle, le budget, la configuration et l'usage que vous en ferez.\nQuelques questions bien ciblées suffisent pour viser juste dès le départ.", tagline: "Objectif : chercher juste, dès le départ." },
       { num: "02", title: "Rechercher et vous présenter les véhicules", description: "On passe l'Europe au crible, selon des critères stricts : historique, kilométrage, entretien, configuration et prix compétitif.\nVous recevez une sélection resserrée et commentée, photos et rapport à l'appui. À vous de choisir.", tagline: "Nous ne cherchons pas une voiture disponible. Nous cherchons le bon exemplaire." },
-      { num: "03", title: "Enquêter en profondeur", description: "Vos favoris identifiés, on enquête pour de vrai : documents, historique complet, entretien, cohérence du kilométrage, conformité et points sensibles du modèle.\nVous tranchez en toute connaissance de cause, sans angle mort.", tagline: "Ce que nous savons, vous le savez aussi." },
+      { num: "03", title: "Enquêter en profondeur", description: "Vos favoris identifiés, on enquête pour de vrai : documents, historique complet, entretien, cohérence du kilométrage, conformité et points du modèle.\nVous tranchez en toute connaissance de cause, sans angle mort.", tagline: "Ce que nous savons, vous le savez aussi." },
       { num: "04", title: "Gérer l'import pour vous", description: "Importer seul, c'est une vraie galère : les démarches sont nombreuses et complexes. Nous nous en occupons de A à Z, vous ne touchez à rien.", tagline: "Notre métier : rendre l'achat d'un véhicule importé aussi simple qu'un achat en France, voire plus simple encore." },
       { num: "05", title: "Livrer une expérience premium", description: "Le véhicule est préparé, documenté et remis avec soin, comme il se doit.\nEt l'accompagnement ne s'arrête pas à la remise des clés : on reste là si vous en avez besoin.", tagline: "La remise des clés n'est pas une fin. C'est le début de la relation." },
       { num: "06", title: "Accompagnement après-vente", description: "On reste disponibles bien après la livraison.\nLe jour où vous voudrez revendre, on s'en occupe. Et pour l'entretien, un conseil est toujours à portée de message.", tagline: "Une relation qui dure, pas une simple transaction." },
@@ -649,7 +649,7 @@ export const fr = {
         title: "Garantie",
         subtitle: "Roulez l'esprit tranquille.",
         paragraphs: [
-          "Chaque véhicule est livré avec une garantie panne mécanique de 3 mois incluse, couvrant les organes essentiels — moteur, boîte de vitesses et transmission.",
+          "Chaque véhicule est livré avec une garantie panne mécanique de 3 mois incluse, couvrant les organes essentiels : moteur, boîte de vitesses et transmission.",
           "Pour aller plus loin, une extension jusqu'à 24 mois est disponible en option, avec assistance et véhicule de remplacement.",
         ],
         points: [
@@ -666,7 +666,7 @@ export const fr = {
         subtitle: "Une solution adaptée à votre projet.",
         paragraphs: [
           "Crédit auto classique, location avec option d'achat (LOA) ou location longue durée (LLD) : nous vous orientons vers la formule la plus cohérente avec votre budget et votre usage.",
-          "Nos partenaires bancaires, spécialisés dans le véhicule premium, étudient votre dossier sous 48 h — y compris sur les véhicules importés.",
+          "Nos partenaires bancaires, spécialisés dans le véhicule premium, étudient votre dossier sous 48 h, y compris sur les véhicules importés.",
         ],
         points: [
           "Crédit auto, LOA, LLD",
@@ -714,7 +714,7 @@ export const fr = {
         subtitle: "Votre véhicule, immatriculé en France.",
         paragraphs: [
           "Une fois le dossier complet, nous obtenons votre carte grise définitive française et faisons poser vos plaques d'immatriculation définitives.",
-          "Vous suivez chaque étape jusqu'à la réception de votre titre — sans aucune démarche à effectuer vous-même.",
+          "Vous suivez chaque étape jusqu'à la réception de votre titre, sans aucune démarche à effectuer vous-même.",
         ],
         points: [
           "Immatriculation définitive française",
@@ -739,7 +739,7 @@ export const fr = {
     dossierCta: "Recevoir le dossier complet",
     testDriveLabel: "Essai disponible sur rendez-vous",
     ctaTitle: "Contactez Intelligence Automobile pour une présentation complète.",
-    ctaSubtitle: "Inspection, financement, immatriculation — nous gérons tout.",
+    ctaSubtitle: "Inspection, financement, immatriculation : nous gérons tout.",
     soldMsg: "Ce véhicule a déjà trouvé preneur. Découvrez notre stock ou confiez-nous un mandat d'import.",
     viewStock: "Voir le stock disponible",
     mandatCta: "Mandat d'import sur-mesure",
@@ -761,7 +761,7 @@ export const fr = {
       { label: "Réponse", value: "Sous 24h ouvrées" },
     ],
     firstContactTitle: "Première prise de contact",
-    firstContactText: "Pas besoin de préparer un dossier complet. Un message suffit : dites-nous ce que vous cherchez — acheter, importer ou vendre — et nous prendrons le temps de vous orienter.",
+    firstContactText: "Pas besoin de préparer un dossier complet. Un message suffit : dites-nous ce que vous cherchez (acheter, importer ou vendre) et nous prendrons le temps de vous orienter.",
     servicesLabel: "Nos services",
     services: [
       { label: "Recherche personnalisée", href: "/recherche-personnalisee" },
