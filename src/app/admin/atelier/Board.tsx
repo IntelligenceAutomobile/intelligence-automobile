@@ -269,10 +269,61 @@ export default function Board({ authorName }: { authorName: string }) {
   const visibleNotes = notes.filter(n => n.category === selectedCat);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 70px)", backgroundColor: T.bg, color: T.text }}>
+    <div className="flex flex-col md:flex-row md:h-[calc(100vh-70px)]" style={{ backgroundColor: T.bg, color: T.text }}>
 
       {/* ── Sidebar ─────────────────────────────── */}
-      <div style={{ width: "210px", flexShrink: 0, backgroundColor: T.surfaceAlt, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column" }}>
+      <div className="md:hidden" style={{ backgroundColor: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+        <div className="flex items-center gap-2 overflow-x-auto px-3 py-2.5" style={{ scrollbarWidth: "none" }}>
+          {CATEGORIES.map(cat => {
+            const selected = selectedCat === cat.id;
+            const unread   = hasUnread(cat.id);
+            const todo     = todoCount(cat.id);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => selectCategory(cat.id)}
+                className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 whitespace-nowrap"
+                style={{
+                  fontSize: "13px",
+                  borderRadius: "999px",
+                  border: `1px solid ${selected ? cat.color : "#1B3055"}`,
+                  backgroundColor: selected ? "#112240" : "transparent",
+                  color: selected ? cat.color : "#C8D8EE",
+                }}
+              >
+                <span style={{ color: cat.color, fontSize: "7px", lineHeight: 1 }}>●</span>
+                <span>{cat.label}</span>
+                {todo > 0 && (
+                  <span style={{ fontSize: "10px", lineHeight: 1, padding: "2px 6px", borderRadius: "9px", backgroundColor: selected ? cat.color : "#1B3055", color: selected ? "#0B1930" : "#C8D8EE" }}>{todo}</span>
+                )}
+                {unread && <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#6B9FEE" }} />}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => selectCategory("__trash__")}
+            className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 whitespace-nowrap"
+            style={{
+              fontSize: "13px",
+              borderRadius: "999px",
+              border: "1px solid #1B3055",
+              backgroundColor: selectedCat === "__trash__" ? "#112240" : "transparent",
+              color: selectedCat === "__trash__" ? "#C8D8EE" : "#7C92B5",
+            }}
+          >
+            <span style={{ fontSize: "11px" }}>🗑</span>
+            <span>Corbeille</span>
+            {trashNotes && trashNotes.length > 0 && <span style={{ fontSize: "10px" }}>{trashNotes.length}</span>}
+          </button>
+        </div>
+        <div className="flex items-center gap-2 px-3 pb-2.5" style={{ fontSize: "11px", color: "#7C92B5" }}>
+          <span>Signé : {authorName}</span>
+          <button onClick={changeName} style={{ textDecoration: "underline", color: "#7C92B5" }}>changer</button>
+        </div>
+      </div>
+
+      {/* ── Sidebar (desktop) ───────────────────── */}
+      <div className="hidden md:flex md:flex-col" style={{ width: "210px", flexShrink: 0, backgroundColor: T.surfaceAlt, borderRight: `1px solid ${T.border}` }}>
 
         {/* Titre */}
         <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${T.border}` }}>
@@ -381,7 +432,7 @@ export default function Board({ authorName }: { authorName: string }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
         {/* Header */}
-        <div style={{ borderBottom: "1px solid #1B3055", backgroundColor: "#112240", padding: "14px 24px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div className="flex items-center gap-2.5 px-4 py-3 md:px-6 md:py-3.5" style={{ borderBottom: "1px solid #1B3055", backgroundColor: "#112240" }}>
           {selectedCat === "__trash__" ? (
             <>
               <span style={{ fontSize: "12px" }}>🗑</span>
@@ -401,7 +452,7 @@ export default function Board({ authorName }: { authorName: string }) {
           )}
         </div>
 
-        <div style={{ flex: 1, padding: "28px 24px", overflowY: "auto" }}>
+        <div className="flex-1 overflow-y-auto min-h-0 p-4 md:px-6 md:py-7">
           {selectedCat === "__trash__" && (
             <TrashView notes={trashNotes ?? []} loading={loadingTrash} />
           )}
@@ -420,7 +471,7 @@ export default function Board({ authorName }: { authorName: string }) {
               />
               <AttachPreviews att={att} className="mt-3" size={96} />
             </div>
-            <div className="flex items-center gap-3 px-4 pb-4">
+            <div className="flex flex-wrap items-center gap-3 px-4 pb-4">
               <AttachBar att={att} />
               <div className="flex-1" />
               <select value={tag} onChange={e => setTag(e.target.value)} className="px-3 py-2 border text-xs outline-none" style={{ backgroundColor: "#0B1930", borderColor: "#1B3055", color: "#C8D8EE" }}>
@@ -439,7 +490,7 @@ export default function Board({ authorName }: { authorName: string }) {
           {loading ? (
             <div className="text-sm text-center py-16" style={{ color: "#1B3055" }}>Chargement...</div>
           ) : (
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               {COLUMNS.map(col => {
                 const colNotes = visibleNotes.filter(n => n.status === col.status);
                 return (
@@ -491,7 +542,7 @@ export default function Board({ authorName }: { authorName: string }) {
                 ‹
               </button>
             )}
-            <img src={url} alt="screenshot" className="max-w-4xl max-h-screen p-8 object-contain" onClick={e => e.stopPropagation()} />
+            <img src={url} alt="screenshot" className="max-w-4xl max-h-screen p-4 md:p-8 object-contain" onClick={e => e.stopPropagation()} />
             {multi && (
               <button
                 type="button"
@@ -507,12 +558,12 @@ export default function Board({ authorName }: { authorName: string }) {
                 {overlay.index + 1} / {overlay.urls.length}
               </div>
             )}
-            <div className="absolute top-6 right-6 flex items-center gap-4">
+            <div className="absolute top-3 right-3 md:top-6 md:right-6 flex flex-wrap items-center justify-end gap-3 md:gap-4">
               {multi && (
                 <button
                   type="button"
                   onClick={e => { e.stopPropagation(); downloadAllImages(overlay.urls); }}
-                  className="text-sm tracking-widest uppercase"
+                  className="text-xs md:text-sm tracking-widest uppercase"
                   style={{ color: "#C8D8EE" }}
                 >
                   Tout télécharger
@@ -521,12 +572,12 @@ export default function Board({ authorName }: { authorName: string }) {
               <button
                 type="button"
                 onClick={e => { e.stopPropagation(); downloadImage(url); }}
-                className="text-sm tracking-widest uppercase"
+                className="text-xs md:text-sm tracking-widest uppercase"
                 style={{ color: "#C8D8EE" }}
               >
                 Télécharger
               </button>
-              <button type="button" className="text-sm tracking-widest uppercase" style={{ color: "#C8D8EE" }} onClick={() => setOverlay(null)}>Fermer</button>
+              <button type="button" className="text-xs md:text-sm tracking-widest uppercase" style={{ color: "#C8D8EE" }} onClick={() => setOverlay(null)}>Fermer</button>
             </div>
           </div>
         );
@@ -865,29 +916,60 @@ function TrashView({ notes, loading }: { notes: TrashNote[]; loading: boolean })
   const getCatColor = (catId: string) =>
     CATEGORIES.find(c => c.id === catId)?.color ?? "#1B3055";
 
+  // Regroupement par mois de suppression, du plus récent au plus ancien.
+  // (Les notes sont d'abord triées par deletedAt décroissant : mois ET notes
+  //  à l'intérieur d'un mois ressortent donc du plus récent au plus ancien.)
+  type Group = { key: string; label: string; items: TrashNote[] };
+  const groups: Group[] = [];
+  const byKey = new Map<string, Group>();
+  [...notes]
+    .sort((a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime())
+    .forEach(note => {
+      const d = new Date(note.deletedAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      let group = byKey.get(key);
+      if (!group) {
+        const raw = d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+        group = { key, label: raw.charAt(0).toUpperCase() + raw.slice(1), items: [] };
+        byKey.set(key, group);
+        groups.push(group);
+      }
+      group.items.push(note);
+    });
+
   return (
     <div style={{ maxWidth: "720px" }}>
-      <div className="space-y-3">
-        {notes.map(note => (
-          <div
-            key={note.id}
-            style={{
-              backgroundColor: "#112240",
-              border: "1px solid #1B3055",
-              borderLeft: `3px solid ${getCatColor(note.category)}`,
-              padding: "14px 16px",
-              opacity: 0.7,
-            }}
-          >
-            <p className="text-sm leading-relaxed mb-3" style={{ color: "#C8D8EE", whiteSpace: "pre-wrap" }}>
-              {note.content}
-            </p>
-            <div className="flex items-center gap-2 flex-wrap text-xs" style={{ color: "#1B3055" }}>
-              <span style={{ color: getCatColor(note.category) }}>{note.category}</span>
-              <span>·</span>
-              <span>{note.author}</span>
-              <span>·</span>
-              <span>Supprimé le {fmtDate(note.deletedAt)}</span>
+      <div className="space-y-8">
+        {groups.map(group => (
+          <div key={group.key}>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs tracking-widest uppercase" style={{ color: "#C8D8EE" }}>{group.label}</span>
+              <span className="text-xs px-2 py-0.5" style={{ backgroundColor: "#1B3055", color: "#7C92B5" }}>{group.items.length}</span>
+            </div>
+            <div className="space-y-3">
+              {group.items.map(note => (
+                <div
+                  key={note.id}
+                  style={{
+                    backgroundColor: "#112240",
+                    border: "1px solid #1B3055",
+                    borderLeft: `3px solid ${getCatColor(note.category)}`,
+                    padding: "14px 16px",
+                    opacity: 0.7,
+                  }}
+                >
+                  <p className="text-sm leading-relaxed mb-3" style={{ color: "#C8D8EE", whiteSpace: "pre-wrap" }}>
+                    {note.content}
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap text-xs" style={{ color: "#1B3055" }}>
+                    <span style={{ color: getCatColor(note.category) }}>{note.category}</span>
+                    <span>·</span>
+                    <span>{note.author}</span>
+                    <span>·</span>
+                    <span>Supprimé le {fmtDate(note.deletedAt)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
@@ -911,27 +993,39 @@ type AttachApi = ReturnType<typeof useAttachments>;
 
 function useAttachments() {
   const [pending, setPending] = useState<Pending[]>([]);
+  const pendingRef = useRef<Pending[]>([]);
+  useEffect(() => { pendingRef.current = pending; }, [pending]);
+
+  // Révoque les URL d'aperçu (blob:) restantes au démontage, pour éviter les fuites mémoire.
+  useEffect(() => () => {
+    pendingRef.current.forEach(p => { if (p.preview) URL.revokeObjectURL(p.preview); });
+  }, []);
 
   function addFiles(files: File[], kind: AttachmentKind) {
-    const entries: Pending[] = files.map(file => ({ file, kind, preview: null }));
+    // URL.createObjectURL : référence légère (pas de base64 en mémoire ni dans le state),
+    // disponible immédiatement. Évite le freeze que provoquait readAsDataURL sur des photos lourdes.
+    const entries: Pending[] = files.map(file => ({
+      file,
+      kind,
+      preview: kind === "image" ? URL.createObjectURL(file) : null,
+    }));
     setPending(prev => [...prev, ...entries]);
-    if (kind === "image") {
-      entries.forEach(entry => {
-        const reader = new FileReader();
-        reader.onload = ev =>
-          setPending(prev => prev.map(p => (p.file === entry.file ? { ...p, preview: ev.target?.result as string } : p)));
-        reader.readAsDataURL(entry.file);
-      });
-    }
   }
 
   function removeAt(index: number) {
-    setPending(prev => prev.filter((_, i) => i !== index));
+    setPending(prev => {
+      const target = prev[index];
+      if (target?.preview) URL.revokeObjectURL(target.preview);
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   // Les <input> sont vidés à chaque sélection (voir AttachBar.pick), donc rien à réinitialiser ici.
   function clear() {
-    setPending([]);
+    setPending(prev => {
+      prev.forEach(p => { if (p.preview) URL.revokeObjectURL(p.preview); });
+      return [];
+    });
   }
 
   async function uploadAll(): Promise<Attachment[]> {
@@ -1005,7 +1099,7 @@ function AttachPreviews({ att, size = 80, className = "" }: { att: AttachApi; si
         <div key={i} className="relative">
           {p.kind === "image" ? (
             p.preview ? (
-              <img src={p.preview} alt="aperçu" className="object-cover border" style={{ width: size, height: size, borderColor: "#1B3055" }} />
+              <img src={p.preview} alt="aperçu" decoding="async" className="object-cover border" style={{ width: size, height: size, borderColor: "#1B3055" }} />
             ) : (
               <div className="border flex items-center justify-center text-xs" style={{ width: size, height: size, borderColor: "#1B3055", color: "#1B3055" }}>…</div>
             )
