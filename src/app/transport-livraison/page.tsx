@@ -16,6 +16,14 @@ export default async function ConvoyagePage2() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
+        {/* CSS : cadrage responsive — mobile décale à gauche pour dégager la route (zone du texte), desktop reste centré camion */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          .ia-convoyage-photo { object-position: 55% 45%; }
+          @media (max-width: 767px) {
+            .ia-convoyage-photo { object-position: 34% 45%; }
+          }
+        ` }} />
+
         {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
@@ -23,29 +31,22 @@ export default async function ConvoyagePage2() {
         >
           {/* fond flou de secours (même scène) : évite tout vide sur les ratios d'écran extrêmes */}
           <img
-            src="/Photo du Site/Convoyage 2.png"
+            src="/Photo du Site/Convoyage/convoyage 2.png"
             alt=""
             aria-hidden="true"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
           />
-          {/* MOBILE : version portrait, remplit tout le hero (cover), camion entier */}
+          {/* photo nette, remplit tout le hero (cover) — recadrée pour garder le camion et les voitures visibles sur tous les formats */}
           <img
-            src="/Photo du Site/Convoyage.png"
+            src="/Photo du Site/Convoyage/convoyage 2.png"
             alt=""
-            className="md:hidden"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-          />
-          {/* DESKTOP : version paysage, remplit tout le hero (cover), camion entier */}
-          <img
-            src="/Photo du Site/Convoyage 2.png"
-            alt=""
-            className="hidden md:block"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+            className="ia-convoyage-photo"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
           {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
           {/* fondu bas : fusion avec le fond sombre + lisibilité du titre */}
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.82) 30%, transparent 100%)" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.78) 32%, transparent 100%)" }} />
 
           <div
             className="absolute z-10"
