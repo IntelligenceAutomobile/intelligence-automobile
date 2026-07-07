@@ -90,7 +90,7 @@ export default async function Methode2Page() {
           <div style={{ position: "relative", maxWidth: "900px" }}>
             <h1
               style={{
-                fontSize: "clamp(2.4rem, 4.5vw, 4.5rem)",
+                fontSize: "clamp(2.6rem, 6vw, 5rem)",
                 fontWeight: 900,
                 lineHeight: 0.95,
                 letterSpacing: "-0.02em",

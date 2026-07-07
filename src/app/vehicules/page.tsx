@@ -48,42 +48,12 @@ export default async function VehiculesV2Page({
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* ── HERO mobile : bande photo + titre dessous ── */}
-        <section className="md:hidden" style={{ position: "relative", backgroundColor: "#070F1E" }}>
-          <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 2", overflow: "hidden" }}>
-            <Image
-              src="/Photo du Site/Photo IA/Image Nos véhicules.png"
-              alt="Nos véhicules"
-              fill
-              priority
-              sizes="100vw"
-              style={{ objectFit: "cover" }}
-            />
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "55%", background: "linear-gradient(to top, #070F1E 0%, transparent 100%)" }} />
-          </div>
-          <div style={{ padding: "0.25rem 6vw 2.5rem" }}>
-            <h1 style={{ fontWeight: 900, fontSize: "clamp(2.4rem, 11vw, 3.4rem)", letterSpacing: "-0.03em", lineHeight: 0.9, color: "#F0F5FF", marginBottom: "1rem" }}>
-              Nos
-              <br />
-              <span style={{ color: "#6B9FEE" }}>véhicules.</span>
-            </h1>
-            <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
-              <p style={{ color: "rgba(168,196,240,0.68)", fontSize: "0.85rem", lineHeight: 1.8, fontWeight: 400, fontStyle: "italic", letterSpacing: "0.01em" }}>
-                {t.vehicles.heroSubtitle}
-              </p>
-            </div>
-            <HeroCta />
-          </div>
-        </section>
-
-        {/* ── HERO FULL-BLEED (desktop, inchangé) ── */}
+        {/* ── HERO FULL-BLEED (plein écran, mobile + desktop) ── */}
         <section
-          className="hidden md:block"
           style={{
             position: "relative",
-            height: "100vh",
+            height: "100svh",
+            minHeight: "520px",
             overflow: "hidden",
           }}
         >
@@ -134,7 +104,7 @@ export default async function VehiculesV2Page({
             <h1
               style={{
                 fontWeight: 900,
-                fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                fontSize: "clamp(2.6rem, 6vw, 5rem)",
                 letterSpacing: "-0.04em",
                 lineHeight: 0.88,
                 color: "#F0F5FF",

@@ -52,7 +52,7 @@ export default async function AideVenteV2Page() {
               <h1
                 className="font-black"
                 style={{
-                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                  fontSize: "clamp(2.6rem, 6vw, 5rem)",
                   lineHeight: 0.88,
                   letterSpacing: "-0.04em",
                   marginBottom: "clamp(1.5rem, 3vh, 2.5rem)",

@@ -8,9 +8,9 @@ const adapter = new PrismaLibSql({
 });
 const prisma = new PrismaClient({ adapter });
 
-const description = `Audi TT Coupé 2.0 TFSI importée d'Allemagne — excellent état, finition S line Competition, teinte Gris Daytona Perlé. Design iconique, cohérence stylistique sans compromis.
+const description = `Audi TT Coupé 2.0 TFSI importée d'Allemagne, excellent état, finition S line Competition, teinte Gris Daytona Perlé. Design iconique, cohérence stylistique sans compromis.
 
-4 cylindres 2.0 TFSI — 230 ch, boîte S tronic 6 rapports. Performances vives et agrément de conduite au quotidien. Virtual Cockpit intégralement numérique, navigation MMI, sellerie Alcantara.
+4 cylindres 2.0 TFSI, 230 ch, boîte S tronic 6 rapports. Performances vives et agrément de conduite au quotidien. Virtual Cockpit intégralement numérique, navigation MMI, sellerie Alcantara.
 
 Contrôle technique valide. Historique d'entretien complet. Sans accident connu. 2 propriétaires précédents.
 

@@ -45,7 +45,7 @@ const MAINTENANCE_HIGHLIGHTS: Record<string, MaintenanceHighlight[]> = {
   "audi-tt-mk2-sline-2010": [
     { icon: "📓", label: "Carnet d'origine", text: "Tampons de concessionnaires agréés Audi de mai 2010 à 2023", color: "#6B9FEE" },
     { icon: "🧾", label: "Factures originales", text: "Interventions récentes documentées (Midas, Autodoc, ByMyCar)", color: "#C6CCD6" },
-    { icon: "✓", label: "Contrôle technique", text: "2 CT favorables — dernier valide jusqu'au 28/01/2028", color: "#5BD89A" },
+    { icon: "✓", label: "Contrôle technique", text: "2 CT favorables, dernier valide jusqu'au 28/01/2028", color: "#5BD89A" },
   ],
 };
 

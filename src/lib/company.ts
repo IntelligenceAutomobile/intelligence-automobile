@@ -16,5 +16,5 @@ export const COMPANY = {
   logoSrc: "/Logo/v9%20transparent.png",
   // Mention de bas de page (statut juridique).
   legalFootnote:
-    "SASU Intelligence Automobile en cours d'immatriculation au Registre du Commerce et des Sociétés — SIRET et numéro de TVA intracommunautaire communiqués dès leur attribution. Devis sans valeur d'engagement avant signature des deux parties.",
+    "SASU Intelligence Automobile en cours d'immatriculation au Registre du Commerce et des Sociétés. SIRET et numéro de TVA intracommunautaire communiqués dès leur attribution. Devis sans valeur d'engagement avant signature des deux parties.",
 } as const;

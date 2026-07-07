@@ -22,7 +22,7 @@ const client = (url.startsWith("libsql://") || url.startsWith("https://"))
 const VEHICLE_ID = "audi-tt-mk2-sline-2010";
 
 const FEATURES = JSON.stringify([
-  "Freinage refait — disques et plaquettes neufs AV/AR",
+  "Freinage refait : disques et plaquettes neufs AV/AR",
   "Kit distribution neuf (déc. 2023)",
   "Jantes alliage 19 pouces S-line",
   "Sièges cuir chauffants",
@@ -49,7 +49,7 @@ const FEATURES = JSON.stringify([
 const DESCRIPTION =
   "Coupé sport 2+2 de la deuxième génération de la série TT, arrêtée définitivement en novembre 2023 sans successeur annoncé. " +
   "Le moteur 2.0 TFSI EA888 délivre 200 ch et 280 Nm de couple, associé à une boîte manuelle 6 rapports.\n\n" +
-  "Mise en circulation le 25 mai 2010, kilométrage actuel : 151 042 km — suivi documenté depuis l'origine avec 18 entrées au carnet. " +
+  "Mise en circulation le 25 mai 2010, kilométrage actuel : 151 042 km, suivi documenté depuis l'origine avec 18 entrées au carnet. " +
   "La finition S-line embarque les jantes 19 pouces, les sièges cuir chauffants et le volant sport cuir.\n\n" +
   "Contrôle technique favorable le 29/01/2026, valide jusqu'au 28/01/2028. " +
   "Pas d'accident déclaré. " +

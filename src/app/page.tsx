@@ -240,6 +240,9 @@ export default async function HomePage() {
           color: #DCE8F8;
           text-wrap: balance;
         }
+        .ia-hero-photo {
+          object-position: 38% 50%;
+        }
         @media (max-width: 1023px) {
           .ia-stat-row {
             flex-direction: column;
@@ -277,7 +280,8 @@ export default async function HomePage() {
           <img
             src="/Photo du Site/Voiture Accueil.jpg"
             alt=""
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "38% 50%" }}
+            className="ia-hero-photo"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
           {/* assombrit le haut pour la lisibilité du logo du header posé dessus */}
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
@@ -285,7 +289,7 @@ export default async function HomePage() {
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.82) 30%, transparent 100%)" }} />
           {/* titre + CTA superposés en bas */}
           <div style={{ position: "absolute", left: "6vw", right: "6vw", bottom: "7vh", maxWidth: "1400px", margin: "0 auto" }}>
-            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 7vw, 5rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
+            <h1 style={{ fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.03em", fontSize: "clamp(2.6rem, 5vw, 4.2rem)", color: "#F0F5FF", marginBottom: "1.75rem" }}>
               {t.home.heroTitle[0]}
               <br />{t.home.heroTitle[1]}
               <br /><span style={{ color: "#6B9FEE" }}>{t.home.heroTitle[2]}</span>
@@ -354,7 +358,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Photo IA/Recherche personnalisé.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Recherche personnalisé/Recherche 2.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
@@ -398,7 +402,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Photo IA/Covoyage 3 Logo Mate Optimiser Telephone Eloigné2  16 9eme.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Convoyage 2.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
@@ -442,7 +446,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Photo IA/Garage 3 voitures.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Nos Services/Nos service 2.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>

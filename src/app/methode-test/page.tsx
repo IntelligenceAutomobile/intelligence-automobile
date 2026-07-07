@@ -188,6 +188,61 @@ function NumberTicket({
   );
 }
 
+/* Lignes pleine largeur façon /recherche-personnalisee : filet dégradé en haut, chiffre à gauche, titre + filet + description à droite. */
+function EditorialSteps({
+  steps,
+  importSteps,
+  numberWidth,
+  titleSize,
+  number,
+  compact = false,
+}: {
+  steps: Step[];
+  importSteps: string[];
+  numberWidth: string;
+  titleSize: string;
+  number: (step: Step) => React.ReactNode;
+  compact?: boolean;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {steps.map((step) => (
+        <div
+          key={step.num}
+          style={{
+            borderTop: "1px solid",
+            borderImage: "linear-gradient(to right, rgba(107,159,238,0.6), rgba(107,159,238,0.08)) 1",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: compact ? "clamp(1.5rem, 4vw, 3.5rem)" : "clamp(2rem, 5vw, 5rem)",
+            padding: compact ? "clamp(1.3rem, 2.5vw, 2rem) 0" : "clamp(1.8rem, 3.5vw, 2.8rem) 0",
+          }}
+        >
+          <div style={{ flexShrink: 0, minWidth: numberWidth }}>{number(step)}</div>
+          <div style={{ flex: 1, paddingTop: "0.3rem" }}>
+            <p
+              style={{
+                fontSize: titleSize,
+                textTransform: "uppercase",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                color: "#F0F5FF",
+                marginBottom: "0.7rem",
+              }}
+            >
+              {step.title}
+            </p>
+            <div style={{ borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.7rem", maxWidth: "560px" }}>
+              <Desc step={step} importSteps={importSteps} />
+              <Tag step={step} />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* Style d'un chiffre en dégradé bleu → argent (taille/graisse paramétrables). */
 function gradNum(fontSize: string, fontWeight = 800): React.CSSProperties {
   return {
@@ -955,6 +1010,96 @@ export default async function MethodeTestPage() {
                     / {String(steps.length).padStart(2, "0")}
                   </span>
                 </span>
+              )}
+            />
+          </section>
+
+          {/* ═══════════ ÉTAPES · STYLE RECHERCHE PERSONNALISÉE ═══════════ */}
+          <PartDivider
+            kicker="Étapes · style recherche personnalisée"
+            title="Le même esprit que la page recherche"
+            note="Trois variantes reprenant le style de la section étapes de /recherche-personnalisee : lignes pleine largeur sans carte, filet supérieur en dégradé, grand chiffre à gauche."
+          />
+
+          {/* CONCEPT L · LIGNE ÉDITORIALE (FIDÈLE À RECHERCHE PERSO) */}
+          <section style={{ marginBottom: "6rem" }}>
+            <ConceptHeader
+              letter="L"
+              title="Ligne éditoriale"
+              note="Reprise quasi identique du style de /recherche-personnalisee : filet dégradé en haut de chaque ligne, chiffre à bordure gauche bleue, titre en majuscules suivi d'un filet puis la description."
+            />
+            <EditorialSteps
+              steps={steps}
+              importSteps={importSteps}
+              numberWidth="clamp(6rem, 10vw, 10rem)"
+              titleSize="13px"
+              number={(step) => (
+                <div
+                  style={{
+                    fontWeight: 900,
+                    fontSize: "clamp(2.8rem, 5.5vw, 5rem)",
+                    lineHeight: 1,
+                    borderLeft: "2px solid #6B9FEE",
+                    paddingLeft: "1.6rem",
+                    color: "#F0F5FF",
+                    letterSpacing: "-0.04em",
+                  }}
+                >
+                  {step.num}
+                </div>
+              )}
+            />
+          </section>
+
+          {/* CONCEPT M · LIGNE ÉDITORIALE, CHIFFRE DÉGRADÉ */}
+          <section style={{ marginBottom: "6rem" }}>
+            <ConceptHeader
+              letter="M"
+              title="Ligne éditoriale, chiffre dégradé"
+              note="Même structure de ligne, mais le chiffre est rempli du dégradé bleu → argent au lieu d'être plein blanc à bordure gauche. Un peu plus de matière, sans surcharger."
+            />
+            <EditorialSteps
+              steps={steps}
+              importSteps={importSteps}
+              numberWidth="clamp(6rem, 10vw, 10rem)"
+              titleSize="13px"
+              number={(step) => (
+                <div style={{ borderLeft: "2px solid rgba(107,159,238,0.35)", paddingLeft: "1.6rem" }}>
+                  <span aria-hidden="true" style={gradNum("clamp(2.8rem, 5.5vw, 5rem)", 900)}>
+                    {step.num}
+                  </span>
+                </div>
+              )}
+            />
+          </section>
+
+          {/* CONCEPT N · LIGNE ÉDITORIALE COMPACTE */}
+          <section>
+            <ConceptHeader
+              letter="N"
+              title="Ligne éditoriale compacte"
+              note="Version resserrée : chiffre, titre et espacements réduits d'un cran. Pensée pour rester légère si la page s'allonge avec les 6 étapes."
+            />
+            <EditorialSteps
+              steps={steps}
+              importSteps={importSteps}
+              numberWidth="clamp(4.5rem, 7vw, 7rem)"
+              titleSize="12px"
+              compact
+              number={(step) => (
+                <div
+                  style={{
+                    fontWeight: 900,
+                    fontSize: "clamp(2rem, 4vw, 3.4rem)",
+                    lineHeight: 1,
+                    borderLeft: "2px solid #6B9FEE",
+                    paddingLeft: "1.2rem",
+                    color: "#F0F5FF",
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  {step.num}
+                </div>
               )}
             />
           </section>

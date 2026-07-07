@@ -54,7 +54,7 @@ export default async function ConvoyagePage2() {
             <div style={{ maxWidth: "680px" }}>
               <h1
                 style={{
-                  fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                  fontSize: "clamp(2.6rem, 6vw, 5rem)",
                   fontWeight: 900,
                   lineHeight: 0.88,
                   letterSpacing: "-0.03em",

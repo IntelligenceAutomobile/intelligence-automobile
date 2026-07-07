@@ -19,32 +19,56 @@ export default async function ServicesPage() {
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
         {/* ─── HERO ──────────────────────────────────────────────────────── */}
-        <section className="relative px-6 lg:px-12" style={{ paddingTop: "220px", paddingBottom: "90px" }}>
-          <div className="max-w-7xl mx-auto">
-            <p className="text-[11px] sm:text-sm tracking-[0.4em] uppercase font-bold mb-6" style={{ color: "#6B9FEE" }}>
-              {s.heroLabel}
-            </p>
-            <h1 className="font-light leading-[1.05]" style={{ fontSize: "clamp(2.4rem, 6vw, 4.5rem)" }}>
-              {s.heroTitle.map((line, i) => (
-                <span key={i} className="block">{line}</span>
-              ))}
-            </h1>
-            <p className="mt-8 max-w-2xl text-base sm:text-lg leading-relaxed" style={{ color: "rgba(240,245,255,0.7)" }}>
-              {s.heroSubtitle}
-            </p>
+        <section
+          className="relative overflow-hidden flex items-end"
+          style={{ height: "100vh", minHeight: "600px", backgroundColor: "#070F1E", paddingBottom: "8vh" }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: "url('/Photo%20du%20Site/Nos%20Services/Nos%20service%202.png')",
+              backgroundSize: "cover",
+              backgroundPosition: "center 45%",
+            }}
+          />
+          {/* Fondu bas pour la lisibilité */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(to top, #070F1E 16%, rgba(7,15,30,0.45) 55%, rgba(7,15,30,0.12) 100%)" }}
+          />
+          {/* Renfort gauche (le texte y est posé) */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(to right, rgba(7,15,30,0.82) 0%, rgba(7,15,30,0.38) 38%, transparent 68%)" }}
+          />
 
-            {/* Accès rapide aux sections */}
-            <div className="mt-10 flex flex-wrap gap-3">
-              {s.items.map((it) => (
-                <a
-                  key={it.id}
-                  href={`#${it.id}`}
-                  className="text-[11px] tracking-[0.12em] uppercase px-4 py-2.5 rounded-full transition-colors duration-200"
-                  style={{ color: "#A8C4F0", border: "1px solid rgba(107,159,238,0.3)" }}
-                >
-                  {it.title}
-                </a>
-              ))}
+          <div className="relative w-full px-6 lg:px-12">
+            <div className="max-w-7xl mx-auto">
+              <p className="text-[11px] sm:text-sm tracking-[0.4em] uppercase font-bold mb-6" style={{ color: "#6B9FEE" }}>
+                {s.heroLabel}
+              </p>
+              <h1 className="font-light leading-[1.05]" style={{ fontSize: "clamp(2.4rem, 6vw, 4.5rem)" }}>
+                {s.heroTitle.map((line, i) => (
+                  <span key={i} className="block">{line}</span>
+                ))}
+              </h1>
+              <p className="mt-8 max-w-2xl text-base sm:text-lg leading-relaxed" style={{ color: "rgba(240,245,255,0.78)" }}>
+                {s.heroSubtitle}
+              </p>
+
+              {/* Accès rapide aux sections */}
+              <div className="mt-10 flex flex-wrap gap-3">
+                {s.items.map((it) => (
+                  <a
+                    key={it.id}
+                    href={`#${it.id}`}
+                    className="text-[11px] tracking-[0.12em] uppercase px-4 py-2.5 rounded-full transition-colors duration-200"
+                    style={{ color: "#A8C4F0", border: "1px solid rgba(107,159,238,0.3)", backgroundColor: "rgba(7,15,30,0.35)" }}
+                  >
+                    {it.title}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </section>

@@ -22,7 +22,7 @@ const client = (url.startsWith("libsql://") || url.startsWith("https://"))
 const VEHICLE_ID = "audi-tt-mk3-sline-2014";
 
 const FEATURES = JSON.stringify([
-  "Virtual Cockpit — instrumentation numérique 12.3\"",
+  "Virtual Cockpit : instrumentation numérique 12.3\"",
   "Apple CarPlay intégré",
   "Pack S line extérieur complet",
   "Seuils de portes S line aluminium",
@@ -45,7 +45,7 @@ const FEATURES = JSON.stringify([
 
 // P1 + P2 visibles, P3 → badges État & historique (filtré côté frontend)
 const DESCRIPTION =
-  "Troisième génération du Coupé Audi TT — génération 8S, produite de 2014 à 2023. " +
+  "Troisième génération du Coupé Audi TT (génération 8S), produite de 2014 à 2023. " +
   "Ce 2.0 TFSI 230 ch couplé à la transmission intégrale quattro et à la boîte S tronic 7 rapports représente la configuration la plus aboutie de la gamme. " +
   "Le Virtual Cockpit (instrumentation 12.3\" entièrement numérique) fait son apparition sur cette génération.\n\n" +
   "Première immatriculation le 17/11/2014 en Belgique. Kilométrage au CT belge (24/04/2026) : 147 005 km. " +

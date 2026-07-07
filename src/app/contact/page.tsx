@@ -32,7 +32,7 @@ export default async function ContactV2Page({
           }}
         >
           <img
-            src="/Photo du Site/New Photo HD/tim-meyer-WvA85uSNL6k-unsplash.jpg"
+            src="/Photo du Site/Contact/Contact 2.png"
             alt=""
             style={{
               position: "absolute",
@@ -41,16 +41,17 @@ export default async function ContactV2Page({
               height: "100%",
               objectFit: "cover",
               objectPosition: "center",
-              opacity: 0.80,
+              opacity: 1,
             }}
           />
 
+          {/* Assombrit la gauche (le texte y est posé), laisse la scène visible à droite */}
           <div
             style={{
               position: "absolute",
               inset: 0,
               background:
-                "linear-gradient(120deg, rgba(7,15,30,0.9) 0%, rgba(7,15,30,0.3) 55%, transparent 100%)",
+                "linear-gradient(to right, rgba(7,15,30,0.92) 0%, rgba(7,15,30,0.55) 30%, rgba(7,15,30,0) 62%)",
             }}
           />
 
@@ -60,7 +61,7 @@ export default async function ContactV2Page({
               bottom: 0,
               left: 0,
               right: 0,
-              height: "40%",
+              height: "45%",
               background: "linear-gradient(to top, #070F1E, transparent)",
             }}
           />
@@ -71,7 +72,7 @@ export default async function ContactV2Page({
               bottom: "8vh",
               left: "6vw",
               right: "6vw",
-              maxWidth: "660px",
+              maxWidth: "560px",
             }}
           >
             <h1

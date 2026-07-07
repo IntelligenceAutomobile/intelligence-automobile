@@ -53,7 +53,7 @@ const features = [
 
 const description = `Exceptionnelle Audi TT Coupé 2.0 TFSI 230 ch S line Competition, importée directement d'Allemagne et proposée en parfait état. Revêtue dans la légendaire teinte Gris Daytona Perlé, cette icône du design automobile allie sportivité pure et élégance allemande avec une cohérence stylistique sans faille.
 
-Le pack S line Competition lui confère un caractère encore plus affirmé : boucliers exclusifs aux grandes prises d'air, jantes 19" bi-ton anthracite, diffuseur arrière sport et double sortie d'échappement chromée — une signature visuelle immédiatement reconnaissable.
+Le pack S line Competition lui confère un caractère encore plus affirmé : boucliers exclusifs aux grandes prises d'air, jantes 19" bi-ton anthracite, diffuseur arrière sport et double sortie d'échappement chromée, une signature visuelle immédiatement reconnaissable.
 
 À bord, le poste de conduite orienté pilote fascine dès le premier regard : Audi Virtual Cockpit entièrement numérique, navigation MMI, sièges sport S line en Alcantara et volant à méplat enveloppé de cuir fine-grain. Chaque détail a été pensé pour sublimer l'expérience de conduite.
 

@@ -21,6 +21,13 @@ Les tirets (cadratin `—`, demi-cadratin `–`) ne sont **pas** interdits. Ce q
 - Les autres usages (énumération, plage de valeurs, tirets déjà présents sur le site) restent acceptés.
 - Vaut pour tout le contenu rédactionnel du site (textes i18n, descriptions, etc.).
 
+# Conventions d'images
+
+## Hero de page ↔ encart d'accueil : même image
+Chaque page de service a un encart correspondant sur la page d'accueil (`src/app/page.tsx`, sections `SERVICE 0x`). **Quand on change l'image du hero d'une page, il faut mettre la même image dans l'encart d'accueil correspondant**, et inversement, pour garder la cohérence page ↔ accueil.
+- Correspondances : `/vehicules` ↔ encart 01, `/recherche-personnalisee` ↔ 02, `/revente-sur-mesure` ↔ 03, `/transport-livraison` ↔ 04, `/methode` ↔ 05, `/services` ↔ 06.
+- Le hero est plein cadre, l'encart est un 16:9 avec fondu vers le texte : vérifier que le cadrage tient dans les deux (capture desktop + mobile).
+
 # Conventions d'affichage
 
 ## Format des nombres
