@@ -641,7 +641,7 @@ export const fr = {
     heroLabel: "Nos services",
     heroTitle: ["Tout ce qui entoure", "votre véhicule,", "pris en charge."],
     heroSubtitle:
-      "De la garantie à la carte grise définitive, nous gérons l'ensemble des démarches qui sécurisent et simplifient votre acquisition. Vous conduisez, nous nous occupons du reste.",
+      "De la garantie à la carte grise définitive, nous gérons les démarches qui sécurisent votre acquisition. Vous conduisez, nous nous occupons du reste.",
     items: [
       {
         id: "garantie",
@@ -649,8 +649,7 @@ export const fr = {
         title: "Garantie",
         subtitle: "Roulez l'esprit tranquille.",
         paragraphs: [
-          "Chaque véhicule est livré avec une garantie panne mécanique de 3 mois incluse, couvrant les organes essentiels : moteur, boîte de vitesses et transmission.",
-          "Pour aller plus loin, une extension jusqu'à 24 mois est disponible en option, avec assistance et véhicule de remplacement.",
+          "Moteur, boîte et transmission couverts dès la remise des clés, sans démarche de votre part.",
         ],
         points: [
           "Garantie panne mécanique 3 mois incluse",
@@ -665,8 +664,7 @@ export const fr = {
         title: "Financement",
         subtitle: "Une solution adaptée à votre projet.",
         paragraphs: [
-          "Crédit auto classique, location avec option d'achat (LOA) ou location longue durée (LLD) : nous vous orientons vers la formule la plus cohérente avec votre budget et votre usage.",
-          "Nos partenaires bancaires, spécialisés dans le véhicule premium, étudient votre dossier sous 48 h, y compris sur les véhicules importés.",
+          "Crédit, LOA ou LLD : nous vous orientons vers la formule qui colle à votre budget, réponse sous 48 h.",
         ],
         points: [
           "Crédit auto, LOA, LLD",
@@ -681,8 +679,7 @@ export const fr = {
         title: "Assurances",
         subtitle: "Assuré dès la remise des clés.",
         paragraphs: [
-          "Pour rouler immédiatement, nous mettons en place l'assurance temporaire nécessaire à la circulation sous plaques provisoires WW, le temps que votre immatriculation définitive soit établie.",
-          "Au-delà de la phase temporaire, nos partenaires assureurs, habitués aux véhicules premium et importés, vous proposent des devis comparatifs pour votre assurance définitive, pour une couverture effective dès la livraison et sur le long terme.",
+          "Assurance temporaire WW pour rouler tout de suite, puis devis comparatifs pour votre couverture définitive.",
         ],
         points: [
           "Assurance temporaire WW et assurance définitive",
@@ -697,8 +694,7 @@ export const fr = {
         title: "Démarches administratives (WW, CPI)",
         subtitle: "L'import sans la paperasse.",
         paragraphs: [
-          "Importer un véhicule implique un parcours administratif précis : quitus fiscal, certificat de conformité européen (COC), puis Certificat Provisoire d'Immatriculation (CPI) et plaques provisoires WW pour circuler sans attendre.",
-          "Nous constituons et suivons l'intégralité du dossier ANTS à votre place, jusqu'à l'obtention de votre titre définitif.",
+          "Quitus, COC, CPI, plaques WW : nous montons et suivons tout le dossier ANTS à votre place.",
         ],
         points: [
           "Quitus fiscal & certificat de conformité (COC)",
@@ -713,8 +709,7 @@ export const fr = {
         title: "Carte grise définitive",
         subtitle: "Votre véhicule, immatriculé en France.",
         paragraphs: [
-          "Une fois le dossier complet, nous obtenons votre carte grise définitive française et faisons poser vos plaques d'immatriculation définitives.",
-          "Vous suivez chaque étape jusqu'à la réception de votre titre, sans aucune démarche à effectuer vous-même.",
+          "Nous obtenons votre carte grise française définitive et faisons poser vos plaques, sans une démarche de votre part.",
         ],
         points: [
           "Immatriculation définitive française",

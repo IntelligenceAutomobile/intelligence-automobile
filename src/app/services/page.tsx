@@ -2,6 +2,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getTranslations } from "@/lib/i18n-server";
+import ServicesAccordion from "./ServicesAccordion";
 
 export const metadata = {
   title: "Services — Intelligence Automobile",
@@ -19,121 +20,42 @@ export default async function ServicesPage() {
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
         {/* ─── HERO ──────────────────────────────────────────────────────── */}
-        <section
-          className="relative overflow-hidden flex items-end"
-          style={{ height: "100vh", minHeight: "600px", backgroundColor: "#070F1E", paddingBottom: "8vh" }}
-        >
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: "url('/Photo%20du%20Site/Nos%20Services/Nos%20service%202.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center 45%",
-            }}
+        <section style={{ position: "relative", height: "100svh", minHeight: "600px", overflow: "hidden", backgroundColor: "#070F1E" }}>
+          {/* fond flou de secours : évite tout vide sur les ratios d'écran extrêmes */}
+          <img
+            src="/Photo du Site/Nos Services/Nos service 2.png"
+            alt=""
+            aria-hidden="true"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
           />
-          {/* Fondu bas pour la lisibilité */}
-          <div
-            className="absolute inset-0"
-            style={{ background: "linear-gradient(to top, #070F1E 16%, rgba(7,15,30,0.45) 55%, rgba(7,15,30,0.12) 100%)" }}
+          {/* photo nette, plein cadre */}
+          <img
+            src="/Photo du Site/Nos Services/Nos service 2.png"
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 42%" }}
           />
-          {/* Renfort gauche (le texte y est posé) */}
-          <div
-            className="absolute inset-0"
-            style={{ background: "linear-gradient(to right, rgba(7,15,30,0.82) 0%, rgba(7,15,30,0.38) 38%, transparent 68%)" }}
-          />
+          {/* assombrit le haut pour la lisibilité du logo du header */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
+          {/* fondu bas : fusion avec le fond + lisibilité du titre */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "66%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.9) 24%, rgba(7,15,30,0.5) 58%, transparent 100%)" }} />
 
-          <div className="relative w-full px-6 lg:px-12">
-            <div className="max-w-7xl mx-auto">
-              <p className="text-[11px] sm:text-sm tracking-[0.4em] uppercase font-bold mb-6" style={{ color: "#6B9FEE" }}>
-                {s.heroLabel}
-              </p>
-              <h1 className="font-light leading-[1.05]" style={{ fontSize: "clamp(2.4rem, 6vw, 4.5rem)" }}>
-                {s.heroTitle.map((line, i) => (
-                  <span key={i} className="block">{line}</span>
-                ))}
-              </h1>
-              <p className="mt-8 max-w-2xl text-base sm:text-lg leading-relaxed" style={{ color: "rgba(240,245,255,0.78)" }}>
+          <div style={{ position: "absolute", left: "6vw", right: "6vw", bottom: "8vh", maxWidth: "1400px", margin: "0 auto" }}>
+            <h1 style={{ fontWeight: 900, lineHeight: 0.92, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 5.4vw, 4.4rem)", textTransform: "uppercase", color: "#F0F5FF", margin: 0 }}>
+              {s.heroTitle.map((line, i) => (
+                <span key={i} style={{ display: "block", color: i === s.heroTitle.length - 1 ? "#6B9FEE" : "#F0F5FF" }}>{line}</span>
+              ))}
+            </h1>
+            <div style={{ marginTop: "1.8rem" }}>
+              <div style={{ width: "36px", height: "1px", backgroundColor: "#6B9FEE", opacity: 0.45, marginBottom: "0.6rem" }} />
+              <p style={{ color: "rgba(214,228,246,0.82)", fontSize: "clamp(0.82rem, 1.1vw, 0.92rem)", lineHeight: 1.8, fontWeight: 300, maxWidth: "460px", fontStyle: "italic", letterSpacing: "0.01em" }}>
                 {s.heroSubtitle}
               </p>
-
-              {/* Accès rapide aux sections */}
-              <div className="mt-10 flex flex-wrap gap-3">
-                {s.items.map((it) => (
-                  <a
-                    key={it.id}
-                    href={`#${it.id}`}
-                    className="text-[11px] tracking-[0.12em] uppercase px-4 py-2.5 rounded-full transition-colors duration-200"
-                    style={{ color: "#A8C4F0", border: "1px solid rgba(107,159,238,0.3)", backgroundColor: "rgba(7,15,30,0.35)" }}
-                  >
-                    {it.title}
-                  </a>
-                ))}
-              </div>
             </div>
           </div>
         </section>
 
         {/* ─── SECTIONS SERVICES ─────────────────────────────────────────── */}
-        {s.items.map((it, idx) => (
-          <section
-            key={it.id}
-            id={it.id}
-            className="px-6 lg:px-12 scroll-mt-[150px] lg:scroll-mt-[180px]"
-            style={{
-              paddingTop: "70px",
-              paddingBottom: "70px",
-              backgroundColor: idx % 2 === 0 ? "#070F1E" : "#040B16",
-              borderTop: "1px solid rgba(255,255,255,0.05)",
-            }}
-          >
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
-              {/* Colonne titre */}
-              <div className="lg:col-span-5">
-                <div className="flex items-center gap-4 mb-5">
-                  <span
-                    className="font-black tabular-nums flex items-center justify-center leading-none flex-shrink-0"
-                    style={{
-                      fontSize: "1.05rem",
-                      color: "#6B9FEE",
-                      width: "2.75rem",
-                      height: "2.75rem",
-                      backgroundColor: "rgba(107,159,238,0.1)",
-                      border: "1px solid rgba(107,159,238,0.3)",
-                      borderRadius: "8px",
-                    }}
-                  >
-                    {it.num}
-                  </span>
-                  <div className="h-px flex-1" style={{ backgroundColor: "rgba(107,159,238,0.25)" }} />
-                </div>
-                <h2 className="font-light leading-tight" style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)" }}>
-                  {it.title}
-                </h2>
-                <div className="mt-4" style={{ width: "48px", height: "3px", background: "linear-gradient(to right, #C6CCD6, transparent)", borderRadius: "2px" }} />
-                <p className="mt-4 text-lg" style={{ color: "#8BB8F5" }}>{it.subtitle}</p>
-              </div>
-
-              {/* Colonne contenu */}
-              <div className="lg:col-span-7">
-                <div className="space-y-4">
-                  {it.paragraphs.map((p, i) => (
-                    <p key={i} className="text-base sm:text-[1.05rem] leading-relaxed" style={{ color: "rgba(240,245,255,0.78)" }}>
-                      {p}
-                    </p>
-                  ))}
-                </div>
-                <ul className="mt-8 grid sm:grid-cols-2 gap-x-8 gap-y-4">
-                  {it.points.map((pt, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm" style={{ color: "#D4E2F4" }}>
-                      <span className="mt-[7px] flex-shrink-0" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#C6CCD6" }} />
-                      <span>{pt}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </section>
-        ))}
+        <ServicesAccordion items={s.items} />
 
         {/* ─── CTA ───────────────────────────────────────────────────────── */}
         <section
@@ -141,26 +63,26 @@ export default async function ServicesPage() {
           style={{ paddingTop: "90px", paddingBottom: "110px", background: "linear-gradient(180deg, #040B16 0%, #070F1E 100%)" }}
         >
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-[11px] tracking-[0.4em] uppercase font-bold mb-5" style={{ color: "#6B9FEE" }}>
+            <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.3em", textTransform: "uppercase", color: "#9DBFF2", marginBottom: "1.4rem" }}>
               {s.ctaLabel}
             </p>
-            <h2 className="font-light leading-tight" style={{ fontSize: "clamp(2rem, 4.5vw, 3.2rem)" }}>
+            <h2 style={{ fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.6rem)", letterSpacing: "-0.03em", lineHeight: 0.95, textTransform: "uppercase" }}>
               {s.ctaTitle.map((l, i) => (
-                <span key={i} className="block">{l}</span>
+                <span key={i} style={{ display: "block", color: i === s.ctaTitle.length - 1 ? "#6B9FEE" : "#F0F5FF" }}>{l}</span>
               ))}
             </h2>
             <div className="mt-10 flex flex-wrap gap-4 justify-center">
               <Link
                 href="/contact"
-                className="inline-flex items-center text-[11px] font-bold tracking-[0.2em] uppercase px-8 py-4 transition-opacity hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
+                className="inline-flex items-center transition-opacity hover:opacity-90"
+                style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 40px" }}
               >
                 {s.ctaContact}
               </Link>
               <Link
                 href="/vehicules"
-                className="inline-flex items-center text-[11px] font-bold tracking-[0.2em] uppercase px-8 py-4 transition-colors"
-                style={{ color: "#A8C4F0", border: "1px solid rgba(107,159,238,0.4)" }}
+                className="inline-flex items-center transition-colors"
+                style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase", color: "#F0F5FF", border: "1px solid rgba(240,245,255,0.2)", padding: "16px 40px" }}
               >
                 {s.ctaStock}
               </Link>

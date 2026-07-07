@@ -2,6 +2,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getTranslations } from "@/lib/i18n-server";
+import MethodeSteps from "./MethodeSteps";
 
 export const metadata = {
   title: "Notre Méthode — Intelligence Automobile",
@@ -151,130 +152,7 @@ export default async function Methode2Page() {
           {/* ── 01 · LES 6 ÉTAPES ── */}
           <div className="mb-20">
             <SectionHeader num="01" label={s.processTitle.replace("\n", " ")} />
-            <div style={{ display: "grid", gap: "1rem" }}>
-              {s.steps.map((step, i) => (
-                <div
-                  key={i}
-                  className="transition-transform duration-300 hover:-translate-y-1"
-                  style={{
-                    background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
-                    border: "1px solid rgba(107,159,238,0.12)",
-                    borderRadius: "10px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div className="grid grid-cols-[70px_1fr] sm:grid-cols-[108px_1fr]">
-                    {/* Panneau gauche : chiffre dégradé + filet */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        padding: "0.9rem 0.5rem",
-                        background:
-                          "linear-gradient(160deg, rgba(107,159,238,0.16) 0%, rgba(107,159,238,0.03) 100%)",
-                        borderRight: "1px solid rgba(107,159,238,0.18)",
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem" }}
-                      >
-                        <span
-                          style={{
-                            fontSize: "clamp(1.8rem, 4vw, 2.75rem)",
-                            fontWeight: 800,
-                            lineHeight: 1,
-                            letterSpacing: "-0.03em",
-                            backgroundImage: "linear-gradient(150deg, #6B9FEE 0%, #C6CCD6 100%)",
-                            WebkitBackgroundClip: "text",
-                            backgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            color: "transparent",
-                          }}
-                        >
-                          {step.num}
-                        </span>
-                        <span
-                          style={{
-                            width: "24px",
-                            height: "2px",
-                            borderRadius: "1px",
-                            background: "linear-gradient(to right, #6B9FEE, transparent)",
-                          }}
-                        />
-                      </span>
-                    </div>
-
-                    {/* Contenu */}
-                    <div style={{ padding: "1.1rem clamp(1rem, 2.5vw, 1.5rem)" }}>
-                      <h3
-                        className="font-black leading-tight"
-                        style={{
-                          fontSize: "clamp(1rem, 1.7vw, 1.2rem)",
-                          letterSpacing: "-0.01em",
-                          color: "#F0F5FF",
-                          marginBottom: "0.55rem",
-                        }}
-                      >
-                        {step.title}
-                      </h3>
-                      <div className="mb-3" style={{ maxWidth: "560px" }}>
-                        {step.description.split("\n").map((line, j, arr) => (
-                          <p
-                            key={j}
-                            style={{
-                              fontSize: "12px",
-                              color: "#A8C6F4",
-                              lineHeight: 1.65,
-                              marginBottom: j < arr.length - 1 ? "0.5rem" : 0,
-                            }}
-                          >
-                            {line}
-                          </p>
-                        ))}
-                      </div>
-                      {step.num === "04" && (
-                        <ul className="mb-3 space-y-2" style={{ maxWidth: "560px" }}>
-                          {s.importSteps.map((item, k) => (
-                            <li
-                              key={k}
-                              className="flex items-start gap-2.5"
-                              style={{ fontSize: "12px", color: "#A8C6F4", lineHeight: 1.5 }}
-                            >
-                              <span
-                                className="flex-shrink-0 font-bold"
-                                style={{ color: "#6B9FEE", marginTop: "1px" }}
-                              >
-                                —
-                              </span>
-                              <span>
-                                {item.split(/\[\[|\]\]/).map((part, j) =>
-                                  j % 2 === 1 ? (
-                                    <span key={j} style={{ color: "#FF14E1", fontWeight: 700 }}>
-                                      {part}
-                                    </span>
-                                  ) : (
-                                    <span key={j}>{part}</span>
-                                  )
-                                )}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <p
-                        className="font-medium italic"
-                        style={{ fontSize: "11px", color: "#C6CCD6" }}
-                      >
-                        → {step.tagline}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <MethodeSteps steps={s.steps} importSteps={s.importSteps} />
           </div>
 
           {/* ── 02 · CE QUE NOUS SÉCURISONS ── */}
@@ -304,58 +182,9 @@ export default async function Methode2Page() {
             </div>
           </div>
 
-          {/* ── 03 · NOS VALEURS ── */}
+          {/* ── 03 · POSITIONNEMENT ── */}
           <div className="mb-20">
-            <SectionHeader num="03" label={s.pillarsTitle.replace("\n", " ")} />
-            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "1rem" }}>
-              {s.pillars.map((pillar, i) => (
-                <div
-                  key={i}
-                  className="transition-transform duration-300 hover:-translate-y-1"
-                  style={{
-                    background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
-                    border: "1px solid rgba(107,159,238,0.12)",
-                    borderRadius: "10px",
-                    padding: "1.5rem",
-                  }}
-                >
-                  <h3
-                    style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.12em",
-                      fontSize: "0.85rem",
-                      fontWeight: 800,
-                      color: "#F0F5FF",
-                      marginBottom: "0.6rem",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "2.2em",
-                        letterSpacing: "0",
-                        lineHeight: 1,
-                        backgroundImage: "linear-gradient(150deg, #6B9FEE 0%, #C6CCD6 100%)",
-                        WebkitBackgroundClip: "text",
-                        backgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        color: "transparent",
-                      }}
-                    >
-                      {pillar.title.charAt(0)}
-                    </span>
-                    <span>{pillar.title.slice(1)}</span>
-                  </h3>
-                  <p style={{ fontSize: "13px", color: "#A8C6F4", lineHeight: 1.6 }}>{pillar.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── 04 · POSITIONNEMENT ── */}
-          <div className="mb-20">
-            <SectionHeader num="04" label={s.cabinetLabel} />
+            <SectionHeader num="03" label={s.cabinetLabel} />
             <div style={{ ...sectionCardStyle, padding: "clamp(1.75rem, 4vw, 3rem)" }}>
               <h2
                 className="font-black leading-tight"

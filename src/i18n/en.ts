@@ -638,7 +638,7 @@ export const en: Translations = {
     heroLabel: "Our services",
     heroTitle: ["Everything around", "your vehicle,", "handled."],
     heroSubtitle:
-      "From the warranty to the final registration certificate, we manage every step that secures and simplifies your acquisition. You drive, we handle the rest.",
+      "From the warranty to the final registration certificate, we manage the steps that secure your acquisition. You drive, we handle the rest.",
     items: [
       {
         id: "garantie",
@@ -646,8 +646,7 @@ export const en: Translations = {
         title: "Warranty",
         subtitle: "Drive with peace of mind.",
         paragraphs: [
-          "Every vehicle is delivered with a 3-month mechanical breakdown warranty included, covering the essential components: engine, gearbox and transmission.",
-          "To go further, a 12 to 24-month extension is available as an option, with coverage through our network of partner garages across France.",
+          "Engine, gearbox and transmission covered from the moment you get the keys, with nothing to handle yourself.",
         ],
         points: [
           "3-month mechanical breakdown warranty included",
@@ -662,8 +661,7 @@ export const en: Translations = {
         title: "Financing",
         subtitle: "A solution tailored to your project.",
         paragraphs: [
-          "Standard car loan, lease with purchase option (LOA) or long-term lease (LLD): we guide you to the formula best suited to your budget and your use.",
-          "Our banking partners, specialised in premium vehicles, review your application within 48 hours, including on imported vehicles.",
+          "Car loan, LOA or LLD: we guide you to the formula that fits your budget, with an answer within 48 hours.",
         ],
         points: [
           "Car loan, LOA, LLD",
@@ -678,8 +676,7 @@ export const en: Translations = {
         title: "Insurance",
         subtitle: "Insured from the moment you get the keys.",
         paragraphs: [
-          "To drive immediately, we arrange the temporary insurance required to circulate under provisional WW plates, while your final registration is being established.",
-          "Our insurance partners, familiar with premium and imported vehicles, provide comparative quotes for cover effective from delivery.",
+          "Temporary WW insurance so you can drive right away, then comparative quotes for your permanent cover.",
         ],
         points: [
           "Temporary insurance for WW plates",
@@ -694,8 +691,7 @@ export const en: Translations = {
         title: "Administrative procedures (WW, CPI)",
         subtitle: "Import without the paperwork.",
         paragraphs: [
-          "Importing a vehicle involves a precise administrative path: tax clearance (quitus fiscal), European certificate of conformity (COC), then the Provisional Registration Certificate (CPI) and provisional WW plates to drive without waiting.",
-          "We compile and follow the entire ANTS file on your behalf, all the way to your final registration document.",
+          "Tax clearance, COC, CPI, WW plates: we compile and follow the entire ANTS file on your behalf.",
         ],
         points: [
           "Tax clearance & certificate of conformity (COC)",
@@ -710,8 +706,7 @@ export const en: Translations = {
         title: "Final registration",
         subtitle: "Your vehicle, registered in France.",
         paragraphs: [
-          "Once the file is complete, we obtain your final French registration certificate and have your definitive number plates fitted.",
-          "You follow every step until you receive your document, with nothing to handle yourself.",
+          "We obtain your final French registration certificate and have your plates fitted, with nothing to handle yourself.",
         ],
         points: [
           "Final French registration",
