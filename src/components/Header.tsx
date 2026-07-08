@@ -70,6 +70,26 @@ const MARK_TOP_PAD = 239 / MARK_H;
 const MARK_VISIBLE_FRAC_Y = (622 - 239) / MARK_H;
 const MARK_VISIBLE_LEFT_X = 630 / MARK_W;
 const MARK_VISIBLE_RIGHT_X = 1102 / MARK_W;
+// Hauteur de texte "raisonnable" utilisée le temps du tout premier rendu,
+// avant que la vraie mesure (ResizeObserver) ne soit disponible — évite que
+// le mark soit invisible un instant (et, sur certains chargements, le reste).
+const FALLBACK_TEXT_HEIGHT = 44;
+
+function computeMarkFit(textHeight: number) {
+  const imgHeight = textHeight / MARK_VISIBLE_FRAC_Y;
+  const imgWidth = imgHeight * (MARK_W / MARK_H);
+  return {
+    height: imgHeight,
+    width: imgWidth,
+    top: -imgHeight * MARK_TOP_PAD,
+    // le mark est decale a gauche pour compenser SA PROPRE marge
+    // transparente gauche (glyphe visible flush avec le debut du bloc) ;
+    // le texte recoit un marginLeft base sur la largeur du glyphe visible
+    // (pas la largeur totale de l'image) pour rester colle a sa droite.
+    left: -imgWidth * MARK_VISIBLE_LEFT_X,
+    textMarginLeft: imgWidth * (MARK_VISIBLE_RIGHT_X - MARK_VISIBLE_LEFT_X),
+  };
+}
 
 export function LogoFull({
   markHeight = 48,
@@ -82,6 +102,9 @@ export function LogoFull({
   textScale?: number;
   // Cale le haut/bas du glyphe visible du mark sur le haut de "Intelligence"
   // et le bas de "Automobile", au lieu de dimensionner le mark via markHeight.
+  // Le texte utilise alors une taille responsive (clamp/vw) au lieu de
+  // markHeight/textScale : pense pour l'unique logo du header (toutes tailles
+  // d'ecran), pas pour les autres usages (admin) qui ne l'activent pas.
   matchTextHeight?: boolean;
 }) {
   const isCol = layout === "col";
@@ -90,7 +113,7 @@ export function LogoFull({
   const markLeft = isCol ? undefined : markHeight * (23 / 110);
 
   const textRef = useRef<HTMLDivElement>(null);
-  const [fitted, setFitted] = useState<{ height: number; width: number; top: number; left: number; textMarginLeft: number } | null>(null);
+  const [fitted, setFitted] = useState(() => computeMarkFit(FALLBACK_TEXT_HEIGHT));
 
   useLayoutEffect(() => {
     if (!matchTextHeight || isCol || !textRef.current) return;
@@ -98,55 +121,57 @@ export function LogoFull({
     const measure = () => {
       const textHeight = el.getBoundingClientRect().height;
       if (!textHeight) return;
-      const imgHeight = textHeight / MARK_VISIBLE_FRAC_Y;
-      const imgWidth = imgHeight * (MARK_W / MARK_H);
-      setFitted({
-        height: imgHeight,
-        width: imgWidth,
-        top: -imgHeight * MARK_TOP_PAD,
-        // le mark est decale a gauche pour compenser SA PROPRE marge
-        // transparente gauche (glyphe visible flush avec le debut du bloc) ;
-        // le texte recoit un marginLeft base sur la largeur du glyphe visible
-        // (pas la largeur totale de l'image) pour rester colle a sa droite.
-        left: -imgWidth * MARK_VISIBLE_LEFT_X,
-        textMarginLeft: imgWidth * (MARK_VISIBLE_RIGHT_X - MARK_VISIBLE_LEFT_X),
-      });
+      setFitted(computeMarkFit(textHeight));
     };
     measure();
     // ResizeObserver plutot qu'un seul recalcul post-chargement des polices :
     // se re-declenche a chaque changement de taille reel du bloc de texte
-    // (police qui finit de charger, re-render, etc.), donc toujours a jour.
+    // (police qui finit de charger, re-render, largeur d'ecran qui change le
+    // clamp() du texte, etc.), donc toujours a jour.
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [matchTextHeight, isCol, markHeight, textScale]);
+  }, [matchTextHeight, isCol]);
 
   if (matchTextHeight && !isCol) {
     // Mark en position absolue dans un conteneur dimensionne par le SEUL texte :
     // le glyphe (avec ses marges transparentes, plus grand que le texte) peut
     // deborder sans jamais agrandir la boite du conteneur. Indispensable ici
     // car ce composant est aussi utilise dans un lien position:absolute (logo
-    // desktop) dont le centrage automatique se base sur cette boite — une
+    // du header) dont le centrage automatique se base sur cette boite — une
     // marge negative sur un enfant en flux normal aurait fausse ce calcul.
     return (
       <div style={{ position: "relative", display: "inline-block" }}>
-        <div ref={textRef} style={{ marginLeft: fitted?.textMarginLeft ?? 0 }}>
-          <LogoText markHeight={markHeight} layout={layout} textScale={textScale} offsetLeft={false} />
+        <div ref={textRef} style={{ marginLeft: fitted.textMarginLeft }}>
+          <div className="flex flex-col items-start leading-none">
+            <span
+              className="font-light uppercase"
+              style={{ color: "#F0F5FF", fontSize: "clamp(14px, calc(7px + 1.85vw), 20px)", letterSpacing: "0.45em" }}
+            >
+              Intelligence
+            </span>
+            <div className="flex items-center mt-[0.4em]">
+              <span
+                className="font-normal uppercase"
+                style={{ color: "#6B9FEE", fontSize: "clamp(10px, calc(5.4px + 1.23vw), 14px)", letterSpacing: "0.38em" }}
+              >
+                Automobile
+              </span>
+            </div>
+          </div>
         </div>
-        {fitted && (
-          <img
-            src={MARK_SRC}
-            alt=""
-            style={{
-              position: "absolute",
-              top: fitted.top,
-              left: fitted.left,
-              height: fitted.height,
-              width: fitted.width,
-              display: "block",
-            }}
-          />
-        )}
+        <img
+          src={MARK_SRC}
+          alt=""
+          style={{
+            position: "absolute",
+            top: fitted.top,
+            left: fitted.left,
+            height: fitted.height,
+            width: fitted.width,
+            display: "block",
+          }}
+        />
       </div>
     );
   }
@@ -164,7 +189,6 @@ export function LogoFull({
 export default function Header() {
   const pathname  = usePathname();
   const { t }     = useLocale();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin]   = useState(false);
 
@@ -178,6 +202,7 @@ export default function Header() {
     { href: "/services",   label: t.nav.services },
     { href: "/contact",    label: t.nav.contact },
   ];
+  const NAV_ROWS = [NAV_LINKS_V2.slice(0, 4), NAV_LINKS_V2.slice(4, 8)];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -189,6 +214,8 @@ export default function Header() {
   useEffect(() => {
     fetch("/api/admin/me").then(r => r.json()).then(d => setIsAdmin(d.isAdmin));
   }, []);
+
+  const isLinkActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
 
   return (
     <header
@@ -204,44 +231,20 @@ export default function Header() {
       {/* Filet accent top */}
       <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #6B9FEE 30%, #6B9FEE 70%, transparent 100%)", opacity: 0.45 }} />
 
-      {/* ── Rangée 1 : Logo centré + CTA + LanguageSwitcher ── */}
+      {/* ── Rangée 1 : Logo centré (toutes tailles) + LanguageSwitcher ── */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="relative flex items-center justify-between" style={{ paddingTop: "18px", paddingBottom: "18px" }}>
+        <div className="relative flex items-center justify-end" style={{ paddingTop: "26px", paddingBottom: "22px" }}>
 
-          {/* Logo desktop/tablette — centré (compensation optique -30px), a partir de md */}
+          {/* Logo — centré, décalage optique proportionnel (vw) pour rester cohérent de 375px à desktop */}
           <Link
             href="/"
-            className="hidden md:block absolute left-1/2 w-max flex-shrink-0 [transform:translateX(calc(-50%_-_30px))]"
+            className="absolute left-1/2 w-max flex-shrink-0"
+            style={{ transform: "translateX(calc(-50% - 2.08vw))" }}
           >
             <LogoFull markHeight={110} layout="row" textScale={0.82} matchTextHeight />
           </Link>
 
-          {/* Logo mobile — mark + texte en un seul bloc, aligné à gauche (sous md) */}
-          <Link href="/" className="md:hidden flex-shrink-0">
-            <LogoFull markHeight={68} layout="row" textScale={1} matchTextHeight />
-          </Link>
-
-          {/* Spacer gauche */}
-          <div className="hidden lg:block" style={{ visibility: "hidden", pointerEvents: "none" }}>
-            <span className="text-[10px] tracking-[0.2em] px-5 py-2.5">{t.nav.contactCta}</span>
-          </div>
-
-          {/* Droite : LanguageSwitcher desktop — aligné en bas de la rangée */}
-          <div className="hidden lg:flex flex-shrink-0 self-end" style={{ paddingBottom: "2px" }}>
-            <LanguageSwitcher />
-          </div>
-
-          {/* Burger + LanguageSwitcher mobile — empilés (switcher sous le burger), alignés à droite */}
-          <div className="lg:hidden flex flex-col items-end flex-shrink-0 ml-auto" style={{ gap: "6px" }}>
-            <button
-              className="flex flex-col justify-center gap-[5px] p-2"
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
-            >
-              <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(45deg) translateY(6px)" : "none", transition: "transform 0.25s ease" }} />
-              <span className="block h-px"     style={{ backgroundColor: "#F0F5FF", width: menuOpen ? "20px" : "14px", opacity: menuOpen ? 0 : 1, transition: "opacity 0.2s ease, width 0.25s ease" }} />
-              <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(-45deg) translateY(-6px)" : "none", transition: "transform 0.25s ease" }} />
-            </button>
+          <div className="flex-shrink-0">
             <LanguageSwitcher />
           </div>
         </div>
@@ -250,7 +253,7 @@ export default function Header() {
       {/* Séparateur */}
       <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.07)", transition: "opacity 0.4s ease" }} />
 
-      {/* ── Navigation ── */}
+      {/* ── Navigation desktop : 1 ligne, à partir de lg ── */}
       <div
         className="hidden lg:block"
         style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
@@ -258,7 +261,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-6">
           <nav className="flex items-center justify-evenly" style={{ height: "60px" }}>
             {NAV_LINKS_V2.map((link) => {
-              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+              const isActive = isLinkActive(link.href);
               return (
                 <Link
                   key={link.href}
@@ -297,59 +300,53 @@ export default function Header() {
         </div>
       </div>
 
+      {/* ── Navigation mobile/tablette : 2 lignes de 4, toujours visible, sous lg ── */}
+      <div
+        className="lg:hidden"
+        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
+      >
+        {NAV_ROWS.map((row, rowIdx) => (
+          <div
+            key={rowIdx}
+            className="flex items-center justify-evenly px-6"
+            style={{ height: "46px", borderTop: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            {row.map((link) => {
+              const isActive = isLinkActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="relative flex items-center justify-center h-full text-center"
+                  style={{
+                    color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.52)",
+                    fontSize: "10.5px",
+                    fontWeight: isActive ? 600 : 400,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    padding: "0 4px",
+                  }}
+                >
+                  {link.label}
+                  {isActive && (
+                    <span
+                      className="absolute bottom-0 left-0 right-0"
+                      style={{
+                        height: "2px",
+                        background: "linear-gradient(to right, transparent, #8BB8F5, transparent)",
+                        borderRadius: "2px",
+                      }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
       {/* Bordure basse */}
       <div style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent)" }} />
-
-      {/* ── Menu mobile ── */}
-      <div
-        className="lg:hidden overflow-hidden"
-        style={{
-          maxHeight: menuOpen ? "680px" : "0",
-          transition: "max-height 0.35s ease",
-          backgroundColor: "#040B16",
-        }}
-      >
-        <nav className="flex flex-col px-6 pt-8 pb-10">
-          {NAV_LINKS_V2.map((link, i) => {
-            const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center justify-between py-4"
-                style={{
-                  color: isActive ? "#F0F5FF" : "#A8C4F0",
-                  borderTop: i === 0 ? "none" : "1px solid rgba(27,48,85,0.6)",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                }}
-              >
-                <span>{link.label}</span>
-                <span
-                  style={{
-                    width: "5px", height: "5px", borderRadius: "50%",
-                    backgroundColor: "#6B9FEE", flexShrink: 0,
-                    opacity: isActive ? 1 : 0, transition: "opacity 0.2s",
-                  }}
-                />
-              </Link>
-            );
-          })}
-          <div className="pt-4">
-            <Link
-              href="/contact"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center justify-center text-[11px] font-bold tracking-[0.22em] uppercase py-4 transition-opacity hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
-            >
-              {t.nav.contactCta}
-            </Link>
-          </div>
-        </nav>
-      </div>
     </header>
   );
 }
