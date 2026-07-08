@@ -107,14 +107,33 @@ export default async function ContactV2Page({
                 {s.heroSubtitle}
               </p>
             </div>
+            <a
+              href="#formulaire"
+              style={{
+                display: "inline-block",
+                backgroundColor: "#F0F5FF",
+                color: "#070F1E",
+                fontWeight: 700,
+                fontSize: "0.78rem",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                padding: "14px 28px",
+                borderRadius: 0,
+                textDecoration: "none",
+              }}
+            >
+              {s.heroCta}
+            </a>
           </div>
         </section>
 
         {/* ── CONTENU PRINCIPAL ── */}
         <section
+          id="formulaire"
           style={{
             backgroundColor: "#070F1E",
             borderTop: "1px solid #1B3055",
+            scrollMarginTop: "100px",
           }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-12">

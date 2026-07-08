@@ -126,15 +126,15 @@ export default async function Methode2Page() {
               href="#processus"
               style={{
                 display: "inline-block",
-                padding: "0.85rem 2rem",
-                border: "1px solid #F0F5FF",
-                color: "#F0F5FF",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                letterSpacing: "0.05em",
+                backgroundColor: "#F0F5FF",
+                color: "#070F1E",
+                fontWeight: 700,
+                fontSize: "0.78rem",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
+                padding: "14px 28px",
+                borderRadius: 0,
                 textDecoration: "none",
-                transition: "background 0.2s, color 0.2s",
               }}
             >
               {s.heroCta}

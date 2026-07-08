@@ -62,6 +62,23 @@ export default async function ServicesPage() {
                 {s.heroSubtitle}
               </p>
             </div>
+            <a
+              href="#prestations"
+              style={{
+                display: "inline-block",
+                backgroundColor: "#F0F5FF",
+                color: "#070F1E",
+                fontWeight: 700,
+                fontSize: "0.78rem",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                padding: "14px 28px",
+                borderRadius: 0,
+                textDecoration: "none",
+              }}
+            >
+              {s.heroCta}
+            </a>
           </div>
         </section>
 

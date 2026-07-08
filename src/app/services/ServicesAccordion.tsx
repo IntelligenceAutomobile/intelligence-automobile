@@ -48,7 +48,7 @@ export default function ServicesAccordion({ items }: { items: Item[] }) {
   }, [items]);
 
   return (
-    <section style={{ backgroundColor: "#070F1E", padding: "clamp(3rem, 8vh, 6rem) 6vw" }}>
+    <section id="prestations" style={{ backgroundColor: "#070F1E", padding: "clamp(3rem, 8vh, 6rem) 6vw", scrollMarginTop: "100px" }}>
       <style dangerouslySetInnerHTML={{ __html: `
         @media (prefers-reduced-motion: reduce) {
           .sa-body { transition: none !important; }

@@ -642,6 +642,7 @@ export const fr = {
     heroTitle: ["Au-delà de", "la voiture."],
     heroSubtitle:
       "De la garantie à la carte grise définitive, nous gérons les démarches qui sécurisent votre acquisition. Vous conduisez, nous nous occupons du reste.",
+    heroCta: "Voir nos services →",
     items: [
       {
         id: "garantie",
@@ -748,6 +749,7 @@ export const fr = {
     metaTitle: "Contact — Intelligence Automobile",
     heroTitle: ["Écrivez-", "nous."],
     heroSubtitle: "Décrivez-nous votre projet en quelques mots. Nous vous répondons sous 24h et vous orientons vers la solution la plus adaptée.",
+    heroCta: "Envoyer un message →",
     sendMessage: "Envoyer un message",
     info: [
       { label: "Email", value: "contact@intelligenceautomobile.com" },

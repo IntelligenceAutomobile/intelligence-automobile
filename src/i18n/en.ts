@@ -639,6 +639,7 @@ export const en: Translations = {
     heroTitle: ["Beyond", "the car."],
     heroSubtitle:
       "From the warranty to the final registration certificate, we manage the steps that secure your acquisition. You drive, we handle the rest.",
+    heroCta: "View our services →",
     items: [
       {
         id: "garantie",
@@ -745,6 +746,7 @@ export const en: Translations = {
     metaTitle: "Contact — Intelligence Automobile",
     heroTitle: ["Write", "to us."],
     heroSubtitle: "Describe your project in a few words. We reply within 24 hours and guide you to the most suitable solution.",
+    heroCta: "Send a message →",
     sendMessage: "Send a message",
     info: [
       { label: "Email", value: "contact@intelligenceautomobile.com" },
