@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useLocale, LanguageSwitcher } from "@/i18n/context";
 
 const MARK_SRC = "/Logo/v9%20Logo%20Sans%20texte.png";
@@ -60,19 +60,92 @@ export function LogoText({
   );
 }
 
+// Zone visible (non transparente) du fichier v9 Logo Sans texte.png, mesurée sur
+// le canal alpha : image de 1536x1024, glyphe de x=630 a 1102, y=239 à y=622.
+// Sert a convertir une taille de texte cible en la taille d'<img> (avec ses
+// marges transparentes) qui donnera un glyphe visible de cette même taille,
+// cale a gauche du texte (bord droit du glyphe = bord gauche du texte).
+const MARK_W = 1536, MARK_H = 1024;
+const MARK_TOP_PAD = 239 / MARK_H;
+const MARK_VISIBLE_FRAC_Y = (622 - 239) / MARK_H;
+const MARK_VISIBLE_RIGHT_X = 1102 / MARK_W;
+
 export function LogoFull({
   markHeight = 48,
   layout = "row",
   textScale = 1,
+  matchTextHeight = false,
 }: {
   markHeight?: number;
   layout?: "row" | "col";
   textScale?: number;
+  // Cale le haut/bas du glyphe visible du mark sur le haut de "Intelligence"
+  // et le bas de "Automobile", au lieu de dimensionner le mark via markHeight.
+  matchTextHeight?: boolean;
 }) {
   const isCol = layout === "col";
   // décalages optiques proportionnels à markHeight (valent 22 / 23 px à markHeight=110)
   const markTop  = isCol ? undefined : markHeight * (22 / 110);
   const markLeft = isCol ? undefined : markHeight * (23 / 110);
+
+  const textRef = useRef<HTMLDivElement>(null);
+  const [fitted, setFitted] = useState<{ height: number; width: number; top: number; textMarginLeft: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!matchTextHeight || isCol || !textRef.current) return;
+    const el = textRef.current;
+    const measure = () => {
+      const textHeight = el.getBoundingClientRect().height;
+      if (!textHeight) return;
+      const imgHeight = textHeight / MARK_VISIBLE_FRAC_Y;
+      const imgWidth = imgHeight * (MARK_W / MARK_H);
+      setFitted({
+        height: imgHeight,
+        width: imgWidth,
+        top: -imgHeight * MARK_TOP_PAD,
+        // le mark reste cale a gauche (left:0, flush avec le debut du bloc) ;
+        // c'est le texte qui recoit un marginLeft pour lui laisser sa place.
+        textMarginLeft: imgWidth * MARK_VISIBLE_RIGHT_X,
+      });
+    };
+    measure();
+    // ResizeObserver plutot qu'un seul recalcul post-chargement des polices :
+    // se re-declenche a chaque changement de taille reel du bloc de texte
+    // (police qui finit de charger, re-render, etc.), donc toujours a jour.
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [matchTextHeight, isCol, markHeight, textScale]);
+
+  if (matchTextHeight && !isCol) {
+    // Mark en position absolue dans un conteneur dimensionne par le SEUL texte :
+    // le glyphe (avec ses marges transparentes, plus grand que le texte) peut
+    // deborder sans jamais agrandir la boite du conteneur. Indispensable ici
+    // car ce composant est aussi utilise dans un lien position:absolute (logo
+    // desktop) dont le centrage automatique se base sur cette boite — une
+    // marge negative sur un enfant en flux normal aurait fausse ce calcul.
+    return (
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <div ref={textRef} style={{ marginLeft: fitted?.textMarginLeft ?? 0 }}>
+          <LogoText markHeight={markHeight} layout={layout} textScale={textScale} offsetLeft={false} />
+        </div>
+        {fitted && (
+          <img
+            src={MARK_SRC}
+            alt=""
+            style={{
+              position: "absolute",
+              top: fitted.top,
+              left: 0,
+              height: fitted.height,
+              width: fitted.width,
+              display: "block",
+            }}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`flex ${isCol ? "flex-col items-center" : "flex-row items-center"}`} style={{ gap: isCol ? "12px" : "0px" }}>
@@ -136,16 +209,12 @@ export default function Header() {
             href="/"
             className="hidden lg:block absolute left-1/2 w-max flex-shrink-0 [transform:translateX(calc(-50%_-_30px))]"
           >
-            <LogoFull markHeight={110} layout="row" textScale={0.82} />
+            <LogoFull markHeight={110} layout="row" textScale={0.82} matchTextHeight />
           </Link>
 
-          {/* Logo mobile — marque seule, à gauche (marge droite négative : récupère la zone transparente du PNG) */}
-          <Link href="/" className="lg:hidden flex-shrink-0 [transform:translateX(-34px)]" style={{ marginRight: -60 }}>
-            <LogoMark height={96} />
-          </Link>
-          {/* Logo mobile — texte seul, poussé à droite (avant le burger) */}
-          <Link href="/" className="lg:hidden ml-auto mr-4 flex-shrink-0">
-            <LogoText markHeight={72} layout="row" textScale={1.0} offsetLeft={false} widthScale={1.15} />
+          {/* Logo mobile — mark + texte en un seul bloc, aligné à gauche */}
+          <Link href="/" className="lg:hidden flex-shrink-0">
+            <LogoFull markHeight={68} layout="row" textScale={1} matchTextHeight />
           </Link>
 
           {/* Spacer gauche */}
