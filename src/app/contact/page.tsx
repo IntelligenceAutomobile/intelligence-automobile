@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/app/contact/ContactForm";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getTranslations } from "@/lib/i18n-server";
 
 export const metadata = {
@@ -21,12 +22,13 @@ export default async function ContactV2Page({
     <>
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
+        <style dangerouslySetInnerHTML={{ __html: ".wa-phone{color:#F0F5FF;transition:color .2s;} .wa-phone:hover{color:#25D366;}" }} />
 
         {/* ── HERO ── */}
         <section
           style={{
             position: "relative",
-            height: "80vh",
+            height: "100svh",
             minHeight: "520px",
             overflow: "hidden",
           }}
@@ -77,7 +79,7 @@ export default async function ContactV2Page({
           >
             <h1
               style={{
-                fontSize: "clamp(3rem, 5.5vw, 5.5rem)",
+                fontSize: "clamp(2.6rem, 6vw, 5rem)",
                 fontWeight: 900,
                 lineHeight: 0.88,
                 letterSpacing: "-0.03em",
@@ -167,7 +169,20 @@ export default async function ContactV2Page({
                         {item.label}
                       </span>
                       <span style={{ fontSize: "0.875rem", color: "#F0F5FF" }}>
-                        {item.value}
+                        {item.value.startsWith("+") ? (
+                          <a
+                            href="https://wa.me/qr/M27WU5KOY6H5D1"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="wa-phone inline-flex items-center gap-2"
+                            style={{ textDecoration: "none" }}
+                          >
+                            <WhatsAppIcon size={15} />
+                            {item.value}
+                          </a>
+                        ) : (
+                          item.value
+                        )}
                       </span>
                     </div>
                   ))}

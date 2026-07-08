@@ -752,11 +752,11 @@ export const fr = {
     info: [
       { label: "Email", value: "contact@intelligenceautomobile.com" },
       { label: "Téléphone", value: "+33 6 20 24 38 79" },
-      { label: "Zone d'activité", value: "France · Import DE & BE" },
+      { label: "Zone d'activité", value: "France · Import Union européenne" },
       { label: "Réponse", value: "Sous 24h ouvrées" },
     ],
     firstContactTitle: "Première prise de contact",
-    firstContactText: "Pas besoin de préparer un dossier complet. Un message suffit : dites-nous ce que vous cherchez (acheter, importer ou vendre) et nous prendrons le temps de vous orienter.",
+    firstContactText: "Pas besoin de préparer un dossier complet. Un message suffit : dites-nous ce que vous cherchez (acheter, importer, faire convoyer ou vendre) et nous prendrons le temps de vous orienter.",
     servicesLabel: "Nos services",
     services: [
       { label: "Recherche personnalisée", href: "/recherche-personnalisee" },
@@ -774,6 +774,7 @@ export const fr = {
       subjects: [
         { value: "achat", label: "Achat d'un véhicule" },
         { value: "mandat", label: "Mandat d'import" },
+        { value: "convoyage", label: "Convoyage / Transport" },
         { value: "vente", label: "Aide à la vente" },
         { value: "autre", label: "Autre" },
       ],

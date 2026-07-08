@@ -749,11 +749,11 @@ export const en: Translations = {
     info: [
       { label: "Email", value: "contact@intelligenceautomobile.com" },
       { label: "Phone", value: "+33 6 20 24 38 79" },
-      { label: "Activity area", value: "France · Import DE & BE" },
+      { label: "Activity area", value: "France · European Union import" },
       { label: "Response", value: "Within 24 business hours" },
     ],
     firstContactTitle: "First contact",
-    firstContactText: "No need to prepare a complete file. A message is enough: tell us what you're looking for (buying, importing or selling) and we will take the time to guide you.",
+    firstContactText: "No need to prepare a complete file. A message is enough: tell us what you're looking for (buying, importing, transporting or selling) and we will take the time to guide you.",
     servicesLabel: "Our services",
     services: [
       { label: "Custom search", href: "/recherche-personnalisee" },
@@ -771,6 +771,7 @@ export const en: Translations = {
       subjects: [
         { value: "achat", label: "Vehicle purchase" },
         { value: "mandat", label: "Import mandate" },
+        { value: "convoyage", label: "Transport & delivery" },
         { value: "vente", label: "Resale assistance" },
         { value: "autre", label: "Other" },
       ],
