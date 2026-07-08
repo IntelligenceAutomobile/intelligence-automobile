@@ -153,44 +153,24 @@ export default function Header() {
             <span className="text-[10px] tracking-[0.2em] px-5 py-2.5">{t.nav.contactCta}</span>
           </div>
 
-          {/* Droite : CTA + LanguageSwitcher desktop */}
-          <div className="hidden lg:flex items-center gap-5 flex-shrink-0">
+          {/* Droite : LanguageSwitcher desktop — aligné en bas de la rangée */}
+          <div className="hidden lg:flex flex-shrink-0 self-end" style={{ paddingBottom: "2px" }}>
             <LanguageSwitcher />
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] uppercase px-5 py-2.5 transition-all duration-250"
-              style={{
-                color: "#A8C4F0",
-                border: "1px solid rgba(107,159,238,0.35)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#F0F5FF";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,159,238,0.75)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#A8C4F0";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,159,238,0.35)";
-              }}
+          </div>
+
+          {/* Burger + LanguageSwitcher mobile — empilés (switcher sous le burger), alignés à droite */}
+          <div className="lg:hidden flex flex-col items-end flex-shrink-0" style={{ gap: "6px" }}>
+            <button
+              className="flex flex-col justify-center gap-[5px] p-2"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
             >
-              {t.nav.contactCta}
-            </Link>
-          </div>
-
-          {/* Language switcher — visible dans la barre mobile (avant le burger) */}
-          <div className="lg:hidden flex-shrink-0 mr-3">
+              <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(45deg) translateY(6px)" : "none", transition: "transform 0.25s ease" }} />
+              <span className="block h-px"     style={{ backgroundColor: "#F0F5FF", width: menuOpen ? "20px" : "14px", opacity: menuOpen ? 0 : 1, transition: "opacity 0.2s ease, width 0.25s ease" }} />
+              <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(-45deg) translateY(-6px)" : "none", transition: "transform 0.25s ease" }} />
+            </button>
             <LanguageSwitcher />
           </div>
-
-          {/* Burger mobile */}
-          <button
-            className="lg:hidden flex flex-col justify-center gap-[5px] p-2 -mr-2"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
-          >
-            <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(45deg) translateY(6px)" : "none", transition: "transform 0.25s ease" }} />
-            <span className="block h-px"     style={{ backgroundColor: "#F0F5FF", width: menuOpen ? "20px" : "14px", opacity: menuOpen ? 0 : 1, transition: "opacity 0.2s ease, width 0.25s ease" }} />
-            <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(-45deg) translateY(-6px)" : "none", transition: "transform 0.25s ease" }} />
-          </button>
         </div>
       </div>
 
