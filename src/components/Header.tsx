@@ -68,6 +68,7 @@ export function LogoText({
 const MARK_W = 1536, MARK_H = 1024;
 const MARK_TOP_PAD = 239 / MARK_H;
 const MARK_VISIBLE_FRAC_Y = (622 - 239) / MARK_H;
+const MARK_VISIBLE_LEFT_X = 630 / MARK_W;
 const MARK_VISIBLE_RIGHT_X = 1102 / MARK_W;
 
 export function LogoFull({
@@ -89,7 +90,7 @@ export function LogoFull({
   const markLeft = isCol ? undefined : markHeight * (23 / 110);
 
   const textRef = useRef<HTMLDivElement>(null);
-  const [fitted, setFitted] = useState<{ height: number; width: number; top: number; textMarginLeft: number } | null>(null);
+  const [fitted, setFitted] = useState<{ height: number; width: number; top: number; left: number; textMarginLeft: number } | null>(null);
 
   useLayoutEffect(() => {
     if (!matchTextHeight || isCol || !textRef.current) return;
@@ -103,9 +104,12 @@ export function LogoFull({
         height: imgHeight,
         width: imgWidth,
         top: -imgHeight * MARK_TOP_PAD,
-        // le mark reste cale a gauche (left:0, flush avec le debut du bloc) ;
-        // c'est le texte qui recoit un marginLeft pour lui laisser sa place.
-        textMarginLeft: imgWidth * MARK_VISIBLE_RIGHT_X,
+        // le mark est decale a gauche pour compenser SA PROPRE marge
+        // transparente gauche (glyphe visible flush avec le debut du bloc) ;
+        // le texte recoit un marginLeft base sur la largeur du glyphe visible
+        // (pas la largeur totale de l'image) pour rester colle a sa droite.
+        left: -imgWidth * MARK_VISIBLE_LEFT_X,
+        textMarginLeft: imgWidth * (MARK_VISIBLE_RIGHT_X - MARK_VISIBLE_LEFT_X),
       });
     };
     measure();
@@ -136,7 +140,7 @@ export function LogoFull({
             style={{
               position: "absolute",
               top: fitted.top,
-              left: 0,
+              left: fitted.left,
               height: fitted.height,
               width: fitted.width,
               display: "block",
@@ -204,16 +208,16 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="relative flex items-center justify-between" style={{ paddingTop: "18px", paddingBottom: "18px" }}>
 
-          {/* Logo desktop — centré (compensation optique -30px) */}
+          {/* Logo desktop/tablette — centré (compensation optique -30px), a partir de md */}
           <Link
             href="/"
-            className="hidden lg:block absolute left-1/2 w-max flex-shrink-0 [transform:translateX(calc(-50%_-_30px))]"
+            className="hidden md:block absolute left-1/2 w-max flex-shrink-0 [transform:translateX(calc(-50%_-_30px))]"
           >
             <LogoFull markHeight={110} layout="row" textScale={0.82} matchTextHeight />
           </Link>
 
-          {/* Logo mobile — mark + texte en un seul bloc, aligné à gauche */}
-          <Link href="/" className="lg:hidden flex-shrink-0">
+          {/* Logo mobile — mark + texte en un seul bloc, aligné à gauche (sous md) */}
+          <Link href="/" className="md:hidden flex-shrink-0">
             <LogoFull markHeight={68} layout="row" textScale={1} matchTextHeight />
           </Link>
 
@@ -228,7 +232,7 @@ export default function Header() {
           </div>
 
           {/* Burger + LanguageSwitcher mobile — empilés (switcher sous le burger), alignés à droite */}
-          <div className="lg:hidden flex flex-col items-end flex-shrink-0" style={{ gap: "6px" }}>
+          <div className="lg:hidden flex flex-col items-end flex-shrink-0 ml-auto" style={{ gap: "6px" }}>
             <button
               className="flex flex-col justify-center gap-[5px] p-2"
               onClick={() => setMenuOpen(!menuOpen)}
