@@ -36,7 +36,7 @@ export default async function ConvoyagePage2() {
         {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
-          style={{ height: "100svh", minHeight: "520px" }}
+          style={{ height: "100dvh", minHeight: "520px" }}
         >
           {/* fond flou de secours (même scène) : évite tout vide sur les ratios d'écran extrêmes */}
           <img

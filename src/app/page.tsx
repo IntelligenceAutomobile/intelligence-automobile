@@ -268,7 +268,7 @@ export default async function HomePage() {
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF", overflowX: "hidden" }}>
 
         {/* 1. HERO — unifié mobile + desktop : plein écran, photo en ENTIER (plan large) sur fond flou + titre & CTA superposés. Cadrage identique sur tous les formats. */}
-        <section style={{ position: "relative", height: "100svh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
+        <section style={{ position: "relative", height: "100dvh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
           {/* fond flou plein écran : remplit l'écran sans rogner la photo principale */}
           <img
             src="/Photo du Site/Voiture Accueil.jpg"

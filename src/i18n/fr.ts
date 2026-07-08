@@ -639,7 +639,7 @@ export const fr = {
     metaDesc:
       "Garantie, financement, assurances, démarches administratives (WW, CPI) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
     heroLabel: "Nos services",
-    heroTitle: ["Tout ce qui entoure", "votre véhicule,", "pris en charge."],
+    heroTitle: ["Au-delà de", "la voiture."],
     heroSubtitle:
       "De la garantie à la carte grise définitive, nous gérons les démarches qui sécurisent votre acquisition. Vous conduisez, nous nous occupons du reste.",
     items: [

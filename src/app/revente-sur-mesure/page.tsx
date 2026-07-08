@@ -33,7 +33,7 @@ export default async function AideVenteV2Page() {
         {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
-          style={{ height: "100vh", minHeight: "600px" }}
+          style={{ height: "100dvh", minHeight: "600px" }}
         >
           <div className="absolute inset-0">
             <img

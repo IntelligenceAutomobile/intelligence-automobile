@@ -57,7 +57,7 @@ export default async function Methode2Page() {
         <section
           style={{
             position: "relative",
-            height: "100vh",
+            height: "100dvh",
             minHeight: "600px",
             backgroundColor: "#070F1E",
             overflow: "hidden",

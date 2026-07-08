@@ -30,7 +30,7 @@ export default async function RecherchePage2() {
         {/* ── HERO FULL-BLEED (plein écran, mobile + desktop) ── */}
         <section
           className="relative overflow-hidden"
-          style={{ height: "100svh", minHeight: "520px" }}
+          style={{ height: "100dvh", minHeight: "520px" }}
         >
           <img
             src="/Photo du Site/Recherche personnalisé/Recherche 2.png"

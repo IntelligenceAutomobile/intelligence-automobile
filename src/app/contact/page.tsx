@@ -28,7 +28,7 @@ export default async function ContactV2Page({
         <section
           style={{
             position: "relative",
-            height: "100svh",
+            height: "100dvh",
             minHeight: "520px",
             overflow: "hidden",
           }}
@@ -83,7 +83,6 @@ export default async function ContactV2Page({
                 fontWeight: 900,
                 lineHeight: 0.88,
                 letterSpacing: "-0.03em",
-                textTransform: "uppercase",
                 marginBottom: "1.8rem",
               }}
             >

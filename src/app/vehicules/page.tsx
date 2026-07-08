@@ -52,7 +52,7 @@ export default async function VehiculesV2Page({
         <section
           style={{
             position: "relative",
-            height: "100svh",
+            height: "100dvh",
             minHeight: "520px",
             overflow: "hidden",
           }}

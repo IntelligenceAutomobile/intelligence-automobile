@@ -636,7 +636,7 @@ export const en: Translations = {
     metaDesc:
       "Warranty, financing, insurance, administrative procedures (WW, CPI) and final registration: everything around your acquisition, handled.",
     heroLabel: "Our services",
-    heroTitle: ["Everything around", "your vehicle,", "handled."],
+    heroTitle: ["Beyond", "the car."],
     heroSubtitle:
       "From the warranty to the final registration certificate, we manage the steps that secure your acquisition. You drive, we handle the rest.",
     items: [
