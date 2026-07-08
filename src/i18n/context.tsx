@@ -57,7 +57,7 @@ export function LanguageSwitcher() {
   const inactive: React.CSSProperties = {
     ...active,
     fontWeight: 400,
-    color: "rgba(255,255,255,0.32)",
+    color: "rgba(255,255,255,0.55)",
     cursor: "pointer",
     transition: "color 0.2s",
   };
@@ -68,13 +68,13 @@ export function LanguageSwitcher() {
       onMouseEnter={(e) => {
         const btns = e.currentTarget.querySelectorAll("button");
         btns.forEach((b) => {
-          if (b.dataset.locale !== locale) b.style.color = "rgba(255,255,255,0.65)";
+          if (b.dataset.locale !== locale) b.style.color = "rgba(255,255,255,0.85)";
         });
       }}
       onMouseLeave={(e) => {
         const btns = e.currentTarget.querySelectorAll("button");
         btns.forEach((b) => {
-          if (b.dataset.locale !== locale) b.style.color = "rgba(255,255,255,0.32)";
+          if (b.dataset.locale !== locale) b.style.color = "rgba(255,255,255,0.55)";
         });
       }}
     >

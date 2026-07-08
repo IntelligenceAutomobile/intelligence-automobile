@@ -176,6 +176,11 @@ export default function Header() {
             </Link>
           </div>
 
+          {/* Language switcher — visible dans la barre mobile (avant le burger) */}
+          <div className="lg:hidden flex-shrink-0 mr-3">
+            <LanguageSwitcher />
+          </div>
+
           {/* Burger mobile */}
           <button
             className="lg:hidden flex flex-col justify-center gap-[5px] p-2 -mr-2"
@@ -280,13 +285,6 @@ export default function Header() {
               </Link>
             );
           })}
-          {/* Language switcher mobile */}
-          <div
-            className="flex items-center gap-4 pt-6 mt-2"
-            style={{ borderTop: "1px solid rgba(27,48,85,0.7)" }}
-          >
-            <LanguageSwitcher />
-          </div>
           <div className="pt-4">
             <Link
               href="/contact"
