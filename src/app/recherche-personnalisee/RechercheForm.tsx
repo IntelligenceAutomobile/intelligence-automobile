@@ -104,7 +104,7 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
             border: "1px solid rgba(107,159,238,0.18)",
           }}
         >
-          <span style={{ color: "#6B9FEE", fontSize: "22px" }}>✓</span>
+          <span style={{ color: "#5BD89A", fontSize: "22px" }}>✓</span>
         </div>
         <h3
           className="font-black uppercase mb-4"

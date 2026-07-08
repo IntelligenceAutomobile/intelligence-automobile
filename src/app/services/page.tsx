@@ -19,6 +19,20 @@ export default async function ServicesPage() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
+        {/* CSS : cadrage responsive — sur écrans portrait (téléphone/tablette), décale vers la droite
+            pour garder la clé (élément clé du service) visible ; desktop/laptop inchangés (déjà complets).
+            Titre réduit, surtout sur mobile, pour laisser plus de place à la photo. */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          .ia-services-photo { object-position: center 42%; }
+          .ia-services-title { font-size: clamp(2rem, 5vw, 4.4rem); }
+          @media (max-aspect-ratio: 3/2) {
+            .ia-services-photo { object-position: 72% 42%; }
+          }
+          @media (max-width: 767px) {
+            .ia-services-title { font-size: 1.9rem; }
+          }
+        ` }} />
+
         {/* ─── HERO ──────────────────────────────────────────────────────── */}
         <section style={{ position: "relative", height: "100svh", minHeight: "600px", overflow: "hidden", backgroundColor: "#070F1E" }}>
           {/* fond flou de secours : évite tout vide sur les ratios d'écran extrêmes */}
@@ -32,7 +46,8 @@ export default async function ServicesPage() {
           <img
             src="/Photo du Site/Nos Services/Nos service 2.png"
             alt=""
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 42%" }}
+            className="ia-services-photo"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
           {/* assombrit le haut pour la lisibilité du logo du header */}
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26%", background: "linear-gradient(to bottom, rgba(7,15,30,0.85) 0%, transparent 100%)" }} />
@@ -40,7 +55,7 @@ export default async function ServicesPage() {
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "66%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.9) 24%, rgba(7,15,30,0.5) 58%, transparent 100%)" }} />
 
           <div style={{ position: "absolute", left: "6vw", right: "6vw", bottom: "8vh", maxWidth: "1400px", margin: "0 auto" }}>
-            <h1 style={{ fontWeight: 900, lineHeight: 0.92, letterSpacing: "-0.03em", fontSize: "clamp(2.4rem, 5.4vw, 4.4rem)", textTransform: "uppercase", color: "#F0F5FF", margin: 0 }}>
+            <h1 className="ia-services-title" style={{ fontWeight: 900, lineHeight: 0.92, letterSpacing: "-0.03em", textTransform: "uppercase", color: "#F0F5FF", margin: 0 }}>
               {s.heroTitle.map((line, i) => (
                 <span key={i} style={{ display: "block", color: i === s.heroTitle.length - 1 ? "#6B9FEE" : "#F0F5FF" }}>{line}</span>
               ))}

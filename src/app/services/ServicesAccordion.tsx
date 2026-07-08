@@ -22,7 +22,7 @@ const NUM_GRADIENT = {
 function CheckIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: "2px" }} aria-hidden="true">
-      <path d="M5 12.5l4 4L19 6.5" stroke="#6B9FEE" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 12.5l4 4L19 6.5" stroke="#5BD89A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

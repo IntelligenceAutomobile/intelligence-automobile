@@ -309,7 +309,7 @@ export default function VehiculeDetailView({
                           borderRadius: "6px",
                         }}
                       >
-                        <span className="flex-shrink-0 text-xs font-bold mt-0.5" style={{ color: "#6B9FEE" }}>✓</span>
+                        <span className="flex-shrink-0 text-xs font-bold mt-0.5" style={{ color: "#5BD89A" }}>✓</span>
                         <span className="text-[15px] leading-snug font-medium" style={{ color: "#E8F0FC" }}>{f}</span>
                       </div>
                     ))}
@@ -430,7 +430,7 @@ export default function VehiculeDetailView({
                   <span
                     className="flex items-center justify-center flex-shrink-0 font-bold"
                     style={{
-                      color: "#C6CCD6",
+                      color: "#5BD89A",
                       fontSize: "10px",
                       width: "1.25rem",
                       height: "1.25rem",
@@ -501,7 +501,7 @@ export default function VehiculeDetailView({
                 >
                   {[tm.financing, tm.adminIncluded].map((g) => (
                     <div key={g} className="flex items-center gap-2.5">
-                      <span className="font-bold flex-shrink-0" style={{ color: "#6B9FEE", fontSize: "11px" }}>✓</span>
+                      <span className="font-bold flex-shrink-0" style={{ color: "#5BD89A", fontSize: "11px" }}>✓</span>
                       <span className="text-xs tracking-wide" style={{ color: "#C8D8EE" }}>{g}</span>
                     </div>
                   ))}

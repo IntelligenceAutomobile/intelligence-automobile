@@ -16,11 +16,20 @@ export default async function ConvoyagePage2() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* CSS : cadrage responsive — mobile décale à gauche pour dégager la route (zone du texte), desktop reste centré camion */}
+        {/* CSS : cadrage & titre responsive.
+            - Écrans plus hauts que larges (téléphone + tablette portrait, ratio ≤ 3/2) : photo décalée
+              pour montrer le camion entier + un peu de route devant.
+            - Téléphones : titre un peu plus petit.
+            - Titre descendu (6vh) et légèrement réduit sur tous les formats pour mordre moins sur les voitures. */}
         <style dangerouslySetInnerHTML={{ __html: `
           .ia-convoyage-photo { object-position: 55% 45%; }
+          .ia-convoyage-textblock { bottom: calc(8vh - 16px); }
+          .ia-convoyage-title { font-size: clamp(2.6rem, 5.2vw, 4.6rem); }
+          @media (max-aspect-ratio: 3/2) {
+            .ia-convoyage-photo { object-position: 26% 45%; }
+          }
           @media (max-width: 767px) {
-            .ia-convoyage-photo { object-position: 34% 45%; }
+            .ia-convoyage-title { font-size: 2.4rem; }
           }
         ` }} />
 
@@ -49,13 +58,13 @@ export default async function ConvoyagePage2() {
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "62%", background: "linear-gradient(to top, #070F1E 0%, rgba(7,15,30,0.78) 32%, transparent 100%)" }} />
 
           <div
-            className="absolute z-10"
-            style={{ bottom: "8vh", left: "6vw", right: "6vw" }}
+            className="absolute z-10 ia-convoyage-textblock"
+            style={{ left: "6vw", right: "6vw" }}
           >
             <div style={{ maxWidth: "680px" }}>
               <h1
+                className="ia-convoyage-title"
                 style={{
-                  fontSize: "clamp(2.6rem, 6vw, 5rem)",
                   fontWeight: 900,
                   lineHeight: 0.88,
                   letterSpacing: "-0.03em",
@@ -190,7 +199,7 @@ export default async function ConvoyagePage2() {
                         padding: "0.9rem 0",
                       }}
                     >
-                      <span style={{ color: "#C0C8D4", fontSize: "10px", flexShrink: 0 }}>
+                      <span style={{ color: "#5BD89A", fontSize: "10px", flexShrink: 0 }}>
                         ✓
                       </span>
                       <span

@@ -16,6 +16,20 @@ export default async function AideVenteV2Page() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
+        {/* CSS : cadrage responsive — sur écrans portrait (téléphone/tablette), recadre et remonte
+            légèrement la photo pour garder la voiture bien visible tout en montrant le photographe ;
+            desktop/laptop inchangés (déjà complets). */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          .ia-revente-photo { object-position: center; }
+          @media (max-aspect-ratio: 3/2) {
+            .ia-revente-photo {
+              object-position: 62% 50%;
+              transform: scale(1.25);
+              transform-origin: 62% 25%;
+            }
+          }
+        ` }} />
+
         {/* ── HERO 100vh ── */}
         <section
           className="relative overflow-hidden"
@@ -25,7 +39,7 @@ export default async function AideVenteV2Page() {
             <img
               src="/Photo du Site/Photo IA/Revente sur mesure 4.png"
               alt=""
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover ia-revente-photo"
               style={{ opacity: 0.92 }}
             />
             <div
@@ -191,7 +205,7 @@ export default async function AideVenteV2Page() {
                       style={{ borderBottom: "1px solid #1B3055" }}
                     >
                       <span
-                        style={{ color: "#C0C8D4", fontSize: "10px", flexShrink: 0 }}
+                        style={{ color: "#5BD89A", fontSize: "10px", flexShrink: 0 }}
                       >
                         ✓
                       </span>

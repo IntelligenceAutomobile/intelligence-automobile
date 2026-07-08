@@ -18,6 +18,15 @@ export default async function RecherchePage2() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
+        {/* CSS : cadrage responsive — sur écrans portrait (téléphone/tablette), décale vers la droite
+            pour garder la voiture visible tout en montrant l'écran et la main ; desktop inchangé (déjà complet) */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          .ia-recherche-photo { object-position: center; }
+          @media (max-aspect-ratio: 3/2) {
+            .ia-recherche-photo { object-position: 69% 50%; }
+          }
+        ` }} />
+
         {/* ── HERO FULL-BLEED (plein écran, mobile + desktop) ── */}
         <section
           className="relative overflow-hidden"
@@ -26,7 +35,7 @@ export default async function RecherchePage2() {
           <img
             src="/Photo du Site/Recherche personnalisé/Recherche 2.png"
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            className="absolute inset-0 w-full h-full object-cover ia-recherche-photo"
             style={{ opacity: 1 }}
           />
 
@@ -221,7 +230,7 @@ export default async function RecherchePage2() {
                     >
                       <span
                         style={{
-                          color: "#C6CCD6",
+                          color: "#5BD89A",
                           fontSize: "11px",
                           flexShrink: 0,
                           fontWeight: 700,

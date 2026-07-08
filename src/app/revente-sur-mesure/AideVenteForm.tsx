@@ -100,7 +100,7 @@ export default function AideVenteForm() {
           className="w-14 h-14 flex items-center justify-center mb-6"
           style={{ backgroundColor: "rgba(107,159,238,0.07)", border: "1px solid rgba(107,159,238,0.18)" }}
         >
-          <span style={{ color: "#6B9FEE", fontSize: "22px" }}>✓</span>
+          <span style={{ color: "#5BD89A", fontSize: "22px" }}>✓</span>
         </div>
         <h3 className="font-black uppercase mb-4" style={{ fontSize: "1.4rem", letterSpacing: "-0.02em" }}>
           {f.successTitle}
