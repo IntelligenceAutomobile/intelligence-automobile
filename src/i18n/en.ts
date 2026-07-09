@@ -23,13 +23,14 @@ export const en: Translations = {
       { href: "/", label: "Home" },
       { href: "/vehicules", label: "Our vehicles" },
       { href: "/methode", label: "Our method" },
-      { href: "/contact", label: "Contact" },
     ],
     serviceLinks: [
       { href: "/recherche-personnalisee", label: "Personalised search" },
       { href: "/revente-sur-mesure", label: "Tailored resale" },
       { href: "/transport-livraison", label: "Transport & Delivery" },
+      { href: "/services", label: "Our services" },
     ],
+    contactCta: "Contact us",
     rights: "All rights reserved.",
     tagline: "Premium imports · European Union → France",
     legalLink: "Legal notice",
@@ -237,7 +238,7 @@ export const en: Translations = {
     ctaLabel: "Ready to start?",
     ctaTitle: ["Your next vehicle", "is waiting."],
     ctaBrowse: "Browse stock",
-    ctaContact: "Contact us",
+    ctaContact: "Entrust my search",
   },
 
   vehicles: {

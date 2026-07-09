@@ -75,7 +75,6 @@ export default function Footer() {
               {t.footer.contact}
             </h3>
             <ul className="space-y-3.5 text-sm" style={{ color: "#D4E2F4", fontWeight: 400 }}>
-              <li>contact@intelligenceautomobile.com</li>
               <li>
                 <a
                   href="https://wa.me/qr/M27WU5KOY6H5D1"
@@ -90,7 +89,18 @@ export default function Footer() {
                   +33 6 20 24 38 79
                 </a>
               </li>
-              <li>France</li>
+              <li>Paris France</li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="transition-colors duration-200"
+                  style={{ color: "#D4E2F4" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#6B9FEE")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#D4E2F4")}
+                >
+                  {t.footer.contactCta}
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

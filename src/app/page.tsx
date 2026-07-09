@@ -97,21 +97,6 @@ export default async function HomePage() {
           transform: translateY(-50%);
           background-color: #1B3055;
         }
-        .ia-rail-beam {
-          position: absolute;
-          top: 50%;
-          left: 0;
-          width: 22%;
-          height: 2px;
-          transform: translateY(-50%) translateX(-110%);
-          background: linear-gradient(90deg, transparent, rgba(140,180,240,0.7), transparent);
-          box-shadow: 0 0 10px 1px rgba(107,159,238,0.38);
-          animation: ia-rail-flow 5s linear infinite;
-        }
-        @keyframes ia-rail-flow {
-          0%   { transform: translateY(-50%) translateX(-110%); }
-          100% { transform: translateY(-50%) translateX(560%); }
-        }
         .ia-stock-dot {
           animation: ia-stock-dot-pulse 2.4s ease-in-out infinite;
         }
@@ -127,7 +112,6 @@ export default async function HomePage() {
         }
         @media (prefers-reduced-motion: reduce) {
           .ia-card { animation: none; }
-          .ia-rail-beam { animation: none; opacity: 0; }
           .ia-stock-dot { animation: none; }
         }
 
@@ -507,9 +491,7 @@ export default async function HomePage() {
                     </span>
                   </div>
                 </div>
-                <div className="ia-rail" style={{ marginTop: "1.8rem" }}>
-                  <span className="ia-rail-beam" />
-                </div>
+                <div className="ia-rail" style={{ marginTop: "1.8rem" }} />
                 <p style={{ marginTop: "1.4rem", fontSize: "13px", letterSpacing: "0.01em", color: "#C4D8EE" }}>
                   {t.home.stockKicker}
                 </p>
@@ -580,7 +562,7 @@ export default async function HomePage() {
             <Link href="/vehicules" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "#070F1E", backgroundColor: "#F0F5FF", padding: "16px 40px" }}>
               {t.home.ctaBrowse}
             </Link>
-            <Link href="/contact" style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase", color: "#F0F5FF", border: "1px solid rgba(240,245,255,0.2)", padding: "16px 40px" }}>
+            <Link href="/recherche-personnalisee" style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase", color: "#F0F5FF", border: "1px solid rgba(240,245,255,0.2)", padding: "16px 40px" }}>
               {t.home.ctaContact}
             </Link>
           </div>

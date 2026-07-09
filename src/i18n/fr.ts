@@ -21,13 +21,14 @@ export const fr = {
       { href: "/", label: "Accueil" },
       { href: "/vehicules", label: "Nos véhicules" },
       { href: "/methode", label: "Notre méthode" },
-      { href: "/contact", label: "Contact" },
     ],
     serviceLinks: [
       { href: "/recherche-personnalisee", label: "Recherche personnalisée" },
       { href: "/revente-sur-mesure", label: "Revente sur mesure" },
       { href: "/transport-livraison", label: "Transport & Livraison" },
+      { href: "/services", label: "Nos services" },
     ],
+    contactCta: "Contactez-nous",
     rights: "Tous droits réservés.",
     tagline: "Import premium · Union européenne → France",
     legalLink: "Mentions légales",
@@ -218,7 +219,7 @@ export const fr = {
     service06Desc: "De la garantie à la carte grise, on gère tout.",
     processLabel: "Un processus simple",
     processSteps: [
-      { n: "01", title: "Vous choisissez", desc: "Parmi notre stock ou via mandat sur-mesure." },
+      { n: "01", title: "Vous choisissez", desc: "Parmi notre stock ou via mandat." },
       { n: "02", title: "On gère tout", desc: "Achat, transport, homologation, immatriculation." },
       { n: "03", title: "Vous conduisez", desc: "Livraison à domicile sous 2 à 3 semaines." },
     ],
@@ -235,7 +236,7 @@ export const fr = {
     ctaLabel: "Prêt à commencer ?",
     ctaTitle: ["Votre prochain véhicule", "vous attend."],
     ctaBrowse: "Voir le stock",
-    ctaContact: "Nous contacter",
+    ctaContact: "Confier ma recherche",
   },
 
   vehicles: {

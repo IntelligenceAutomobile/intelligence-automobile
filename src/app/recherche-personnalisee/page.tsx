@@ -116,65 +116,24 @@ export default async function RecherchePage2() {
         </section>
 
         {/* ── SECTION ÉTAPES ── */}
-        <section style={{ backgroundColor: "#040B16" }}>
-          <div
-            className="max-w-7xl mx-auto"
-            style={{ padding: "clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 6vw, 5rem) clamp(4rem, 8vw, 7rem)" }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        <section className="border-b" style={{ borderColor: "#1B3055", backgroundColor: "#040B16" }}>
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {s.steps.map((step) => (
-                <div
-                  key={step.num}
-                  style={{
-                    borderTop: "1px solid",
-                    borderImage:
-                      "linear-gradient(to right, rgba(107,159,238,0.6), rgba(107,159,238,0.08)) 1",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "clamp(2rem, 5vw, 5rem)",
-                    padding: "clamp(1.8rem, 3.5vw, 2.8rem) 0",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontWeight: 900,
-                      fontSize: "clamp(2.8rem, 5.5vw, 5rem)",
-                      lineHeight: 1,
-                      borderLeft: "2px solid #6B9FEE",
-                      paddingLeft: "1.6rem",
-                      color: "#F0F5FF",
-                      letterSpacing: "-0.04em",
-                      flexShrink: 0,
-                      minWidth: "clamp(6rem, 10vw, 10rem)",
-                    }}
-                  >
-                    {step.num}
-                  </div>
-
-                  <div style={{ flex: 1, paddingTop: "0.5rem" }}>
-                    <p
-                      style={{
-                        fontSize: "13px",
-                        textTransform: "uppercase",
-                        fontWeight: 700,
-                        letterSpacing: "0.12em",
-                        color: "#F0F5FF",
-                        marginBottom: "0.8rem",
-                      }}
-                    >
+                <div key={step.num} className="relative">
+                  <div className="px-8 py-6" style={{ borderLeft: "2px solid #6B9FEE" }}>
+                    <div style={{ borderLeft: "2px solid #6B9FEE", paddingLeft: "16px", marginBottom: "1.5rem" }}>
+                      <span
+                        className="font-black leading-none"
+                        style={{ fontSize: "clamp(2.4rem, 4vw, 3.2rem)", color: "#6B9FEE", letterSpacing: "-0.04em", display: "block" }}
+                      >
+                        {step.num}
+                      </span>
+                    </div>
+                    <h3 className="font-black uppercase mb-4" style={{ fontSize: "0.9rem", letterSpacing: "0.06em" }}>
                       {step.title}
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "13px",
-                        color: "#DCE8F8",
-                        lineHeight: 1.8,
-                        fontWeight: 400,
-                        borderTop: "1px solid rgba(107,159,238,0.35)",
-                        paddingTop: "0.8rem",
-                        maxWidth: "520px",
-                      }}
-                    >
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: "#DCE8F8", fontWeight: 400 }}>
                       {step.desc}
                     </p>
                   </div>
