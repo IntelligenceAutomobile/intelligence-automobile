@@ -189,6 +189,7 @@ export function LogoFull({
 export default function Header() {
   const pathname  = usePathname();
   const { t }     = useLocale();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin]   = useState(false);
 
@@ -202,7 +203,6 @@ export default function Header() {
     { href: "/services",   label: t.nav.services },
     { href: "/contact",    label: t.nav.contact },
   ];
-  const NAV_ROWS = [NAV_LINKS_V2.slice(0, 4), NAV_LINKS_V2.slice(4, 8)];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -231,9 +231,9 @@ export default function Header() {
       {/* Filet accent top */}
       <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #6B9FEE 30%, #6B9FEE 70%, transparent 100%)", opacity: 0.45 }} />
 
-      {/* ── Rangée 1 : Logo centré (toutes tailles) + LanguageSwitcher ── */}
+      {/* ── Rangée 1 : Logo centré (toutes tailles) + LanguageSwitcher + burger ── */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="relative flex items-center justify-end" style={{ paddingTop: "26px", paddingBottom: "22px" }}>
+        <div className="relative flex items-center justify-end" style={{ paddingTop: "26px", paddingBottom: "22px", paddingRight: "6px" }}>
 
           {/* Logo — centré, décalage optique proportionnel (vw) pour rester cohérent de 375px à desktop */}
           <Link
@@ -244,7 +244,23 @@ export default function Header() {
             <LogoFull markHeight={110} layout="row" textScale={0.82} matchTextHeight />
           </Link>
 
-          <div className="flex-shrink-0">
+          {/* Desktop : uniquement le sélecteur de langue (nav en dessous) */}
+          <div className="hidden lg:flex flex-shrink-0">
+            <LanguageSwitcher />
+          </div>
+
+          {/* Mobile/tablette : burger + sélecteur empilés (peu de largeur prise,
+              laisse la place au logo centré), avec un peu de marge sur le bord */}
+          <div className="lg:hidden flex flex-col items-end flex-shrink-0" style={{ gap: "8px", marginRight: "2px" }}>
+            <button
+              className="flex flex-col justify-center gap-[5px] p-2"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
+            >
+              <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(45deg) translateY(6px)" : "none", transition: "transform 0.25s ease" }} />
+              <span className="block h-px"     style={{ backgroundColor: "#F0F5FF", width: menuOpen ? "20px" : "14px", opacity: menuOpen ? 0 : 1, transition: "opacity 0.2s ease, width 0.25s ease" }} />
+              <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(-45deg) translateY(-6px)" : "none", transition: "transform 0.25s ease" }} />
+            </button>
             <LanguageSwitcher />
           </div>
         </div>
@@ -300,53 +316,59 @@ export default function Header() {
         </div>
       </div>
 
-      {/* ── Navigation mobile/tablette : 2 lignes de 4, toujours visible, sous lg ── */}
-      <div
-        className="lg:hidden"
-        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, transparent 100%)" }}
-      >
-        {NAV_ROWS.map((row, rowIdx) => (
-          <div
-            key={rowIdx}
-            className="flex items-center justify-evenly px-6"
-            style={{ height: "46px", borderTop: "1px solid rgba(255,255,255,0.07)" }}
-          >
-            {row.map((link) => {
-              const isActive = isLinkActive(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="relative flex items-center justify-center h-full text-center"
-                  style={{
-                    color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.52)",
-                    fontSize: "10.5px",
-                    fontWeight: isActive ? 600 : 400,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    padding: "0 4px",
-                  }}
-                >
-                  {link.label}
-                  {isActive && (
-                    <span
-                      className="absolute bottom-0 left-0 right-0"
-                      style={{
-                        height: "2px",
-                        background: "linear-gradient(to right, transparent, #8BB8F5, transparent)",
-                        borderRadius: "2px",
-                      }}
-                    />
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
       {/* Bordure basse */}
       <div style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent)" }} />
+
+      {/* ── Menu mobile ── */}
+      <div
+        className="lg:hidden overflow-hidden"
+        style={{
+          maxHeight: menuOpen ? "680px" : "0",
+          transition: "max-height 0.35s ease",
+          backgroundColor: "#040B16",
+        }}
+      >
+        <nav className="flex flex-col px-6 pt-8 pb-10">
+          {NAV_LINKS_V2.map((link, i) => {
+            const isActive = isLinkActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-between py-4"
+                style={{
+                  color: isActive ? "#F0F5FF" : "#A8C4F0",
+                  borderTop: i === 0 ? "none" : "1px solid rgba(27,48,85,0.6)",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                <span>{link.label}</span>
+                <span
+                  style={{
+                    width: "5px", height: "5px", borderRadius: "50%",
+                    backgroundColor: "#6B9FEE", flexShrink: 0,
+                    opacity: isActive ? 1 : 0, transition: "opacity 0.2s",
+                  }}
+                />
+              </Link>
+            );
+          })}
+          <div className="pt-4">
+            <Link
+              href="/contact"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-center text-[11px] font-bold tracking-[0.22em] uppercase py-4 transition-opacity hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
+            >
+              {t.nav.contactCta}
+            </Link>
+          </div>
+        </nav>
+      </div>
     </header>
   );
 }
