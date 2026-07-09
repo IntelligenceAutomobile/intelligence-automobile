@@ -21,6 +21,12 @@ Les tirets (cadratin `—`, demi-cadratin `–`) ne sont **pas** interdits. Ce q
 - Les autres usages (énumération, plage de valeurs, tirets déjà présents sur le site) restent acceptés.
 - Vaut pour tout le contenu rédactionnel du site (textes i18n, descriptions, etc.).
 
+## Pas de négation
+Les phrases s'écrivent à la forme affirmative. Éviter "ne...pas", "aucun", "jamais", "zéro", "sans" et autres tournures négatives, même quand elles semblent percutantes.
+- Décrire ce qui est fait/proposé, pas ce qui est absent ou évité.
+- Exemple : pas "Vous ne parlez à aucun acheteur" → "Nous sommes votre unique interlocuteur".
+- Vaut pour tout le contenu rédactionnel du site (textes i18n, descriptions, etc.).
+
 # Conventions d'images
 
 ## Hero de page ↔ encart d'accueil : même image
