@@ -346,10 +346,10 @@ export const fr = {
     heroCta: "Déposer une demande →",
     stepsLabel: "Comment ça marche",
     steps: [
-      { num: "01", title: "Vous définissez", desc: "Marque, modèle, motorisation, budget, kilométrage, options. Le plus précis vous êtes, le mieux nous ciblons." },
-      { num: "02", title: "Nous cherchons", desc: "+2 000 annonces analysées chaque mois sur les marchés de l'Union européenne. Nous filtrons, vérifions, comparons." },
-      { num: "03", title: "Vous validez", desc: "Sous 5 à 15 jours, vous recevez une sélection commentée avec photos, historique et rapport de prix. Aucun engagement avant votre accord." },
-      { num: "04", title: "Nous livrons", desc: "Achat, contrôle technique, homologation, immatriculation française. Remise des clés en France." },
+      { num: "01", title: "Vous définissez", desc: "Marque, budget, options : plus vous êtes précis, mieux on cible." },
+      { num: "02", title: "Nous cherchons", desc: "Le marché européen filtré pour vous." },
+      { num: "03", title: "Vous validez", desc: "Sous 5 à 15 jours, vous recevez une sélection commentée." },
+      { num: "04", title: "Nous livrons", desc: "Nous livrons le véhicule avec son dossier complet, à votre porte." },
     ],
     formTitle: ["Décrivez votre", "véhicule idéal."],
     guarantees: [
@@ -363,7 +363,7 @@ export const fr = {
     marketsLabel: "Marchés couverts",
     markets: "Union européenne",
     brandsLabel: "Marques traitées",
-    brands: "Toutes marques premium et généralistes haut de gamme",
+    brands: "Toutes marques premium",
     form: {
       vehicleSection: "Le véhicule",
       coordsSection: "Vos coordonnées",
@@ -433,10 +433,10 @@ export const fr = {
     colIA: "Aide à la Vente IA",
     stepsLabel: "Comment ça marche",
     steps: [
-      { num: "01", title: "Estimation", desc: "Analyse du marché, de l'historique et de l'état du véhicule. Valorisation argumentée." },
-      { num: "02", title: "Mise en valeur", desc: "Photos professionnelles, description experte, diffusion sur les canaux ciblés." },
-      { num: "03", title: "Gestion des contacts", desc: "Nous filtrons chaque demande. Seuls les acheteurs sérieux vous sont présentés." },
-      { num: "04", title: "Transaction", desc: "Sécurisation du paiement, transfert de propriété, démarches administratives." },
+      { num: "01", title: "Estimation", desc: "Ensemble, nous analysons, comparons et valorisons votre véhicule." },
+      { num: "02", title: "Mise en valeur", desc: "Photos soignées, description experte, diffusion ciblée." },
+      { num: "03", title: "Gestion des contacts", desc: "Nous prenons en charge chaque échange du premier contact à la signature." },
+      { num: "04", title: "Transaction", desc: "Sécurisation du paiement, gestion des démarches administratives." },
     ],
     formSectionLabel: "Estimation gratuite",
     formTitle: ["Décrivez votre", "véhicule."],

@@ -343,10 +343,10 @@ export const en: Translations = {
     heroCta: "Submit a request →",
     stepsLabel: "How it works",
     steps: [
-      { num: "01", title: "You define", desc: "Make, model, engine, budget, mileage, options. The more precise you are, the better we target." },
-      { num: "02", title: "We search", desc: "+2,000 listings analysed every month across the European Union market. We filter, verify, compare." },
-      { num: "03", title: "You validate", desc: "Within 5 to 15 days, you receive a commented selection with photos, history and price report. No commitment before your approval." },
-      { num: "04", title: "We deliver", desc: "Purchase, technical inspection, homologation, French registration. Key handover in France." },
+      { num: "01", title: "You define", desc: "Make, budget, options: the more precise you are, the better we target." },
+      { num: "02", title: "We search", desc: "The European market, filtered for you." },
+      { num: "03", title: "You validate", desc: "Within 5 to 15 days, you receive a curated selection." },
+      { num: "04", title: "We deliver", desc: "We deliver the vehicle with its complete file, to your door." },
     ],
     formTitle: ["Describe your", "ideal vehicle."],
     guarantees: [
@@ -360,7 +360,7 @@ export const en: Translations = {
     marketsLabel: "Markets covered",
     markets: "European Union",
     brandsLabel: "Brands handled",
-    brands: "All premium and upmarket mainstream brands",
+    brands: "All premium brands",
     form: {
       vehicleSection: "The vehicle",
       coordsSection: "Your details",
@@ -430,10 +430,10 @@ export const en: Translations = {
     colIA: "IA Resale Service",
     stepsLabel: "How it works",
     steps: [
-      { num: "01", title: "Valuation", desc: "Market analysis, history review, and vehicle condition assessment. Argued valuation." },
-      { num: "02", title: "Presentation", desc: "Professional photos, expert description, targeted multi-channel listing." },
-      { num: "03", title: "Contact management", desc: "We screen every inquiry. Only serious buyers are presented to you." },
-      { num: "04", title: "Transaction", desc: "Payment security, ownership transfer, administrative procedures." },
+      { num: "01", title: "Valuation", desc: "Together, we analyse, compare and value your vehicle." },
+      { num: "02", title: "Presentation", desc: "Polished photos, expert description, targeted distribution." },
+      { num: "03", title: "Contact management", desc: "We handle every exchange, from first contact to signing." },
+      { num: "04", title: "Transaction", desc: "Payment security, administrative procedures handled." },
     ],
     formSectionLabel: "Free valuation",
     formTitle: ["Describe your", "vehicle."],
