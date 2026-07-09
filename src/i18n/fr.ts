@@ -239,7 +239,7 @@ export const fr = {
   },
 
   vehicles: {
-    heroSubtitle: "Chaque véhicule soigneusement sélectionné auprès de partenaires européens, contrôlé, documenté, prêt à livrer.",
+    heroSubtitle: "Sélectionnés en Europe, contrôlés, documentés, prêts à livrer.",
     browseCta: "Voir les véhicules",
     // Filter UI
     available: "Disponibles",
@@ -341,7 +341,7 @@ export const fr = {
     metaTitle: "Recherche Personnalisée — Intelligence Automobile",
     metaDesc: "Décrivez le véhicule que vous recherchez. Nous activons notre réseau européen et vous soumettons une sélection validée sous 5 à 15 jours.",
     heroTitle: ["Décrivez-le.", "Nous allons", "le trouver."],
-    heroSubtitle: "Dites-nous ce que vous recherchez. Nous vous soumettons une sélection validée, sans engagement.",
+    heroSubtitle: "Dites-nous ce qu'il vous faut. On s'occupe du reste.",
     heroCta: "Déposer une demande →",
     stepsLabel: "Comment ça marche",
     steps: [
@@ -416,7 +416,7 @@ export const fr = {
 
   resale: {
     heroTitle: ["Votre véhicule", "mérite", "le meilleur prix."],
-    heroSubtitle: "Estimation au prix du marché réel, diffusion ciblée, transaction sécurisée. Vous vendez mieux, sans vous en occuper.",
+    heroSubtitle: "Estimation juste, diffusion ciblée, transaction sécurisée.",
     heroCta: "Estimation gratuite →",
     comparativeLabel: "Pourquoi pas la reprise concessionnaire ?",
     comparativeTitle: "Les faits, sans détour.",
@@ -519,7 +519,7 @@ export const fr = {
 
   transport: {
     heroTitle: ["Livré chez vous,", "en toute sérénité."],
-    heroSubtitle: "Conducteur professionnel, couverture assurance complète, photos avant et après. Nous acheminons votre véhicule en toute sécurité.",
+    heroSubtitle: "Votre véhicule acheminé, assuré, documenté.",
     heroCta: "Demander un devis →",
     stepsLabel: "Comment ça marche",
     steps: [
@@ -582,7 +582,7 @@ export const fr = {
   method: {
     metaTitle: "Notre Méthode — Intelligence Automobile",
     heroTitle: ["Votre acquisition.", "Notre exigence."],
-    heroSubtitle: "L'import premium, simplement. Nous trouvons le bon véhicule, vérifions l'essentiel et sécurisons chaque étape. Notre travail, c'est votre tranquillité d'esprit.",
+    heroSubtitle: "Recherche, vérification, sécurisation. Votre tranquillité d'esprit.",
     heroCta: "Voir la méthode →",
     stats: [
       { value: "3 mois", label: "Garantie panne mécanique incluse, extensible sur option" },
@@ -640,8 +640,7 @@ export const fr = {
       "Garantie, financement, assurances, démarches administratives (WW, CPI) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
     heroLabel: "Nos services",
     heroTitle: ["Au-delà de", "la voiture."],
-    heroSubtitle:
-      "De la garantie à la carte grise définitive, nous gérons les démarches qui sécurisent votre acquisition. Vous conduisez, nous nous occupons du reste.",
+    heroSubtitle: "De la garantie à la carte grise, on gère tout.",
     heroCta: "Voir nos services →",
     items: [
       {

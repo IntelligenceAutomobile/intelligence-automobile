@@ -241,7 +241,7 @@ export const en: Translations = {
   },
 
   vehicles: {
-    heroSubtitle: "Every vehicle carefully selected from European partners, inspected, documented, ready to deliver.",
+    heroSubtitle: "Selected across Europe, inspected, documented, ready to deliver.",
     browseCta: "Browse vehicles",
     available: "Available",
     sold: "Sold",
@@ -338,7 +338,7 @@ export const en: Translations = {
     metaTitle: "Custom Search — Intelligence Automobile",
     metaDesc: "Describe the vehicle you're looking for. We activate our European network and submit a validated selection within 5 to 15 days.",
     heroTitle: ["Describe it.", "We will", "find it."],
-    heroSubtitle: "Tell us what you're looking for. We submit a validated selection, no commitment.",
+    heroSubtitle: "Tell us what you need. We take it from there.",
     heroCta: "Submit a request →",
     stepsLabel: "How it works",
     steps: [
@@ -413,7 +413,7 @@ export const en: Translations = {
 
   resale: {
     heroTitle: ["Your vehicle", "deserves", "the best price."],
-    heroSubtitle: "Valuation at real market price, targeted listing, secured transaction. Sell better, without the hassle.",
+    heroSubtitle: "Fair valuation, targeted listing, secured transaction.",
     heroCta: "Free valuation →",
     comparativeLabel: "Why not a dealer trade-in?",
     comparativeTitle: "The facts, straight up.",
@@ -516,7 +516,7 @@ export const en: Translations = {
 
   transport: {
     heroTitle: ["Your vehicle", "delivered,", "without moving."],
-    heroSubtitle: "Professional driver, full insurance cover, before and after photos. We transport your vehicle safely.",
+    heroSubtitle: "Your vehicle transported, insured, documented.",
     heroCta: "Request a quote →",
     stepsLabel: "How it works",
     steps: [
@@ -579,7 +579,7 @@ export const en: Translations = {
   method: {
     metaTitle: "Our Method — Intelligence Automobile",
     heroTitle: ["Your acquisition.", "Our standards."],
-    heroSubtitle: "Premium import, simply. We find the right vehicle, check what matters and secure every step. Our job is your peace of mind.",
+    heroSubtitle: "Search, verification, security. Your peace of mind.",
     heroCta: "See the method →",
     stats: [
       { value: "3 mo", label: "Mechanical breakdown warranty included, extendable on request" },
@@ -637,8 +637,7 @@ export const en: Translations = {
       "Warranty, financing, insurance, administrative procedures (WW, CPI) and final registration: everything around your acquisition, handled.",
     heroLabel: "Our services",
     heroTitle: ["Beyond", "the car."],
-    heroSubtitle:
-      "From the warranty to the final registration certificate, we manage the steps that secure your acquisition. You drive, we handle the rest.",
+    heroSubtitle: "From the warranty to the registration, we handle it all.",
     heroCta: "View our services →",
     items: [
       {
