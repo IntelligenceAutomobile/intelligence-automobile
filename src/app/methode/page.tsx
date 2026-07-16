@@ -3,10 +3,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getTranslations } from "@/lib/i18n-server";
 import MethodeSteps from "./MethodeSteps";
+import { pageMetadata } from "@/lib/og";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Notre Méthode — Intelligence Automobile",
-};
+  description: "Recherche, vérification, sécurisation. Votre tranquillité d'esprit.",
+  path: "/methode",
+  image: "/og/methode.jpg",
+});
 
 const sectionCardStyle = {
   background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",

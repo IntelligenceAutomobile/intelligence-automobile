@@ -2,12 +2,15 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RechercheForm from "@/app/recherche-personnalisee/RechercheForm";
 import { getTranslations } from "@/lib/i18n-server";
+import { pageMetadata } from "@/lib/og";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Recherche Personnalisée — Intelligence Automobile",
   description:
     "Décrivez le véhicule que vous recherchez. Nous activons notre réseau européen et vous soumettons une sélection validée sous 5 à 15 jours.",
-};
+  path: "/recherche-personnalisee",
+  image: "/og/recherche-personnalisee.jpg",
+});
 
 export default async function RecherchePage2() {
   const { t } = await getTranslations();

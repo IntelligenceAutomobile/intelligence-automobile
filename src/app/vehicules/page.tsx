@@ -5,11 +5,15 @@ import { getAdminSession } from "@/lib/auth";
 import VehiculesList from "@/app/vehicules/VehiculesList";
 import Image from "next/image";
 import HeroCta from "./HeroCta";
+import { pageMetadata } from "@/lib/og";
 import { getTranslations } from "@/lib/i18n-server";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Nos véhicules — Intelligence Automobile",
-};
+  description: "Sélectionnés en Europe, contrôlés, documentés, prêts à livrer.",
+  path: "/vehicules",
+  image: "/og/vehicules.jpg",
+});
 
 export default async function VehiculesV2Page({
   searchParams,

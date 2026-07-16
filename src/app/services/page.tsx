@@ -3,12 +3,15 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getTranslations } from "@/lib/i18n-server";
 import ServicesAccordion from "./ServicesAccordion";
+import { pageMetadata } from "@/lib/og";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Services — Intelligence Automobile",
   description:
     "Garantie, financement, assurances, démarches administratives (WW, CPI) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
-};
+  path: "/services",
+  image: "/og/services.jpg",
+});
 
 export default async function ServicesPage() {
   const { t } = await getTranslations();

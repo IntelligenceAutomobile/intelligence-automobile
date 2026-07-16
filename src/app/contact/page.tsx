@@ -2,11 +2,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/app/contact/ContactForm";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { pageMetadata } from "@/lib/og";
 import { getTranslations } from "@/lib/i18n-server";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Contact — Intelligence Automobile",
-};
+  description:
+    "Décrivez-nous votre projet en quelques mots. Nous vous répondons sous 24h et vous orientons vers la solution la plus adaptée.",
+  path: "/contact",
+  image: "/og/contact.jpg",
+});
 
 export default async function ContactV2Page({
   searchParams,

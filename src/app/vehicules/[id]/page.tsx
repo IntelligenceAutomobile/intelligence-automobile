@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
@@ -6,6 +8,8 @@ import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
 import { getTranslations } from "@/lib/i18n-server";
+import { formatNumber } from "@/lib/format";
+import { SITE_NAME } from "@/lib/og";
 import VehiculeDetailView, {
   buildPresentation,
   type MaintenanceEntry,
@@ -55,6 +59,58 @@ const LEGACY_IDS = new Set<string>([
   ...Object.keys(MAINTENANCE_HIGHLIGHTS),
 ]);
 
+// La page et ses métadonnées ont besoin du même véhicule : `cache` fait tenir les
+// deux appels en une seule requête par rendu.
+const getVehicle = cache((id: string) => prisma.vehicle.findUnique({ where: { id } }));
+
+// ── Métadonnées de partage ───────────────────────────────────────────────────
+// Titre, description et photo repris par WhatsApp, LinkedIn, Google… La photo
+// passe par /og-image, qui la recadre et l'allège (voir og-image/route.ts).
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const v = await getVehicle(id);
+
+  // Fiche masquée : un admin connecté la consulte, sans qu'elle s'expose au partage.
+  if (!v?.isPublished) return {};
+
+  const title = `${v.make} ${v.model} ${v.year} — ${SITE_NAME}`;
+  const description = [
+    `${formatNumber(v.mileage)} km`,
+    v.fuel,
+    v.transmission,
+    `${formatNumber(v.price)} €`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const path = `/vehicules/${id}`;
+  const image = `${path}/og-image`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      locale: "fr_FR",
+      title,
+      description,
+      url: path,
+      images: [{ url: image, width: 1200, height: 630, alt: `${v.make} ${v.model} ${v.year}` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+  };
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default async function VehiculeDetailPage({
   params,
@@ -62,7 +118,7 @@ export default async function VehiculeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const [{ id }, { t, locale }, session] = await Promise.all([params, getTranslations(), getAdminSession()]);
-  const v = await prisma.vehicle.findUnique({ where: { id } });
+  const v = await getVehicle(id);
   if (!v) notFound();
   // Annonce masquée : visible uniquement par un admin connecté (jamais publiquement par URL directe)
   if (!v.isPublished && !session) notFound();

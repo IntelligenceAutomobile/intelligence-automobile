@@ -1,11 +1,15 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AideVenteForm from "@/app/revente-sur-mesure/AideVenteForm";
+import { pageMetadata } from "@/lib/og";
 import { getTranslations } from "@/lib/i18n-server";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Revente sur mesure — Intelligence Automobile",
-};
+  description: "Estimation juste, diffusion ciblée, transaction sécurisée.",
+  path: "/revente-sur-mesure",
+  image: "/og/revente-sur-mesure.jpg",
+});
 
 export default async function AideVenteV2Page() {
   const { t } = await getTranslations();

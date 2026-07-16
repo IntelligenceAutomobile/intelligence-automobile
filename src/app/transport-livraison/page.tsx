@@ -1,11 +1,15 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ConvoyageForm from "@/app/transport-livraison/ConvoyageForm";
+import { pageMetadata } from "@/lib/og";
 import { getTranslations } from "@/lib/i18n-server";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Transport & Livraison — Intelligence Automobile",
-};
+  description: "Votre véhicule acheminé, assuré, documenté.",
+  path: "/transport-livraison",
+  image: "/og/transport-livraison.jpg",
+});
 
 export default async function ConvoyagePage2() {
   const { t } = await getTranslations();
