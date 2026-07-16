@@ -5,9 +5,12 @@
 // Référencée par le `generateMetadata` de la fiche. Servie à des robots anonymes
 // (WhatsApp, LinkedIn…), donc jamais de photo d'annonce masquée : ici, une fiche
 // non publiée répond 404, même pour un admin connecté.
+//
+// Tout se charge en HTTP, y compris les photos rangées sous /public (servies par
+// le CDN sur la même origine). Une lecture disque avec chemin variable pousserait
+// Vercel à embarquer les 430 Mo de public/ dans la fonction, au-delà de sa
+// limite de 250 Mo : c'est précisément ce qui a rejeté le premier déploiement.
 
-import { readFile } from "node:fs/promises";
-import { join, normalize, sep } from "node:path";
 import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
 
@@ -15,35 +18,30 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 const QUALITY = 82;
 
-const PUBLIC_DIR = join(process.cwd(), "public");
 // Repli quand la fiche est dépourvue de photo : le visuel de la page /vehicules.
-const FALLBACK = join(PUBLIC_DIR, "og", "vehicules.jpg");
+const FALLBACK_PATH = "/og/vehicules.jpg";
 
 /**
- * Charge la source. Les fiches mélangent deux formes : URL Vercel Blob (uploads
- * récents) et chemin encodé sous /public (fiches d'origine).
+ * Résout la source à télécharger. Les fiches mélangent deux formes : URL Vercel
+ * Blob (uploads récents) et chemin encodé sous /public (fiches d'origine), que
+ * l'origine de la requête suffit à servir.
  */
-async function loadSource(image: string | undefined): Promise<Buffer> {
-  if (!image) return readFile(FALLBACK);
-
+function sourceUrl(image: string | undefined, origin: string): URL {
+  if (!image) return new URL(FALLBACK_PATH, origin);
   if (image.startsWith("http://") || image.startsWith("https://")) {
-    const res = await fetch(image);
-    if (!res.ok) return readFile(FALLBACK);
-    return Buffer.from(await res.arrayBuffer());
+    return new URL(image);
   }
+  return new URL(image, origin);
+}
 
-  // Chemin local : les URL stockées sont encodées ("/Audit%20TT%204/…").
-  const relative = normalize(decodeURIComponent(image)).replace(/^[\\/]+/, "");
-  const resolved = join(PUBLIC_DIR, relative);
-  // Garde-fou : une valeur en base remontant hors de /public est ignorée.
-  if (resolved !== PUBLIC_DIR && !resolved.startsWith(PUBLIC_DIR + sep)) {
-    return readFile(FALLBACK);
-  }
-  return readFile(resolved);
+async function fetchImage(url: URL): Promise<ArrayBuffer | undefined> {
+  const res = await fetch(url).catch(() => undefined);
+  if (!res?.ok) return undefined;
+  return res.arrayBuffer();
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -64,11 +62,12 @@ export async function GET(
     first = undefined;
   }
 
-  let source: Buffer;
-  try {
-    source = await loadSource(first);
-  } catch {
-    source = await readFile(FALLBACK);
+  const { origin } = new URL(req.url);
+  const source =
+    (await fetchImage(sourceUrl(first, origin))) ??
+    (await fetchImage(new URL(FALLBACK_PATH, origin)));
+  if (!source) {
+    return new Response("Not found", { status: 404 });
   }
 
   const body = await sharp(source)
