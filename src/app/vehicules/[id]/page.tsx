@@ -10,6 +10,8 @@ import { getAdminSession } from "@/lib/auth";
 import { getTranslations } from "@/lib/i18n-server";
 import { formatNumber } from "@/lib/format";
 import { SITE_NAME } from "@/lib/og";
+import JsonLd from "@/components/JsonLd";
+import { vehicleJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import VehiculeDetailView, {
   buildPresentation,
   type MaintenanceEntry,
@@ -216,6 +218,20 @@ export default async function VehiculeDetailPage({
 
   return (
     <>
+      {/* Réservé aux fiches publiées : une annonce masquée que consulte un admin
+          reste hors des données structurées, comme elle est hors du partage. */}
+      {v.isPublished && (
+        <>
+          <JsonLd data={vehicleJsonLd(v, images)} />
+          <JsonLd
+            data={breadcrumbJsonLd([
+              { name: "Accueil", path: "/" },
+              { name: "Nos véhicules", path: "/vehicules" },
+              { name: `${v.make} ${v.model} ${v.year}`, path: `/vehicules/${id}` },
+            ])}
+          />
+        </>
+      )}
       <Header />
       <VehiculeDetailView model={model} t={t} />
       <Footer />

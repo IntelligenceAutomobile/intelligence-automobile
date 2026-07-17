@@ -199,7 +199,7 @@ export const en: Translations = {
   },
 
   home: {
-    heroTitle: ["Automotive", "imports,", "differently."],
+    heroTitle: ["European premium,", "imported", "differently."],
     heroCta: "Browse vehicles",
     scrollIndicator: "Scroll",
     stats: [

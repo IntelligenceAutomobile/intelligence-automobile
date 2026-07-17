@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, DM_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { LocaleProvider } from "@/i18n/context";
+import JsonLd from "@/components/JsonLd";
+import { organizationJsonLd } from "@/lib/jsonld";
 import "./globals.css";
 
 const geist = Geist({
@@ -56,6 +58,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${geist.variable} ${dmSans.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
+        <JsonLd data={organizationJsonLd()} />
         <LocaleProvider initialLocale={locale}>
           {children}
         </LocaleProvider>

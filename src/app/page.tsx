@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -5,6 +6,12 @@ import { prisma } from "@/lib/prisma";
 import { getTranslations } from "@/lib/i18n-server";
 import { formatNumber } from "@/lib/format";
 import CountUp from "@/components/CountUp";
+
+// Titre, description et image de partage viennent du layout racine ; seul le
+// canonical manque à l'appel, faute d'un `pageMetadata()` comme sur les autres pages.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const [{ t }, derniersVehicules, stockCount] = await Promise.all([
