@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   images: string[];
@@ -14,17 +14,35 @@ export default function HeroCarousel({ images, alt, imgOpacity = 0.8, children }
   const total = images.length;
   const src = images[idx] ?? null;
 
+  // Le header est fixed et semi-opaque : une photo qui monte jusqu'en haut du
+  // cadre passe dessous et perd le toit du véhicule. Sa hauteur varie selon le
+  // breakpoint (nav desktop) et le contenu du logo → mesurée, avec suivi du resize.
+  const [headerH, setHeaderH] = useState(110);
+  useEffect(() => {
+    const measure = () =>
+      setHeaderH(document.querySelector("header")?.getBoundingClientRect().height ?? 110);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   const prev = () => setIdx((i) => (i - 1 + total) % total);
   const next = () => setIdx((i) => (i + 1) % total);
 
   return (
-    <div className="relative w-full" style={{ height: "70vh", minHeight: "420px", paddingTop: "80px" }}>
+    // Plein écran en paysage ; en portrait la photo occupe une part réduite du
+    // cadre (contain), 70dvh suffisent et le contenu remonte au-dessus du pli.
+    <div className="relative w-full h-dvh portrait:h-[70dvh] min-h-[520px]" style={{ paddingTop: "80px" }}>
       {src ? (
+        // Photo toujours entière (contain) : c'est la seule règle qui garantit
+        // le véhicule complet sur chaque photo et chaque format d'écran. Les
+        // abords restent sur le fond du site. Le cadre utile démarre sous le
+        // header pour que le haut de la photo reste visible.
         <img
           src={src}
           alt={`${alt} — ${idx + 1}/${total}`}
-          className="absolute inset-0 w-full h-full object-cover object-center"
-          style={{ opacity: imgOpacity }}
+          className="absolute inset-x-0 bottom-0 w-full object-contain object-center"
+          style={{ opacity: imgOpacity, top: `${headerH}px`, height: `calc(100% - ${headerH}px)` }}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "#0D1A2D" }}>
