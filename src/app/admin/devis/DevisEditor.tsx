@@ -416,7 +416,8 @@ export default function DevisEditor({
                 <div className="flex items-start gap-2">
                   <div className="flex-1 space-y-2 min-w-0">
                     <input className={fieldClass} style={fieldStyle} value={it.designation} onChange={(e) => updateItem(it.id, { designation: e.target.value })} placeholder="Désignation" />
-                    <input className={fieldClass} style={{ ...fieldStyle, fontSize: "0.8rem" }} value={it.detail} onChange={(e) => updateItem(it.id, { detail: e.target.value })} placeholder="Détail (année, km, options…)" />
+                    {/* Multi-ligne : les retours saisis ici se retrouvent tels quels sur le document (rendu pre-line) */}
+                    <textarea className={fieldClass} style={{ ...fieldStyle, fontSize: "0.8rem", resize: "vertical" }} rows={2} value={it.detail} onChange={(e) => updateItem(it.id, { detail: e.target.value })} placeholder="Détail (année, km, options…) — Entrée : nouvelle ligne" />
                     <div className="flex flex-wrap gap-2 items-end">
                       <label className="text-[11px]" style={{ color: T.muted }}>
                         <span className="block mb-1">Qté</span>
