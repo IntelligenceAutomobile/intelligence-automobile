@@ -33,6 +33,14 @@ function shade(hex: string, factor: number): string {
   return `#${c(m[1])}${c(m[2])}${c(m[3])}`;
 }
 
+// Teinte pastel : mélange la couleur vers le blanc (keep = part de couleur conservée).
+function tint(hex: string, keep: number): string {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return hex;
+  const c = (h: string) => Math.round(parseInt(h, 16) * keep + 255 * (1 - keep)).toString(16).padStart(2, "0");
+  return `#${c(m[1])}${c(m[2])}${c(m[3])}`;
+}
+
 const labelMini: CSSProperties = {
   fontSize: "7.5pt",
   letterSpacing: "0.16em",
@@ -104,6 +112,7 @@ export default function DevisDocument({
 
   return (
     <div
+      className="devis-sheet"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -202,7 +211,7 @@ export default function DevisDocument({
 
         {/* Destinataire */}
         <div style={blockWrap("client")} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("client", e) : undefined}>
-          <PartyBox label="Client">
+          <PartyBox label="Client" accent={accent}>
             {quote.clientName || quote.clientCompany ? (
               <>
                 {quote.clientCompany && <div style={{ fontWeight: 600 }}>{quote.clientCompany}</div>}
@@ -257,8 +266,8 @@ export default function DevisDocument({
                     {it.unit ? ` ${it.unit}` : ""}
                   </td>
                   <td style={tdCell("right")}>{formatEuro(it.unitPrice)}</td>
-                  <td style={{ ...tdCell("right"), fontWeight: 600 }}>
-                    {disc > 0 && <span style={{ color: "#AEB6C2", textDecoration: "line-through", fontWeight: 400, fontSize: "8pt", marginRight: "2mm" }}>{formatEuro(lineGross(it))}</span>}
+                  <td style={{ ...tdCell("right"), fontWeight: 600, whiteSpace: "nowrap" }}>
+                    {disc > 0 && <span style={{ display: "block", color: "#AEB6C2", textDecoration: "line-through", fontWeight: 400, fontSize: "8pt" }}>{formatEuro(lineGross(it))}</span>}
                     {formatEuro(lineTotal(it))}
                   </td>
                 </tr>
@@ -269,7 +278,7 @@ export default function DevisDocument({
       </table>
 
       {/* ── Totaux ── */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "6mm" }}>
+      <div className="devis-avoid-break" style={{ display: "flex", justifyContent: "flex-end", marginTop: "6mm" }}>
         <table style={{ width: "78mm", borderCollapse: "collapse", fontSize: "9.5pt" }}>
           <tbody>
             {showHT ? (
@@ -331,7 +340,7 @@ export default function DevisDocument({
 
       {/* ── Signatures (devis uniquement : une facture ne se signe pas) ── */}
       {!isFacture && (
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "12mm", marginTop: "14mm" }}>
+        <div className="devis-avoid-break" style={{ display: "flex", justifyContent: "space-between", gap: "12mm", marginTop: "10mm" }}>
           <SignatureBox title={`Pour ${b.emitterName}`} name={b.emitterRepresentative} />
           <SignatureBox title="Bon pour accord — Le client" hint="Date, signature et cachet" />
         </div>
@@ -355,10 +364,19 @@ export default function DevisDocument({
 }
 
 /* ── Sous-composants ── */
-function PartyBox({ label, children }: { label: string; children: React.ReactNode }) {
+function PartyBox({ label, accent, children }: { label: string; accent?: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, border: `1px solid ${C.border}`, borderRadius: 4, padding: "4mm 5mm" }}>
-      <div style={{ ...labelMini, marginBottom: "2mm" }}>{label}</div>
+    <div
+      style={{
+        flex: 1,
+        border: `1px solid ${C.border}`,
+        borderLeft: accent ? `2.5px solid ${accent}` : `1px solid ${C.border}`,
+        borderRadius: 4,
+        padding: "4mm 5mm",
+        backgroundColor: accent ? tint(accent, 0.035) : undefined,
+      }}
+    >
+      <div style={{ ...labelMini, marginBottom: "2mm", color: accent ?? C.muted }}>{label}</div>
       {children}
     </div>
   );
@@ -373,13 +391,16 @@ function SectionTitle({ children, color = "#1E4FA3" }: { children: React.ReactNo
 }
 
 function TotalRow({ label, value, grand, spaced, barColor = "#0E2747" }: { label: string; value: string; grand?: boolean; spaced?: boolean; barColor?: string }) {
+  // Le total principal ressort sur une bande teintée à la couleur de l'accent.
+  const grandBg = grand ? tint(barColor, 0.07) : undefined;
   return (
     <tr>
       <td
         style={{
-          padding: grand ? "2.5mm 0 0" : "1mm 0",
+          padding: grand ? "2mm 2.5mm" : "1mm 0",
           paddingTop: spaced ? "4mm" : undefined,
           borderTop: grand ? `2px solid ${barColor}` : undefined,
+          backgroundColor: grandBg,
           color: grand ? C.ink : C.muted,
           fontWeight: grand ? 700 : 400,
           fontSize: grand ? "11pt" : undefined,
@@ -389,9 +410,10 @@ function TotalRow({ label, value, grand, spaced, barColor = "#0E2747" }: { label
       </td>
       <td
         style={{
-          padding: grand ? "2.5mm 0 0" : "1mm 0",
+          padding: grand ? "2mm 2.5mm" : "1mm 0",
           paddingTop: spaced ? "4mm" : undefined,
           borderTop: grand ? `2px solid ${barColor}` : undefined,
+          backgroundColor: grandBg,
           textAlign: "right",
           fontWeight: grand ? 700 : 600,
           fontSize: grand ? "11pt" : undefined,
@@ -406,13 +428,25 @@ function TotalRow({ label, value, grand, spaced, barColor = "#0E2747" }: { label
 function SignatureBox({ title, name, hint }: { title: string; name?: string; hint?: string }) {
   return (
     <div style={{ width: "45%" }}>
-      <div style={{ ...labelMini, marginBottom: "12mm" }}>
+      <div style={{ ...labelMini, marginBottom: "1.5mm" }}>
         {title}
         <div style={{ textTransform: "none", letterSpacing: 0, color: C.muted, fontSize: "7.5pt", marginTop: "0.5mm" }}>
           {hint ?? "Date, signature et cachet"}
         </div>
       </div>
-      <div style={{ borderTop: `1px solid ${C.muted}`, paddingTop: "1.5mm", fontSize: "8pt", color: C.muted, minHeight: "5mm" }}>
+      <div
+        style={{
+          border: `1px solid ${C.border}`,
+          borderRadius: 4,
+          height: "20mm",
+          backgroundColor: "#FBFCFE",
+          display: "flex",
+          alignItems: "flex-end",
+          padding: "1.5mm 2.5mm",
+          fontSize: "8pt",
+          color: C.muted,
+        }}
+      >
         {name ?? " "}
       </div>
     </div>
