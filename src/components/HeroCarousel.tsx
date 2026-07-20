@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Props {
   images: string[];
@@ -41,19 +41,58 @@ export default function HeroCarousel({ images, alt, imgOpacity = 0.8, topBar }: 
     };
   }, []);
 
+  // Bord haut de la photo RÉELLEMENT affichée. En object-contain, l'image est
+  // centrée dans son cadre et laisse une bande sombre quand son format diffère
+  // de celui du cadre : le haut du cadre n'est donc pas le haut de la photo.
+  // Sans ce calcul, la barre flotte au-dessus de l'image au lieu de se poser
+  // dans son coin. La hauteur affichée se déduit du format naturel du fichier.
+  const frameRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [photoTop, setPhotoTop] = useState<number | null>(null);
+  const [sideBand, setSideBand] = useState(0);
+
+  const measurePhoto = useCallback(() => {
+    const img = imgRef.current;
+    const frame = frameRef.current;
+    if (!img || !frame || !img.naturalWidth || !img.naturalHeight) return;
+    const box = img.getBoundingClientRect();
+    if (!box.height) return;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const shownH = Math.min(box.height, box.width / ratio);
+    const shownW = Math.min(box.width, box.height * ratio);
+    // Position rendue en coordonnées du cadre, seul repère utile pour un enfant
+    // en position absolue.
+    setPhotoTop(box.top - frame.getBoundingClientRect().top + (box.height - shownH) / 2);
+    // Une photo plus étroite que la fenêtre laisse une bande de chaque côté :
+    // la barre s'y rétracte pour rester dans l'image plutôt que de déborder
+    // sur le fond. Bande nulle (le cas courant), la grille reprend la main.
+    setSideBand((box.width - shownW) / 2);
+  }, []);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+    measurePhoto();
+    const ro = new ResizeObserver(measurePhoto);
+    ro.observe(img);
+    return () => ro.disconnect();
+  }, [measurePhoto, src]);
+
   const prev = () => setIdx((i) => (i - 1 + total) % total);
   const next = () => setIdx((i) => (i + 1) % total);
 
   return (
     // Plein écran en paysage ; en portrait la photo occupe une part réduite du
     // cadre (contain), 70dvh suffisent et le contenu remonte au-dessus du pli.
-    <div className="relative w-full h-dvh portrait:h-[70dvh] min-h-[520px]" style={{ paddingTop: "80px" }}>
+    <div ref={frameRef} className="relative w-full h-dvh portrait:h-[70dvh] min-h-[520px]" style={{ paddingTop: "80px" }}>
       {src ? (
         // Photo toujours entière (contain) : c'est la seule règle qui garantit
         // le véhicule complet sur chaque photo et chaque format d'écran. Les
         // abords restent sur le fond du site. Le cadre utile démarre sous le
         // header pour que le haut de la photo reste visible.
         <img
+          ref={imgRef}
+          onLoad={measurePhoto}
           src={src}
           alt={`${alt} — ${idx + 1}/${total}`}
           className="absolute inset-x-0 bottom-0 w-full object-contain object-center"
@@ -136,15 +175,24 @@ export default function HeroCarousel({ images, alt, imgOpacity = 0.8, topBar }: 
         </>
       )}
 
-      {/* Barre haute. Deux ancrages, tous deux partagés avec le reste du site :
-          verticalement la hauteur de header mesurée (elle change au breakpoint
-          de la nav desktop), horizontalement la grille de contenu de la page.
-          Le retour tombe ainsi à la verticale du H1 et le statut à celle de la
-          colonne droite, à chaque largeur de fenêtre. */}
+      {/* Barre haute. Verticalement elle se pose dans le coin de la photo, 20 px
+          sous son bord haut réel, avec la hauteur du header comme plancher : une
+          photo très letterboxée descend la barre, jamais sous le header elle ne
+          remonte. Horizontalement elle suit la grille de contenu de la page, donc
+          le retour tombe à la verticale du H1 et le statut à celle de la colonne
+          droite, à chaque largeur de fenêtre. */}
       {topBar && (
         /* La bande traverse toute la largeur : elle laisse passer les clics,
            seules les pastilles restent cliquables. */
-        <div className="absolute inset-x-0 z-10 pointer-events-none" style={{ top: `${headerH + 20}px` }}>
+        <div
+          className="absolute inset-x-0 z-10 pointer-events-none"
+          style={{
+            top: `${Math.max(headerH, photoTop ?? headerH) + 20}px`,
+            paddingLeft: `${sideBand}px`,
+            paddingRight: `${sideBand}px`,
+            transition: "top 0.2s ease, padding 0.2s ease",
+          }}
+        >
           <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-start justify-between gap-4 [&>*]:pointer-events-auto">
             {topBar}
           </div>
