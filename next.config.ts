@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Les gabarits Cerfa sont lus au moment de générer le mandat : ils doivent
+  // suivre la fonction déployée, sinon la lecture échoue en production.
+  outputFileTracingIncludes: {
+    "/api/admin/immatriculations/[id]/mandat": ["assets/cerfa/**/*"],
+  },
   async redirects() {
     return [
       // Renommage des routes vers des slugs cohérents avec les onglets
