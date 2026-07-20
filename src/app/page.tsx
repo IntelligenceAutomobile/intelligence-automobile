@@ -431,7 +431,7 @@ export default async function HomePage() {
                 <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   {t.home.service06Title[0]}<br />{t.home.service06Title[1]}
                 </h3>
-                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
+                <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem", textWrap: "balance" }}>
                   {t.home.service06Desc}
                 </p>
               </div>

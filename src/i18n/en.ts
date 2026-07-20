@@ -218,11 +218,11 @@ export const en: Translations = {
     service05Title: ["Our", "Method"],
     service05Desc: "Search, verification, security. Your peace of mind.",
     service06Title: ["Our", "Services"],
-    service06Desc: "From the warranty to the registration, we handle it all.",
+    service06Desc: "From the warranty to the registration, end-to-end handling.",
     processLabel: "A simple process",
     processSteps: [
       { n: "01", title: "You choose", desc: "From our stock or via a custom mandate." },
-      { n: "02", title: "We handle it", desc: "Purchase, transport, homologation, registration." },
+      { n: "02", title: "Full handling", desc: "Purchase, transport, homologation, registration." },
       { n: "03", title: "You drive", desc: "Home delivery within 2 to 3 weeks." },
     ],
     processLink: "Our full method →",
@@ -638,7 +638,7 @@ export const en: Translations = {
       "Warranty, financing, insurance, administrative procedures (WW, CPI) and final registration: everything around your acquisition, handled.",
     heroLabel: "Our services",
     heroTitle: ["Beyond", "the car."],
-    heroSubtitle: "From the warranty to the registration, we handle it all.",
+    heroSubtitle: "From the warranty to the registration, end-to-end handling.",
     heroCta: "View our services →",
     items: [
       {

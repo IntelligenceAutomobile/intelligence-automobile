@@ -216,11 +216,11 @@ export const fr = {
     service05Title: ["Notre", "méthode"],
     service05Desc: "Recherche, vérification, sécurisation. Votre tranquillité d'esprit.",
     service06Title: ["Nos", "services"],
-    service06Desc: "De la garantie à la carte grise, on gère tout.",
+    service06Desc: "De la garantie à la carte grise, une prise en charge intégrale.",
     processLabel: "Un processus simple",
     processSteps: [
       { n: "01", title: "Vous choisissez", desc: "Parmi notre stock ou via mandat." },
-      { n: "02", title: "On gère tout", desc: "Achat, transport, homologation, immatriculation." },
+      { n: "02", title: "Prise en charge", desc: "Achat, transport, homologation, immatriculation." },
       { n: "03", title: "Vous conduisez", desc: "Livraison à domicile sous 2 à 3 semaines." },
     ],
     processLink: "Notre méthode complète →",
@@ -641,7 +641,7 @@ export const fr = {
       "Garantie, financement, assurances, démarches administratives (WW, CPI) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
     heroLabel: "Nos services",
     heroTitle: ["Au-delà de", "la voiture."],
-    heroSubtitle: "De la garantie à la carte grise, on gère tout.",
+    heroSubtitle: "De la garantie à la carte grise, une prise en charge intégrale.",
     heroCta: "Voir nos services →",
     items: [
       {
