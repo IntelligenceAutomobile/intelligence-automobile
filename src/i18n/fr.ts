@@ -357,7 +357,7 @@ export const fr = {
       "Zéro frais avant votre validation",
       "Rapport d'inspection complet fourni",
       "Démarches administratives incluses",
-      "Marché de l'Union européenne",
+      "Un interlocuteur unique du début à la livraison",
       "Commission fixe, transparente, annoncée",
     ],
     marketsLabel: "Marchés couverts",

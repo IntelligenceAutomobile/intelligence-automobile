@@ -354,7 +354,7 @@ export const en: Translations = {
       "Zero fees before your validation",
       "Complete inspection report provided",
       "Administrative procedures included",
-      "European Union market",
+      "A single point of contact from start to delivery",
       "Fixed, transparent, upfront commission",
     ],
     marketsLabel: "Markets covered",
