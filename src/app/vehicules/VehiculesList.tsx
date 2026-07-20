@@ -300,6 +300,12 @@ export default function VehiculesList({
     [filters, pathname, router]
   );
 
+  // Même mécanisme que updateFilter (replace + scroll conservé) : un <Link> empilerait
+  // une entrée d'historique et remonterait la page en haut, contrairement aux autres filtres.
+  const clearFilters = useCallback(() => {
+    router.replace(pathname, { scroll: false });
+  }, [pathname, router]);
+
   const fuelOpts = tv.fuelOptions;
   const transOpts = tv.transmissionOptions;
   const currentStatus = filters.status ?? "disponible";
@@ -359,7 +365,7 @@ export default function VehiculesList({
         style={{ backgroundColor: "rgba(7,15,30,0.95)", borderColor: "#1B3055" }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="flex items-center gap-4 pt-5 pb-3 overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-4 pt-5 pb-3">
 
             <div className="flex gap-2 flex-shrink-0">
               {[
@@ -424,25 +430,17 @@ export default function VehiculesList({
               ))}
             </select>
 
-            {hasActiveFilters && (
-              <>
-                <div className="w-px h-4 flex-shrink-0" style={{ backgroundColor: "#1B3055" }} />
-                <Link href="/vehicules" className="text-[9px] tracking-[0.25em] uppercase flex-shrink-0" style={{ color: "#6B9FEE" }}>
-                  {tv.clearFilters}
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* ── LIGNE 2 : FILTRES SUPPLÉMENTAIRES ── */}
-          <div className="flex items-center">
             <button
               onClick={() => setShowMoreFilters((v) => !v)}
-              className="flex items-center gap-2 text-[11px] tracking-[0.25em] uppercase transition-all duration-200 hover:opacity-70 py-1.5"
-              style={{ color: hasMoreFiltersActive || showMoreFilters ? "#F0F5FF" : "#6B9FEE" }}
+              className="flex items-center gap-2 text-[10px] tracking-[0.25em] uppercase flex-shrink-0 cursor-pointer rounded-full transition-all duration-200 hover:-translate-y-px hover:opacity-90 px-4 py-2"
+              style={{
+                backgroundColor: hasMoreFiltersActive || showMoreFilters ? "rgba(107,159,238,0.10)" : "transparent",
+                color: hasMoreFiltersActive || showMoreFilters ? "#F0F5FF" : "#6B9FEE",
+                border: `1px solid ${hasMoreFiltersActive || showMoreFilters ? "#6B9FEE" : "rgba(107,159,238,0.15)"}`,
+              }}
             >
               <svg
-                width="11" height="11" viewBox="0 0 14 14" fill="none"
+                width="10" height="10" viewBox="0 0 14 14" fill="none"
                 className="transition-transform duration-300 flex-shrink-0"
                 style={{ transform: showMoreFilters ? "rotate(180deg)" : "rotate(0deg)" }}
               >
@@ -450,22 +448,32 @@ export default function VehiculesList({
               </svg>
               {showMoreFilters ? tv.lessFilters : tv.moreFilters}
               {hasMoreFiltersActive && (
-                <span className="text-[8px] px-1.5 py-0.5 ml-1" style={{ backgroundColor: "rgba(107,159,238,0.15)", color: "#6B9FEE" }}>
+                <span className="text-[8px] px-1.5 py-0.5 ml-1 rounded-full" style={{ backgroundColor: "rgba(107,159,238,0.15)", color: "#6B9FEE" }}>
                   {[filters.fuel, filters.transmission, filters.maxMileage, filters.minYear].filter(Boolean).length}
                 </span>
               )}
             </button>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center text-[10px] tracking-[0.25em] uppercase flex-shrink-0 cursor-pointer rounded-full transition-all duration-200 hover:-translate-y-px hover:opacity-90 px-4 py-2"
+                style={{ backgroundColor: "transparent", color: "#6B9FEE", border: "1px solid rgba(107,159,238,0.15)" }}
+              >
+                {tv.clearFilters}
+              </button>
+            )}
           </div>
 
           {/* ── FILTRES SECONDAIRES ── */}
           <div
             style={{
               overflow: "hidden",
-              maxHeight: showMoreFilters ? "120px" : "0",
+              maxHeight: showMoreFilters ? "200px" : "0",
               transition: "max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           >
-            <div className="flex items-center gap-4 pb-5 overflow-x-auto">
+            <div className="flex flex-wrap items-center gap-4 pb-5">
               <select
                 value={filters.fuel ?? ""}
                 onChange={(e) => updateFilter("fuel", e.target.value)}
@@ -663,9 +671,9 @@ export default function VehiculesList({
           {/* Pied : réinitialiser + appliquer */}
           <div className="flex items-center gap-3 px-6 py-4" style={{ borderTop: "1px solid #14243d" }}>
             {hasActiveFilters && (
-              <Link href="/vehicules" onClick={() => setFiltersOpen(false)} className="text-[11px] tracking-[0.2em] uppercase flex-shrink-0 px-2 py-3" style={{ color: "#6B9FEE" }}>
+              <button onClick={() => { clearFilters(); setFiltersOpen(false); }} className="text-[11px] tracking-[0.2em] uppercase flex-shrink-0 cursor-pointer px-2 py-3" style={{ color: "#6B9FEE" }}>
                 {tv.clearFilters}
-              </Link>
+              </button>
             )}
             <button onClick={() => setFiltersOpen(false)} className="flex-1 text-[11px] tracking-[0.2em] uppercase font-bold py-4 transition-opacity hover:opacity-90" style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}>
               {tv.applyFilters}
