@@ -389,7 +389,7 @@ export default function EntretienDocumentsSection({
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(false); }}
                   placeholder="Mot de passe"
-                  className="flex-1 px-4 py-3 border text-sm outline-none focus:border-[#6B9FEE]"
+                  className="flex-1 min-w-0 px-4 py-3 border text-sm outline-none focus:border-[#6B9FEE]"
                   style={{
                     backgroundColor: "#112240",
                     borderColor: error ? "#FF6B35" : pendingDoc ? "#6B9FEE" : "#1B3055",

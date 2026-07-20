@@ -147,12 +147,14 @@ export default function HeroCarousel({ images, alt, imgOpacity = 0.8, topBar }: 
             ›
           </button>
 
-          {/* Compteur + dots */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+          {/* Compteur + dots. Une fiche peut porter des dizaines de photos : la
+              rangée est bornée à la largeur du cadre et passe à la ligne, sinon
+              elle sort de l'écran sur les petits mobiles. */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 w-[calc(100%-3rem)]">
             <span className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(138,171,212,0.6)" }}>
               {idx + 1} / {total}
             </span>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap justify-center gap-1.5">
               {images.map((_, i) => (
                 <button
                   key={i}
