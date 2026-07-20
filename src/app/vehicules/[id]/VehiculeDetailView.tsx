@@ -540,11 +540,11 @@ export default function VehiculeDetailView({
                       {td.viewStock}
                     </Link>
                     <Link
-                      href="/contact"
+                      href="/recherche-personnalisee"
                       className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-4 border"
                       style={{ borderColor: "rgba(107,159,238,0.25)", color: "#C8D8EE" }}
                     >
-                      {td.mandatCta}
+                      {td.searchCta}
                     </Link>
                   </>
                 )}
