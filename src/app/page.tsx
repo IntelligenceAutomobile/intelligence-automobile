@@ -321,9 +321,14 @@ export default async function HomePage() {
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: "-0.15em", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>01</div>
+              {/* Le chiffre vit dans le flux et occupe donc sa propre place, ce qui le met
+                  à l'abri du rognage. La marge basse négative fait remonter le titre sur
+                  son bas (superposition volontaire, identique à toutes les tailles puisqu'elle
+                  est exprimée en em). La marge gauche négative compense le padding de 5vw
+                  pour que le chiffre déborde jusqu'au bord de la colonne. */}
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
-                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                <div style={{ position: "relative", zIndex: 0, marginLeft: "-5vw", marginBottom: "-0.3em", fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>01</div>
+                <h3 style={{ position: "relative", zIndex: 1, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   {t.home.service01Title[0]}<br />{t.home.service01Title[1]}
                 </h3>
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
@@ -338,9 +343,9 @@ export default async function HomePage() {
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
           <Link href="/recherche-personnalisee" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: "-0.15em", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>02</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
-                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                <div style={{ position: "relative", zIndex: 0, marginLeft: "-5vw", marginBottom: "-0.3em", fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>02</div>
+                <h3 style={{ position: "relative", zIndex: 1, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   {t.home.service02Title[0]}<br />{t.home.service02Title[1]}
                 </h3>
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
@@ -365,9 +370,9 @@ export default async function HomePage() {
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: "-0.15em", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>03</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
-                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                <div style={{ position: "relative", zIndex: 0, marginLeft: "-5vw", marginBottom: "-0.3em", fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>03</div>
+                <h3 style={{ position: "relative", zIndex: 1, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   {t.home.service03Title[0]}<br />{t.home.service03Title[1]}
                 </h3>
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
@@ -382,9 +387,9 @@ export default async function HomePage() {
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
           <Link href="/transport-livraison" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: "-0.15em", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>04</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
-                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                <div style={{ position: "relative", zIndex: 0, marginLeft: "-5vw", marginBottom: "-0.3em", fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>04</div>
+                <h3 style={{ position: "relative", zIndex: 1, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   {t.home.service04Title[0]}<br />{t.home.service04Title[1]}
                 </h3>
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
@@ -409,9 +414,9 @@ export default async function HomePage() {
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: "-0.15em", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>05</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
-                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                <div style={{ position: "relative", zIndex: 0, marginLeft: "-5vw", marginBottom: "-0.3em", fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>05</div>
+                <h3 style={{ position: "relative", zIndex: 1, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   {t.home.service05Title[0]}<br />{t.home.service05Title[1]}
                 </h3>
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem" }}>
@@ -426,9 +431,9 @@ export default async function HomePage() {
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
           <Link href="/services" className="flex flex-col-reverse lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[42%]" style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6vh 5vw", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: "-0.15em", left: 0, fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none", zIndex: 0 }}>06</div>
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
-                <h3 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
+                <div style={{ position: "relative", zIndex: 0, marginLeft: "-5vw", marginBottom: "-0.3em", fontSize: "clamp(5rem, 12vw, 10rem)", fontWeight: 900, color: "rgba(107,159,238,0.14)", letterSpacing: "-0.05em", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>06</div>
+                <h3 style={{ position: "relative", zIndex: 1, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#F0F5FF", marginBottom: "1.6rem", lineHeight: 1.05 }}>
                   {t.home.service06Title[0]}<br />{t.home.service06Title[1]}
                 </h3>
                 <p style={{ fontSize: "13px", lineHeight: 1.85, color: "#C4D8EE", maxWidth: "340px", marginBottom: "2.4rem", borderTop: "1px solid rgba(107,159,238,0.35)", paddingTop: "0.9rem", textWrap: "balance" }}>

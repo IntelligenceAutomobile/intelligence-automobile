@@ -80,7 +80,7 @@ export default function MethodeSteps({ steps, importSteps }: { steps: Step[]; im
         role="tabpanel"
         style={{ position: "relative", background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)", border: "1px solid rgba(107,159,238,0.14)", borderRadius: "14px", padding: "clamp(1.6rem, 4vw, 3rem)", overflow: "hidden" }}
       >
-        <span aria-hidden="true" style={{ position: "absolute", top: "-0.15em", right: "0.1em", fontSize: "clamp(5rem, 12vw, 11rem)", fontWeight: 900, letterSpacing: "-0.05em", lineHeight: 1, color: "rgba(107,159,238,0.10)", userSelect: "none", pointerEvents: "none" }}>{it.num}</span>
+        <span aria-hidden="true" style={{ position: "absolute", top: 0, right: "0.1em", fontSize: "clamp(5rem, 12vw, 11rem)", fontWeight: 900, letterSpacing: "-0.05em", lineHeight: 1, color: "rgba(107,159,238,0.10)", userSelect: "none", pointerEvents: "none" }}>{it.num}</span>
         <div key={active} className="ms-panel-in" style={{ position: "relative", animation: "ms-fade 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
           <div style={{ width: "44px", height: "3px", borderRadius: "2px", background: "linear-gradient(to right, #6B9FEE, transparent)", marginBottom: "1.2rem" }} />
           <p className="lg:hidden" style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#6B9FEE", margin: "0 0 0.6rem" }}>Étape {it.num} / {String(steps.length).padStart(2, "0")}</p>
