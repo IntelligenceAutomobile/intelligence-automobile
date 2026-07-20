@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -201,30 +202,37 @@ export default async function HomePage() {
           .ia-step, .ia-step:hover { transition: none; transform: none; }
         }
 
-        /* 3. CHIFFRES — chiffre + label (rendu figé, 2 lignes max sur desktop) */
-        .ia-stat-row {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 4.5vh 6vw;
-          display: flex;
-          align-items: center;
-          gap: 3rem;
+        /* 3. CHIFFRES — une seule grille pour les 3 lignes : la colonne des chiffres
+           prend la largeur du plus large, donc les labels sont alignés à toutes les
+           tailles d'écran. Les colonnes 1 et 4 centrent le bloc et laissent les
+           filets séparateurs courir sur toute la largeur.
+           Le label reste à droite du chiffre jusqu'en 320px : les tailles suivent le
+           vw pour que les deux colonnes tiennent côte à côte sans jamais s'empiler. */
+        .ia-stats {
+          display: grid;
+          grid-template-columns: minmax(5vw, 1fr) max-content minmax(0, 34rem) minmax(5vw, 1fr);
+        }
+        .ia-stat-sep {
+          grid-column: 1 / -1;
+          height: 1px;
+          background: linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%);
         }
         .ia-stat-num {
-          flex-shrink: 0;
-          min-width: 200px;
+          grid-column: 2;
+          align-self: center;
           border-left: 2px solid #6B9FEE;
-          padding-left: 1.6rem;
+          padding: 4.5vh 0 4.5vh clamp(0.7rem, 2vw, 1.6rem);
           font-weight: 900;
-          font-size: clamp(2.8rem, 5.5vw, 5rem);
+          font-size: clamp(1.55rem, 7.4vw, 5rem);
           letter-spacing: -0.04em;
           line-height: 1;
           color: #F0F5FF;
         }
         .ia-stat-label {
-          flex-shrink: 0;
-          width: 33rem;
-          font-size: 1.2rem;
+          grid-column: 3;
+          align-self: center;
+          padding: 4.5vh 0 4.5vh clamp(0.85rem, 2.4vw, 3rem);
+          font-size: clamp(0.8rem, 2.5vw, 1.2rem);
           line-height: 1.55;
           font-weight: 500;
           letter-spacing: 0.01em;
@@ -233,25 +241,6 @@ export default async function HomePage() {
         }
         .ia-hero-photo {
           object-position: 38% 50%;
-        }
-        @media (max-width: 1023px) {
-          .ia-stat-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.9rem;
-            padding: 4vh 7vw;
-          }
-          .ia-stat-num {
-            min-width: 0;
-            padding-left: 1.1rem;
-            font-size: clamp(2.6rem, 13vw, 3.6rem);
-          }
-          .ia-stat-label {
-            width: 100%;
-            max-width: 30rem;
-            font-size: 1.05rem;
-            line-height: 1.5;
-          }
         }
       ` }} />
 
@@ -295,21 +284,19 @@ export default async function HomePage() {
         </section>
 
         {/* 3. CHIFFRES */}
-        <section style={{ backgroundColor: "#040B16" }}>
+        <section className="ia-stats" style={{ backgroundColor: "#040B16" }}>
           {t.home.stats.map((s) => (
-            <div key={s.val}>
-              <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%)" }} />
-              <div className="ia-stat-row">
-                <div className="ia-stat-num">
-                  <CountUp value={s.val} />
-                </div>
-                <div className="ia-stat-label">
-                  {s.label}
-                </div>
+            <Fragment key={s.val}>
+              <div className="ia-stat-sep" />
+              <div className="ia-stat-num">
+                <CountUp value={s.val} />
               </div>
-            </div>
+              <div className="ia-stat-label">
+                {s.label}
+              </div>
+            </Fragment>
           ))}
-          <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #1B3055 15%, #1B3055 85%, transparent 100%)" }} />
+          <div className="ia-stat-sep" />
         </section>
 
         {/* SERVICE 01 — Nos véhicules */}

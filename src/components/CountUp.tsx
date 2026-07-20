@@ -75,5 +75,12 @@ export default function CountUp({ value }: { value: string }) {
           .map((p) => (p.num === null ? p.text : formatNumber(Math.round(p.num * progress))))
           .join("");
 
-  return <span ref={ref}>{display}</span>;
+  // La valeur finale est rendue en doublure invisible : la largeur du bloc reste
+  // celle du résultat pendant toute l'animation (sinon la mise en page bouge).
+  return (
+    <span ref={ref} style={{ position: "relative", display: "inline-block", whiteSpace: "nowrap" }}>
+      <span aria-hidden="true" style={{ visibility: "hidden" }}>{value}</span>
+      <span style={{ position: "absolute", left: 0, top: 0 }}>{display}</span>
+    </span>
+  );
 }
