@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can, asRole } from "@/lib/roles";
 import { checklistFor, checklistProgress, deadlines, isRegType, isVatRegime, type RegStatus } from "@/lib/immatriculation";
-import ImmatriculationsClient, { type RegRow } from "./ImmatriculationsClient";
+import ImmatriculationsClient, { type RegRow, type StockVehicle } from "./ImmatriculationsClient";
 
 export default async function ImmatriculationsPage() {
   const session = await requireAdmin();
@@ -11,7 +11,15 @@ export default async function ImmatriculationsPage() {
   const canDelete = can(asRole(session.admin.role), "delete");
 
   const today = new Date().toISOString().slice(0, 10);
-  const rows = await prisma.registration.findMany({ orderBy: { createdAt: "desc" } });
+  const [rows, stock] = await Promise.all([
+    prisma.registration.findMany({ orderBy: { createdAt: "desc" } }),
+    // Le stock alimente le pré-remplissage du dossier : marque, modèle, année,
+    // kilométrage et pays d'origine sont déjà saisis sur la fiche véhicule.
+    prisma.vehicle.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { id: true, make: true, model: true, year: true, mileage: true, origin: true },
+    }),
+  ]);
 
   const registrations: RegRow[] = rows.map((r) => {
     const type = isRegType(r.type) ? r.type : "import_ue";
@@ -40,5 +48,12 @@ export default async function ImmatriculationsPage() {
     };
   });
 
-  return <ImmatriculationsClient registrations={registrations} canDelete={canDelete} />;
+  const vehicles: StockVehicle[] = stock.map((v) => ({
+    id: v.id,
+    label: `${v.make} ${v.model} (${v.year})`,
+    mileage: v.mileage,
+    origin: v.origin,
+  }));
+
+  return <ImmatriculationsClient registrations={registrations} vehicles={vehicles} canDelete={canDelete} />;
 }

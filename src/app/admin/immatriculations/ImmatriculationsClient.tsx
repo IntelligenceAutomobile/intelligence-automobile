@@ -28,12 +28,20 @@ export type RegRow = {
   nextDeadline: Deadline | null;
 };
 
-function NewDossierModal({ onClose }: { onClose: () => void }) {
+export type StockVehicle = {
+  id: string;
+  label: string;
+  mileage: number;
+  origin: string;
+};
+
+function NewDossierModal({ vehicles, onClose }: { vehicles: StockVehicle[]; onClose: () => void }) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
     type: "import_ue" as RegType,
+    vehicleId: "",
     vehicleLabel: "",
     vin: "",
     plateForeign: "",
@@ -73,6 +81,33 @@ function NewDossierModal({ onClose }: { onClose: () => void }) {
     >
       <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
         <SectionCard title="Nouveau dossier d'immatriculation">
+          {vehicles.length > 0 && (
+            <div>
+              <label className={labelClass} style={{ color: T.textDim }}>Reprendre un véhicule du stock</label>
+              <select
+                value={f.vehicleId}
+                onChange={(e) => {
+                  const v = vehicles.find((x) => x.id === e.target.value);
+                  setF((x) => ({
+                    ...x,
+                    vehicleId: e.target.value,
+                    vehicleLabel: v ? v.label : x.vehicleLabel,
+                    mileageKm: v ? v.mileage : x.mileageKm,
+                    countryOrigin: v ? v.origin : x.countryOrigin,
+                  }));
+                }}
+                className="px-4 py-3 text-sm outline-none w-full cursor-pointer"
+                style={fieldStyle}
+              >
+                <option value="">Saisie manuelle</option>
+                {vehicles.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
+              </select>
+              <p className="text-[11px] mt-1.5" style={{ color: T.muted }}>
+                Reprend le libellé, le kilométrage et le pays d&apos;origine de la fiche véhicule.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass} style={{ color: T.textDim }}>Type de dossier</label>
@@ -143,7 +178,15 @@ function NewDossierModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function ImmatriculationsClient({ registrations, canDelete }: { registrations: RegRow[]; canDelete: boolean }) {
+export default function ImmatriculationsClient({
+  registrations,
+  vehicles,
+  canDelete,
+}: {
+  registrations: RegRow[];
+  vehicles: StockVehicle[];
+  canDelete: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [, startTransition] = useTransition();
@@ -255,7 +298,7 @@ export default function ImmatriculationsClient({ registrations, canDelete }: { r
         </div>
       )}
 
-      {open && <NewDossierModal onClose={() => setOpen(false)} />}
+      {open && <NewDossierModal vehicles={vehicles} onClose={() => setOpen(false)} />}
       <ConfirmDialog
         open={confirmDelete !== null}
         title="Supprimer ce dossier ?"

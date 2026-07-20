@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, ReceiptText, ShieldCheck, MessagesSquare, XCircle, Send, Users } from "lucide-react";
+import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, XCircle, Send, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
@@ -9,6 +9,7 @@ import { computeTotals, formatEuro, type QuoteItem, type TvaMode, type DepositMo
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
 import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, type AppointmentType } from "@/lib/planning";
+import { deadlines as regDeadlines, isRegType } from "@/lib/immatriculation";
 import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
 import { KpiTile, AreaChart, Donut, Bars } from "./charts";
 
@@ -125,7 +126,7 @@ export default async function AdminDashboard() {
   warrantyToDate.setDate(warrantyToDate.getDate() + 60);
   const warrantyTo = warrantyToDate.toISOString().slice(0, 10);
 
-  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties] =
+  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, openRegistrations] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -163,9 +164,24 @@ export default async function AdminDashboard() {
       }),
       prisma.quote.findMany({ where: { docType: "facture", paymentStatus: "impayee" } }),
       prisma.warranty.count({ where: { endDate: { gte: warrantyFrom, lte: warrantyTo } } }),
+      // Dossiers d'immatriculation encore ouverts : les délais légaux courent
+      // tant que l'immatriculation n'est pas obtenue.
+      prisma.registration.findMany({
+        where: { registeredOn: "" },
+        select: { type: true, acquiredOn: true, deliveredOn: true, registeredOn: true, quitusDate: true },
+      }),
     ]);
 
   const stockValue = valueAgg._sum.price ?? 0;
+
+  // Dossiers dont au moins une échéance légale est dépassée.
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const lateRegistrations = openRegistrations.filter((r) =>
+    regDeadlines(
+      { type: isRegType(r.type) ? r.type : "import_ue", acquiredOn: r.acquiredOn, deliveredOn: r.deliveredOn, registeredOn: r.registeredOn, quitusDate: r.quitusDate },
+      todayKey,
+    ).some((d) => d.key !== "archivage" && d.daysLeft < 0),
+  ).length;
 
   /* Séries mensuelles réelles */
   const months12 = lastMonths(12);
@@ -359,6 +375,27 @@ export default async function AdminDashboard() {
             </span>
             <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
               Voir les garanties
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        )}
+
+        {/* Alerte dossiers d'immatriculation hors délai */}
+        {lateRegistrations > 0 && (
+          <Link
+            href="/admin/immatriculations"
+            className="adm-enter flex items-center gap-3 px-5 py-3 mb-5"
+            style={{ backgroundColor: T.surface, border: "1px solid rgba(255,107,53,0.4)" }}
+          >
+            <FileBadge size={16} style={{ color: T.danger }} />
+            <span className="text-sm" style={{ color: T.textDim }}>
+              <span className="font-semibold" style={{ color: T.danger }}>
+                {lateRegistrations} dossier{lateRegistrations > 1 ? "s" : ""} d&apos;immatriculation hors délai
+              </span>
+              {" · quitus sous 15 jours, immatriculation sous 30 jours"}
+            </span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Voir les dossiers
               <ChevronRight size={12} />
             </span>
           </Link>

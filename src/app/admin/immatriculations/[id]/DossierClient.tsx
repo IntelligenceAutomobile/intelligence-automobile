@@ -5,7 +5,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Check, Copy, AlertTriangle, Archive, Calculator, ListChecks, CalendarClock, Send } from "lucide-react";
+import { ArrowLeft, Check, Copy, AlertTriangle, Archive, Calculator, ListChecks, CalendarClock, Send, Printer } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { formatEuroCents } from "@/lib/comptes";
 import { formatDateFr } from "@/lib/devis";
@@ -145,6 +145,10 @@ export default function DossierClient({ dossier, today }: { dossier: Dossier; to
             <Link href="/admin/immatriculations" className={btnGhostClass} style={btnGhostStyle}>
               <ArrowLeft size={14} />
               Retour
+            </Link>
+            <Link href={`/admin/immatriculations/${dossier.id}/imprimer`} className={btnGhostClass} style={btnGhostStyle}>
+              <Printer size={14} />
+              Mandat & récapitulatif
             </Link>
             <button type="button" onClick={save} disabled={busy} className={btnPrimaryClass} style={btnPrimaryStyle}>
               {busy ? "…" : "Enregistrer"}

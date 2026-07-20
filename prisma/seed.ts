@@ -1,11 +1,13 @@
 import { PrismaClient } from "../src/generated/prisma/client.ts";
-import { PrismaLibSQL } from "@prisma/adapter-libsql";
-import { createClient } from "@libsql/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import bcrypt from "bcryptjs";
 
-const libsql = createClient({ url: "file:./prisma/dev.db" });
-// @ts-expect-error - adapter-libsql types
-const adapter = new PrismaLibSQL(libsql);
+// Même cible que src/lib/prisma.ts : la base pointée par DATABASE_URL, sinon
+// le fichier local. Le seed visait auparavant prisma/dev.db, qui reste vide.
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL ?? "file:./dev.db",
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
