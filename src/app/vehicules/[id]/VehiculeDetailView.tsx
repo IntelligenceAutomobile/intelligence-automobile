@@ -146,34 +146,65 @@ export default function VehiculeDetailView({
 
   const contactSlug = `${model.make} ${model.model} ${model.year}`;
 
+  // Pastilles de la barre haute du hero : même verre fumé que les flèches du
+  // carrousel, pour que les contrôles posés sur la photo forment une famille.
+  // Le fond sombre translucide garde le texte lisible sur une photo claire.
+  const heroPill: CSSProperties = {
+    backgroundColor: "rgba(7,15,30,0.65)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    border: "1px solid rgba(27,48,85,0.7)",
+    borderRadius: "999px",
+  };
+  const statusTone = isAvailable
+    ? { fg: "#5BD89A", border: "rgba(91,216,154,0.45)" }
+    : isSold
+      ? { fg: "#C8D8EE", border: "rgba(27,48,85,0.7)" }
+      : { fg: "#F0B860", border: "rgba(240,184,96,0.45)" };
+  const pillClass =
+    "inline-flex items-center px-3.5 py-2 lg:px-4 lg:py-2.5 text-[9px] lg:text-[10px] tracking-[0.28em] uppercase whitespace-nowrap";
+
   return (
     <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
       {/* ── HERO ── */}
-      <HeroCarousel images={images} alt={name} imgOpacity={isSold ? 0.85 : 1}>
-        <div className="absolute top-28 left-6 lg:left-12 z-10">
-          <Link
-            href="/vehicules"
-            className="inline-flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-opacity hover:opacity-70"
-            style={{ color: "#C8D8EE" }}
-          >
-            {td.backLink}
-          </Link>
-        </div>
-        <div className="absolute top-28 right-6 lg:right-12 z-10">
-          <span
-            className="text-[9px] tracking-[0.3em] uppercase px-3 py-1.5"
-            style={{
-              backgroundColor: isAvailable ? "rgba(91,216,154,0.12)" : "transparent",
-              color: isAvailable ? "#5BD89A" : "#C8D8EE",
-              border: isAvailable ? "1px solid rgba(91,216,154,0.35)" : "1px solid #1B3055",
-              borderRadius: "4px",
-            }}
-          >
-            {isAvailable ? tm.available : isSold ? tm.sold : td.reserved}
-          </span>
-        </div>
-      </HeroCarousel>
+      <HeroCarousel
+        images={images}
+        alt={name}
+        imgOpacity={isSold ? 0.85 : 1}
+        topBar={
+          <>
+            <Link
+              href="/vehicules"
+              className={`group gap-2.5 text-[#C8D8EE] hover:text-white transition-colors duration-200 ${pillClass}`}
+              style={heroPill}
+            >
+              <span
+                aria-hidden
+                className="transition-transform duration-200 group-hover:-translate-x-0.5"
+                style={{ fontSize: "1.15em", lineHeight: 1 }}
+              >
+                ←
+              </span>
+              {td.backLink}
+            </Link>
+
+            <span className={`gap-2 ${pillClass}`} style={{ ...heroPill, border: `1px solid ${statusTone.border}`, color: statusTone.fg }}>
+              <span
+                aria-hidden
+                style={{
+                  width: "5px",
+                  height: "5px",
+                  borderRadius: "50%",
+                  backgroundColor: statusTone.fg,
+                  boxShadow: `0 0 8px ${statusTone.fg}`,
+                }}
+              />
+              {isAvailable ? tm.available : isSold ? tm.sold : td.reserved}
+            </span>
+          </>
+        }
+      />
 
       {/* ── LAYOUT PRINCIPAL ── */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12">

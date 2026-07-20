@@ -730,7 +730,7 @@ export const en: Translations = {
   },
 
   vehicleDetail: {
-    backLink: "← Our vehicles",
+    backLink: "Our vehicles",
     reserved: "Reserved",
     presentationSection: "Overview",
     priceLabel: "Sale price",

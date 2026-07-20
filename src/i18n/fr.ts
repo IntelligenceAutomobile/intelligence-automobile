@@ -733,7 +733,7 @@ export const fr = {
   },
 
   vehicleDetail: {
-    backLink: "← Nos véhicules",
+    backLink: "Nos véhicules",
     reserved: "Réservé",
     presentationSection: "Présentation",
     priceLabel: "Prix de vente",
