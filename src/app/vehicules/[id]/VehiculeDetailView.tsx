@@ -251,7 +251,7 @@ export default function VehiculeDetailView({
                     {nextNum()}
                   </span>
                   <p
-                    className="text-sm tracking-[0.5em] uppercase font-bold flex-shrink-0"
+                    className="text-[11px] sm:text-sm tracking-[0.15em] sm:tracking-[0.5em] uppercase font-bold min-w-0"
                     style={{ color: "#F0F5FF" }}
                   >
                     {td.presentationSection}
@@ -317,7 +317,7 @@ export default function VehiculeDetailView({
                     {nextNum()}
                   </span>
                   <p
-                    className="text-sm tracking-[0.5em] uppercase font-bold flex-shrink-0"
+                    className="text-[11px] sm:text-sm tracking-[0.15em] sm:tracking-[0.5em] uppercase font-bold min-w-0"
                     style={{ color: "#F0F5FF" }}
                   >
                     {tm.highlights}
@@ -369,7 +369,7 @@ export default function VehiculeDetailView({
                     {nextNum()}
                   </span>
                   <p
-                    className="text-sm tracking-[0.5em] uppercase font-bold flex-shrink-0"
+                    className="text-[11px] sm:text-sm tracking-[0.15em] sm:tracking-[0.5em] uppercase font-bold min-w-0"
                     style={{ color: "#F0F5FF" }}
                   >
                     {tm.equipmentTitle}
@@ -404,7 +404,7 @@ export default function VehiculeDetailView({
                     {nextNum()}
                   </span>
                   <p
-                    className="text-sm tracking-[0.5em] uppercase font-bold flex-shrink-0"
+                    className="text-[11px] sm:text-sm tracking-[0.15em] sm:tracking-[0.5em] uppercase font-bold min-w-0"
                     style={{ color: "#F0F5FF" }}
                   >
                     Entretien &amp; Documents
