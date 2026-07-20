@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useLocale } from "@/i18n/context";
+import SearchableSelect, { type SelectGroup, type SelectOption } from "@/components/SearchableSelect";
+import { MAIN_MAKES, OTHER_MAKES, getModelsForMake, normalizeLabel } from "@/lib/vehicle-catalog";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Vehicle = {
@@ -260,45 +262,6 @@ function VehicleCard({
   );
 }
 
-// ── Modèles par marque (pour le filtre secondaire "Modèle") ──────────────────
-const AUDI_MODELS = [
-  "A1", "A3", "A4", "A5", "A6", "A7", "A8",
-  "S3", "S4", "S5", "S6", "S7", "S8",
-  "RS3", "RS4", "RS5", "RS6", "RS7",
-  "Q2", "Q3", "Q4 e-tron", "Q5", "Q6 e-tron", "Q7", "Q8", "Q8 e-tron",
-  "SQ2", "SQ5", "SQ7", "SQ8",
-  "RS Q3", "RS Q8",
-  "TT", "TTS", "TT RS",
-  "R8",
-  "e-tron GT", "RS e-tron GT",
-  "80", "90", "100", "200", "Coupé", "Cabriolet", "Allroad", "V8",
-];
-
-const MODELS_BY_MAKE: Record<string, string[]> = {
-  Audi: AUDI_MODELS,
-};
-
-// ── Marques sport/luxe pré-chargées ─────────────────────────────────────────
-const SPORT_MAKES = [
-  "Alfa Romeo",
-  "Alpine",
-  "Aston Martin",
-  "Audi",
-  "BMW",
-  "Ferrari",
-  "Honda",
-  "Jaguar",
-  "Lamborghini",
-  "Lotus",
-  "Maserati",
-  "McLaren",
-  "Mercedes-AMG",
-  "Nissan",
-  "Porsche",
-  "Renault",
-  "Toyota",
-];
-
 // ── Composant principal ──────────────────────────────────────────────────────
 export default function VehiculesList({
   vehicules,
@@ -346,12 +309,38 @@ export default function VehiculesList({
   const hasMoreFiltersActive = filters.fuel || filters.transmission || filters.maxMileage || filters.minYear;
   const activeFilterCount = [filters.make, filters.model, filters.fuel, filters.transmission, filters.maxPrice, filters.maxMileage, filters.minYear].filter(Boolean).length;
 
-  const dbMakesSet = new Set(makes);
-  const extraMakes = SPORT_MAKES.filter((m) => !dbMakesSet.has(m)).sort((a, b) => a.localeCompare(b));
+  const customRowLabel = useCallback((q: string) => `${tv.useCustomEntry} « ${q} »`, [tv.useCustomEntry]);
 
-  const availableModels = filters.make
-    ? Array.from(new Set([...(MODELS_BY_MAKE[filters.make] ?? []), ...(modelsByMake[filters.make] ?? [])])).sort((a, b) => a.localeCompare(b))
-    : [];
+  // Deux groupes : les cinq marques de tête, puis le reste par volume de ventes.
+  // Quand la base orthographie une marque autrement (casse, accent), on garde le
+  // libellé du catalogue à l'affichage mais on filtre sur l'orthographe de la base.
+  const makeGroups = useMemo<SelectGroup[]>(() => {
+    const dbByKey = new Map(makes.map((m) => [normalizeLabel(m), m]));
+    const toOption = (label: string): SelectOption => ({
+      value: dbByKey.get(normalizeLabel(label)) ?? label,
+      label,
+    });
+
+    const catalogKeys = new Set([...MAIN_MAKES, ...OTHER_MAKES].map(normalizeLabel));
+    const extraMakes = makes
+      .filter((m) => !catalogKeys.has(normalizeLabel(m)))
+      .map((m) => ({ value: m, label: m }));
+
+    return [
+      { label: tv.mainMakes, options: MAIN_MAKES.map(toOption) },
+      { label: tv.otherMakes, options: [...OTHER_MAKES.map(toOption), ...extraMakes] },
+    ];
+  }, [makes, tv.mainMakes, tv.otherMakes]);
+
+  // Catalogue de la marque d'abord, puis les modèles présents en base qu'il ignore.
+  const modelGroups = useMemo<SelectGroup[]>(() => {
+    if (!filters.make) return [];
+    const catalog = getModelsForMake(filters.make);
+    const known = new Set(catalog.map(normalizeLabel));
+    const fromDb = (modelsByMake[filters.make] ?? []).filter((m) => !known.has(normalizeLabel(m)));
+    const options = [...catalog, ...fromDb].map((m) => ({ value: m, label: m }));
+    return options.length > 0 ? [{ label: filters.make, options }] : [];
+  }, [filters.make, modelsByMake]);
 
   // Cases vides en fin de grille : on les comble par des cellules au fond du site (#070F1E)
   // au lieu de laisser apparaître la couleur des séparateurs (#1B3055). Nombre de colonnes
@@ -395,41 +384,30 @@ export default function VehiculesList({
 
             <div className="w-px h-4 flex-shrink-0" style={{ backgroundColor: "#1B3055" }} />
 
-            <select
+            <SearchableSelect
               value={filters.make ?? ""}
-              onChange={(e) => updateFilter("make", e.target.value)}
-              className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
-              style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.make ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
-            >
-              <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allMakes}</option>
-              {makes.length > 0 && (
-                <optgroup label={tv.inStock} style={{ backgroundColor: "#070F1E" }}>
-                  {makes.map((m) => (
-                    <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
-                  ))}
-                </optgroup>
-              )}
-              {extraMakes.length > 0 && (
-                <optgroup label={tv.otherMakes} style={{ backgroundColor: "#070F1E" }}>
-                  {extraMakes.map((m) => (
-                    <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
+              onChange={(v) => updateFilter("make", v)}
+              groups={makeGroups}
+              placeholder={tv.allMakes}
+              clearLabel={tv.allMakes}
+              searchPlaceholder={tv.searchMake}
+              customGroupLabel={tv.customEntry}
+              customRowLabel={customRowLabel}
+              noResultLabel={tv.noMatch}
+            />
 
-            {filters.make && availableModels.length > 0 && (
-              <select
+            {filters.make && (
+              <SearchableSelect
                 value={filters.model ?? ""}
-                onChange={(e) => updateFilter("model", e.target.value)}
-                className="text-[11px] tracking-[0.25em] uppercase outline-none flex-shrink-0 cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
-                style={{ backgroundColor: "rgba(107,159,238,0.04)", color: filters.model ? "#F0F5FF" : "#C8D8EE", border: "1px solid rgba(107,159,238,0.2)" }}
-              >
-                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allModels} {filters.make}</option>
-                {availableModels.map((m) => (
-                  <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>
-                ))}
-              </select>
+                onChange={(v) => updateFilter("model", v)}
+                groups={modelGroups}
+                placeholder={tv.allModels}
+                clearLabel={`${tv.allModels} ${filters.make}`}
+                searchPlaceholder={tv.searchModel}
+                customGroupLabel={tv.customEntry}
+                customRowLabel={customRowLabel}
+                noResultLabel={tv.noMatch}
+              />
             )}
 
             <select
@@ -609,28 +587,35 @@ export default function VehiculesList({
           <div className="overflow-y-auto px-6 py-5 flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.allMakes}</span>
-              <select value={filters.make ?? ""} onChange={(e) => updateFilter("make", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.make ? "#F0F5FF" : "#C8D8EE" }}>
-                <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allMakes}</option>
-                {makes.length > 0 && (
-                  <optgroup label={tv.inStock} style={{ backgroundColor: "#070F1E" }}>
-                    {makes.map((m) => <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>)}
-                  </optgroup>
-                )}
-                {extraMakes.length > 0 && (
-                  <optgroup label={tv.otherMakes} style={{ backgroundColor: "#070F1E" }}>
-                    {extraMakes.map((m) => <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>)}
-                  </optgroup>
-                )}
-              </select>
+              <SearchableSelect
+                value={filters.make ?? ""}
+                onChange={(v) => updateFilter("make", v)}
+                groups={makeGroups}
+                placeholder={tv.allMakes}
+                clearLabel={tv.allMakes}
+                searchPlaceholder={tv.searchMake}
+                customGroupLabel={tv.customEntry}
+                customRowLabel={customRowLabel}
+                noResultLabel={tv.noMatch}
+                variant="block"
+              />
             </div>
 
-            {filters.make && availableModels.length > 0 && (
+            {filters.make && (
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: "#6B9FEE" }}>{tv.allModels}</span>
-                <select value={filters.model ?? ""} onChange={(e) => updateFilter("model", e.target.value)} className="w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer" style={{ backgroundColor: "rgba(107,159,238,0.04)", border: "1px solid rgba(107,159,238,0.2)", color: filters.model ? "#F0F5FF" : "#C8D8EE" }}>
-                  <option value="" style={{ backgroundColor: "#070F1E" }}>{tv.allModels} {filters.make}</option>
-                  {availableModels.map((m) => <option key={m} value={m} style={{ backgroundColor: "#070F1E" }}>{m}</option>)}
-                </select>
+                <SearchableSelect
+                  value={filters.model ?? ""}
+                  onChange={(v) => updateFilter("model", v)}
+                  groups={modelGroups}
+                  placeholder={tv.allModels}
+                  clearLabel={`${tv.allModels} ${filters.make}`}
+                  searchPlaceholder={tv.searchModel}
+                  customGroupLabel={tv.customEntry}
+                  customRowLabel={customRowLabel}
+                  noResultLabel={tv.noMatch}
+                  variant="block"
+                />
               </div>
             )}
 

@@ -23,29 +23,59 @@ export default async function VehiculesV2Page({
   const [params, session, { t }] = await Promise.all([searchParams, getAdminSession(), getTranslations()]);
   const isAdmin = !!session;
 
+  const toInt = (value?: string) => {
+    const n = value ? parseInt(value, 10) : NaN;
+    return Number.isFinite(n) ? n : undefined;
+  };
+
   const makeFilter = params.make;
+  const modelFilter = params.model;
   const fuelFilter = params.fuel;
-  const maxPrice = params.maxPrice ? parseInt(params.maxPrice) : undefined;
+  const transmissionFilter = params.transmission;
+  const maxPrice = toInt(params.maxPrice);
+  const maxMileage = toInt(params.maxMileage);
+  const minYear = toInt(params.minYear);
   const statusFilter = params.status ?? "disponible";
 
   const where: Record<string, unknown> = {};
   if (!isAdmin) where.isPublished = true;
   if (statusFilter !== "tous") where.status = statusFilter;
   if (makeFilter) where.make = makeFilter;
+  // `contains` et pas `equals` : le filtre porte sur une famille (« 911 », « Classe C »)
+  // alors que la base stocke la finition complète (« 911 Carrera 4S »).
+  if (modelFilter) where.model = { contains: modelFilter };
   if (fuelFilter) where.fuel = fuelFilter;
+  if (transmissionFilter) where.transmission = transmissionFilter;
   if (maxPrice) where.price = { lte: maxPrice };
+  if (maxMileage) where.mileage = { lte: maxMileage };
+  if (minYear) where.year = { gte: minYear };
 
-  const [vehicules, makes] = await Promise.all([
+  // Marques et modèles proposés dans les menus : mêmes règles de visibilité que la grille.
+  const facetWhere = isAdmin ? {} : { isPublished: true };
+
+  const [vehicules, makes, modelRows] = await Promise.all([
     prisma.vehicle.findMany({
       where,
       orderBy: { createdAt: "desc" },
     }),
     prisma.vehicle.findMany({
+      where: facetWhere,
       select: { make: true },
       distinct: ["make"],
       orderBy: { make: "asc" },
     }),
+    prisma.vehicle.findMany({
+      where: facetWhere,
+      select: { make: true, model: true },
+      distinct: ["make", "model"],
+      orderBy: { model: "asc" },
+    }),
   ]);
+
+  const modelsByMake = modelRows.reduce<Record<string, string[]>>((acc, row) => {
+    (acc[row.make] ??= []).push(row.model);
+    return acc;
+  }, {});
 
   return (
     <>
@@ -149,7 +179,17 @@ export default async function VehiculesV2Page({
           <VehiculesList
             vehicules={vehicules}
             makes={makes.map((m) => m.make)}
-            filters={{ make: makeFilter, fuel: fuelFilter, maxPrice, status: statusFilter }}
+            modelsByMake={modelsByMake}
+            filters={{
+              make: makeFilter,
+              model: modelFilter,
+              fuel: fuelFilter,
+              transmission: transmissionFilter,
+              maxPrice,
+              maxMileage,
+              minYear,
+              status: statusFilter,
+            }}
             isAdmin={isAdmin}
           />
         </div>
