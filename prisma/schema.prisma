@@ -285,3 +285,60 @@ model LedgerEntry {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// Dossiers d'immatriculation (habilitation SIV) : import UE principalement,
+// changement de titulaire et duplicata à la marge.
+// Les données véhicule sont recopiées plutôt que référencées : le Vehicle
+// continue de vivre (vendu, modifié, supprimé) alors que le dossier doit rester
+// figé pendant les 5 ans de conservation réglementaire.
+model Registration {
+  id            String   @id @default(cuid())
+  reference     String   @unique                 // référence interne lisible, ex "IMM-2026-014"
+  type          String   @default("import_ue")   // import_ue | titulaire | duplicata
+  status        String   @default("brouillon")   // brouillon | pieces | quitus | pret | transmis | immatricule | archive
+
+  // Rattachements (optionnels : un dossier peut précéder la fiche véhicule)
+  vehicleId     String?
+  clientId      String?
+
+  // Identité du véhicule, figée au dossier
+  vehicleLabel  String   @default("")            // ex "BMW Série 3 320d"
+  vin           String   @default("")
+  plateForeign  String   @default("")            // immatriculation d'origine
+  plateFinal    String   @default("")            // immatriculation française obtenue
+  countryOrigin String   @default("Allemagne")
+  firstRegDate  String   @default("")            // 1re mise en circulation YYYY-MM-DD
+  mileageKm     Int      @default(0)             // kilométrage à l'acquisition
+
+  // Titulaire, figé au dossier
+  holderName    String   @default("")
+  holderAddress String   @default("")
+
+  // Dates clés
+  acquiredOn    String   @default("")            // acquisition YYYY-MM-DD (départ du délai de 30 j)
+  deliveredOn   String   @default("")            // livraison YYYY-MM-DD (départ du délai de quitus)
+  registeredOn  String   @default("")            // immatriculation obtenue YYYY-MM-DD
+
+  // Fiscal
+  vatRegime     String   @default("occasion")    // neuf | occasion (calculé, ajustable à la main)
+  purchaseCents Int      @default(0)             // prix d'achat en centimes (base du calcul de TVA)
+  quitusRef     String   @default("")
+  quitusDate    String   @default("")            // YYYY-MM-DD
+
+  // Télétransmission SIV
+  sivRef        String   @default("")            // numéro de dossier SIV
+
+  // Coffre-fort numérique : notre stockage prépare, le coffre-fort certifié
+  // conserve et fait foi. On garde ici la référence de versement.
+  archiveRef    String   @default("")
+  archivedAt    String   @default("")            // YYYY-MM-DD
+
+  documents     String   @default("[]")          // JSON [{ key, label, url, uploadedAt }]
+  notes         String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([vehicleId])
+  @@index([clientId])
+}
