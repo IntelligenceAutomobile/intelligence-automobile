@@ -52,9 +52,12 @@ export default function HeroCarousel({ images, alt, imgOpacity = 0.8, children }
         </div>
       )}
 
-      {/* Overlays gradient */}
-      <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(7,15,30,0.4) 0%, transparent 40%, #070F1E 100%)" }} />
-      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #070F1E 0%, transparent 28%)" }} />
+      {/* Overlays gradient — volontairement discrets : le fondu bas ne sert qu'à
+          raccorder la photo au fond du site, il démarre tard pour laisser le bas
+          de caisse, les roues et l'ombre au sol visibles. Le voile haut compense
+          le header fixe semi-opaque. */}
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(7,15,30,0.22) 0%, transparent 28%, transparent 70%, #070F1E 100%)" }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #070F1E 0%, transparent 14%)" }} />
 
       {/* Navigation — uniquement si plusieurs images */}
       {total > 1 && (

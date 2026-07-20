@@ -150,7 +150,7 @@ export default function VehiculeDetailView({
     <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
       {/* ── HERO ── */}
-      <HeroCarousel images={images} alt={name} imgOpacity={isSold ? 0.45 : 1}>
+      <HeroCarousel images={images} alt={name} imgOpacity={isSold ? 0.85 : 1}>
         <div className="absolute top-28 left-6 lg:left-12 z-10">
           <Link
             href="/vehicules"
