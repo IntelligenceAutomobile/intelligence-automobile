@@ -13,6 +13,14 @@ Avant toute modification de code, **toujours proposer la solution** et attendre 
 - Attendre que l'utilisateur demande explicitement ("commit", "deploy", "pousse", etc.)
 - Ne pas commit ni pousser automatiquement après une modification, même si le travail est terminé
 
+## Expliquer simplement
+Les explications s'adressent à quelqu'un qui connaît son site, pas le code. **Parler du site tel qu'il se voit à l'écran, jamais en termes techniques.**
+- Commencer par **où** ça se passe et **ce que ça donne à l'écran** : quelle page, quel endroit, ce qui est moche ou cassé. Une capture vaut mieux qu'un paragraphe.
+- Les noms de propriétés CSS, de composants, de classes Tailwind restent dans le code. Dire « le titre est trop large pour l'écran », pas « `flex-shrink-0` empêche le `<p>` de se réduire ».
+- Les chiffres servent quand ils parlent : « ça dépasse de 25 px » se comprend, « `scrollWidth` 415 vs `innerWidth` 390 » non.
+- Une phrase par idée. Éviter les paragraphes qui enchaînent trois causes.
+- Le détail technique se donne s'il est demandé, ou en une ligne à la fin pour ceux qui veulent creuser.
+
 # Conventions de rédaction
 
 ## Tirets : jamais en parenthèse
