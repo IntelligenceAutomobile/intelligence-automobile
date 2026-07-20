@@ -197,7 +197,7 @@ export const fr = {
   },
 
   home: {
-    heroTitle: ["Le premium européen,", "importé", "autrement."],
+    heroTitle: ["L'importation", "automobile,", "autrement."],
     heroCta: "Voir les véhicules",
     scrollIndicator: "Défiler",
     stats: [
