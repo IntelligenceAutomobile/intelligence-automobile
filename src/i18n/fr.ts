@@ -633,7 +633,7 @@ export const fr = {
     ],
     cabinetLabel: "Notre positionnement",
     cabinetTitle: "Un cabinet automobile\npremium.",
-    cabinetText: "Nous ne sommes ni un mandataire généraliste, ni une marketplace, ni un simple revendeur. Intelligence Automobile est un cabinet spécialisé, pensé pour accompagner ses clients dans leur projet automobile.",
+    cabinetText: "Intelligence Automobile est un cabinet spécialisé dans l'acquisition de véhicules premium. Un interlocuteur unique, une méthode éprouvée, et un accompagnement qui va de la première conversation à la remise des clés.",
     cabinetPoints: ["Une sélection exigeante.", "Une relation personnalisée.", "Une transparence totale.", "Une expérience maîtrisée."],
     ctaTitle: "Vous avez le projet.\nNous avons la méthode.",
     ctaSubtitle: "Un véhicule premium précis en tête, ou simplement l'envie d'être guidé : nous menons la recherche avec rigueur et exigence.",

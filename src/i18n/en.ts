@@ -630,7 +630,7 @@ export const en: Translations = {
     ],
     cabinetLabel: "Our positioning",
     cabinetTitle: "A premium automotive\nconsultancy.",
-    cabinetText: "We are neither a generalist broker, nor a marketplace, nor a mere reseller. Intelligence Automobile is a specialised consultancy, built to support its clients in their automotive project.",
+    cabinetText: "Intelligence Automobile is a consultancy specialised in premium vehicle acquisition. A single point of contact, a proven method, and support that runs from the first conversation to the handover of the keys.",
     cabinetPoints: ["A demanding selection.", "A personal relationship.", "Total transparency.", "A mastered experience."],
     ctaTitle: "You have the project.\nWe have the method.",
     ctaSubtitle: "A specific premium vehicle in mind, or simply the wish to be guided: we conduct the search with rigour and exacting standards.",
