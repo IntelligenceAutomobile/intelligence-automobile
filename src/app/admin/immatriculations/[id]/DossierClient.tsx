@@ -150,6 +150,10 @@ export default function DossierClient({ dossier, today }: { dossier: Dossier; to
               <FileDown size={14} />
               Cerfa 13757
             </a>
+            <a href={`/api/admin/immatriculations/${dossier.id}/cerfa-13750`} target="_blank" rel="noreferrer" className={btnGhostClass} style={btnGhostStyle}>
+              <FileDown size={14} />
+              Cerfa 13750
+            </a>
             <Link href={`/admin/immatriculations/${dossier.id}/imprimer`} className={btnGhostClass} style={btnGhostStyle}>
               <Printer size={14} />
               Récapitulatif

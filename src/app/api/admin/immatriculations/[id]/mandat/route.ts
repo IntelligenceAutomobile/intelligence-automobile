@@ -4,29 +4,28 @@ import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { REG_TYPE_LABEL, isRegType } from "@/lib/immatriculation";
+import { REG_TYPE_LABEL, isRegType, parseAddress } from "@/lib/immatriculation";
 
 // Gabarit officiel du mandat d'immatriculation (Cerfa 13757*03).
 // Le chemin est littéral : c'est lui que le traceur de fichiers de Next suit
 // pour embarquer le PDF dans la fonction déployée (voir next.config.ts).
 const TEMPLATE = path.join(process.cwd(), "assets", "cerfa", "cerfa_13757-03.pdf");
 
-/**
- * Découpe une adresse libre en composants du formulaire.
- * Le dernier segment contenant un code postal donne commune et code postal ;
- * le reste part dans le nom de voie. L'opérateur ajuste dans le PDF au besoin,
- * les champs restent modifiables.
- */
-function splitAddress(raw: string): { street: string; postalCode: string; city: string } {
-  const parts = raw.split(/[\n,]+/).map((p) => p.trim()).filter(Boolean);
-  for (let i = parts.length - 1; i >= 0; i--) {
-    const m = parts[i].match(/^(\d{5})\s+(.+)$/);
-    if (m) {
-      return { street: parts.slice(0, i).join(" "), postalCode: m[1], city: m[2] };
-    }
-  }
-  return { street: parts.join(" "), postalCode: "", city: "" };
-}
+// Champs dont le texte s'affichait un peu bas par rapport à la ligne imprimée :
+// leur cadre est remonté de 2 points avant remplissage.
+const RAISED_FIELDS = [
+  "txt_IdentitéMandant",
+  "txt_IdentitéMandataire",
+  "txt_NatureOpération",
+  "txt_MarqueVéhicule",
+  "txt_MarqueImmatriculation",
+  "txt_NomVoieAdresse",
+  "txt_TypeVoieAdresse",
+  "txt_ExtensionAdresse",
+  "txt_CommuneAdresse",
+  "txt_PaysAdresse",
+  "txt_LieuDéclaration",
+];
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin();
@@ -43,6 +42,20 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const doc = await PDFDocument.load(await readFile(TEMPLATE));
     const form = doc.getForm();
 
+    // Remonte légèrement les cadres avant remplissage : l'apparence du texte
+    // est régénérée d'après le cadre au moment du setText.
+    for (const name of RAISED_FIELDS) {
+      try {
+        const field = form.getTextField(`topmostSubform[0].Page1[0].${name}[0]`);
+        for (const w of field.acroField.getWidgets()) {
+          const r = w.getRectangle();
+          w.setRectangle({ x: r.x, y: r.y + 2, width: r.width, height: r.height });
+        }
+      } catch {
+        /* champ absent de cette version du gabarit */
+      }
+    }
+
     // Renseigne un champ en ignorant ceux qui manqueraient dans une future
     // version du Cerfa : un formulaire partiellement rempli vaut mieux qu'une
     // erreur au moment où l'utilisateur clique.
@@ -55,12 +68,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       }
     };
 
-    const addr = splitAddress(row.holderAddress);
+    const addr = parseAddress(row.holderAddress);
     const today = new Date();
     const type = isRegType(row.type) ? row.type : "import_ue";
 
     set("txt_IdentitéMandant", row.holderName);
-    set("txt_NomVoieAdresse", addr.street);
+    set("num_VoieAdresse", addr.streetNumber);
+    set("txt_ExtensionAdresse", addr.extension);
+    set("txt_TypeVoieAdresse", addr.streetType);
+    set("txt_NomVoieAdresse", addr.streetName);
     set("num_CodePostalAdresse", addr.postalCode);
     set("txt_CommuneAdresse", addr.city);
     set("txt_PaysAdresse", addr.postalCode ? "France" : "");

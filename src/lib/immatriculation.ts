@@ -361,6 +361,69 @@ export function checklistProgress(specs: DocSpec[], provided: string[]): { done:
   return { done, total: required.length, complete: done === required.length };
 }
 
+/* ── Découpage d'adresse ──
+   Les Cerfa ventilent l'adresse en cases distinctes (n°, extension, type de
+   voie, libellé, code postal, commune). On découpe une adresse libre au mieux ;
+   en cas de doute, tout part dans le libellé de voie et l'opérateur ajuste. */
+
+export type AddressParts = {
+  streetNumber: string;
+  extension: string; // bis, ter, quater
+  streetType: string; // rue, avenue…
+  streetName: string;
+  postalCode: string;
+  city: string;
+};
+
+const STREET_TYPES = new Set([
+  "rue", "avenue", "av", "boulevard", "bd", "chemin", "impasse", "place", "pl",
+  "route", "rte", "allée", "allee", "quai", "cours", "square", "passage",
+  "sentier", "villa", "hameau", "faubourg", "fbg", "promenade", "esplanade",
+  "traverse", "montée", "montee", "résidence", "residence", "lotissement",
+  "clos", "côte", "cote",
+]);
+
+export function parseAddress(raw: string): AddressParts {
+  const out: AddressParts = { streetNumber: "", extension: "", streetType: "", streetName: "", postalCode: "", city: "" };
+  const segments = raw.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+
+  // Le dernier segment portant un code postal donne CP et commune.
+  for (let i = segments.length - 1; i >= 0; i--) {
+    const m = segments[i].match(/^(\d{5})\s+(.+)$/);
+    if (m) {
+      out.postalCode = m[1];
+      out.city = m[2];
+      segments.splice(i, 1);
+      break;
+    }
+  }
+
+  const tokens = segments.join(" ").split(/\s+/).filter(Boolean);
+  if (/^\d+[a-z]?$/i.test(tokens[0] ?? "")) out.streetNumber = tokens.shift() as string;
+  if (/^(bis|ter|quater)$/i.test(tokens[0] ?? "")) out.extension = tokens.shift() as string;
+  const t = (tokens[0] ?? "").toLowerCase().replace(/\.$/, "");
+  if (STREET_TYPES.has(t)) out.streetType = tokens.shift() as string;
+  out.streetName = tokens.join(" ");
+  return out;
+}
+
+/* ── Marque / modèle ──
+   Le dossier fige le véhicule en un libellé unique (« Mercedes GLC 220d »).
+   Les Cerfa demandent la marque (D.1) et la dénomination commerciale (D.3)
+   séparément : on coupe au premier mot, sauf marques en deux mots. */
+
+const TWO_WORD_MAKES = new Set(["alfa romeo", "aston martin", "land rover", "great wall", "mg motor", "ds automobiles"]);
+
+export function splitVehicleLabel(label: string): { make: string; model: string } {
+  // Retire une éventuelle année entre parenthèses, ex « (2022) ».
+  const clean = label.replace(/\s*\(\d{4}\)\s*$/, "").trim();
+  const tokens = clean.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return { make: "", model: "" };
+  const two = tokens.slice(0, 2).join(" ").toLowerCase();
+  const n = TWO_WORD_MAKES.has(two) ? 2 : 1;
+  return { make: tokens.slice(0, n).join(" "), model: tokens.slice(n).join(" ") };
+}
+
 /* ── Gardes de type ── */
 
 export function isRegType(v: unknown): v is RegType {

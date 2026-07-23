@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   // suivre la fonction déployée, sinon la lecture échoue en production.
   outputFileTracingIncludes: {
     "/api/admin/immatriculations/[id]/mandat": ["assets/cerfa/**/*"],
+    "/api/admin/immatriculations/[id]/cerfa-13750": ["assets/cerfa/**/*"],
   },
   async redirects() {
     return [
