@@ -641,7 +641,7 @@ export const en: Translations = {
   services: {
     metaTitle: "Services — Intelligence Automobile",
     metaDesc:
-      "Warranty, financing, insurance, administrative procedures (WW, CPI) and final registration: everything around your acquisition, handled.",
+      "Warranty, financing, insurance, administrative procedures (COC, CPI, ANTS file) and final registration: everything around your acquisition, handled.",
     heroLabel: "Our services",
     heroTitle: ["Beyond", "the car."],
     heroSubtitle: "From the warranty to the registration, end-to-end handling.",
@@ -683,7 +683,7 @@ export const en: Translations = {
         title: "Insurance",
         subtitle: "Insured from the moment you get the keys.",
         paragraphs: [
-          "Temporary WW insurance so you can drive right away, then comparative quotes for your permanent cover.",
+          "Temporary insurance tied to your CPI WW so you can drive right away, then comparative quotes for your permanent cover.",
         ],
         points: [
           "Temporary insurance for WW plates",
@@ -695,16 +695,17 @@ export const en: Translations = {
       {
         id: "demarches",
         num: "04",
-        title: "Administrative procedures (WW, CPI)",
+        title: "Administrative procedures (COC, CPI, ANTS files)",
         subtitle: "Import without the paperwork.",
         paragraphs: [
-          "Tax clearance, COC, CPI, WW plates: we compile and follow the entire ANTS file on your behalf.",
+          "Importing a vehicle takes close to twenty documents and four procedures that follow one another in a precise order: conformity, tax, provisional registration, filing. We compile the whole file and submit it on your behalf.",
+          "You drive from the moment you get the keys thanks to the WW plates, while the final registration comes through.",
         ],
         points: [
-          "Tax clearance & certificate of conformity (COC)",
-          "CPI — Provisional Registration Certificate",
-          "Provisional WW plates to drive immediately",
-          "ANTS file handled end to end",
+          "European certificate of conformity (COC), obtained from the manufacturer",
+          "Tax clearance, as soon as the vehicle reaches France",
+          "WW plates to drive immediately (provisional registration certificate)",
+          "ANTS file compiled and submitted, close to twenty documents gathered",
         ],
       },
       {
@@ -713,13 +714,14 @@ export const en: Translations = {
         title: "Final registration",
         subtitle: "Your vehicle, registered in France.",
         paragraphs: [
-          "We obtain your final French registration certificate and have your plates fitted, with nothing to handle yourself.",
+          "Once the file is submitted, we follow it through until your French registration certificate arrives, then we have your final plates fitted.",
+          "The document reaches your door, and the vehicle changes plates before the expiry date shown on the WW.",
         ],
         points: [
           "Final French registration",
-          "ANTS procedure handled",
-          "Follow-up until the document is received",
-          "Definitive plates fitted",
+          "Followed through until the document arrives",
+          "Final plates fitted",
+          "Handover before the WW expires",
         ],
       },
     ],

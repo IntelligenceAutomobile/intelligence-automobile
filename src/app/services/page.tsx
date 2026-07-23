@@ -8,7 +8,7 @@ import { pageMetadata } from "@/lib/og";
 export const metadata = pageMetadata({
   title: "Services — Intelligence Automobile",
   description:
-    "Garantie, financement, assurances, démarches administratives (WW, CPI) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
+    "Garantie, financement, assurances, démarches administratives (COC, CPI, dossier ANTS) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
   path: "/services",
   image: "/og/services.jpg",
 });
@@ -16,6 +16,13 @@ export const metadata = pageMetadata({
 export default async function ServicesPage() {
   const { t } = await getTranslations();
   const s = t.services;
+
+  /* Validite de la plaque WW : quatre mois devant nous, calculee cote serveur
+     pour que la plaque reste credible sans jamais dater. */
+  const validity = new Date();
+  validity.setMonth(validity.getMonth() + 4);
+  const plateMonth = String(validity.getMonth() + 1).padStart(2, "0");
+  const plateYear = String(validity.getFullYear()).slice(-2);
 
   return (
     <>
@@ -86,7 +93,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ─── SECTIONS SERVICES ─────────────────────────────────────────── */}
-        <ServicesAccordion items={s.items} />
+        <ServicesAccordion items={s.items} plateMonth={plateMonth} plateYear={plateYear} />
 
         {/* ─── CTA ───────────────────────────────────────────────────────── */}
         <section

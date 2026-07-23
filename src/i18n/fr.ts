@@ -644,7 +644,7 @@ export const fr = {
   services: {
     metaTitle: "Services — Intelligence Automobile",
     metaDesc:
-      "Garantie, financement, assurances, démarches administratives (WW, CPI) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
+      "Garantie, financement, assurances, démarches administratives (COC, CPI, dossier ANTS) et carte grise définitive : tout ce qui entoure votre acquisition, pris en charge.",
     heroLabel: "Nos services",
     heroTitle: ["Au-delà de", "la voiture."],
     heroSubtitle: "De la garantie à la carte grise, une prise en charge intégrale.",
@@ -686,7 +686,7 @@ export const fr = {
         title: "Assurances",
         subtitle: "Assuré dès la remise des clés.",
         paragraphs: [
-          "Assurance temporaire WW pour rouler tout de suite, puis devis comparatifs pour votre couverture définitive.",
+          "Assurance temporaire adossée à votre CPI WW pour rouler tout de suite, puis devis comparatifs pour votre couverture définitive.",
         ],
         points: [
           "Assurance temporaire WW et assurance définitive",
@@ -698,16 +698,17 @@ export const fr = {
       {
         id: "demarches",
         num: "04",
-        title: "Démarches administratives (WW, CPI)",
+        title: "Démarches administratives (COC, CPI, Dossiers ANTS)",
         subtitle: "L'import sans la paperasse.",
         paragraphs: [
-          "Quitus, COC, CPI, plaques WW : nous montons et suivons tout le dossier ANTS à votre place.",
+          "Importer un véhicule demande près de vingt pièces et quatre démarches qui s'enchaînent dans un ordre précis : conformité, fiscalité, immatriculation provisoire, dépôt du dossier. Nous montons l'ensemble et nous le déposons à votre place.",
+          "Vous roulez dès la remise des clés grâce aux plaques WW, le temps que l'immatriculation définitive arrive.",
         ],
         points: [
-          "Quitus fiscal & certificat de conformité (COC)",
-          "CPI — Certificat Provisoire d'Immatriculation",
-          "Plaques provisoires WW pour rouler immédiatement",
-          "Dossier ANTS géré de bout en bout",
+          "Certificat de conformité européen (COC), obtenu auprès de la marque",
+          "Quitus fiscal, dès l'arrivée du véhicule en France",
+          "WW pour rouler immédiatement (certificat provisoire d'immatriculation)",
+          "Dossier ANTS monté et déposé, près de vingt pièces réunies",
         ],
       },
       {
@@ -716,13 +717,14 @@ export const fr = {
         title: "Carte grise définitive",
         subtitle: "Votre véhicule, immatriculé en France.",
         paragraphs: [
-          "Nous obtenons votre carte grise française définitive et faisons poser vos plaques, sans une démarche de votre part.",
+          "Le dossier déposé, nous suivons son instruction jusqu'à la réception de votre carte grise française, puis nous faisons poser vos plaques définitives.",
+          "Le titre arrive chez vous, et le véhicule change de plaques avant l'échéance inscrite sur le WW.",
         ],
         points: [
           "Immatriculation définitive française",
-          "Démarche ANTS prise en charge",
-          "Suivi jusqu'à réception du titre",
+          "Suivi de l'instruction jusqu'à réception du titre",
           "Plaques définitives posées",
+          "Relais assuré avant l'échéance du WW",
         ],
       },
     ],
