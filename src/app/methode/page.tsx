@@ -78,14 +78,34 @@ export default async function Methode2Page() {
             paddingRight: "clamp(1.5rem, 6vw, 7rem)",
           }}
         >
+          <style dangerouslySetInnerHTML={{ __html: `
+            /* La photo demarre SOUS le bandeau de menu (sinon il cache le plafond
+               et le haut de la voiture), calee sur son bord haut : on voit tout le
+               haut de la photo, et c'est le sol qui sort du cadre en bas. */
+            .methode-hero-photo {
+              top: 97px;
+              background-image: url('/Photo%20du%20Site/Photo%20notre%20m%C3%A9thode%20Final%20mobile.png');
+              background-position: center top;
+            }
+            /* Ecrans larges (ordinateurs) : photo paysage, menu plus haut. */
+            @media (min-aspect-ratio: 1/1) {
+              .methode-hero-photo {
+                background-image: url('/Photo%20du%20Site/Photo%20notre%20m%C3%A9thode%20Final.png');
+              }
+            }
+            @media (min-width: 1024px) {
+              .methode-hero-photo { top: 120px; }
+            }
+          ` }} />
           <div
+            className="methode-hero-photo"
             style={{
               position: "absolute",
-              inset: 0,
-              backgroundImage:
-                "url('/Photo%20du%20Site/Photo%20Notre%20m%C3%A9thode.png')",
+              left: 0,
+              right: 0,
+              bottom: 0,
               backgroundSize: "cover",
-              backgroundPosition: "center 45%",
+              backgroundRepeat: "no-repeat",
               opacity: 1,
             }}
           />

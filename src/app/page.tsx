@@ -396,7 +396,7 @@ export default async function HomePage() {
         <section className="ia-service-block" style={{ borderTop: "1px solid #1B3055", backgroundColor: "#040B16" }}>
           <Link href="/methode" className="flex flex-col lg:flex-row" style={{ alignItems: "center", textDecoration: "none", cursor: "pointer" }}>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Photo Notre méthode.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Photo notre méthode Final.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
