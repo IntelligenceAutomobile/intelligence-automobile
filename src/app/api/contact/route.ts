@@ -10,9 +10,15 @@ const FROM = process.env.RESEND_FROM ?? "Intelligence Automobile <contact@intell
 const SUJETS: Record<string, string> = {
   achat:  "Achat d'un véhicule",
   mandat: "Recherche personnalisée",
+  // Le client a collé le lien d'une annonce qu'il a lui-même repérée : la
+  // demande porte sur l'achat de CE véhicule, pas sur une recherche à mener.
+  "mandat-import": "Mandat d'import",
   vente:  "Aide à la vente",
   autre:  "Autre",
 };
+
+// Les demandes issues de la page « recherche personnalisée », mandat compris.
+const SUJETS_RECHERCHE = new Set(["mandat", "mandat-import"]);
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +37,7 @@ export async function POST(req: NextRequest) {
         name: nom,
         email,
         phone: telephone,
-        source: sujet === "mandat" ? "recherche-perso" : "site-contact",
+        source: SUJETS_RECHERCHE.has(sujet) ? "recherche-perso" : "site-contact",
         title: sujetLabel,
         message,
       });

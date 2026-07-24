@@ -5,6 +5,7 @@ import { upload } from "@vercel/blob/client";
 import { useLocale } from "@/i18n/context";
 import YearField from "@/components/YearField";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { LienAnnonceField, StockSimilaire, useLienAnnonce } from "@/components/LienAnnonce";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -49,6 +50,9 @@ export default function AideVenteForm() {
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef          = useRef<HTMLInputElement>(null);
 
+  // Reprise d'annonce : le client colle le lien de l'annonce qu'il a publiée.
+  const annonce = useLienAnnonce();
+
   function handleFiles(files: FileList | null) {
     if (!files) return;
     const incoming = Array.from(files).slice(0, 10 - photos.length);
@@ -88,6 +92,7 @@ export default function AideVenteForm() {
       previews.forEach((url) => URL.revokeObjectURL(url));
       setPhotos([]);
       setPreviews([]);
+      annonce.reset();
     } catch {
       setStatus("error");
     }
@@ -117,10 +122,23 @@ export default function AideVenteForm() {
       <style>{`.ia-resale-form ::placeholder { color: #9FB7D8; opacity: 1; }`}</style>
 
       <SectionCard title={f.vehicleSection}>
+        <LienAnnonceField
+          state={annonce}
+          labels={{
+            rowLabel: f.linkRowLabel,
+            rowCta: f.linkRowCta,
+            label: f.linkLabel,
+            placeholder: f.linkPlaceholder,
+            noteTitle: f.annonceNoteTitle,
+            noteText: f.annonceNoteText,
+          }}
+        />
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div>
             <label style={labelStyle}>{f.makeLabel}</label>
             <input name="marque" required type="text" placeholder={f.makePlaceholder}
+              onChange={(e) => annonce.setMarque(e.target.value)}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -129,12 +147,20 @@ export default function AideVenteForm() {
           <div className="sm:col-span-2">
             <label style={labelStyle}>{f.modelLabel}</label>
             <input name="modele" required type="text" placeholder={f.modelPlaceholder}
+              onChange={(e) => annonce.setModele(e.target.value)}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
+
+        <StockSimilaire
+          items={annonce.similaires}
+          label={f.stockLabel}
+          countOne={f.stockCountOne}
+          count={f.stockCount}
+        />
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
           <div>

@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
     const entretien   = data.get("entretien")    as string;
     const prix        = data.get("prix")         as string;
     const precisions  = data.get("precisions")   as string;
+    // Reprise d'annonce : le vendeur a déjà publié son véhicule quelque part.
+    const lien        = ((data.get("lien") as string) ?? "").trim();
 
     if (!prenom || !nom || !email || !marque || !modele) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
@@ -39,11 +41,12 @@ export async function POST(req: NextRequest) {
         email,
         phone: telephone,
         source: "aide-vente",
-        title: `Vente ${marque} ${modele} (${annee})`,
+        title: `${lien ? "Reprise d'annonce" : "Vente"} ${marque} ${modele} (${annee})`,
         message: [
           `${marque} ${modele} · ${annee} · ${kilometrage} km · ${carburant} · ${boite}`,
           `État : ${etat} · Entretien : ${entretien}`,
           prix ? `Prix espéré : ${prix}` : "",
+          lien ? `Annonce en ligne : ${lien}` : "",
           precisions || "",
         ].filter(Boolean).join("\n"),
       });
@@ -69,7 +72,7 @@ export async function POST(req: NextRequest) {
         Nouvelle demande
       </p>
       <h1 style="color:#F0F5FF;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.02em;">
-        Aide à la Vente
+        ${lien ? "Reprise d'annonce" : "Aide à la Vente"}
       </h1>
       <p style="color:#C8D8EE;font-size:13px;margin:8px 0 0;">
         ${marque} ${modele} · ${annee} · ${kilometrage} km
@@ -87,6 +90,7 @@ export async function POST(req: NextRequest) {
       ${row("État", etat)}
       ${row("Entretien", entretien)}
       ${row("Prix espéré", prix)}
+      ${lien ? row("Annonce en ligne", `<a href="${lien}" style="color:#6B9FEE;">${lien}</a>`) : ""}
       ${precisions ? row("Précisions", precisions) : ""}
     </table>
 
@@ -123,7 +127,7 @@ export async function POST(req: NextRequest) {
         from: FROM,
         to: TO,
         replyTo: email,
-        subject: `Aide à la vente — ${marque} ${modele} (${annee}) — ${prenom} ${nom}`,
+        subject: `${lien ? "Reprise d'annonce" : "Aide à la vente"} — ${marque} ${modele} (${annee}) — ${prenom} ${nom}`,
         html,
       });
       if (error) console.error("[Resend] Erreur:", JSON.stringify(error));

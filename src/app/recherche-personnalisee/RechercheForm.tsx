@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale } from "@/i18n/context";
 import YearField from "@/components/YearField";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { LienAnnonceField, StockSimilaire, useLienAnnonce } from "@/components/LienAnnonce";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -51,13 +52,19 @@ export default function RechercheForm() {
   const f = t.search.form;
   const [status, setStatus] = useState<Status>("idle");
 
+  // Mandat d'import : le client colle le lien d'une annonce qu'il a déjà trouvée.
+  const annonce = useLienAnnonce();
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("sending");
     const form = e.currentTarget;
     const d = new FormData(form);
+    const lienSaisi = String(d.get("lien") ?? "").trim();
 
-    const message = `RECHERCHE PERSONNALISÉE
+    const message = `${lienSaisi ? `MANDAT D'IMPORT
+
+Annonce repérée : ${lienSaisi}` : "RECHERCHE PERSONNALISÉE"}
 
 Véhicule :
 — Marque : ${d.get("marque")}
@@ -79,13 +86,14 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
           nom: `${d.get("prenom")} ${d.get("nom")}`,
           email: d.get("email"),
           telephone: d.get("telephone"),
-          sujet: "mandat",
+          sujet: lienSaisi ? "mandat-import" : "mandat",
           message,
         }),
       });
       if (!res.ok) throw new Error();
       setStatus("success");
       form.reset();
+      annonce.reset();
     } catch {
       setStatus("error");
     }
@@ -123,11 +131,24 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
     <form onSubmit={handleSubmit} className="ia-search-form space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
       <style>{`.ia-search-form ::placeholder { color: #9FB7D8; opacity: 1; }`}</style>
       <SectionCard title={f.vehicleSection}>
+        <LienAnnonceField
+          state={annonce}
+          labels={{
+            rowLabel: f.linkRowLabel,
+            rowCta: f.linkRowCta,
+            label: f.linkLabel,
+            placeholder: f.linkPlaceholder,
+            noteTitle: f.mandatNoteTitle,
+            noteText: f.mandatNoteText,
+          }}
+        />
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label style={labelStyle}>{f.makeLabel}</label>
             <input
               name="marque" required type="text" placeholder={f.makePlaceholder}
+              onChange={(e) => annonce.setMarque(e.target.value)}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
@@ -137,12 +158,20 @@ Précisions : ${d.get("precisions") || "Aucune"}`;
             <label style={labelStyle}>{f.modelLabel}</label>
             <input
               name="modele" required type="text" placeholder={f.modelPlaceholder}
+              onChange={(e) => annonce.setModele(e.target.value)}
               style={fieldStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#6B9FEE")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#2A4878")}
             />
           </div>
         </div>
+
+        <StockSimilaire
+          items={annonce.similaires}
+          label={f.stockLabel}
+          countOne={f.stockCountOne}
+          count={f.stockCount}
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div>
