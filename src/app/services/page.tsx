@@ -29,13 +29,13 @@ export default async function ServicesPage() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* CSS : cadrage responsive — sur écrans portrait (téléphone/tablette), décale vers la droite
-            pour garder la clé (élément clé du service) visible ; desktop/laptop inchangés (déjà complets). */}
+        {/* CSS : cadrage responsive — sur écrans portrait (téléphone/tablette), on recentre sur la
+            face avant de l'Alpine (les deux phares ronds, la calandre) ; desktop/laptop inchangés. */}
         <style dangerouslySetInnerHTML={{ __html: `
           .ia-services-photo { object-position: center 42%; }
           .ia-services-title { font-size: clamp(2.6rem, 6vw, 5rem); }
           @media (max-aspect-ratio: 3/2) {
-            .ia-services-photo { object-position: 72% 42%; }
+            .ia-services-photo { object-position: 56% 48%; }
           }
         ` }} />
 
@@ -43,14 +43,14 @@ export default async function ServicesPage() {
         <section style={{ position: "relative", height: "100dvh", minHeight: "600px", overflow: "hidden", backgroundColor: "#070F1E" }}>
           {/* fond flou de secours : évite tout vide sur les ratios d'écran extrêmes */}
           <img
-            src="/Photo du Site/Nos Services/Nos service 2.png"
+            src="/Photo du Site/Nos Services/Nos services 4.png"
             alt=""
             aria-hidden="true"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
           />
           {/* photo nette, plein cadre */}
           <img
-            src="/Photo du Site/Nos Services/Nos service 2.png"
+            src="/Photo du Site/Nos Services/Nos services 4.png"
             alt=""
             className="ia-services-photo"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}

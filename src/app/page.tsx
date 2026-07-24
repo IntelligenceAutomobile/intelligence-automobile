@@ -429,7 +429,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Nos Services/Nos service 2.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Nos Services/Nos services 4.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>
