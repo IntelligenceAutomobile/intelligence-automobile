@@ -1252,7 +1252,7 @@ export default async function MethodeTestPage() {
           <PartDivider
             kicker="Variantes sans icône"
             title="Ce que nous sécurisons — sans icône"
-            note="Cinq styles nettement différents, sans aucune icône : chiffres éditoriaux, filet latéral, fiche technique, soulignement et grand format."
+            note="Six styles nettement différents, sans aucune icône : chiffres éditoriaux, chiffres éditoriaux sur deux colonnes, filet latéral, fiche technique, soulignement et grand format."
           />
 
           {/* S5 · GRANDS NUMÉROS ÉDITORIAUX */}
@@ -1397,6 +1397,44 @@ export default async function MethodeTestPage() {
                     {item.title}
                   </h3>
                   <p style={{ fontSize: "14px", color: "#A8C6F4", lineHeight: 1.7, maxWidth: "420px" }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* S10 · GRANDS NUMÉROS ÉDITORIAUX SUR 2 COLONNES */}
+          <section>
+            <ConceptHeader
+              letter="S10"
+              title="Grands numéros éditoriaux, deux colonnes"
+              note="La même écriture que S5 (grand chiffre coloré translucide), réorganisée en deux colonnes de trois lignes. Plus compact en largeur, toujours aussi typographique."
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2" style={{ columnGap: "clamp(2rem, 4vw, 3.5rem)" }}>
+              {secureItems.map((item, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-[auto_1fr] border-t border-t-[rgba(107,159,238,0.14)] first:border-t-0 md:[&:nth-child(2)]:border-t-0"
+                  style={{
+                    gap: "clamp(1rem, 3vw, 2rem)",
+                    alignItems: "center",
+                    padding: "1.6rem 0",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      letterSpacing: "-0.03em",
+                      color: tint(item.color, 0.55),
+                    }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#F0F5FF", marginBottom: "0.35rem" }}>{item.title}</h3>
+                    <p style={{ fontSize: "13px", color: "#A8C6F4", lineHeight: 1.6, maxWidth: "400px" }}>{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>

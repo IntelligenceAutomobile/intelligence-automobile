@@ -19,6 +19,11 @@ const sectionCardStyle = {
   padding: "2rem",
 };
 
+function tint(hex: string, alpha: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 /* La photo descend sous la ligne de flottaison de cette hauteur, et l'encadre
    remonte dedans. Le texte du hero garde donc sa position d'origine (8vh au-dessus
    de la ligne de flottaison), et l'encadre chevauche une zone de photo encore visible. */
@@ -274,25 +279,32 @@ export default async function Methode2Page() {
           {/* ── 02 · CE QUE NOUS SÉCURISONS ── */}
           <div className="mb-20">
             <SectionHeader num="02" label={s.secureTitle.replace("\n", " ")} />
-            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "1rem" }}>
+            <div className="grid grid-cols-1 md:grid-cols-2" style={{ columnGap: "clamp(2rem, 4vw, 3.5rem)" }}>
               {s.secureItems.map((item, i) => (
                 <div
                   key={i}
-                  className="transition-transform duration-300 hover:-translate-y-1"
+                  className="grid grid-cols-[auto_1fr] border-t border-t-[rgba(107,159,238,0.14)] first:border-t-0 md:[&:nth-child(2)]:border-t-0"
                   style={{
-                    background: "linear-gradient(160deg, #0D1F3C 0%, #0B1929 100%)",
-                    border: "1px solid rgba(107,159,238,0.12)",
-                    borderLeft: `3px solid ${item.color}`,
-                    borderRadius: "10px",
-                    padding: "1.4rem 1.5rem",
+                    gap: "clamp(1rem, 3vw, 2rem)",
+                    alignItems: "center",
+                    padding: "1.6rem 0",
                   }}
                 >
-                  <h3
-                    style={{ fontSize: "0.95rem", fontWeight: 800, color: "#F0F5FF", marginBottom: "0.4rem" }}
+                  <span
+                    style={{
+                      fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      letterSpacing: "-0.03em",
+                      color: tint(item.color, 0.55),
+                    }}
                   >
-                    {item.title}
-                  </h3>
-                  <p style={{ fontSize: "13px", color: "#A8C6F4", lineHeight: 1.6 }}>{item.desc}</p>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#F0F5FF", marginBottom: "0.35rem" }}>{item.title}</h3>
+                    <p style={{ fontSize: "13px", color: "#A8C6F4", lineHeight: 1.6, maxWidth: "400px" }}>{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
