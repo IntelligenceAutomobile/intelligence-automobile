@@ -248,7 +248,7 @@ export default async function Methode2Page() {
           {/* ── 01 · LES 6 ÉTAPES ── */}
           <div className="mb-20">
             <SectionHeader num="01" label={s.processTitle.replace("\n", " ")} />
-            <MethodeSteps steps={s.steps} importSteps={s.importSteps} />
+            <MethodeSteps steps={s.steps} />
           </div>
 
           {/* ── 02 · CE QUE NOUS SÉCURISONS ── */}

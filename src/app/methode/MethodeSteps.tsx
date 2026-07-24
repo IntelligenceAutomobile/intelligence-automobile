@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type Step = { num: string; title: string; description: string; tagline: string };
+type Step = { num: string; value: string; title: string; description: string; tagline: string };
 
 const NUM_GRADIENT = {
   backgroundImage: "linear-gradient(150deg, #6B9FEE 0%, #C6CCD6 100%)",
@@ -12,22 +12,7 @@ const NUM_GRADIENT = {
   color: "transparent",
 };
 
-/* Surligne en magenta ce qui est entre [[ ]] (plaques WW). */
-function Pinked({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/\[\[|\]\]/).map((part, j) =>
-        j % 2 === 1 ? (
-          <span key={j} style={{ color: "#FF14E1", fontWeight: 700 }}>{part}</span>
-        ) : (
-          <span key={j}>{part}</span>
-        )
-      )}
-    </>
-  );
-}
-
-export default function MethodeSteps({ steps, importSteps }: { steps: Step[]; importSteps: string[] }) {
+export default function MethodeSteps({ steps }: { steps: Step[] }) {
   const [active, setActive] = useState(0);
   const it = steps[active];
   const lines = it.description.split("\n");
@@ -83,23 +68,15 @@ export default function MethodeSteps({ steps, importSteps }: { steps: Step[]; im
         <span aria-hidden="true" style={{ position: "absolute", top: 0, right: "0.1em", fontSize: "clamp(5rem, 12vw, 11rem)", fontWeight: 900, letterSpacing: "-0.05em", lineHeight: 1, color: "rgba(107,159,238,0.10)", userSelect: "none", pointerEvents: "none" }}>{it.num}</span>
         <div key={active} className="ms-panel-in" style={{ position: "relative", animation: "ms-fade 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
           <div style={{ width: "44px", height: "3px", borderRadius: "2px", background: "linear-gradient(to right, #6B9FEE, transparent)", marginBottom: "1.2rem" }} />
-          <p className="lg:hidden" style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#6B9FEE", margin: "0 0 0.6rem" }}>Étape {it.num} / {String(steps.length).padStart(2, "0")}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", flexWrap: "wrap", margin: "0 0 0.7rem" }}>
+            <span className="lg:hidden" style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#6B9FEE" }}>Étape {it.num} / {String(steps.length).padStart(2, "0")}</span>
+            <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#5BD89A", padding: "0.28rem 0.65rem", borderRadius: "3px", backgroundColor: "rgba(91,216,154,0.12)", border: "1px solid rgba(91,216,154,0.35)" }}>{it.value}</span>
+          </div>
           <h3 style={{ fontSize: "clamp(1.4rem, 3vw, 2.4rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.025em", color: "#F0F5FF", lineHeight: 1.05, margin: "0 0 1.3rem" }}>{it.title}</h3>
 
           {lines.map((line, i) => (
             <p key={i} style={{ fontSize: "clamp(0.9rem, 1.4vw, 1rem)", lineHeight: 1.7, color: "#C4D8EE", margin: i < lines.length - 1 ? "0 0 0.65rem" : 0 }}>{line}</p>
           ))}
-
-          {it.num === "04" && (
-            <ul style={{ listStyle: "none", margin: "1.3rem 0 0", padding: 0, display: "grid", gap: "0.6rem" }}>
-              {importSteps.map((item, k) => (
-                <li key={k} style={{ display: "flex", alignItems: "flex-start", gap: "0.65rem", fontSize: "13px", color: "#A8C6F4", lineHeight: 1.55 }}>
-                  <span style={{ color: "#6B9FEE", flexShrink: 0, fontWeight: 700, marginTop: "1px" }}>—</span>
-                  <span><Pinked text={item} /></span>
-                </li>
-              ))}
-            </ul>
-          )}
 
           <p style={{ display: "flex", gap: "0.6rem", fontSize: "13px", fontStyle: "italic", fontWeight: 500, color: "#C6CCD6", margin: "1.4rem 0 0", lineHeight: 1.6 }}>
             <span style={{ color: "#6B9FEE", flexShrink: 0, fontStyle: "normal" }}>→</span>
