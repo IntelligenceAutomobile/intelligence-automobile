@@ -249,9 +249,13 @@ export default function Header() {
             <LanguageSwitcher />
           </div>
 
-          {/* Mobile/tablette : burger + sélecteur empilés (peu de largeur prise,
-              laisse la place au logo centré), avec un peu de marge sur le bord */}
-          <div className="lg:hidden flex flex-col items-end flex-shrink-0" style={{ gap: "8px", marginRight: "2px" }}>
+          {/* Mobile/tablette : sélecteur de langue plaqué à gauche du bandeau */}
+          <div className="lg:hidden absolute left-0 flex items-center">
+            <LanguageSwitcher />
+          </div>
+
+          {/* Mobile/tablette : burger seul à droite */}
+          <div className="lg:hidden flex flex-shrink-0" style={{ marginRight: "2px" }}>
             <button
               className="flex flex-col justify-center gap-[5px] p-2"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -261,7 +265,6 @@ export default function Header() {
               <span className="block h-px"     style={{ backgroundColor: "#F0F5FF", width: menuOpen ? "20px" : "14px", opacity: menuOpen ? 0 : 1, transition: "opacity 0.2s ease, width 0.25s ease" }} />
               <span className="block w-5 h-px" style={{ backgroundColor: "#F0F5FF", transform: menuOpen ? "rotate(-45deg) translateY(-6px)" : "none", transition: "transform 0.25s ease" }} />
             </button>
-            <LanguageSwitcher />
           </div>
         </div>
       </div>
