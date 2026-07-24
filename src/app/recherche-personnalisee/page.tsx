@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RechercheForm from "@/app/recherche-personnalisee/RechercheForm";
-import AnnonceLine from "@/components/AnnonceLine";
+import AnnonceCard from "@/components/AnnonceCard";
 import { getTranslations } from "@/lib/i18n-server";
 import { pageMetadata } from "@/lib/og";
 
@@ -171,17 +171,6 @@ export default async function RecherchePage2() {
                 <span style={{ color: "#6B9FEE" }}>{s.formTitle[1]}</span>
               </h2>
               <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #C6CCD6, transparent)", borderRadius: "2px" }} />
-              {/* Sur grand écran l'encart suit le titre. Sur mobile les colonnes
-                  s'empilent : il serait séparé du formulaire par toutes les
-                  garanties, il est donc repris juste au-dessus (voir plus bas). */}
-              <div className="hidden lg:block">
-                <AnnonceLine
-                  chip={s.mandat.chip}
-                  title={s.mandat.title}
-                  text={s.mandat.text}
-                  cta={s.mandat.cta}
-                />
-              </div>
             </div>
 
             <div
@@ -223,6 +212,17 @@ export default async function RecherchePage2() {
                       </span>
                     </div>
                   ))}
+                </div>
+
+                {/* Mandat d'import : carte au-dessus de l'encadré « Marchés couverts »,
+                    même habillage pour se fondre parmi les garanties. */}
+                <div style={{ marginBottom: "1.25rem" }}>
+                  <AnnonceCard
+                    label={s.mandat.chip}
+                    title={s.mandat.title}
+                    text={s.mandat.text}
+                    cta={s.mandat.cta}
+                  />
                 </div>
 
                 <div
@@ -298,15 +298,6 @@ export default async function RecherchePage2() {
 
               {/* Colonne droite — formulaire */}
               <div className="lg:col-span-3">
-                <div className="lg:hidden">
-                  <AnnonceLine
-                    chip={s.mandat.chip}
-                    title={s.mandat.title}
-                    text={s.mandat.text}
-                    cta={s.mandat.cta}
-                    style={{ marginTop: 0, marginBottom: "16px" }}
-                  />
-                </div>
                 <RechercheForm />
               </div>
             </div>

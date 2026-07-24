@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AideVenteForm from "@/app/revente-sur-mesure/AideVenteForm";
-import AnnonceLine from "@/components/AnnonceLine";
+import AnnonceCard from "@/components/AnnonceCard";
 import { pageMetadata } from "@/lib/og";
 import { getTranslations } from "@/lib/i18n-server";
 
@@ -197,18 +197,6 @@ export default async function AideVenteV2Page() {
                 {s.formTitle[1]}
               </h2>
               <div style={{ marginTop: "1.4rem", width: "48px", height: "3px", background: "linear-gradient(to right, #6B9FEE, transparent)", borderRadius: "2px" }} />
-              {/* Fond de section plus sombre ici : l'étiquette s'y découpe.
-                  Sur mobile les colonnes s'empilent et l'encart serait séparé du
-                  formulaire : il est repris juste au-dessus (voir plus bas). */}
-              <div className="hidden lg:block">
-                <AnnonceLine
-                  chip={s.annonce.chip}
-                  title={s.annonce.title}
-                  text={s.annonce.text}
-                  cta={s.annonce.cta}
-                  background="#040B16"
-                />
-              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
@@ -235,6 +223,15 @@ export default async function AideVenteV2Page() {
                     </div>
                   ))}
                 </div>
+
+                {/* Reprise d'annonce : carte au-dessus de l'encadré d'infos,
+                    même habillage pour se fondre parmi les garanties. */}
+                <AnnonceCard
+                  label={s.annonce.chip}
+                  title={s.annonce.title}
+                  text={s.annonce.text}
+                  cta={s.annonce.cta}
+                />
 
                 <div
                   className="p-5 space-y-5"
@@ -277,16 +274,6 @@ export default async function AideVenteV2Page() {
               </div>
 
               <div className="lg:col-span-3">
-                <div className="lg:hidden">
-                  <AnnonceLine
-                    chip={s.annonce.chip}
-                    title={s.annonce.title}
-                    text={s.annonce.text}
-                    cta={s.annonce.cta}
-                    background="#040B16"
-                    style={{ marginTop: 0, marginBottom: "16px" }}
-                  />
-                </div>
                 <AideVenteForm />
               </div>
 
