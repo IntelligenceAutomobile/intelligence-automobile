@@ -24,9 +24,10 @@ const nextConfig: NextConfig = {
       // Pages de démo/legacy supprimées
       { source: "/accueil-2", destination: "/", permanent: true },
       { source: "/accueil-3", destination: "/", permanent: true },
-      // Démo pro : lien court avec un seul O -> route canonique /demoprooo.
-      { source: "/demopro", destination: "/demoprooo", permanent: false },
-      { source: "/demopro/:path*", destination: "/demoprooo/:path*", permanent: false },
+      // Démo pro : la route canonique est /demopro (un seul O). On rattrape
+      // l'ancienne adresse à 3 O pour ne pas casser un lien déjà partagé.
+      { source: "/demoprooo", destination: "/demopro", permanent: false },
+      { source: "/demoprooo/:path*", destination: "/demopro/:path*", permanent: false },
     ];
   },
 };

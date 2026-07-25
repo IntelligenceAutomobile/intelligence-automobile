@@ -1,4 +1,4 @@
-// Données d'exemple FIGÉES pour la démonstration publique /demoprooo.
+// Données d'exemple FIGÉES pour la démonstration publique /demopro.
 //
 // ⚠️ Ce module ne doit JAMAIS importer @/lib/prisma ni @/lib/auth : la démo est
 // servie sur le domaine live (branché sur la vraie base Turso). Toutes les

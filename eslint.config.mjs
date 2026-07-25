@@ -19,7 +19,7 @@ const eslintConfig = defineConfig([
   // ou le client Prisma : la démo doit rendre UNIQUEMENT des données d'exemple
   // figées. Toute violation fait échouer le lint (donc le build).
   {
-    files: ["src/app/demoprooo/**/*.{ts,tsx}", "src/lib/demo-data.ts"],
+    files: ["src/app/demopro/**/*.{ts,tsx}", "src/lib/demo-data.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
