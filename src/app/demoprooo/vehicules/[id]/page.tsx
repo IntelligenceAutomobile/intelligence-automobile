@@ -7,7 +7,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ClipboardList, Pencil, Send, Trash2, Car, FileText, Wrench } from "lucide-react";
 import { formatNumber } from "@/lib/format";
-import { T, AdminPage, PageHeader, SectionCard, StatusBadge, Tag, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { T, AdminPage, SectionCard, StatusBadge, Tag, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { DemoPageHeader } from "@/app/demoprooo/DemoPageHeader";
 import { getDemoVehicle } from "@/lib/demo-data";
 import { DEMO_BASE } from "../../demo";
 import DemoActionButton from "../../DemoActionButton";
@@ -79,7 +80,7 @@ export default async function DemoVehiculeFiche({ params }: { params: Promise<{ 
         ← Stock
       </Link>
 
-      <PageHeader
+      <DemoPageHeader
         title={`${v.make} ${v.model}`}
         subtitle="Aperçu complet de la fiche en lecture seule."
         action={

@@ -11,7 +11,8 @@ import {
   APPOINTMENT_TYPES, TYPE_LABEL, TYPE_COLOR, DAY_START_MIN, DAY_END_MIN,
   formatMin, formatDayFr, type AppointmentType,
 } from "@/lib/planning";
-import { T, AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui";
+import { T, AdminPage, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui";
+import { DemoPageHeader } from "@/app/demoprooo/DemoPageHeader";
 import { useToast } from "@/app/admin/toast";
 import { DEMO_MSG } from "../demo";
 
@@ -47,7 +48,7 @@ export default function PlanningBoard({
 
   return (
     <AdminPage>
-      <PageHeader
+      <DemoPageHeader
         title="Planning atelier"
         subtitle={`Semaine du ${weekLabel} · essais, livraisons, préparation, indisponibilités.`}
         action={

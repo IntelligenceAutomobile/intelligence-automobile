@@ -7,7 +7,8 @@ import {
   REG_TYPE_LABEL, REG_STATUS_LABEL, REG_STATUS_TONE, VAT_REGIME_LABEL,
   checklistFor, checklistProgress, deadlines, type RegStatus,
 } from "@/lib/immatriculation";
-import { T, TONE, Tag, AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui";
+import { T, TONE, Tag, AdminPage, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui";
+import { DemoPageHeader } from "@/app/demoprooo/DemoPageHeader";
 import { getDemoRegistrations } from "@/lib/demo-data";
 import { DEMO_BASE } from "../demo";
 import DemoActionButton from "@/app/demoprooo/DemoActionButton";
@@ -30,7 +31,7 @@ export default function DemoImmatriculationsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <DemoPageHeader
         title="Immatriculations"
         subtitle={`${rows.length} dossier${rows.length > 1 ? "s" : ""}${late > 0 ? ` · ${late} hors délai` : ""}.`}
         action={

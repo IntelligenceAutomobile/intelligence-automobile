@@ -17,7 +17,8 @@ import {
   type FactureKind,
   type PaymentStatus,
 } from "@/lib/devis";
-import { T, AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { T, AdminPage, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { DemoPageHeader } from "@/app/demoprooo/DemoPageHeader";
 import { getDemoQuote } from "@/lib/demo-data";
 import DevisDocument from "@/app/admin/devis/DevisDocument";
 import { DEMO_BASE } from "../../demo";
@@ -78,7 +79,7 @@ export default async function DemoFacturePage({ params }: { params: Promise<{ id
         ← Factures
       </Link>
 
-      <PageHeader
+      <DemoPageHeader
         title={`Facture ${q.number}`}
         subtitle={q.clientCompany || q.clientName || "Sans client"}
         action={

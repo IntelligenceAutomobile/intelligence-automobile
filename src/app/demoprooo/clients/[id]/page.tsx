@@ -11,7 +11,8 @@ import {
   PIPELINE_STAGES, type Stage,
 } from "@/lib/crm";
 import { STATUS_LABEL, formatDateFr, type QuoteStatus } from "@/lib/devis";
-import { T, Tag, AdminPage, PageHeader, SectionCard, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { T, Tag, AdminPage, SectionCard, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { DemoPageHeader } from "@/app/demoprooo/DemoPageHeader";
 import { getDemoClient, getDemoVehicles, getDemoQuotes } from "@/lib/demo-data";
 import { DEMO_BASE } from "../../demo";
 import { DemoAction } from "../../DemoAction";
@@ -66,7 +67,7 @@ export default async function DemoClientDetailPage({ params }: { params: Promise
         Clients & leads
       </Link>
 
-      <PageHeader
+      <DemoPageHeader
         title={client.company || client.name}
         subtitle={client.company ? client.name : `Client depuis le ${client.createdAt.toLocaleDateString("fr-FR")}`}
         action={

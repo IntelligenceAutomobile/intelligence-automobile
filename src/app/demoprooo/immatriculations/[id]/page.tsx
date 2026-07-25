@@ -13,7 +13,8 @@ import {
   assessVat, checklistFor, checklistProgress, deadlines, ARCHIVE_RETENTION_YEARS,
   type RegStatus, type VatRegime,
 } from "@/lib/immatriculation";
-import { T, TONE, AdminPage, PageHeader, SectionCard, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { T, TONE, AdminPage, SectionCard, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
+import { DemoPageHeader } from "@/app/demoprooo/DemoPageHeader";
 import { getDemoRegistrations } from "@/lib/demo-data";
 import { DEMO_BASE } from "../../demo";
 import DemoActionButton from "@/app/demoprooo/DemoActionButton";
@@ -64,7 +65,7 @@ export default async function DemoDossierPage({ params }: { params: Promise<{ id
 
   return (
     <AdminPage>
-      <PageHeader
+      <DemoPageHeader
         title={r.vehicleLabel || r.reference}
         subtitle={`${r.reference} · ${REG_TYPE_LABEL[r.type]}${r.countryOrigin ? ` · ${r.countryOrigin}` : ""}`}
         action={
