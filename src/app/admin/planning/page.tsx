@@ -46,6 +46,7 @@ export default async function PlanningPage({
     type: a.type,
     title: a.title,
     person: a.person,
+    author: a.author,
     clientId: a.clientId,
     vehicleId: a.vehicleId,
     notes: a.notes,

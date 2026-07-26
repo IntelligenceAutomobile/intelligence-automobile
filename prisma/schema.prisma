@@ -250,6 +250,7 @@ model Appointment {
   type       String   @default("essai")    // essai | livraison | preparation | ct | mecanique | indispo | autre
   title      String   @default("")
   person     String   @default("")         // qui est concerné (obligatoire pour indispo)
+  author     String   @default("")         // qui a créé l'événement (nom d'Atelier, rempli à la création)
   clientId   String?                        // client CRM (optionnel)
   vehicleId  String?                        // véhicule du stock (optionnel)
   notes      String   @default("")

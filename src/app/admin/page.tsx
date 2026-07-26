@@ -8,7 +8,7 @@ import { formatNumber } from "@/lib/format";
 import { computeTotals, formatEuro, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
-import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, type AppointmentType } from "@/lib/planning";
+import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, authorColor, signatureOf, type AppointmentType } from "@/lib/planning";
 import { deadlines as regDeadlines, isRegType } from "@/lib/immatriculation";
 import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
 import { KpiTile, AreaChart, Donut, Bars } from "./charts";
@@ -507,6 +507,7 @@ export default async function AdminDashboard() {
                       : r.date === toDateKey(tomorrow)
                         ? "Demain"
                         : new Date(`${r.date}T00:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                  const signature = signatureOf(r);
                   return (
                     <li key={r.id} className="flex items-center gap-2.5 min-w-0">
                       <span style={{ width: 8, height: 8, backgroundColor: c.bd, flexShrink: 0 }} />
@@ -514,6 +515,13 @@ export default async function AdminDashboard() {
                         {r.type === "indispo" && r.person ? `${r.person} — ` : ""}
                         {r.title || TYPE_LABEL[(r.type as AppointmentType) ?? "autre"]}
                       </span>
+                      {/* Même code couleur que le planning : rond = qui a créé l'événement. */}
+                      {signature && (
+                        <span
+                          title={`Créé par ${signature}`}
+                          style={{ display: "block", width: 7, height: 7, borderRadius: "50%", backgroundColor: authorColor(signature), flexShrink: 0 }}
+                        />
+                      )}
                       <span className="text-[10px] ml-auto flex-shrink-0 flex items-center gap-1" style={{ color: T.muted }}>
                         <CalendarClock size={10} />
                         {dayLabel} · {formatMin(r.startMin)}

@@ -29,6 +29,44 @@ export function isAppointmentType(v: unknown): v is AppointmentType {
   return typeof v === "string" && (APPOINTMENT_TYPES as readonly string[]).includes(v);
 }
 
+/* ── Signature : qui a créé l'événement ── */
+// Teintes sourdes prises hors des couleurs de type (bleus, verts, ambres) : sur
+// un même bloc, « quel type » et « qui l'a écrit » restent deux lectures distinctes.
+const AUTHOR_PALETTE = [
+  "#A594D0", // mauve
+  "#D493A8", // rose poudré
+  "#8FC2C8", // bleu-vert pâle
+  "#C6B37E", // sable
+  "#9AAFD9", // bleu ardoise
+  "#C0968C", // terre rosée
+] as const;
+
+// César et Fab gardent une teinte fixe (les deux orthographes mènent à la même
+// couleur) ; toute autre signature reçoit une couleur stable, dérivée de son nom.
+const AUTHOR_FIXED: Record<string, string> = {
+  "césar": AUTHOR_PALETTE[0],
+  "cesar": AUTHOR_PALETTE[0],
+  "fab": AUTHOR_PALETTE[1],
+};
+
+const AUTHOR_FALLBACK = "#7C92B5";
+
+export function authorColor(name: string): string {
+  const key = name.trim().toLowerCase();
+  if (!key) return AUTHOR_FALLBACK;
+  if (AUTHOR_FIXED[key]) return AUTHOR_FIXED[key];
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return AUTHOR_PALETTE[hash % AUTHOR_PALETTE.length];
+}
+
+// Nom affiché sur un événement : l'auteur enregistré à la création. Les
+// événements antérieurs à la signature retombent sur « person », qui était
+// pré-rempli avec le nom d'Atelier au moment de la saisie.
+export function signatureOf(a: { author?: string; person?: string }): string {
+  return (a.author ?? "").trim() || (a.person ?? "").trim();
+}
+
 /* ── Grille horaire ── */
 export const DAY_START_MIN = 8 * 60; // 08:00
 export const DAY_END_MIN = 19 * 60; // 19:00

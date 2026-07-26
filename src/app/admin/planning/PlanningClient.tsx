@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle, Car, Users } from "lucide-react";
 import {
   APPOINTMENT_TYPES, TYPE_LABEL, TYPE_COLOR, DAY_START_MIN, DAY_END_MIN,
-  formatMin, formatDayFr, type AppointmentType,
+  formatMin, formatDayFr, authorColor, signatureOf, type AppointmentType,
 } from "@/lib/planning";
 import { T, AdminPage, PageHeader, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../ui";
 import { useToast } from "../toast";
@@ -21,6 +21,7 @@ export type ApptRow = {
   type: string;
   title: string;
   person: string;
+  author: string;
   clientId: string | null;
   vehicleId: string | null;
   notes: string;
@@ -50,13 +51,25 @@ type Draft = {
   type: AppointmentType;
   title: string;
   person: string;
+  author: string; // signature, posée par le serveur à la création (lecture seule)
   clientId: string;
   vehicleId: string;
   notes: string;
 };
 
 function emptyDraft(date: string, startMin: number, person: string): Draft {
-  return { date, startMin, durationMin: 60, type: "essai", title: "", person, clientId: "", vehicleId: "", notes: "" };
+  return { date, startMin, durationMin: 60, type: "essai", title: "", person, author: person, clientId: "", vehicleId: "", notes: "" };
+}
+
+/* ── Pastille de signature ── */
+function AuthorDot({ name, size = 7, className = "" }: { name: string; size?: number; className?: string }) {
+  return (
+    <span
+      className={className}
+      title={`Créé par ${name}`}
+      style={{ display: "block", width: size, height: size, borderRadius: "50%", backgroundColor: authorColor(name), flexShrink: 0 }}
+    />
+  );
 }
 
 /* ── Modale création / édition ── */
@@ -76,6 +89,7 @@ function ApptModal({
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isEdit = Boolean(initial.id);
+  const signature = signatureOf(d);
 
   // Chevauchement avec un autre événement du même jour (information, non bloquant).
   const conflict = useMemo(() => {
@@ -135,9 +149,17 @@ function ApptModal({
         style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-medium mb-5" style={{ color: T.text }}>
-          {isEdit ? "Modifier l'événement" : "Nouvel événement"}
-        </h2>
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <h2 className="text-base font-medium" style={{ color: T.text }}>
+            {isEdit ? "Modifier l'événement" : "Nouvel événement"}
+          </h2>
+          {signature && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] flex-shrink-0" style={{ color: T.muted }}>
+              <AuthorDot name={signature} />
+              {isEdit ? "Créé par" : "Sera signé"} {signature}
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -330,6 +352,16 @@ export default function PlanningClient({
     return m;
   }, [vehicles]);
 
+  // Légende des signatures : seulement les personnes présentes dans la semaine affichée.
+  const signatures = useMemo(() => {
+    const found = new Set<string>();
+    appointments.forEach((a) => {
+      const s = signatureOf(a);
+      if (s) found.add(s);
+    });
+    return [...found].sort((a, b) => a.localeCompare(b, "fr"));
+  }, [appointments]);
+
   const monday = new Date(`${mondayKey}T00:00:00`);
   const weekLabel = monday.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   const hours = Array.from({ length: (DAY_END_MIN - DAY_START_MIN) / 60 + 1 }, (_, i) => DAY_START_MIN + i * 60);
@@ -347,6 +379,7 @@ export default function PlanningClient({
       type: (a.type as AppointmentType) ?? "autre",
       title: a.title,
       person: a.person,
+      author: a.author,
       clientId: a.clientId ?? "",
       vehicleId: a.vehicleId ?? "",
       notes: a.notes,
@@ -391,14 +424,27 @@ export default function PlanningClient({
         }
       />
 
-      {/* Légende */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+      {/* Légende — carré : le type d'événement. Rond : qui l'a créé. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
         {APPOINTMENT_TYPES.map((t) => (
           <span key={t} className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>
             <span style={{ width: 9, height: 9, backgroundColor: TYPE_COLOR[t].bd, flexShrink: 0 }} />
             {TYPE_LABEL[t]}
           </span>
         ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4" style={{ minHeight: 14 }}>
+        {signatures.length > 0 && (
+          <>
+            <span className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>Créé par</span>
+            {signatures.map((name) => (
+              <span key={name} className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>
+                <AuthorDot name={name} />
+                {name}
+              </span>
+            ))}
+          </>
+        )}
       </div>
 
       {/* Grille semaine */}
@@ -470,6 +516,7 @@ export default function PlanningClient({
                     const top = ((a.startMin - DAY_START_MIN) / 60) * PX_PER_HOUR;
                     const height = Math.max(22, (a.durationMin / 60) * PX_PER_HOUR - 2);
                     const isIndispo = a.type === "indispo";
+                    const signature = signatureOf(a);
                     return (
                       <button
                         key={a.id}
@@ -486,12 +533,21 @@ export default function PlanningClient({
                             : undefined,
                         }}
                       >
-                        <span className="block text-[11px] font-medium truncate" style={{ color: c.fg }}>
-                          {isIndispo && a.person ? `${a.person} — ` : ""}
-                          {a.title || TYPE_LABEL[(a.type as AppointmentType) ?? "autre"]}
+                        {/* Ligne 1 : la pastille de signature reste visible même sur un créneau de 30 min. */}
+                        <span className="flex items-center gap-1.5">
+                          {signature && <AuthorDot name={signature} size={6} />}
+                          <span className="text-[11px] font-medium truncate min-w-0" style={{ color: c.fg }}>
+                            {isIndispo && a.person ? `${a.person} — ` : ""}
+                            {a.title || TYPE_LABEL[(a.type as AppointmentType) ?? "autre"]}
+                          </span>
                         </span>
-                        <span className="block text-[10px] truncate" style={{ color: T.muted }}>
-                          {formatMin(a.startMin)} · {TYPE_LABEL[(a.type as AppointmentType) ?? "autre"]}
+                        <span className="flex items-center gap-1 text-[10px]" style={{ color: T.muted }}>
+                          <span className="truncate min-w-0">
+                            {formatMin(a.startMin)} · {TYPE_LABEL[(a.type as AppointmentType) ?? "autre"]}
+                          </span>
+                          {signature && (
+                            <span className="ml-auto flex-shrink-0" style={{ color: authorColor(signature) }}>{signature}</span>
+                          )}
                         </span>
                         {height > 56 && (a.clientId || a.vehicleId) && (
                           <span className="block text-[10px] truncate mt-0.5" style={{ color: T.textDim }}>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
@@ -57,7 +58,12 @@ export async function POST(req: NextRequest) {
     const data = sanitize(body);
     if (!data) return NextResponse.json({ error: "Données invalides." }, { status: 400 });
 
-    const appt = await prisma.appointment.create({ data });
+    // Signature : le nom choisi dans l'Atelier, lu côté serveur pour qu'elle
+    // reste fidèle même si le client envoie autre chose. Reste vide tant que
+    // personne n'a choisi de nom.
+    const author = (await cookies()).get("ia_collab_name")?.value?.trim() ?? "";
+
+    const appt = await prisma.appointment.create({ data: { ...data, author } });
 
     // Trace le RDV dans la timeline du lead actif le plus récent du client.
     if (data.clientId && data.type !== "indispo") {
