@@ -1,4 +1,5 @@
 import { AdminPage, Skeleton, T } from "../ui";
+import { GRID_H } from "@/lib/planning";
 
 export default function Loading() {
   return (
@@ -11,7 +12,8 @@ export default function Loading() {
       <div className="flex gap-4 mb-4">
         <Skeleton w={340} h={12} />
       </div>
-      <Skeleton h={560} />
+      {/* Même hauteur que la grille réelle : le squelette cesse de sauter au chargement. */}
+      <Skeleton h={GRID_H + 42} />
     </AdminPage>
   );
 }

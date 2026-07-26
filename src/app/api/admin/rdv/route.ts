@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
-import { isAppointmentType, TYPE_LABEL, formatMin, type AppointmentType } from "@/lib/planning";
+import {
+  isAppointmentType, isValidStartMin, TYPE_LABEL, formatMin,
+  MIN_DURATION_MIN, MAX_DURATION_MIN, type AppointmentType,
+} from "@/lib/planning";
 import { PIPELINE_STAGES } from "@/lib/crm";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -31,8 +34,8 @@ function sanitize(body: Record<string, unknown>) {
   if (!DATE_RE.test(date)) return null;
   const startMin = Math.round(Number(body.startMin));
   const durationMin = Math.round(Number(body.durationMin ?? 60));
-  if (!Number.isFinite(startMin) || startMin < 0 || startMin > 23 * 60) return null;
-  if (!Number.isFinite(durationMin) || durationMin < 15 || durationMin > 12 * 60) return null;
+  if (!isValidStartMin(startMin)) return null;
+  if (!Number.isFinite(durationMin) || durationMin < MIN_DURATION_MIN || durationMin > MAX_DURATION_MIN) return null;
   const type: AppointmentType = isAppointmentType(body.type) ? body.type : "autre";
   const person = String(body.person ?? "").trim();
   if (type === "indispo" && !person) return null;
@@ -66,7 +69,9 @@ export async function POST(req: NextRequest) {
     const appt = await prisma.appointment.create({ data: { ...data, author } });
 
     // Trace le RDV dans la timeline du lead actif le plus récent du client.
-    if (data.clientId && data.type !== "indispo") {
+    // « silent » sert au rétablissement après annulation : la ligne de timeline
+    // existe déjà, la réécrire créerait un doublon dans la fiche client.
+    if (data.clientId && data.type !== "indispo" && body.silent !== true) {
       const lead = await prisma.lead.findFirst({
         where: { clientId: data.clientId, stage: { in: [...PIPELINE_STAGES] } },
         orderBy: { updatedAt: "desc" },

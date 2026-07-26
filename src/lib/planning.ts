@@ -71,10 +71,146 @@ export function signatureOf(a: { author?: string; person?: string }): string {
 export const DAY_START_MIN = 8 * 60; // 08:00
 export const DAY_END_MIN = 19 * 60; // 19:00
 
+// 60 px par heure : en dessous, un créneau de 30 min ne loge pas ses deux lignes
+// et un quart d'heure devient trop fin pour être visé à la souris.
+export const PX_PER_HOUR = 60;
+export const GRID_H = ((DAY_END_MIN - DAY_START_MIN) / 60) * PX_PER_HOUR;
+
+// Pas d'aimantation des gestes et des listes de saisie.
+export const SNAP_MIN = 15;
+
+// Bornes communes à la création et à la modification.
+export const MIN_DURATION_MIN = 15;
+export const MAX_DURATION_MIN = 12 * 60;
+export const FULL_DAY_MIN = DAY_END_MIN - DAY_START_MIN;
+
+export function snapTo(min: number, step: number = SNAP_MIN): number {
+  return Math.round(min / step) * step;
+}
+
+// Ramène un début dans la journée affichée, en gardant la durée visible en entier.
+export function clampStart(startMin: number, durationMin: number): number {
+  return Math.max(DAY_START_MIN, Math.min(DAY_END_MIN - durationMin, startMin));
+}
+
+export function clampDuration(durationMin: number): number {
+  return Math.max(MIN_DURATION_MIN, Math.min(MAX_DURATION_MIN, Math.round(durationMin)));
+}
+
+export function isValidStartMin(v: unknown): v is number {
+  return Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 23 * 60;
+}
+
+export const DURATIONS = [
+  { value: 15, label: "15 min" },
+  { value: 30, label: "30 min" },
+  { value: 45, label: "45 min" },
+  { value: 60, label: "1 h" },
+  { value: 90, label: "1 h 30" },
+  { value: 120, label: "2 h" },
+  { value: 180, label: "3 h" },
+  { value: 240, label: "4 h" },
+  { value: FULL_DAY_MIN, label: "Journée" },
+] as const;
+
+// Durée standard par prestation : une création part de la bonne valeur au lieu
+// d'une heure systématique, corrigée ensuite à la main.
+export const TYPE_DURATION: Record<AppointmentType, number> = {
+  essai: 60,
+  livraison: 90,
+  preparation: 240,
+  ct: 30,
+  mecanique: 120,
+  indispo: FULL_DAY_MIN,
+  autre: 60,
+};
+
 export function formatMin(min: number): string {
   const h = Math.floor(min / 60);
   const m = min % 60;
   return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, "0")}`;
+}
+
+// Durée en toutes lettres : « 1 h 30 », « 45 min ».
+export function formatDuration(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, "0")}`;
+}
+
+/* ── Répartition en colonnes des événements simultanés ── */
+// Sans cela, deux RDV à la même heure occupent le même rectangle : celui du
+// dessous devient invisible ET inclicable.
+export type DayLayout = { col: number; cols: number; span: number };
+
+type Placed = { id: string; start: number; end: number; col: number };
+
+export function layoutDay(
+  events: readonly { id: string; startMin: number; durationMin: number }[],
+): Map<string, DayLayout> {
+  const out = new Map<string, DayLayout>();
+
+  // Tri stable : à heure égale, le plus long passe devant, puis l'identifiant
+  // départage. Sans ce dernier critère l'empilement change d'un chargement à l'autre.
+  const sorted = [...events].sort(
+    (a, b) => a.startMin - b.startMin || b.durationMin - a.durationMin || a.id.localeCompare(b.id),
+  );
+
+  let cluster: Placed[] = [];
+  let clusterEnd = -Infinity;
+
+  function flush() {
+    if (cluster.length === 0) return;
+    const cols = Math.max(...cluster.map((p) => p.col)) + 1;
+    for (const p of cluster) {
+      // Extension vers la droite : un bloc s'élargit tant qu'aucun voisin ne le
+      // recoupe. Sans cette étape, une longue préparation et deux essais courts
+      // gaspillent la moitié de la largeur.
+      let span = 1;
+      for (let c = p.col + 1; c < cols; c++) {
+        const busy = cluster.some((q) => q.col === c && q.start < p.end && q.end > p.start);
+        if (busy) break;
+        span++;
+      }
+      out.set(p.id, { col: p.col, cols, span });
+    }
+    cluster = [];
+    clusterEnd = -Infinity;
+  }
+
+  for (const e of sorted) {
+    const start = e.startMin;
+    const end = e.startMin + e.durationMin;
+    if (start >= clusterEnd) flush();
+    let col = 0;
+    while (cluster.some((p) => p.col === col && p.end > start)) col++;
+    cluster.push({ id: e.id, start, end, col });
+    clusterEnd = Math.max(clusterEnd, end);
+  }
+  flush();
+
+  return out;
+}
+
+/* ── Charge d'une journée ── */
+// Les plages qui se recouvrent comptent une seule fois : deux RDV simultanés
+// occupent une heure de l'atelier, pas deux.
+export function dayLoadMin(events: readonly { startMin: number; durationMin: number }[]): number {
+  const ranges = [...events]
+    .map((e) => [e.startMin, e.startMin + e.durationMin] as const)
+    .sort((a, b) => a[0] - b[0]);
+
+  let total = 0;
+  let cursor = -Infinity;
+  for (const [start, end] of ranges) {
+    const from = Math.max(start, cursor);
+    if (end > from) {
+      total += end - from;
+      cursor = end;
+    }
+  }
+  return total;
 }
 
 /* ── Semaine (lundi → samedi) ── */

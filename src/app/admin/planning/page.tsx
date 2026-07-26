@@ -29,7 +29,9 @@ export default async function PlanningPage({
   const [appointments, clients, vehicles] = await Promise.all([
     prisma.appointment.findMany({
       where: { date: { gte: days[0].key, lte: days[days.length - 1].key } },
-      orderBy: [{ date: "asc" }, { startMin: "asc" }],
+      // Le dernier critère départage deux RDV à la même heure : sans lui,
+      // l'ordre d'empilement change d'un chargement à l'autre.
+      orderBy: [{ date: "asc" }, { startMin: "asc" }, { durationMin: "desc" }, { id: "asc" }],
     }),
     prisma.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, company: true } }),
     prisma.vehicle.findMany({
@@ -54,6 +56,9 @@ export default async function PlanningPage({
 
   return (
     <PlanningClient
+      // La grille tient désormais son propre état pour se mettre à jour sans
+      // attendre le serveur : la clé la remonte à chaque changement de semaine.
+      key={days[0].key}
       appointments={rows}
       clients={clients}
       vehicles={vehicles}
