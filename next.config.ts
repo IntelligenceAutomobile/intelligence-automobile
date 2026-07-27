@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Les photos de véhicules sont déposées telles quelles sur Vercel Blob, à leur
+  // taille d'origine. Les autoriser ici permet à l'optimiseur d'images de servir
+  // une vignette au lieu du fichier complet.
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
+  },
   // Les gabarits Cerfa sont lus au moment de générer le mandat : ils doivent
   // suivre la fonction déployée, sinon la lecture échoue en production.
   outputFileTracingIncludes: {

@@ -11,11 +11,58 @@
   --adm-accent-border: color-mix(in srgb, var(--adm-accent) 38%, transparent);
 }
 
-/* Focus des champs : suit l'accent du thème (remplace les focus:border bleus figés). */
-.adm-root input:focus,
+/* Focus des champs : suit l'accent du thème (remplace les focus:border bleus figés).
+   Les cases, boutons radio, curseurs et sélecteurs de couleur sont exclus : un
+   halo autour d'une case de 16 px est un défaut, pas un gain. */
+.adm-root input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
 .adm-root select:focus,
 .adm-root textarea:focus {
   border-color: var(--adm-accent) !important;
+  box-shadow: 0 0 0 2px var(--adm-accent-soft);
+}
+
+/* Survols des actions de ligne. Leur couleur est posée en style direct sur
+   l'élément, ce qui prenait le pas sur les classes de survol : « Voir »,
+   « Suivi » et « Supprimer » ne réagissaient jamais. */
+.adm-act {
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+.adm-act:hover {
+  color: #f0f5ff !important;
+}
+.adm-act:focus-visible {
+  outline: 1px solid var(--adm-accent);
+  outline-offset: 2px;
+}
+
+.adm-act-danger {
+  transition: color 0.15s ease;
+}
+.adm-act-danger:hover {
+  color: #ff6b35 !important;
+}
+.adm-act-danger:focus-visible {
+  outline: 1px solid var(--adm-accent);
+  outline-offset: 2px;
+}
+
+/* Pastilles de filtre et boutons de vue : la pastille active garde son aplat. */
+.adm-chip:hover:not([aria-pressed="true"]) {
+  border-color: var(--adm-accent-border) !important;
+  color: #f0f5ff !important;
+}
+
+/* Les actions d'une ligne se révèlent sous la souris, ce qui laisse la liste
+   calme au repos. Sur un écran sans survol, elles restent visibles. */
+@media (hover: hover) and (pointer: fine) {
+  .adm-row-actions {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .group:hover .adm-row-actions,
+  .group:focus-within .adm-row-actions {
+    opacity: 1;
+  }
 }
 
 @keyframes adm-in {
@@ -72,4 +119,25 @@
 }
 .adm-veh:hover img {
   transform: scale(1.06);
+}
+
+/* Réglage système « réduire les animations » : la vitrine le respecte déjà,
+   le back-office l'ignorait complètement. */
+@media (prefers-reduced-motion: reduce) {
+  .adm-enter {
+    animation: none;
+  }
+  .adm-card,
+  .adm-veh img,
+  .adm-act,
+  .adm-act-danger,
+  .adm-row-actions {
+    transition: none;
+  }
+  .adm-card:hover {
+    transform: none;
+  }
+  .adm-veh:hover img {
+    transform: none;
+  }
 }

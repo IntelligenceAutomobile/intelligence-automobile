@@ -9,17 +9,18 @@ import { computeTotals, formatEuro, type QuoteItem, type TvaMode, type DepositMo
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
 import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, authorColor, signatureOf, type AppointmentType } from "@/lib/planning";
+import { missingEssentials } from "@/lib/vehicules";
 import { deadlines as regDeadlines, isRegType } from "@/lib/immatriculation";
 import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
 import { KpiTile, AreaChart, Donut, Bars } from "./charts";
 
 type VehLite = { id: string; make: string; model: string; images: string; price: number };
 
+// Même règle que l'écran de stock : les deux comptes se contredisaient, l'un
+// cherchant une liste de photos strictement vide en base, l'autre lisant vraiment
+// son contenu.
 function reasons(v: VehLite): string[] {
-  const r: string[] = [];
-  if (firstImage(v.images) === null) r.push("Sans photo");
-  if (v.price <= 0) r.push("Prix manquant");
-  return r;
+  return missingEssentials({ image: firstImage(v.images), price: v.price });
 }
 
 /* ── Mois glissants ── */
@@ -126,17 +127,19 @@ export default async function AdminDashboard() {
   warrantyToDate.setDate(warrantyToDate.getDate() + 60);
   const warrantyTo = warrantyToDate.toISOString().slice(0, 10);
 
-  const [disponibles, reserves, vendus, valueAgg, recent, aCompleter, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, openRegistrations] =
+  const [disponibles, reserves, vendus, valueAgg, recent, tousVehicules, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, openRegistrations] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
       prisma.vehicle.count({ where: { status: "vendu" } }),
       prisma.vehicle.aggregate({ _sum: { price: true }, where: { status: "disponible" } }),
       prisma.vehicle.findMany({ orderBy: { createdAt: "desc" }, take: 4 }),
+      // Le tri des fiches incomplètes se fait en mémoire : une liste de photos
+      // abîmée ou remplie d'entrées vides échappait au filtre écrit en base.
+      // Seules les colonnes affichées remontent.
       prisma.vehicle.findMany({
-        where: { OR: [{ images: "[]" }, { price: { lte: 0 } }] },
         orderBy: { createdAt: "desc" },
-        take: 5,
+        select: { id: true, make: true, model: true, images: true, price: true },
       }),
       prisma.vehicle.findMany({ where: { isPublished: false }, orderBy: { createdAt: "desc" }, take: 5 }),
       prisma.vehicle.findMany({ select: { createdAt: true } }),
@@ -173,6 +176,10 @@ export default async function AdminDashboard() {
     ]);
 
   const stockValue = valueAgg._sum.price ?? 0;
+
+  // Fiches incomplètes, filtrées en mémoire pour appliquer la même règle que
+  // l'écran de stock : les deux comptes divergeaient jusqu'ici.
+  const aCompleter = tousVehicules.filter((v) => reasons(v).length > 0).slice(0, 5);
 
   // Dossiers dont au moins une échéance légale est dépassée.
   const todayKey = new Date().toISOString().slice(0, 10);

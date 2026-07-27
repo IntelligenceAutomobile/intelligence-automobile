@@ -284,7 +284,10 @@ export function SkeletonRows({ count = 5 }: { count?: number }) {
 export function firstImage(imagesJson: string): string | null {
   try {
     const arr = JSON.parse(imagesJson);
-    return Array.isArray(arr) && typeof arr[0] === "string" ? arr[0] : null;
+    // Une entrée vide compte comme une photo manquante : elle passait jusqu'ici
+    // pour une vraie photo au tableau de bord et pour une absence dans le stock.
+    const first = Array.isArray(arr) ? arr.find((v) => typeof v === "string" && v.trim() !== "") : null;
+    return typeof first === "string" ? first : null;
   } catch {
     return null;
   }
