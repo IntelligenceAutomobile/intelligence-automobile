@@ -3,6 +3,10 @@
 // Liste du stock : tableau à colonnes alignées, actions directes sur la ligne,
 // sélection multiple. Les écritures sont appliquées avant l'aller-retour serveur
 // et rattrapables par la bande « Annuler », comme le planning atelier.
+//
+// Ce composant sert AUSSI la démonstration publique /demopro, en mode lecture :
+// `demoMessage` remplace alors chaque écriture par un message. Un seul rendu à
+// maintenir, au lieu de deux jumeaux qui divergent.
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -247,9 +251,11 @@ function MenuTitre({ children }: { children: React.ReactNode }) {
   return <div className="px-3 pt-2 pb-1 text-[10px] tracking-[0.14em] uppercase" style={{ color: T.border }}>{children}</div>;
 }
 
-function ContextMenu({ state, canDelete, onClose, onStatus, onPublish, onDuplicate, onDelete }: {
+function ContextMenu({ state, canDelete, base, publicBase, onClose, onStatus, onPublish, onDuplicate, onDelete }: {
   state: ContextMenuState;
   canDelete: boolean;
+  base: string;
+  publicBase: string | null;
   onClose: () => void;
   onStatus: (v: StockItem, s: VehicleStatus) => void;
   onPublish: (v: StockItem) => void;
@@ -291,9 +297,9 @@ function ContextMenu({ state, canDelete, onClose, onStatus, onPublish, onDuplica
         {v.make} {v.model}
       </div>
 
-      <MenuItem onClose={onClose} label="Modifier la fiche" hint="E" onPick={() => { window.location.href = `/admin/vehicules/${v.id}`; }} />
-      <MenuItem onClose={onClose} label="Ouvrir le suivi" hint="S" onPick={() => { window.location.href = `/admin/vehicules/${v.id}/suivi`; }} />
-      <MenuItem onClose={onClose} label="Voir l'annonce" onPick={() => window.open(`/vehicules/${v.id}`, "_blank")} />
+      <MenuItem onClose={onClose} label="Modifier la fiche" hint="E" onPick={() => { window.location.href = `${base}/${v.id}`; }} />
+      <MenuItem onClose={onClose} label="Ouvrir le suivi" hint="S" onPick={() => { window.location.href = `${base}/${v.id}/suivi`; }} />
+      {publicBase && <MenuItem onClose={onClose} label="Voir l'annonce" onPick={() => window.open(`${publicBase}/${v.id}`, "_blank")} />}
       <MenuItem onClose={onClose} label="Dupliquer" hint="D" onPick={() => onDuplicate(v)} />
 
       <MenuSep />
@@ -377,9 +383,11 @@ function ShortcutSheet({ onClose }: { onClose: () => void }) {
 }
 
 /* ── Actions d'une ligne ── */
-function RowActions({ v, canDelete, onDuplicate, onDelete }: {
+function RowActions({ v, canDelete, base, publicBase, onDuplicate, onDelete }: {
   v: StockItem;
   canDelete: boolean;
+  base: string;
+  publicBase: string | null;
   onDuplicate: (v: StockItem) => void;
   onDelete: (v: StockItem) => void;
 }) {
@@ -387,19 +395,21 @@ function RowActions({ v, canDelete, onDuplicate, onDelete }: {
   const size = { width: 28, height: 28 };
   return (
     <>
+      {publicBase && (
+        <Link
+          href={`${publicBase}/${v.id}`}
+          target="_blank"
+          title="Voir l'annonce publique"
+          aria-label="Voir l'annonce publique"
+          className={iconBtn}
+          style={{ ...size, color: T.muted }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ExternalLink size={14} />
+        </Link>
+      )}
       <Link
-        href={`/vehicules/${v.id}`}
-        target="_blank"
-        title="Voir l'annonce publique"
-        aria-label="Voir l'annonce publique"
-        className={iconBtn}
-        style={{ ...size, color: T.muted }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ExternalLink size={14} />
-      </Link>
-      <Link
-        href={`/admin/vehicules/${v.id}`}
+        href={`${base}/${v.id}`}
         title="Modifier la fiche"
         aria-label="Modifier la fiche"
         className={iconBtn}
@@ -409,7 +419,7 @@ function RowActions({ v, canDelete, onDuplicate, onDelete }: {
         <Pencil size={14} />
       </Link>
       <Link
-        href={`/admin/vehicules/${v.id}/suivi`}
+        href={`${base}/${v.id}/suivi`}
         title="Ouvrir le suivi"
         aria-label="Ouvrir le suivi"
         className={iconBtn}
@@ -451,12 +461,22 @@ export default function StockList({
   initialQuery = "",
   initialSort = "recent",
   canDelete = false,
+  demoMessage,
+  base = "/admin/vehicules",
+  publicBase = "/vehicules",
 }: {
   vehicles: StockItem[];
   initialFilter?: string;
   initialQuery?: string;
   initialSort?: string;
   canDelete?: boolean;
+  // Renseigné uniquement par la démonstration : aucune écriture ne part.
+  demoMessage?: string;
+  // Racine des liens de fiche, et racine de l'annonce publique. La démonstration
+  // pointe vers ses propres pages : ses véhicules sont des exemples, ils n'ont
+  // pas d'annonce en ligne.
+  base?: string;
+  publicBase?: string | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -590,6 +610,7 @@ export default function StockList({
   // Applique le changement tout de suite puis enregistre ; en cas d'échec, la
   // valeur d'avant reprend sa place et le message le dit.
   const patch = useCallback(async (id: string, delta: Partial<StockItem>, previous: StockItem) => {
+    if (demoMessage) { toast.info(demoMessage); return; }
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...delta } : r)));
     setBusy(id, true);
     try {
@@ -605,7 +626,7 @@ export default function StockList({
     } finally {
       setBusy(id, false);
     }
-  }, [setBusy, toast]);
+  }, [setBusy, toast, demoMessage]);
 
   function changeStatus(v: StockItem, status: VehicleStatus) {
     setStatusMenu(null);
@@ -624,6 +645,7 @@ export default function StockList({
   }, [patch, showUndo]);
 
   async function removeVehicle(v: StockItem) {
+    if (demoMessage) { toast.info(demoMessage); return; }
     setRows((prev) => prev.filter((r) => r.id !== v.id));
     setSelected((prev) => { const n = new Set(prev); n.delete(v.id); return n; });
     try {
@@ -640,6 +662,7 @@ export default function StockList({
   }
 
   const duplicate = useCallback(async (v: StockItem) => {
+    if (demoMessage) { toast.info(demoMessage); return; }
     if (busyRows.has(v.id)) return;
     setBusy(v.id, true);
     try {
@@ -653,7 +676,7 @@ export default function StockList({
     } finally {
       setBusy(v.id, false);
     }
-  }, [busyRows, setBusy, toast, router]);
+  }, [busyRows, setBusy, toast, router, demoMessage]);
 
   /* ── Actions groupées ── */
   async function bulkPatch(delta: Partial<StockItem>, label: string) {
@@ -671,6 +694,7 @@ export default function StockList({
   }
 
   async function bulkDelete() {
+    if (demoMessage) { toast.info(demoMessage); setConfirmBulk(false); return; }
     const targets = filtered.filter((r) => selected.has(r.id));
     setConfirmBulk(false);
     setRows((prev) => prev.filter((r) => !selected.has(r.id)));
@@ -716,8 +740,8 @@ export default function StockList({
       // l'œil désigne déjà, sans avoir à introduire un curseur de sélection.
       const v = hoveredRef.current;
       if (!v) return;
-      if (e.key === "e" || e.key === "E") { e.preventDefault(); router.push(`/admin/vehicules/${v.id}`); }
-      else if (e.key === "s" || e.key === "S") { e.preventDefault(); router.push(`/admin/vehicules/${v.id}/suivi`); }
+      if (e.key === "e" || e.key === "E") { e.preventDefault(); router.push(`${base}/${v.id}`); }
+      else if (e.key === "s" || e.key === "S") { e.preventDefault(); router.push(`${base}/${v.id}/suivi`); }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); togglePublished(v); }
       else if (e.key === "d" || e.key === "D") { e.preventDefault(); duplicate(v); }
       else if (e.key === "Delete" || e.key === "Backspace") {
@@ -728,7 +752,7 @@ export default function StockList({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undoItem, router, canDelete, togglePublished, duplicate]);
+  }, [undoItem, router, canDelete, base, togglePublished, duplicate]);
 
 
   /* ── Sélection ── */
@@ -1020,7 +1044,7 @@ export default function StockList({
         />
       ) : view === "grid" ? (
         <div className="@container">
-          <GridView rows={filtered} canDelete={canDelete} onDuplicate={duplicate} onDelete={setConfirmOne} />
+          <GridView rows={filtered} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={duplicate} onDelete={setConfirmOne} />
         </div>
       ) : (
         // Les colonnes suivent la largeur du CADRE, pas celle de la fenêtre : la
@@ -1067,6 +1091,8 @@ export default function StockList({
                   selected={selected.has(v.id)}
                   busy={busyRows.has(v.id)}
                   canDelete={canDelete}
+                  base={base}
+                  publicBase={publicBase}
                   statusMenuOpen={statusMenu === v.id}
                   onToggleSelect={toggleRow}
                   onOpenStatusMenu={setStatusMenu}
@@ -1135,6 +1161,8 @@ export default function StockList({
         <ContextMenu
           state={ctxMenu}
           canDelete={canDelete}
+          base={base}
+          publicBase={publicBase}
           onClose={() => setCtxMenu(null)}
           onStatus={changeStatus}
           onPublish={togglePublished}
@@ -1185,7 +1213,7 @@ export default function StockList({
 
 /* ── Une ligne ── */
 function Row({
-  v, index, ordered, compact, selected, busy, canDelete, statusMenuOpen,
+  v, index, ordered, compact, selected, busy, canDelete, base, publicBase, statusMenuOpen,
   onToggleSelect, onOpenStatusMenu, onChangeStatus, onTogglePublished, onDuplicate, onDelete,
   onContextMenu, onHover,
 }: {
@@ -1196,6 +1224,8 @@ function Row({
   selected: boolean;
   busy: boolean;
   canDelete: boolean;
+  base: string;
+  publicBase: string | null;
   statusMenuOpen: boolean;
   onToggleSelect: (id: string, shift: boolean, ordered: StockItem[]) => void;
   onOpenStatusMenu: (id: string | null) => void;
@@ -1239,7 +1269,7 @@ function Row({
     >
       {/* Lien de couverture : toute la ligne mène à la fiche, sans imbriquer de liens. */}
       <Link
-        href={`/admin/vehicules/${v.id}`}
+        href={`${base}/${v.id}`}
         aria-label={`Modifier ${v.make} ${v.model}`}
         // Le titre vit sur le lien de couverture : la grille de la ligne est en
         // pointer-events-none, une infobulle posée sur une cellule ne s'affichait
@@ -1401,7 +1431,7 @@ function Row({
           >
             {v.isPublished ? <Eye size={14} /> : <EyeOff size={14} />}
           </button>
-          <RowActions v={v} canDelete={canDelete} onDuplicate={onDuplicate} onDelete={onDelete} />
+          <RowActions v={v} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={onDuplicate} onDelete={onDelete} />
           <ChevronRight size={14} style={{ color: T.border }} />
         </div>
 
@@ -1416,15 +1446,17 @@ function Row({
           >
             {v.isPublished ? <Eye size={16} /> : <EyeOff size={16} />}
           </button>
-          <Link href={`/admin/vehicules/${v.id}`} aria-label="Modifier la fiche" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.accent }}>
+          <Link href={`${base}/${v.id}`} aria-label="Modifier la fiche" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.accent }}>
             <Pencil size={16} />
           </Link>
-          <Link href={`/admin/vehicules/${v.id}/suivi`} aria-label="Ouvrir le suivi" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.muted }}>
+          <Link href={`${base}/${v.id}/suivi`} aria-label="Ouvrir le suivi" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.muted }}>
             <ClipboardList size={16} />
           </Link>
-          <Link href={`/vehicules/${v.id}`} target="_blank" aria-label="Voir l'annonce publique" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.muted }}>
-            <ExternalLink size={16} />
-          </Link>
+          {publicBase && (
+            <Link href={`${publicBase}/${v.id}`} target="_blank" aria-label="Voir l'annonce publique" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.muted }}>
+              <ExternalLink size={16} />
+            </Link>
+          )}
           {canDelete && (
             <button
               type="button"
@@ -1443,9 +1475,11 @@ function Row({
 }
 
 /* ── Vue photos ── */
-function GridView({ rows, canDelete, onDuplicate, onDelete }: {
+function GridView({ rows, canDelete, base, publicBase, onDuplicate, onDelete }: {
   rows: StockItem[];
   canDelete: boolean;
+  base: string;
+  publicBase: string | null;
   onDuplicate: (v: StockItem) => void;
   onDelete: (v: StockItem) => void;
 }) {
@@ -1456,7 +1490,7 @@ function GridView({ rows, canDelete, onDuplicate, onDelete }: {
         return (
           <div key={v.id} className="adm-veh adm-card" style={{ border: `1px solid ${T.border}`, backgroundColor: T.surface }}>
             <Link
-              href={`/admin/vehicules/${v.id}`}
+              href={`${base}/${v.id}`}
               className="block relative overflow-hidden"
               style={{ aspectRatio: "16 / 10", backgroundColor: T.float }}
             >
@@ -1504,7 +1538,7 @@ function GridView({ rows, canDelete, onDuplicate, onDelete }: {
                 <StatusBadge status={v.status} />
               </div>
               <div className="flex items-center gap-0.5 mt-3 pt-3" style={{ borderTop: `1px solid ${T.border}` }}>
-                <RowActions v={v} canDelete={canDelete} onDuplicate={onDuplicate} onDelete={onDelete} />
+                <RowActions v={v} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={onDuplicate} onDelete={onDelete} />
                 <span className="ml-auto text-[10px]" style={{ color: ageTone(v.daysInStock) === "muted" ? T.muted : T.warning }}>
                   {formatDays(v.daysInStock)}
                 </span>
