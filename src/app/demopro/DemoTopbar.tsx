@@ -1,13 +1,14 @@
 "use client";
 
 // Barre supérieure de la démonstration : fil d'Ariane dérivé de l'URL et action
-// « Ajouter » qui affiche un message de démo au lieu d'agir.
+// « Ajouter », qui pose une annonce vierge dans le bac à sable du visiteur.
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight, Plus } from "lucide-react";
 import { T, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui";
 import { useToast } from "@/app/admin/toast";
-import { DEMO_BASE, DEMO_MSG } from "./demo";
+import { DEMO_BASE } from "./demo";
+import { addBlankVehicle } from "./store";
 
 const SEGMENT_LABELS: Record<string, string> = {
   vehicules: "Stock",
@@ -46,6 +47,7 @@ function crumbsFrom(pathname: string): { label: string; href?: string }[] {
 export default function DemoTopbar() {
   const pathname = usePathname();
   const crumbs = crumbsFrom(pathname);
+  const router = useRouter();
   const toast = useToast();
 
   return (
@@ -75,7 +77,11 @@ export default function DemoTopbar() {
       <div className="ml-auto flex items-center gap-3 min-w-0">
         <button
           type="button"
-          onClick={() => toast.info(DEMO_MSG)}
+          onClick={() => {
+            addBlankVehicle();
+            toast.success("Annonce créée dans le stock, masquée du site.");
+            router.push(`${DEMO_BASE}/vehicules`);
+          }}
           className={btnPrimaryClass + " flex-shrink-0"}
           style={btnPrimaryStyle}
         >

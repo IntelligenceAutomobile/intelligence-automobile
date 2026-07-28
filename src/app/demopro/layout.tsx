@@ -11,12 +11,14 @@ import DemoSidebar from "./DemoSidebar";
 import DemoTopbar from "./DemoTopbar";
 import DemoNav from "./DemoNav";
 import DemoBanner from "./DemoBanner";
+import { DemoStoreProvider } from "./store";
 import { DEMO_BASE } from "./demo";
 import "@/app/admin/admin.css";
 
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
+      <DemoStoreProvider>
       <div
         className="adm-root min-h-screen flex"
         style={{ backgroundColor: T.bg, color: T.text, ["--adm-accent" as never]: "#6B9FEE" }}
@@ -43,6 +45,7 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 min-w-0">{children}</main>
         </div>
       </div>
+      </DemoStoreProvider>
     </ToastProvider>
   );
 }

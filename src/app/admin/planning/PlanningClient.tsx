@@ -18,6 +18,39 @@ import { T, AdminPage, PageHeader, fieldStyle, labelClass, btnPrimaryClass, btnP
 import { useToast } from "../toast";
 import { ConfirmDialog } from "../confirm";
 
+// Carnet d'écriture. Le back-office parle à l'API ; la démonstration publique
+// fournit le sien, qui écrit dans le bac à sable du visiteur. Un seul composant
+// sert donc les deux, gestes compris.
+export type ApptWriter = {
+  create: (payload: Record<string, unknown>) => Promise<ApptRow>;
+  update: (id: string, delta: Record<string, unknown>) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+};
+
+const apiWriter: ApptWriter = {
+  create: async (payload) => {
+    const res = await fetch("/api/admin/rdv", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error();
+    return res.json();
+  },
+  update: async (id, delta) => {
+    const res = await fetch(`/api/admin/rdv/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(delta),
+    });
+    if (!res.ok) throw new Error();
+  },
+  remove: async (id) => {
+    const res = await fetch(`/api/admin/rdv/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error();
+  },
+};
+
 export type ApptRow = {
   id: string;
   date: string;
@@ -139,13 +172,14 @@ const overlayDown = { current: false };
 
 /* ── Modale création / édition ── */
 function ApptModal({
-  draft: initial, clients, vehicles, appointments, weekKeys, onClose, onSaved, onDeleted,
+  draft: initial, clients, vehicles, appointments, weekKeys, writer, onClose, onSaved, onDeleted,
 }: {
   draft: Draft;
   clients: ClientLite[];
   vehicles: VehicleLite[];
   appointments: ApptRow[];
   weekKeys: string[];
+  writer: ApptWriter;
   onClose: () => void;
   onSaved: (row: ApptRow, previous: ApptRow | null) => void;
   onDeleted: (row: ApptRow) => void;
@@ -258,14 +292,14 @@ function ApptModal({
         return;
       }
 
-      const res = await fetch(isEdit ? `/api/admin/rdv/${d.id}` : "/api/admin/rdv", {
-        method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error();
-      const row: ApptRow = await res.json();
       const previous = isEdit ? (appointments.find((a) => a.id === d.id) ?? null) : null;
+      let row: ApptRow;
+      if (isEdit && previous) {
+        await writer.update(d.id as string, payload);
+        row = { ...previous, ...(payload as Partial<ApptRow>) };
+      } else {
+        row = await writer.create(payload);
+      }
       onSaved(row, previous);
       toast.success(isEdit ? "RDV mis à jour." : "RDV planifié.");
       onClose();
@@ -280,8 +314,7 @@ function ApptModal({
     setBusy(true);
     try {
       const row = appointments.find((a) => a.id === d.id);
-      const res = await fetch(`/api/admin/rdv/${d.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
+      await writer.remove(d.id as string);
       if (row) onDeleted(row);
       onClose();
     } catch {
@@ -547,6 +580,7 @@ type Preview =
 /* ── Page ── */
 export default function PlanningClient({
   appointments, clients, vehicles, weekKeys, mondayKey, prevWeek, nextWeek, todayKey, defaultPerson,
+  writer = apiWriter, base = "/admin/planning",
 }: {
   appointments: ApptRow[];
   clients: ClientLite[];
@@ -557,15 +591,25 @@ export default function PlanningClient({
   nextWeek: string;
   todayKey: string;
   defaultPerson: string;
+  // La démonstration fournit son propre carnet d'écriture et sa propre racine
+  // d'adresses : elle se manipule pareil, sans rien envoyer au serveur.
+  writer?: ApptWriter;
+  base?: string;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [, startTransition] = useTransition();
 
-  // État local : la grille se met à jour avant l'aller-retour serveur. Le
-  // composant est remonté à chaque changement de semaine (clé posée par la page),
-  // donc la prop sert uniquement de valeur initiale.
+  // État local : la grille se met à jour avant l'aller-retour serveur. La prop
+  // reste la source de vérité : quand elle change d'identité (rechargement
+  // serveur, ou bac à sable de la démonstration repris depuis l'onglet), l'état
+  // local se re-sème pendant le rendu.
   const [rows, setRows] = useState<ApptRow[]>(appointments);
+  const [prevAppointments, setPrevAppointments] = useState(appointments);
+  if (prevAppointments !== appointments) {
+    setPrevAppointments(appointments);
+    setRows(appointments);
+  }
   const [draft, setDraft] = useState<Draft | null>(null);
   const hiddenTypes = useSyncExternalStore(subscribeFilters, readFilters, () => NO_FILTER);
   const [gesture, setGesture] = useState<Gesture | null>(null);
@@ -640,52 +684,49 @@ export default function PlanningClient({
   const patch = useCallback(async (id: string, delta: Partial<ApptRow>, previous: ApptRow) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...delta } : r)));
     try {
-      const res = await fetch(`/api/admin/rdv/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(delta),
-      });
-      if (!res.ok) throw new Error();
+      await writer.update(id, delta as Record<string, unknown>);
     } catch {
       setRows((prev) => prev.map((r) => (r.id === id ? previous : r)));
       toast.error("Le déplacement a échoué.");
     }
-  }, [toast]);
+  }, [toast, writer]);
 
   const restore = useCallback(async (row: ApptRow) => {
     setRows((prev) => (prev.some((r) => r.id === row.id) ? prev : [...prev, row]));
     try {
-      const res = await fetch("/api/admin/rdv", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // La ligne de suivi côté client existe déjà : la réécrire ferait doublon.
-        body: JSON.stringify({ ...row, silent: true }),
-      });
-      if (!res.ok) throw new Error();
-      const created: ApptRow = await res.json();
+      // La ligne de suivi côté client existe déjà : la réécrire ferait doublon.
+      const created = await writer.create({ ...row, silent: true });
       setRows((prev) => prev.map((r) => (r.id === row.id ? created : r)));
     } catch {
       setRows((prev) => prev.filter((r) => r.id !== row.id));
       toast.error("Le rétablissement a échoué.");
     }
-  }, [toast]);
+  }, [toast, writer]);
 
   function onSaved(row: ApptRow, previous: ApptRow | null) {
-    setRows((prev) => (previous ? prev.map((r) => (r.id === row.id ? row : r)) : [...prev, row]));
+    // Ajout idempotent : le carnet d'écriture peut déjà avoir fait remonter la
+    // ligne par la source (c'est le cas du bac à sable de la démonstration),
+    // auquel cas l'ajouter une seconde fois la duplique.
+    setRows((prev) =>
+      prev.some((r) => r.id === row.id)
+        ? prev.map((r) => (r.id === row.id ? row : r))
+        : [...prev, row],
+    );
     if (previous) {
       showUndo(`« ${previous.title || TYPE_LABEL[(previous.type as AppointmentType) ?? "autre"]} » modifié.`, () => {
         patch(previous.id, previous, row);
       });
     }
-    // Aligne les données annexes (fiches client, tableau de bord) sans bloquer l'affichage.
-    startTransition(() => router.refresh());
+    // Aligne les données annexes (fiches client, tableau de bord) sans bloquer
+    // l'affichage. Sans objet quand l'écriture reste dans le navigateur.
+    if (writer === apiWriter) startTransition(() => router.refresh());
   }
 
   function onDeleted(row: ApptRow) {
     setRows((prev) => prev.filter((r) => r.id !== row.id));
     toast.success("RDV supprimé.");
     showUndo(`« ${row.title || TYPE_LABEL[(row.type as AppointmentType) ?? "autre"]} » supprimé.`, () => restore(row));
-    startTransition(() => router.refresh());
+    if (writer === apiWriter) startTransition(() => router.refresh());
   }
 
   /* ── Ouverture de la modale ── */
@@ -995,17 +1036,17 @@ export default function PlanningClient({
         action={
           <div className="flex items-center gap-3">
             <div className="flex" style={{ border: `1px solid ${T.border}` }}>
-              <Link href={`/admin/planning?semaine=${prevWeek}`} className="p-2.5 transition-colors hover:text-[#F0F5FF]" style={{ color: T.muted }} aria-label="Semaine précédente">
+              <Link href={`${base}?semaine=${prevWeek}`} className="p-2.5 transition-colors hover:text-[#F0F5FF]" style={{ color: T.muted }} aria-label="Semaine précédente">
                 <ChevronLeft size={15} />
               </Link>
               <Link
-                href="/admin/planning"
+                href={base}
                 className="px-3 py-2.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
                 style={{ color: T.textDim, borderLeft: `1px solid ${T.border}`, borderRight: `1px solid ${T.border}` }}
               >
                 Aujourd&apos;hui
               </Link>
-              <Link href={`/admin/planning?semaine=${nextWeek}`} className="p-2.5 transition-colors hover:text-[#F0F5FF]" style={{ color: T.muted }} aria-label="Semaine suivante">
+              <Link href={`${base}?semaine=${nextWeek}`} className="p-2.5 transition-colors hover:text-[#F0F5FF]" style={{ color: T.muted }} aria-label="Semaine suivante">
                 <ChevronRight size={15} />
               </Link>
             </div>
@@ -1407,6 +1448,7 @@ export default function PlanningClient({
           vehicles={vehicles}
           appointments={rows}
           weekKeys={weekKeys}
+          writer={writer}
           onClose={() => setDraft(null)}
           onSaved={onSaved}
           onDeleted={onDeleted}

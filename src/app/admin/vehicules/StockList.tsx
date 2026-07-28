@@ -25,6 +25,34 @@ import { T, Tag, StatusBadge, Thumb, fieldStyle, btnPrimaryClass, btnPrimaryStyl
 import { useToast } from "../toast";
 import { ConfirmDialog } from "../confirm";
 
+// Carnet d'écriture. Le back-office parle à l'API ; la démonstration publique
+// fournit le sien, qui écrit dans le bac à sable du visiteur.
+export type StockWriter = {
+  update: (id: string, delta: Record<string, unknown>) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  duplicate: (id: string) => Promise<{ id: string }>;
+};
+
+const apiWriter: StockWriter = {
+  update: async (id, delta) => {
+    const res = await fetch(`/api/admin/vehicules/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(delta),
+    });
+    if (!res.ok) throw new Error();
+  },
+  remove: async (id) => {
+    const res = await fetch(`/api/admin/vehicules/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error();
+  },
+  duplicate: async (id) => {
+    const res = await fetch(`/api/admin/vehicules/${id}/dupliquer`, { method: "POST" });
+    if (!res.ok) throw new Error();
+    return res.json();
+  },
+};
+
 export type StockItem = {
   id: string;
   make: string;
@@ -461,7 +489,7 @@ export default function StockList({
   initialQuery = "",
   initialSort = "recent",
   canDelete = false,
-  demoMessage,
+  writer = apiWriter,
   base = "/admin/vehicules",
   publicBase = "/vehicules",
 }: {
@@ -470,8 +498,9 @@ export default function StockList({
   initialQuery?: string;
   initialSort?: string;
   canDelete?: boolean;
-  // Renseigné uniquement par la démonstration : aucune écriture ne part.
-  demoMessage?: string;
+  // La démonstration fournit son propre carnet : elle se manipule pareil, sans
+  // rien envoyer au serveur.
+  writer?: StockWriter;
   // Racine des liens de fiche, et racine de l'annonce publique. La démonstration
   // pointe vers ses propres pages : ses véhicules sont des exemples, ils n'ont
   // pas d'annonce en ligne.
@@ -610,23 +639,17 @@ export default function StockList({
   // Applique le changement tout de suite puis enregistre ; en cas d'échec, la
   // valeur d'avant reprend sa place et le message le dit.
   const patch = useCallback(async (id: string, delta: Partial<StockItem>, previous: StockItem) => {
-    if (demoMessage) { toast.info(demoMessage); return; }
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...delta } : r)));
     setBusy(id, true);
     try {
-      const res = await fetch(`/api/admin/vehicules/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(delta),
-      });
-      if (!res.ok) throw new Error();
+      await writer.update(id, delta as Record<string, unknown>);
     } catch {
       setRows((prev) => prev.map((r) => (r.id === id ? previous : r)));
       toast.error("La mise à jour a échoué.");
     } finally {
       setBusy(id, false);
     }
-  }, [setBusy, toast, demoMessage]);
+  }, [setBusy, toast, writer]);
 
   function changeStatus(v: StockItem, status: VehicleStatus) {
     setStatusMenu(null);
@@ -645,14 +668,12 @@ export default function StockList({
   }, [patch, showUndo]);
 
   async function removeVehicle(v: StockItem) {
-    if (demoMessage) { toast.info(demoMessage); return; }
     setRows((prev) => prev.filter((r) => r.id !== v.id));
     setSelected((prev) => { const n = new Set(prev); n.delete(v.id); return n; });
     try {
-      const res = await fetch(`/api/admin/vehicules/${v.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
+      await writer.remove(v.id);
       toast.success(`${v.make} ${v.model} supprimé.`);
-      startTransition(() => router.refresh());
+      if (writer === apiWriter) startTransition(() => router.refresh());
     } catch {
       // Le rechargement remet la ligne à sa place : la réinsérer à la main
       // l'aurait posée en fin de liste, loin de là où elle était.
@@ -662,21 +683,18 @@ export default function StockList({
   }
 
   const duplicate = useCallback(async (v: StockItem) => {
-    if (demoMessage) { toast.info(demoMessage); return; }
     if (busyRows.has(v.id)) return;
     setBusy(v.id, true);
     try {
-      const res = await fetch(`/api/admin/vehicules/${v.id}/dupliquer`, { method: "POST" });
-      if (!res.ok) throw new Error();
-      const created: { id: string } = await res.json();
+      const created = await writer.duplicate(v.id);
       toast.success("Copie créée. Ouvrez-la pour la compléter.");
-      router.push(`/admin/vehicules/${created.id}`);
+      router.push(`${base}/${created.id}`);
     } catch {
       toast.error("La duplication a échoué.");
     } finally {
       setBusy(v.id, false);
     }
-  }, [busyRows, setBusy, toast, router, demoMessage]);
+  }, [busyRows, setBusy, toast, router, base, writer]);
 
   /* ── Actions groupées ── */
   async function bulkPatch(delta: Partial<StockItem>, label: string) {
@@ -694,18 +712,17 @@ export default function StockList({
   }
 
   async function bulkDelete() {
-    if (demoMessage) { toast.info(demoMessage); setConfirmBulk(false); return; }
     const targets = filtered.filter((r) => selected.has(r.id));
     setConfirmBulk(false);
     setRows((prev) => prev.filter((r) => !selected.has(r.id)));
     setSelected(new Set());
     const results = await Promise.all(
-      targets.map((t) => fetch(`/api/admin/vehicules/${t.id}`, { method: "DELETE" }).then((r) => r.ok).catch(() => false)),
+      targets.map((t) => writer.remove(t.id).then(() => true).catch(() => false)),
     );
     const failed = results.filter((ok) => !ok).length;
     if (failed > 0) toast.error(`${failed} suppression${failed > 1 ? "s ont" : " a"} échoué.`);
     else toast.success(`${targets.length} véhicule${targets.length > 1 ? "s supprimés" : " supprimé"}.`);
-    startTransition(() => router.refresh());
+    if (writer === apiWriter) startTransition(() => router.refresh());
   }
 
   /* ── Raccourcis ── */

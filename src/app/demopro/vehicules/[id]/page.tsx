@@ -1,15 +1,16 @@
-// Fiche véhicule de la démonstration publique /demopro (lecture seule).
-// Reproduit la fiche du back-office alimentée par les données d'exemple figées
-// (src/lib/demo-data.ts) : galerie, caractéristiques, présentation, état,
-// équipements, documents et historique d'entretien. Aucun accès base.
-// Les boutons Modifier / Publier / Supprimer affichent un toast au lieu d'agir.
-import { notFound } from "next/navigation";
+"use client";
+
+// Fiche véhicule de la démonstration publique /demopro.
+// Reproduit la fiche du back-office, alimentée par le bac à sable du visiteur :
+// une annonce créée ou dupliquée pendant la démonstration s'ouvre donc ici comme
+// les autres. Aucun accès base.
+import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
 import { ClipboardList, Pencil, Send, Trash2, Car, FileText, Wrench } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { T, AdminPage, SectionCard, StatusBadge, Tag, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
 import { DemoPageHeader } from "@/app/demopro/DemoPageHeader";
-import { getDemoVehicle } from "@/lib/demo-data";
+import { useDemoStore } from "../../store";
 import { DEMO_BASE } from "../../demo";
 import DemoActionButton from "../../DemoActionButton";
 
@@ -43,9 +44,10 @@ function Spec({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default async function DemoVehiculeFiche({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const v = getDemoVehicle(id);
+export default function DemoVehiculeFiche() {
+  const params = useParams<{ id: string }>();
+  const { vehicles } = useDemoStore();
+  const v = vehicles.find((x) => x.id === params.id);
   if (!v) notFound();
 
   const images = parseJson<string[]>(v.images, []);
