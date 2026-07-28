@@ -9,6 +9,7 @@ import AdminNav from "./AdminNav";
 import AdminLogout from "./AdminLogout";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import AcceptationsWatcher from "./AcceptationsWatcher";
 import { ToastProvider } from "./toast";
 import { T } from "./ui";
 import "./admin.css";
@@ -40,6 +41,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         className="adm-root min-h-screen flex"
         style={{ backgroundColor: T.bg, color: T.text, ["--adm-accent" as never]: accent }}
       >
+        {/* Annonce des devis signés en ligne, où que l'on soit dans l'outil. */}
+        <AcceptationsWatcher />
+
         <Sidebar name={name} role={role} brandName={brandName} brandTagline={brandTagline} showroom={isShowroom} relanceCount={relances.count} />
 
         <div className="flex-1 flex flex-col min-w-0">

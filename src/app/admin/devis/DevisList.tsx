@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Search, X, Check, ChevronUp, ChevronDown, Printer, Pencil, Copy, Trash2,
+  Search, X, Check, ChevronUp, ChevronDown, Eye, Pencil, Copy, Trash2,
   Send, FileText, Undo2, Loader2,
 } from "lucide-react";
 import {
@@ -732,12 +732,12 @@ function Row({
         <Link
           href={`${basePath}/${d.id}/imprimer`}
           target="_blank"
-          title="Ouvrir le PDF"
-          aria-label="Ouvrir le PDF"
+          title="Afficher le devis"
+          aria-label="Afficher le devis"
           className={iconBtn}
           style={{ color: T.muted }}
         >
-          <Printer size={14} />
+          <Eye size={14} />
         </Link>
         {canDelete && (
           <button

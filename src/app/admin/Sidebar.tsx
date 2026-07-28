@@ -13,6 +13,7 @@ import { T } from "./ui";
 import AdminLogout from "./AdminLogout";
 import { ConfirmDialog } from "./confirm";
 import { useToast } from "./toast";
+import { useAcceptationCount } from "./AcceptationsWatcher";
 
 type NavItem = { icon: LucideIcon; label: string; href?: string; exact?: boolean; soon?: boolean; cap?: Capability };
 
@@ -66,6 +67,9 @@ export default function Sidebar({
   relanceCount?: number;
 }) {
   const pathname = usePathname();
+  // Devis signés en ligne et pas encore consultés : la bonne nouvelle se voit
+  // sans avoir à ouvrir la liste.
+  const acceptations = useAcceptationCount();
   // Filtre la navigation selon les capacités du rôle ; retire les sections vides.
   const nav = NAV.map((g) => ({ ...g, items: g.items.filter((it) => !it.cap || can(role, it.cap)) })).filter((g) => g.items.length > 0);
   const router = useRouter();
@@ -138,6 +142,20 @@ export default function Sidebar({
                         style={{ border: "1px solid rgba(199,211,232,0.28)", color: "#C7D3E8" }}
                       >
                         Bientôt
+                      </span>
+                    )}
+                    {item.href === "/admin/devis" && acceptations > 0 && (
+                      <span
+                        className="ml-auto text-[10px] px-1.5 py-0.5 flex-shrink-0"
+                        style={{
+                          backgroundColor: "rgba(78,209,161,0.10)",
+                          border: "1px solid rgba(78,209,161,0.40)",
+                          color: T.success,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                        aria-label={`${acceptations} devis accepté${acceptations > 1 ? "s" : ""} par un client`}
+                      >
+                        {acceptations}
                       </span>
                     )}
                     {item.href === "/admin/relances" && relanceCount > 0 && (

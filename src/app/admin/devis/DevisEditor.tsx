@@ -162,6 +162,8 @@ export default function DevisEditor({
   const [prestaOpen, setPrestaOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [leaveOpen, setLeaveOpen] = useState(false);
+  // Devis qui vient d'être créé : déclenche le message de confirmation.
+  const [created, setCreated] = useState<{ id: string; number: string } | null>(null);
   const [draftDismissed, setDraftDismissed] = useState(false);
   const savingRef = useRef(false);
 
@@ -476,8 +478,13 @@ export default function DevisEditor({
         setSavedAt(new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
         clearDraft();
       }
-      toast.success(`Devis ${saved.number ?? sent.number} enregistré.`);
-      if (!isEdit) router.push(`/admin/devis/${saved.id}`);
+      if (isEdit) {
+        toast.success(`Devis ${saved.number ?? sent.number} enregistré.`);
+      } else {
+        // Création : on annonce clairement le résultat au lieu de laisser le
+        // vendeur devant son formulaire encore rempli, sans savoir où il en est.
+        setCreated({ id: saved.id as string, number: saved.number ?? sent.number });
+      }
       router.refresh();
       return saved.id as string;
     } catch {
@@ -499,6 +506,9 @@ export default function DevisEditor({
       win?.close();
       return;
     }
+    // Le document s'affiche dans le nouvel onglet : la confirmation de création
+    // ferait doublon, le vendeur voit déjà son devis.
+    setCreated(null);
     if (win) win.location.href = `/admin/devis/${id}/imprimer`;
   }
 
@@ -547,7 +557,9 @@ export default function DevisEditor({
     function onKey(e: KeyboardEvent) {
       if ((e.key === "s" || e.key === "S") && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        void save();
+        // Tant que la confirmation de création est ouverte, un second Ctrl+S
+        // créerait un deuxième devis identique.
+        if (!created) void save();
         return;
       }
       if (e.key === "Escape") {
@@ -558,7 +570,7 @@ export default function DevisEditor({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [save]);
+  }, [save, created]);
 
   // Encaissement d'une facture, depuis sa propre fiche.
   async function togglePaid() {
@@ -1637,6 +1649,53 @@ export default function DevisEditor({
           onConfirm={() => { setLeaveOpen(false); router.push(isFacture ? "/admin/factures" : "/admin/devis"); }}
           onCancel={() => setLeaveOpen(false)}
         />
+
+        {/* Confirmation de création : le devis est enregistré, on le dit et on
+            ramène à la liste plutôt que de laisser le formulaire encore rempli. */}
+        {created && (
+          <div
+            className="fixed inset-0 z-[70] flex items-center justify-center px-6"
+            style={{ backgroundColor: "rgba(4,11,22,0.72)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Devis créé"
+          >
+            <div
+              className="w-full max-w-sm p-8 text-center"
+              style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, borderTop: `2px solid ${T.success}`, boxShadow: "0 24px 70px rgba(0,0,0,0.55)" }}
+            >
+              <div className="flex justify-center mb-4">
+                <span
+                  className="inline-flex items-center justify-center"
+                  style={{ width: 48, height: 48, border: `1px solid ${TONE.success.bd}`, backgroundColor: TONE.success.bg, color: T.success }}
+                >
+                  <Check size={22} />
+                </span>
+              </div>
+              <p className="text-lg mb-1.5" style={{ color: T.text }}>Votre devis a été créé.</p>
+              <p className="text-[13px] mb-7" style={{ color: T.muted }}>
+                Devis {created.number} · {formatEuro(totals.totalTTC)}
+              </p>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => { setCreated(null); router.push("/admin/devis"); }}
+                className={btnPrimaryClass + " w-full py-3.5"}
+                style={btnPrimaryStyle}
+              >
+                OK
+              </button>
+              <button
+                type="button"
+                onClick={() => { const id = created.id; setCreated(null); router.push(`/admin/devis/${id}`); }}
+                className="block w-full mt-3 text-[11px] tracking-widest uppercase"
+                style={{ color: T.muted }}
+              >
+                Rester sur ce devis
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ─────────── Colonne aperçu live ─────────── */}
