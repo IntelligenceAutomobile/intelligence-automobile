@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, List, LayoutGrid, Eye, EyeOff, ExternalLink, Pencil, ClipboardList, X, Check,
   ChevronRight, ChevronUp, ChevronDown, AlertTriangle, Car, Undo2, Copy, Trash2,
+  SlidersHorizontal, Rows3, Keyboard,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import {
@@ -66,10 +67,38 @@ const SORTS: { value: string; label: string }[] = [
   { value: "statut-asc", label: "Statut" },
 ];
 
+/* ── Filtres avancés ── */
+// Rangés dans un tiroir : la barre porte déjà la recherche, six pastilles, le
+// tri et la bascule de vue. Un septième contrôle permanent la ferait déborder.
+type AdvancedFilters = {
+  fuels: string[];
+  origins: string[];
+  yearMin: string;
+  yearMax: string;
+  priceMax: string;
+  kmMax: string;
+};
+const EMPTY_ADV: AdvancedFilters = { fuels: [], origins: [], yearMin: "", yearMax: "", priceMax: "", kmMax: "" };
+
+function advActiveCount(a: AdvancedFilters): number {
+  return (a.fuels.length > 0 ? 1 : 0) + (a.origins.length > 0 ? 1 : 0)
+    + (a.yearMin || a.yearMax ? 1 : 0) + (a.priceMax ? 1 : 0) + (a.kmMax ? 1 : 0);
+}
+
+/* ── Regroupement ── */
+type GroupKey = "aucun" | "statut" | "marque";
+const GROUPS: { value: GroupKey; label: string }[] = [
+  { value: "aucun", label: "Sans regroupement" },
+  { value: "statut", label: "Grouper par statut" },
+  { value: "marque", label: "Grouper par marque" },
+];
+
 /* Préférence de vue persistée, lue via useSyncExternalStore : le serveur rend
    toujours "list", le client se synchronise sur localStorage sans effet. */
 const VIEW_KEY = "admin_stock_view";
-type View = "list" | "grid";
+// « compact » retire la vignette et la ligne de contexte : une quarantaine de
+// véhicules tiennent alors dans un écran.
+type View = "list" | "compact" | "grid";
 let viewListeners: Array<() => void> = [];
 function subscribeView(cb: () => void) {
   viewListeners.push(cb);
@@ -81,7 +110,8 @@ function subscribeView(cb: () => void) {
 // la lecture jetait et emportait tout l'affichage de la liste avec elle.
 function readView(): View {
   try {
-    return localStorage.getItem(VIEW_KEY) === "grid" ? "grid" : "list";
+    const v = localStorage.getItem(VIEW_KEY);
+    return v === "grid" || v === "compact" ? v : "list";
   } catch {
     return "list";
   }
@@ -114,10 +144,11 @@ function tooltipOf(v: StockItem): string {
 }
 
 /* ── Menu de statut ── */
-function StatusMenu({ current, onPick, onClose }: {
+function StatusMenu({ current, onPick, onClose, triggerRef }: {
   current: VehicleStatus;
   onPick: (s: VehicleStatus) => void;
   onClose: () => void;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -128,6 +159,8 @@ function StatusMenu({ current, onPick, onClose }: {
     // clic n'atteigne l'entrée choisie, et rien ne se passait.
     function onDown(e: PointerEvent) {
       if (boxRef.current?.contains(e.target as Node)) return;
+      // La pastille qui a ouvert le menu garde la main : c'est elle qui ferme.
+      if (triggerRef.current?.contains(e.target as Node)) return;
       onClose();
     }
     window.addEventListener("keydown", onKey);
@@ -136,7 +169,7 @@ function StatusMenu({ current, onPick, onClose }: {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerdown", onDown, true);
     };
-  }, [onClose]);
+  }, [onClose, triggerRef]);
 
   return (
     <div
@@ -183,6 +216,163 @@ function SortHead({ label, k, dir, sort, onSort, className = "" }: {
       {label}
       {active && (asc ? <ChevronUp size={11} /> : <ChevronDown size={11} />)}
     </button>
+  );
+}
+
+/* ── Menu au clic droit ── */
+type ContextMenuState = { x: number; y: number; v: StockItem };
+
+function MenuItem({ label, hint, onPick, onClose, danger = false, disabled = false }: {
+  label: string; hint?: string; onPick: () => void; onClose: () => void; danger?: boolean; disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => { onPick(); onClose(); }}
+      className="w-full flex items-center gap-3 px-3 text-left text-[13px] transition-colors hover:bg-[rgba(107,159,238,0.10)] disabled:opacity-40"
+      style={{ height: 32, color: danger ? T.muted : T.textDim }}
+    >
+      <span className="flex-1 truncate">{label}</span>
+      {hint && <span className="text-[10px] flex-shrink-0" style={{ color: T.border }}>{hint}</span>}
+    </button>
+  );
+}
+
+function MenuSep() {
+  return <div style={{ height: 1, backgroundColor: T.border, margin: "4px 0" }} />;
+}
+
+function MenuTitre({ children }: { children: React.ReactNode }) {
+  return <div className="px-3 pt-2 pb-1 text-[10px] tracking-[0.14em] uppercase" style={{ color: T.border }}>{children}</div>;
+}
+
+function ContextMenu({ state, canDelete, onClose, onStatus, onPublish, onDuplicate, onDelete }: {
+  state: ContextMenuState;
+  canDelete: boolean;
+  onClose: () => void;
+  onStatus: (v: StockItem, s: VehicleStatus) => void;
+  onPublish: (v: StockItem) => void;
+  onDuplicate: (v: StockItem) => void;
+  onDelete: (v: StockItem) => void;
+}) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const { v } = state;
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    function onDown(e: PointerEvent) {
+      if (boxRef.current?.contains(e.target as Node)) return;
+      onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("scroll", onClose, true);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("scroll", onClose, true);
+    };
+  }, [onClose]);
+
+  // Le menu bascule vers la gauche et vers le haut au bord de l'écran.
+  const W = 224, H = 320;
+  const left = Math.min(state.x, window.innerWidth - W - 8);
+  const top = Math.min(state.y, Math.max(8, window.innerHeight - H - 8));
+
+  return (
+    <div
+      ref={boxRef}
+      role="menu"
+      className="fixed z-[64]"
+      style={{ left, top, width: W, backgroundColor: T.surface, border: `1px solid ${T.border}`, boxShadow: "0 14px 40px rgba(4,11,22,0.6)" }}
+    >
+      <div className="px-3 py-2 text-[11px] truncate" style={{ borderBottom: `1px solid ${T.border}`, color: T.text }}>
+        {v.make} {v.model}
+      </div>
+
+      <MenuItem onClose={onClose} label="Modifier la fiche" hint="E" onPick={() => { window.location.href = `/admin/vehicules/${v.id}`; }} />
+      <MenuItem onClose={onClose} label="Ouvrir le suivi" hint="S" onPick={() => { window.location.href = `/admin/vehicules/${v.id}/suivi`; }} />
+      <MenuItem onClose={onClose} label="Voir l'annonce" onPick={() => window.open(`/vehicules/${v.id}`, "_blank")} />
+      <MenuItem onClose={onClose} label="Dupliquer" hint="D" onPick={() => onDuplicate(v)} />
+
+      <MenuSep />
+      <MenuTitre>Statut</MenuTitre>
+      {VEHICLE_STATUSES.map((st) => (
+        <MenuItem key={st} onClose={onClose} label={STATUS_LABEL[st]} disabled={v.status === st} onPick={() => onStatus(v, st)} />
+      ))}
+
+      <MenuSep />
+      <MenuItem
+        onClose={onClose}
+        label={v.isPublished ? "Masquer du site public" : "Publier sur le site public"}
+        hint="P"
+        onPick={() => onPublish(v)}
+      />
+
+      {canDelete && (
+        <>
+          <MenuSep />
+          <MenuItem onClose={onClose} label="Supprimer" hint="Suppr" danger onPick={() => onDelete(v)} />
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ── Feuille des raccourcis ── */
+function ShortcutSheet({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const groupes: { titre: string; lignes: [string, string][] }[] = [
+    { titre: "Chercher", lignes: [["/", "Aller dans la recherche"], ["Échap", "Effacer la recherche"]] },
+    { titre: "Agir sur la ligne survolée", lignes: [["E", "Modifier la fiche"], ["S", "Ouvrir le suivi"], ["P", "Publier ou masquer"], ["D", "Dupliquer"], ["Suppr", "Supprimer"]] },
+    { titre: "Revenir", lignes: [["Ctrl Z", "Annuler la dernière action"], ["Échap", "Fermer un menu ou vider la sélection"]] },
+    { titre: "Apprendre", lignes: [["?", "Cette feuille"], ["Clic droit", "Toutes les actions d'un véhicule"]] },
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center px-6"
+      style={{ backgroundColor: "rgba(4,11,22,0.72)", backdropFilter: "blur(6px)" }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Raccourcis clavier"
+    >
+      <div
+        className="w-full max-w-md p-6"
+        style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-base font-medium mb-5" style={{ color: T.text }}>Raccourcis</h2>
+        <div className="space-y-5">
+          {groupes.map((g) => (
+            <div key={g.titre}>
+              <div className="text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: T.muted }}>{g.titre}</div>
+              {g.lignes.map(([touche, quoi]) => (
+                <div key={touche} className="flex items-center gap-3 py-1">
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 flex-shrink-0"
+                    style={{ border: `1px solid ${T.border}`, color: T.textDim, minWidth: 46, textAlign: "center" }}
+                  >
+                    {touche}
+                  </span>
+                  <span className="text-[13px]" style={{ color: T.textDim }}>{quoi}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end mt-6">
+          <button type="button" onClick={onClose} className={btnGhostClass} style={btnGhostStyle}>Fermer</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -278,6 +468,12 @@ export default function StockList({
   const [sort, setSort] = useState(initialSort);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [statusMenu, setStatusMenu] = useState<string | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
+  const [showSheet, setShowSheet] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [adv, setAdv] = useState<AdvancedFilters>(EMPTY_ADV);
+  const [group, setGroup] = useState<GroupKey>("aucun");
+  const hoveredRef = useRef<StockItem | null>(null);
   const [busyRows, setBusyRows] = useState<Set<string>>(new Set());
   const [undoItem, setUndoItem] = useState<{ label: string; run: () => void } | null>(null);
   const [confirmBulk, setConfirmBulk] = useState(false);
@@ -314,39 +510,18 @@ export default function StockList({
     return () => clearTimeout(id);
   }, [undoItem]);
 
-  /* ── Raccourcis ── */
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const el = e.target as HTMLElement | null;
-      const inField = el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.tagName === "SELECT" || el?.isContentEditable;
-      // Une demande de confirmation ouverte garde la main sur le clavier.
-      if (document.querySelector('[aria-modal="true"]')) return;
-      if (e.key === "/" && !inField) {
-        e.preventDefault();
-        searchRef.current?.focus();
-        return;
-      }
-      if (e.key === "Escape" && el === searchRef.current) {
-        setQuery("");
-        searchRef.current?.blur();
-        return;
-      }
-      if ((e.key === "z" || e.key === "Z") && (e.ctrlKey || e.metaKey) && !inField && undoItem) {
-        e.preventDefault();
-        undoItem.run();
-        setUndoItem(null);
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [undoItem]);
-
   /* ── Filtrage et tri ── */
   const filtered = useMemo(() => {
     let list = rows.filter((v) => {
       if (filter === "a-completer" && (v.blocking.length === 0 || v.status === "vendu")) return false;
       if (filter === "dorment" && (v.daysInStock < AGE_WATCH_DAYS || v.status === "vendu")) return false;
       if (filter !== "all" && filter !== "a-completer" && filter !== "dorment" && v.status !== filter) return false;
+      if (adv.fuels.length > 0 && !adv.fuels.includes(v.fuel)) return false;
+      if (adv.origins.length > 0 && !adv.origins.includes(v.origin)) return false;
+      if (adv.yearMin && v.year < Number(adv.yearMin)) return false;
+      if (adv.yearMax && v.year > Number(adv.yearMax)) return false;
+      if (adv.priceMax && v.price > Number(adv.priceMax)) return false;
+      if (adv.kmMax && v.mileage > Number(adv.kmMax)) return false;
       return matchesSearch(searchableText(v), query);
     });
 
@@ -362,7 +537,29 @@ export default function StockList({
     };
     if (by[key]) list = [...list].sort((a, b) => by[key](a, b) * sign);
     return list;
-  }, [rows, query, filter, sort]);
+  }, [rows, query, filter, sort, adv]);
+
+  // Valeurs réellement présentes : le tiroir ne propose que ce qui existe.
+  const fuelOptions = useMemo(() => [...new Set(rows.map((v) => v.fuel).filter(Boolean))].sort(), [rows]);
+  const originOptions = useMemo(() => [...new Set(rows.map((v) => v.origin).filter(Boolean))].sort(), [rows]);
+
+  // Regroupement : la liste reste la même, seuls des intertitres s'intercalent.
+  const groups = useMemo(() => {
+    if (group === "aucun") return [{ key: "", label: "", items: filtered }];
+    const map = new Map<string, StockItem[]>();
+    filtered.forEach((v) => {
+      const k = group === "statut" ? STATUS_LABEL[statusOf(v)] : v.make;
+      const arr = map.get(k);
+      if (arr) arr.push(v); else map.set(k, [v]);
+    });
+    const entries = [...map.entries()];
+    if (group === "statut") {
+      entries.sort((a, b) => (STATUS_ORDER[a[0].toLowerCase()] ?? 9) - (STATUS_ORDER[b[0].toLowerCase()] ?? 9));
+    } else {
+      entries.sort((a, b) => a[0].localeCompare(b[0], "fr"));
+    }
+    return entries.map(([key, items]) => ({ key, label: key, items }));
+  }, [filtered, group]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: rows.length, disponible: 0, reserve: 0, vendu: 0, "a-completer": 0, dorment: 0 };
@@ -417,14 +614,14 @@ export default function StockList({
     showUndo(`${v.make} ${v.model} passé en « ${STATUS_LABEL[status].toLowerCase()} ».`, () => patch(v.id, { status: v.status }, { ...v, status }));
   }
 
-  function togglePublished(v: StockItem) {
+  const togglePublished = useCallback((v: StockItem) => {
     const next = !v.isPublished;
     patch(v.id, { isPublished: next }, v);
     showUndo(
       `${v.make} ${v.model} ${next ? "publié sur le site." : "masqué du site."}`,
       () => patch(v.id, { isPublished: v.isPublished }, { ...v, isPublished: next }),
     );
-  }
+  }, [patch, showUndo]);
 
   async function removeVehicle(v: StockItem) {
     setRows((prev) => prev.filter((r) => r.id !== v.id));
@@ -442,7 +639,7 @@ export default function StockList({
     }
   }
 
-  async function duplicate(v: StockItem) {
+  const duplicate = useCallback(async (v: StockItem) => {
     if (busyRows.has(v.id)) return;
     setBusy(v.id, true);
     try {
@@ -456,7 +653,7 @@ export default function StockList({
     } finally {
       setBusy(v.id, false);
     }
-  }
+  }, [busyRows, setBusy, toast, router]);
 
   /* ── Actions groupées ── */
   async function bulkPatch(delta: Partial<StockItem>, label: string) {
@@ -486,6 +683,53 @@ export default function StockList({
     else toast.success(`${targets.length} véhicule${targets.length > 1 ? "s supprimés" : " supprimé"}.`);
     startTransition(() => router.refresh());
   }
+
+  /* ── Raccourcis ── */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const el = e.target as HTMLElement | null;
+      const inField = el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.tagName === "SELECT" || el?.isContentEditable;
+      // Une demande de confirmation ouverte garde la main sur le clavier.
+      if (document.querySelector('[aria-modal="true"]')) return;
+      if (e.key === "/" && !inField) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        return;
+      }
+      if (e.key === "Escape" && el === searchRef.current) {
+        setQuery("");
+        searchRef.current?.blur();
+        return;
+      }
+      if ((e.key === "z" || e.key === "Z") && (e.ctrlKey || e.metaKey) && !inField && undoItem) {
+        e.preventDefault();
+        undoItem.run();
+        setUndoItem(null);
+        return;
+      }
+      if (inField || e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key === "?") { e.preventDefault(); setShowSheet(true); return; }
+      if (e.key === "Escape") { setCtxMenu(null); setStatusMenu(null); setSelected(new Set()); return; }
+
+      // Les touches d'action portent sur la ligne survolée : c'est la cible que
+      // l'œil désigne déjà, sans avoir à introduire un curseur de sélection.
+      const v = hoveredRef.current;
+      if (!v) return;
+      if (e.key === "e" || e.key === "E") { e.preventDefault(); router.push(`/admin/vehicules/${v.id}`); }
+      else if (e.key === "s" || e.key === "S") { e.preventDefault(); router.push(`/admin/vehicules/${v.id}/suivi`); }
+      else if (e.key === "p" || e.key === "P") { e.preventDefault(); togglePublished(v); }
+      else if (e.key === "d" || e.key === "D") { e.preventDefault(); duplicate(v); }
+      else if (e.key === "Delete" || e.key === "Backspace") {
+        if (!canDelete) return;
+        e.preventDefault();
+        setConfirmOne(v);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [undoItem, router, canDelete, togglePublished, duplicate]);
+
 
   /* ── Sélection ── */
   function toggleRow(id: string, shiftKey: boolean, ordered: StockItem[]) {
@@ -521,12 +765,14 @@ export default function StockList({
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
   }, [filter, query, sort]);
 
+  const advActive = advActiveCount(adv);
   const allSelected = filtered.length > 0 && filtered.every((v) => selected.has(v.id));
-  const filtersActive = filter !== "all" || query.trim() !== "";
+  const filtersActive = filter !== "all" || query.trim() !== "" || advActiveCount(adv) > 0;
 
   function resetAll() {
     setFilter("all");
     setQuery("");
+    setAdv(EMPTY_ADV);
   }
 
   function sortByColumn(key: SortKey, defaultDir: "asc" | "desc") {
@@ -636,6 +882,21 @@ export default function StockList({
           </button>
         )}
         <div className="flex items-center gap-3 ml-auto">
+          <button
+            type="button"
+            onClick={() => setShowFilters((x) => !x)}
+            aria-pressed={showFilters}
+            title="Plus de filtres"
+            className="adm-chip inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase px-3 py-2 border transition-colors"
+            style={{
+              borderColor: advActive > 0 || showFilters ? T.accent : T.border,
+              color: advActive > 0 ? T.accent : T.textDim,
+            }}
+          >
+            <SlidersHorizontal size={13} />
+            Filtres
+            {advActive > 0 && <span style={{ fontVariantNumeric: "tabular-nums" }}>{advActive}</span>}
+          </button>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -645,8 +906,17 @@ export default function StockList({
           >
             {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
+          <select
+            value={group}
+            onChange={(e) => setGroup(e.target.value as GroupKey)}
+            aria-label="Regrouper la liste"
+            className="text-xs px-3 py-2 outline-none cursor-pointer hidden sm:block"
+            style={fieldStyle}
+          >
+            {GROUPS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+          </select>
           <div className="flex flex-shrink-0" style={{ border: `1px solid ${T.border}` }}>
-            {([["list", "Liste", List], ["grid", "Photos", LayoutGrid]] as const).map(([v, label, Icon]) => (
+            {([["list", "Liste", List], ["compact", "Compact", Rows3], ["grid", "Photos", LayoutGrid]] as const).map(([v, label, Icon]) => (
               <button
                 key={v}
                 type="button"
@@ -662,6 +932,82 @@ export default function StockList({
           </div>
         </div>
       </div>
+
+      {/* Tiroir de filtres : ouvert à la demande, il ne prend aucune place au repos. */}
+      {showFilters && (
+        <div className="mb-4 p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="sm:col-span-2">
+            <div className="text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: T.muted }}>Carburant</div>
+            <div className="flex flex-wrap gap-1.5">
+              {fuelOptions.map((f) => {
+                const on = adv.fuels.includes(f);
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setAdv((a) => ({ ...a, fuels: on ? a.fuels.filter((x) => x !== f) : [...a.fuels, f] }))}
+                    className="adm-chip text-[11px] px-2.5 py-1.5 border transition-colors"
+                    style={{ borderColor: on ? T.accent : T.border, color: on ? T.bg : T.textDim, backgroundColor: on ? T.accent : "transparent" }}
+                  >
+                    {f}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="sm:col-span-2">
+            <div className="text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: T.muted }}>Provenance</div>
+            <div className="flex flex-wrap gap-1.5">
+              {originOptions.map((o) => {
+                const on = adv.origins.includes(o);
+                return (
+                  <button
+                    key={o}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setAdv((a) => ({ ...a, origins: on ? a.origins.filter((x) => x !== o) : [...a.origins, o] }))}
+                    className="adm-chip text-[11px] px-2.5 py-1.5 border transition-colors"
+                    style={{ borderColor: on ? T.accent : T.border, color: on ? T.bg : T.textDim, backgroundColor: on ? T.accent : "transparent" }}
+                  >
+                    {o}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: T.muted }}>Année</div>
+            <div className="flex items-center gap-2">
+              <input inputMode="numeric" value={adv.yearMin} onChange={(e) => setAdv((a) => ({ ...a, yearMin: e.target.value.replace(/\D/g, "") }))} placeholder="de" aria-label="Année minimum" className="px-3 py-2 text-sm outline-none w-full" style={fieldStyle} />
+              <input inputMode="numeric" value={adv.yearMax} onChange={(e) => setAdv((a) => ({ ...a, yearMax: e.target.value.replace(/\D/g, "") }))} placeholder="à" aria-label="Année maximum" className="px-3 py-2 text-sm outline-none w-full" style={fieldStyle} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: T.muted }}>Prix maximum</div>
+            <input inputMode="numeric" value={adv.priceMax} onChange={(e) => setAdv((a) => ({ ...a, priceMax: e.target.value.replace(/\D/g, "") }))} placeholder="€" aria-label="Prix maximum" className="px-3 py-2 text-sm outline-none w-full" style={fieldStyle} />
+          </div>
+
+          <div>
+            <div className="text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: T.muted }}>Kilométrage maximum</div>
+            <input inputMode="numeric" value={adv.kmMax} onChange={(e) => setAdv((a) => ({ ...a, kmMax: e.target.value.replace(/\D/g, "") }))} placeholder="km" aria-label="Kilométrage maximum" className="px-3 py-2 text-sm outline-none w-full" style={fieldStyle} />
+          </div>
+
+          <div className="flex items-end justify-end gap-3">
+            {advActive > 0 && (
+              <button type="button" onClick={() => setAdv(EMPTY_ADV)} className="adm-act text-[11px] tracking-widest uppercase transition-colors" style={{ color: T.accent }}>
+                Effacer ces filtres
+              </button>
+            )}
+            <button type="button" onClick={() => setShowFilters(false)} className="adm-act text-[11px] tracking-widest uppercase transition-colors" style={{ color: T.muted }}>
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -700,23 +1046,39 @@ export default function StockList({
             <span className="text-[10px] tracking-[0.14em] uppercase text-right" style={{ color: T.muted }}>Actions</span>
           </div>
 
-          {filtered.map((v, i) => (
-            <Row
-              key={v.id}
-              v={v}
-              index={i}
-              ordered={filtered}
-              selected={selected.has(v.id)}
-              busy={busyRows.has(v.id)}
-              canDelete={canDelete}
-              statusMenuOpen={statusMenu === v.id}
-              onToggleSelect={toggleRow}
-              onOpenStatusMenu={setStatusMenu}
-              onChangeStatus={changeStatus}
-              onTogglePublished={togglePublished}
-              onDuplicate={duplicate}
-              onDelete={setConfirmOne}
-            />
+          {groups.map((g, gi) => (
+            <div key={g.key || "tout"}>
+              {g.label && (
+                <div
+                  className="flex items-center gap-2 px-4 py-2 text-[10px] tracking-[0.14em] uppercase"
+                  style={{ backgroundColor: T.surfaceAlt, color: T.muted, borderTop: gi === 0 ? "none" : `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}
+                >
+                  {g.label}
+                  <span style={{ color: T.border }}>{g.items.length}</span>
+                </div>
+              )}
+              {g.items.map((v, i) => (
+                <Row
+                  key={v.id}
+                  v={v}
+                  index={gi === 0 && i === 0 && !g.label ? 0 : 1}
+                  ordered={filtered}
+                  compact={view === "compact"}
+                  selected={selected.has(v.id)}
+                  busy={busyRows.has(v.id)}
+                  canDelete={canDelete}
+                  statusMenuOpen={statusMenu === v.id}
+                  onToggleSelect={toggleRow}
+                  onOpenStatusMenu={setStatusMenu}
+                  onChangeStatus={changeStatus}
+                  onTogglePublished={togglePublished}
+                  onDuplicate={duplicate}
+                  onDelete={setConfirmOne}
+                  onContextMenu={(x, y) => setCtxMenu({ x, y, v })}
+                  onHover={(item) => { hoveredRef.current = item; }}
+                />
+              ))}
+            </div>
           ))}
         </div>
       )}
@@ -769,6 +1131,20 @@ export default function StockList({
         </div>
       )}
 
+      {ctxMenu && (
+        <ContextMenu
+          state={ctxMenu}
+          canDelete={canDelete}
+          onClose={() => setCtxMenu(null)}
+          onStatus={changeStatus}
+          onPublish={togglePublished}
+          onDuplicate={duplicate}
+          onDelete={setConfirmOne}
+        />
+      )}
+
+      {showSheet && <ShortcutSheet onClose={() => setShowSheet(false)} />}
+
       <ConfirmDialog
         open={confirmBulk}
         title={`Supprimer ${selected.size} véhicule${selected.size > 1 ? "s" : ""} ?`}
@@ -783,6 +1159,14 @@ export default function StockList({
         onConfirm={() => { if (confirmOne) removeVehicle(confirmOne); setConfirmOne(null); }}
         onCancel={() => setConfirmOne(null)}
       />
+
+      <p className="text-[11px] mt-3" style={{ color: T.muted }}>
+        Clic droit sur un véhicule pour toutes ses actions.{" "}
+        <button type="button" onClick={() => setShowSheet(true)} className="adm-act inline-flex items-center gap-1 transition-colors" style={{ color: T.accent }}>
+          <Keyboard size={12} />
+          Raccourcis
+        </button>
+      </p>
 
       {/* Case « tout sélectionner », posée hors du tableau pour rester atteignable */}
       {filtered.length > 0 && view === "list" && (
@@ -801,12 +1185,14 @@ export default function StockList({
 
 /* ── Une ligne ── */
 function Row({
-  v, index, ordered, selected, busy, canDelete, statusMenuOpen,
+  v, index, ordered, compact, selected, busy, canDelete, statusMenuOpen,
   onToggleSelect, onOpenStatusMenu, onChangeStatus, onTogglePublished, onDuplicate, onDelete,
+  onContextMenu, onHover,
 }: {
   v: StockItem;
   index: number;
   ordered: StockItem[];
+  compact: boolean;
   selected: boolean;
   busy: boolean;
   canDelete: boolean;
@@ -817,8 +1203,11 @@ function Row({
   onTogglePublished: (v: StockItem) => void;
   onDuplicate: (v: StockItem) => void;
   onDelete: (v: StockItem) => void;
+  onContextMenu: (x: number, y: number) => void;
+  onHover: (v: StockItem | null) => void;
 }) {
   const shiftRef = useRef(false);
+  const badgeRef = useRef<HTMLButtonElement>(null);
   const status = statusOf(v);
   const tone = ageTone(v.daysInStock);
   // Une seule alerte affichée, la plus grave, pour que la couleur garde son sens.
@@ -836,6 +1225,9 @@ function Row({
   return (
     <div
       className="group relative transition-colors"
+      onMouseEnter={() => onHover(v)}
+      onMouseLeave={() => onHover(null)}
+      onContextMenu={(e) => { e.preventDefault(); onContextMenu(e.clientX, e.clientY); }}
       style={{
         borderTop: index === 0 ? "none" : `1px solid ${T.border}`,
         backgroundColor: selected ? "var(--adm-accent-soft)" : undefined,
@@ -858,11 +1250,11 @@ function Row({
       />
 
       <div
-        className="relative z-10 grid items-center px-4 py-3 pointer-events-none gap-x-3 gap-y-1
+        className={`relative z-10 grid items-center px-4 pointer-events-none gap-x-3 gap-y-1 ${compact ? "py-1.5" : "py-3"}
                    grid-cols-[24px_1fr]
                    @[640px]:grid-cols-[24px_56px_minmax(140px,1fr)_100px_112px_140px]
                    @[860px]:grid-cols-[24px_56px_minmax(150px,1fr)_84px_110px_120px_168px]
-                   @[1040px]:grid-cols-[24px_64px_minmax(180px,1fr)_88px_116px_72px_124px_196px]"
+                   @[1040px]:grid-cols-[24px_64px_minmax(180px,1fr)_88px_116px_72px_124px_196px]`}
       >
         {/* Sélection */}
         <label
@@ -885,7 +1277,7 @@ function Row({
 
         {/* Photo */}
         <div className="hidden @[640px]:block">
-          <Thumb src={v.image} alt={`${v.make} ${v.model}`} w={56} h={42} />
+          {compact ? <span /> : <Thumb src={v.image} alt={`${v.make} ${v.model}`} w={56} h={42} />}
         </div>
 
         {/* Véhicule */}
@@ -904,7 +1296,7 @@ function Row({
             </span>
             <span className="text-[15px] font-medium truncate min-w-0" style={{ color: T.text }}>{v.model}</span>
           </div>
-          <div className="text-[11px] truncate" style={{ color: T.muted }}>
+          <div className={`text-[11px] truncate ${compact ? "hidden @[640px]:hidden" : ""}`} style={{ color: T.muted }}>
             {v.year} · <span className="@[860px]:hidden">{formatNumber(v.mileage)} km · </span>{v.fuel}
             {v.power ? ` · ${v.power} ch` : ""}
             <span className="hidden @[1040px]:inline"> · {v.color} · {v.origin}</span>
@@ -953,10 +1345,24 @@ function Row({
         </div>
 
         {/* Statut et alerte, hauteur fixe pour que les lignes restent régulières */}
-        <div className="hidden @[640px]:flex flex-col items-start justify-center gap-1 pointer-events-auto relative" style={{ minHeight: 46 }}>
+        <div
+          className="hidden @[640px]:flex flex-col items-start justify-center gap-1 pointer-events-auto relative"
+          // En vue compacte la hauteur n'est plus réservée : c'est elle qui
+          // fixait le plancher de 58 px et rendait le cran presque inutile.
+          style={{ minHeight: compact ? 0 : 46 }}
+        >
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenStatusMenu(statusMenuOpen ? null : v.id); }}
+            ref={badgeRef}
+            onPointerDown={(e) => {
+              // L'ouverture se joue sur l'appui, dans le même événement que la
+              // fermeture par clic extérieur : sinon un second clic sur la
+              // pastille fermait puis rouvrait aussitôt le menu.
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenStatusMenu(statusMenuOpen ? null : v.id);
+            }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
             className="adm-chip inline-flex items-center gap-1 transition-colors"
             title="Changer le statut"
           >
@@ -965,7 +1371,7 @@ function Row({
           </button>
           {/* Un seul repère secondaire, pour que toutes les lignes gardent la
               même hauteur : l'alerte si elle existe, la note de fiche sinon. */}
-          {alert ? (
+          {compact ? null : alert ? (
             <span title={manques.length > 0 ? `À compléter : ${manques.join(", ")}.` : undefined}>
               {alert.tone === "danger" ? (
                 <Tag tone="danger"><AlertTriangle size={9} className="inline mr-1" />{alert.label}</Tag>
@@ -979,7 +1385,7 @@ function Row({
             </span>
           ) : null}
           {statusMenuOpen && (
-            <StatusMenu current={status} onPick={(s) => onChangeStatus(v, s)} onClose={() => onOpenStatusMenu(null)} />
+            <StatusMenu current={status} onPick={(s) => onChangeStatus(v, s)} onClose={() => onOpenStatusMenu(null)} triggerRef={badgeRef} />
           )}
         </div>
 

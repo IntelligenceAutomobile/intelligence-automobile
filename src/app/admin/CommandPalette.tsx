@@ -31,6 +31,9 @@ const STATIC_ITEMS: Item[] = [
   { icon: MessagesSquare, label: "Atelier", hint: "Page", href: "/admin/atelier" },
   { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes", cap: "finances" },
   { icon: UserCog, label: "Utilisateurs", hint: "Réglages", href: "/admin/utilisateurs", cap: "users" },
+  // Maquette de référence sortie de l'en-tête du stock : la palette est une
+  // surface de navigation durable et cherchable, contrairement à un bouton.
+  { icon: Car, label: "Aperçu ancienne modale véhicule", hint: "Maquette", href: "/admin/vehicules/modale-apercu" },
 ];
 
 type VehicleLite = { id: string; make: string; model: string; year: number; status: string };
