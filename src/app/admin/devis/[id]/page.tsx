@@ -3,7 +3,9 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can, asRole } from "@/lib/roles";
-import { mergeBranding, computeTotals, FACTURE_KIND_LABEL, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
+import { mergeBranding, computeTotals, formatDateFr, FACTURE_KIND_LABEL, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
+import { daysSince } from "@/lib/relances";
+import { parisDay } from "@/lib/vehicules";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
 import ConvertActions from "../ConvertActions";
@@ -92,6 +94,20 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
     depositValue: row.depositValue,
   });
 
+  // Trace des relances : le client qui rappelle « je viens de recevoir votre
+  // mail » trouvait une fiche muette sur le sujet. Un report reste en base après
+  // son échéance : la pause s'affiche seulement tant qu'elle court encore.
+  const todayParis = parisDay(new Date()).toISOString().slice(0, 10);
+  const snoozeActive = Boolean(row.relanceSnoozeUntil) && daysSince(row.relanceSnoozeUntil, todayParis) < 0;
+  const relanceInfo =
+    row.relanceSnoozeUntil === "9999-12-31"
+      ? "Relances arrêtées"
+      : snoozeActive
+        ? `Relances en pause jusqu'au ${formatDateFr(row.relanceSnoozeUntil)}`
+        : row.relanceCount > 0
+          ? `Relancé ×${row.relanceCount}${row.lastRelanceDate ? ` le ${formatDateFr(row.lastRelanceDate)}` : ""}`
+          : "";
+
   return (
     <AdminPage>
       <Link href={backHref} className="inline-block text-[11px] tracking-widest uppercase mb-6 transition-colors hover:text-[#F0F5FF]" style={{ color: T.muted }}>
@@ -99,7 +115,7 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
       </Link>
       <PageHeader
         title={`${docLabel} ${row.number}`}
-        subtitle={row.clientCompany || row.clientName || "Sans client"}
+        subtitle={[row.clientCompany || row.clientName || "Sans client", relanceInfo].filter(Boolean).join(" · ")}
         action={
           isFacture ? undefined : (
             <div className="flex flex-wrap items-center gap-2">

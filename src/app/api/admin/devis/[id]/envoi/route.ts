@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
 import { computeTotals, formatEuro, formatDateFr, validUntilFr, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { escapeHtml } from "@/lib/html";
 import { syncLeadForQuote } from "@/lib/devis-effets";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -27,10 +28,14 @@ function envoiEmail(opts: {
   message: string;
   accent: string;
 }) {
-  const { emitter, number, clientName, amount, validUntil, link, message, accent } = opts;
+  const { validUntil, link, accent } = opts;
+  const emitter = escapeHtml(opts.emitter);
+  const number = escapeHtml(opts.number);
+  const clientName = escapeHtml(opts.clientName);
+  const amount = escapeHtml(opts.amount);
   const hi = clientName ? `Bonjour ${clientName},` : "Bonjour,";
-  const corps = message
-    ? message.split("\n").map((l) => `<p style="margin:0 0 12px;">${l}</p>`).join("")
+  const corps = opts.message
+    ? opts.message.split("\n").map((l) => `<p style="margin:0 0 12px;">${escapeHtml(l)}</p>`).join("")
     : `<p style="margin:0 0 12px;">Vous trouverez ci-dessous votre devis <strong>${number}</strong> d'un montant de <strong>${amount}</strong>.</p>`;
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
@@ -112,7 +117,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const sent = !!process.env.RESEND_API_KEY;
     if (sent) {
-      await resend.emails.send({ from: FROM, to, subject, html });
+      // Resend signale ses échecs dans la réponse, jamais en exception : sans ce
+      // contrôle, un envoi raté passait pour réussi (statut, date, lien… posés).
+      const { error: sendError } = await resend.emails.send({ from: FROM, to, subject, html });
+      if (sendError) {
+        return NextResponse.json({ error: "L'email n'est pas parti : le devis reste à envoyer. Réessayez dans un instant." }, { status: 502 });
+      }
     } else {
       console.log(`[Envoi devis ${row.number}] → ${to} (RESEND_API_KEY absent, non envoyé)\n${link}`);
     }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { relancesDues } from "@/lib/relances-server";
 import { asRole } from "@/lib/roles";
 import { LogoFull } from "@/components/Header";
 import AdminNav from "./AdminNav";
@@ -29,13 +30,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const isShowroom = process.env.SHOWROOM === "1";
   const role = asRole(session.admin.role);
 
+  // Badge « relances à faire » de la navigation : la page travaille seulement
+  // si on pense à l'ouvrir, le compteur y amène.
+  const relances = await relancesDues();
+
   return (
     <ToastProvider>
       <div
         className="adm-root min-h-screen flex"
         style={{ backgroundColor: T.bg, color: T.text, ["--adm-accent" as never]: accent }}
       >
-        <Sidebar name={name} role={role} brandName={brandName} brandTagline={brandTagline} showroom={isShowroom} />
+        <Sidebar name={name} role={role} brandName={brandName} brandTagline={brandTagline} showroom={isShowroom} relanceCount={relances.count} />
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile : logo + nav horizontale (la sidebar est masquée sous lg) */}

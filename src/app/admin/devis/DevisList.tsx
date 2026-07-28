@@ -17,6 +17,7 @@ import { matchesSearch, formatDays } from "@/lib/vehicules";
 import { T, TONE, fieldStyle, btnPrimaryClass, btnPrimaryStyle, type Tone } from "../ui";
 import { useToast } from "../toast";
 import { ConfirmDialog } from "../confirm";
+import { useRelanceSender } from "../relances/RelanceDialog";
 
 export type DevisRow = {
   id: string;
@@ -34,6 +35,9 @@ export type DevisRow = {
   expired: boolean;
   factureNumber: string | null;
   relanceDue: boolean;
+  // Jours sans réponse depuis l'envoi réel (calcul du centre de relances) : le
+  // libellé « N j sans réponse » affichait l'âge depuis l'émission.
+  relanceSinceDays: number | null;
   relanceCount: number;
   sentAt: string;
   // Jours écoulés depuis la première ouverture du lien par le client, ou null.
@@ -85,7 +89,7 @@ function trackOf(d: DevisRow): { text: string; tone: "muted" | "warning" | "dang
     return { text: d.daysLeft === 0 ? "Expire aujourd'hui" : `Expire dans ${formatDays(d.daysLeft)}`, tone: "warning" };
   }
   if (d.signerName) return { text: `Signé par ${d.signerName}`, tone: "accent" };
-  if (d.relanceDue) return { text: `Relance due · ${formatDays(d.ageDays)} sans réponse`, tone: "warning" };
+  if (d.relanceDue) return { text: `Relance due · ${formatDays(d.relanceSinceDays ?? d.ageDays)} sans réponse`, tone: "warning" };
   if (d.viewedDays !== null) return { text: `Ouvert il y a ${formatDays(d.viewedDays)}`, tone: "accent" };
   if (d.sentAt && d.status === "envoye") return { text: "Envoyé, en attente de lecture", tone: "muted" };
   if (d.factureNumber) return { text: `Facturé · ${d.factureNumber}`, tone: "accent" };
@@ -254,6 +258,18 @@ export default function DevisList({
     });
   }, []);
 
+  const relanceSender = useRelanceSender({
+    onSent: (target, warning) => {
+      if (warning) toast.info(warning);
+      else toast.success(`Relance envoyée pour le devis ${target.number}.`);
+      startTransition(() => router.refresh());
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error && e.message ? e.message : "La relance a échoué.");
+      startTransition(() => router.refresh());
+    },
+  });
+
   /* ── Écritures ── */
   // Le statut part seul, par PATCH : le PUT reconstruit tout le devis et
   // effacerait les lignes.
@@ -303,21 +319,13 @@ export default function DevisList({
     }
   }
 
+  // Relance : même aperçu que le centre de relances, aucun email ne part sans
+  // que l'utilisateur ait lu ce que reçoit le client.
   async function relancer(d: DevisRow) {
     if (blocked() || busyRows.has(d.id)) return;
     setBusy(d.id, true);
     try {
-      const res = await fetch(`/api/admin/relances/${d.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "relance" }),
-      });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j.error);
-      toast.success(j.sent ? `Relance envoyée pour le devis ${d.number}.` : `Relance enregistrée pour le devis ${d.number}.`);
-      startTransition(() => router.refresh());
-    } catch (e) {
-      toast.error(e instanceof Error && e.message ? e.message : "La relance a échoué.");
+      await relanceSender.open({ id: d.id, number: d.number, client: d.client, kind: "devis" });
     } finally {
       setBusy(d.id, false);
     }
@@ -583,6 +591,8 @@ export default function DevisList({
         onConfirm={() => { if (confirmOne) remove(confirmOne); }}
         onCancel={() => setConfirmOne(null)}
       />
+
+      {relanceSender.dialog}
     </div>
   );
 }
@@ -637,7 +647,7 @@ function Row({
         </div>
         <div className="text-[11px] truncate flex items-center gap-2" style={{ color: T.muted }}>
           {d.vehicle || `${d.lineCount} ligne${d.lineCount > 1 ? "s" : ""}`}
-          {d.relanceCount > 0 && <span style={{ color: T.warning }}>{d.relanceCount}ᵉ relance</span>}
+          {d.relanceCount > 0 && <span style={{ color: T.warning }}>Relancé ×{d.relanceCount}</span>}
         </div>
         {/* Rappel du suivi sous le nom quand la colonne dédiée disparaît */}
         {track.text && (

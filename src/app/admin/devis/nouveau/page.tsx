@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { emptyQuote, mergeBranding, nextNumber, quotePrefix, type QuoteKind } from "@/lib/devis";
+import { parisDay } from "@/lib/vehicules";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
 
@@ -44,7 +45,7 @@ export default async function NouveauDevisPage({
   const vehiclesWithCost = vehicles.map((v) => ({ ...v, costCents: costByVehicle.get(v.id) ?? 0 }));
 
   const number = nextNumber(quotePrefix(year), taken.map((q) => q.number));
-  const issueDate = new Date().toISOString().slice(0, 10);
+  const issueDate = parisDay(new Date()).toISOString().slice(0, 10);
   const initial = emptyQuote(number, issueDate, mergeBranding(lastBranding), lastKind);
 
   // Pré-remplissage depuis la fiche client CRM (?client=<id>).

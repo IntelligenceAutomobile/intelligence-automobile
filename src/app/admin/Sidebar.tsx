@@ -56,12 +56,14 @@ export default function Sidebar({
   brandName,
   brandTagline,
   showroom = false,
+  relanceCount = 0,
 }: {
   name: string;
   role: Role;
   brandName: string;
   brandTagline: string;
   showroom?: boolean;
+  relanceCount?: number;
 }) {
   const pathname = usePathname();
   // Filtre la navigation selon les capacités du rôle ; retire les sections vides.
@@ -136,6 +138,20 @@ export default function Sidebar({
                         style={{ border: "1px solid rgba(199,211,232,0.28)", color: "#C7D3E8" }}
                       >
                         Bientôt
+                      </span>
+                    )}
+                    {item.href === "/admin/relances" && relanceCount > 0 && (
+                      <span
+                        className="ml-auto text-[10px] px-1.5 py-0.5 flex-shrink-0"
+                        style={{
+                          backgroundColor: "rgba(240,180,90,0.10)",
+                          border: "1px solid rgba(240,180,90,0.38)",
+                          color: T.warning,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                        aria-label={`${relanceCount} relance${relanceCount > 1 ? "s" : ""} à faire`}
+                      >
+                        {relanceCount}
                       </span>
                     )}
                   </>

@@ -1,8 +1,10 @@
 // Relances : détection (côté serveur) de ce qui doit être relancé.
-// Un devis « envoyé » sans réponse depuis N jours, une facture impayée depuis M
-// jours. Module neutre, sans dépendance Prisma/React.
+// Un devis « envoyé » sans réponse depuis N jours ; une facture impayée dont
+// l'échéance de règlement est dépassée. Module neutre, sans dépendance
+// Prisma/React.
 
 export const DEVIS_RELANCE_DAYS = 7;
+// Délai minimum entre deux relances d'une même facture.
 export const FACTURE_RELANCE_DAYS = 15;
 export const SNOOZE_DAYS = 7;
 
@@ -27,6 +29,21 @@ export function addDays(iso: string, days: number): string {
   return new Date(base + days * 86_400_000).toISOString().slice(0, 10);
 }
 
+// Jour civil de Paris d'un horodatage ISO complet. Les sentAt sont stockés en
+// UTC : tranchés bruts, un envoi à 0h30 datait de la veille.
+export function parisDayOf(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
 export type RelanceRow = {
   docType: string;
   status: string;
@@ -36,19 +53,23 @@ export type RelanceRow = {
   // arrivait dans les relances le jour même de son envoi, annoncé « 14 jours
   // sans réponse » : le délai court depuis l'envoi réel.
   sentAt?: string;
+  // Délai de règlement d'une facture, en jours après émission. Le document
+  // imprimé affiche cette échéance : un rappel parti avant réclame un paiement
+  // encore dans les temps. Absent ou nul, l'échéance vaut le jour d'émission.
+  validityDays?: number;
   lastRelanceDate: string;
   relanceSnoozeUntil: string;
 };
 
 export type RelanceKind = "devis" | "facture";
 
-// Renvoie la relance due (type + ancienneté), ou null si rien à faire.
+// Renvoie la relance due, ou null si rien à faire. `sinceDays` compte les jours
+// sans réponse pour un devis, les jours de retard après échéance pour une facture.
 export function relanceDue(row: RelanceRow, todayIso: string): { kind: RelanceKind; sinceDays: number } | null {
   // Reportée ?
   if (row.relanceSnoozeUntil && daysSince(row.relanceSnoozeUntil, todayIso) < 0) return null;
 
   const isFacture = row.docType === "facture";
-  const threshold = isFacture ? FACTURE_RELANCE_DAYS : DEVIS_RELANCE_DAYS;
 
   // Éligible ?
   if (isFacture) {
@@ -57,12 +78,20 @@ export function relanceDue(row: RelanceRow, todayIso: string): { kind: RelanceKi
     if (row.status !== "envoye") return null;
   }
 
-  const depart = (row.sentAt ?? "").slice(0, 10) || row.issueDate;
-  const sinceIssue = daysSince(depart, todayIso);
-  if (sinceIssue < threshold) return null;
+  let sinceDays: number;
+  if (isFacture) {
+    const dueDate = row.validityDays && row.validityDays > 0 ? addDays(row.issueDate, row.validityDays) : row.issueDate;
+    sinceDays = daysSince(dueDate, todayIso);
+    if (sinceDays < 1) return null;
+  } else {
+    const depart = (row.sentAt ? parisDayOf(row.sentAt) : "") || row.issueDate;
+    sinceDays = daysSince(depart, todayIso);
+    if (sinceDays < DEVIS_RELANCE_DAYS) return null;
+  }
 
   // Déjà relancé récemment ?
-  if (row.lastRelanceDate && daysSince(row.lastRelanceDate, todayIso) < threshold) return null;
+  const interval = isFacture ? FACTURE_RELANCE_DAYS : DEVIS_RELANCE_DAYS;
+  if (row.lastRelanceDate && daysSince(row.lastRelanceDate, todayIso) < interval) return null;
 
-  return { kind: isFacture ? "facture" : "devis", sinceDays: sinceIssue };
+  return { kind: isFacture ? "facture" : "devis", sinceDays };
 }

@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, XCircle, Send, Users } from "lucide-react";
+import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, XCircle, Send, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
 import { computeTotals, formatEuro, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { relancesDues } from "@/lib/relances-server";
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
 import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, authorColor, signatureOf, type AppointmentType } from "@/lib/planning";
@@ -117,6 +118,8 @@ function InsightPanel({
 export default async function AdminDashboard() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
+
+  const relances = await relancesDues();
 
   const cookieStore = await cookies();
   const name = cookieStore.get("ia_collab_name")?.value?.trim() || session.admin.email.split("@")[0];
@@ -343,6 +346,29 @@ export default async function AdminDashboard() {
             spark={leadsSeries}
           />
         </div>
+
+        {/* Relances à faire : le centre travaille seulement si on y pense, le bandeau y amène */}
+        {relances.count > 0 && (
+          <Link
+            href="/admin/relances"
+            className="adm-enter flex items-center gap-3 px-5 py-3 mb-5"
+            style={{ backgroundColor: T.surface, border: "1px solid var(--adm-accent-border)" }}
+          >
+            <BellRing size={16} style={{ color: T.accent }} />
+            <span className="text-sm" style={{ color: T.textDim }}>
+              <span className="font-semibold" style={{ color: T.accent }}>
+                {relances.count} relance{relances.count > 1 ? "s" : ""} à faire
+              </span>
+              {" · "}
+              <span className="font-semibold" style={{ color: T.text }}>{formatEuro(relances.total)}</span>
+              {" en attente"}
+            </span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Ouvrir les relances
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        )}
 
         {/* Alerte factures impayées */}
         {impayeesCount > 0 && (

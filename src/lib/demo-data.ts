@@ -404,12 +404,14 @@ export function getDemoQuotes(): DemoQuote[] {
       depositMode: "none", depositValue: 0,
       clientId: "cli-4", clientName: "Marc Dubois", clientCompany: "TransCar SPRL",
       clientEmail: "m.dubois@transcar.be", clientPhone: "+32 475 11 22 33",
-      issueDate: isoDay(-18), vehicleId: "veh-4",
+      // 35 jours : l'échéance à 30 jours est dépassée, la facture illustre le
+      // centre de relances (« retard 5 j ») sans contredire sa fiche.
+      issueDate: isoDay(-35), vehicleId: "veh-4",
       paymentTerms: "Facture d'acompte. Le solde fera l'objet d'une facture ultérieure.",
       items: [
         { id: "acompte", designation: `Acompte sur commande — ${veh4 ? `${veh4.make} ${veh4.model}` : "véhicule"}`, detail: `Acompte 30 % sur devis ${year}-041`, qty: 1, unitPrice: Math.round(transTotal * 0.3) },
       ],
-      createdAt: daysAgo(18), updatedAt: daysAgo(18),
+      createdAt: daysAgo(35), updatedAt: daysAgo(35),
     },
   ];
 }

@@ -2,26 +2,43 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeTotals, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
-import { relanceDue } from "@/lib/relances";
-import RelancesClient, { type RelanceItem } from "./RelancesClient";
+import { relanceDue, daysSince, parisDayOf } from "@/lib/relances";
+import { parisDay } from "@/lib/vehicules";
+import RelancesClient, { type RelanceItem, type HistoryEntry } from "./RelancesClient";
 
 export default async function RelancesPage() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Jour civil de Paris, comme la liste des devis : le runtime tourne en UTC
+  // et les deux pages divergeaient d'un jour en soirée.
+  const today = parisDay(new Date()).toISOString().slice(0, 10);
 
-  const candidates = await prisma.quote.findMany({
-    where: { OR: [{ docType: { not: "facture" }, status: "envoye" }, { docType: "facture", paymentStatus: "impayee" }] },
-    orderBy: { issueDate: "asc" },
-  });
+  const [candidates, logs] = await Promise.all([
+    prisma.quote.findMany({
+      where: { OR: [{ docType: { not: "facture" }, status: "envoye" }, { docType: "facture", paymentStatus: "impayee" }] },
+      orderBy: { issueDate: "asc" },
+    }),
+    // Journal des actions : la question « est-ce que la relance est partie ? »
+    // se répond ici, y compris pour les documents sortis de la liste.
+    prisma.relanceLog.findMany({ orderBy: { createdAt: "desc" }, take: 60 }),
+  ]);
 
   const devis: RelanceItem[] = [];
   const factures: RelanceItem[] = [];
 
   for (const r of candidates) {
     const due = relanceDue(
-      { docType: r.docType, status: r.status, paymentStatus: r.paymentStatus, issueDate: r.issueDate, lastRelanceDate: r.lastRelanceDate, relanceSnoozeUntil: r.relanceSnoozeUntil },
+      {
+        docType: r.docType,
+        status: r.status,
+        paymentStatus: r.paymentStatus,
+        issueDate: r.issueDate,
+        sentAt: r.sentAt,
+        validityDays: r.validityDays,
+        lastRelanceDate: r.lastRelanceDate,
+        relanceSnoozeUntil: r.relanceSnoozeUntil,
+      },
       today,
     );
     if (!due) continue;
@@ -46,14 +63,36 @@ export default async function RelancesPage() {
       id: r.id,
       number: r.number,
       client: r.clientCompany || r.clientName || "",
-      hasEmail: Boolean(r.clientEmail),
+      clientEmail: r.clientEmail,
+      clientPhone: r.clientPhone,
       amount,
+      kind: due.kind,
       sinceDays: due.sinceDays,
       relanceCount: r.relanceCount,
+      lastRelanceDate: r.lastRelanceDate,
+      // Point de départ affiché : l'envoi réel pour un devis (jour de Paris), l'émission sinon.
+      startDate: (r.sentAt ? parisDayOf(r.sentAt) : "") || r.issueDate,
+      // Un devis dont la validité est passée mérite un renvoi plutôt qu'une relance.
+      expired: due.kind === "devis" && r.validityDays > 0 && daysSince(r.issueDate, today) > r.validityDays,
     };
     if (due.kind === "facture") factures.push(item);
     else devis.push(item);
   }
 
-  return <RelancesClient devis={devis} factures={factures} />;
+  // Les plus urgents d'abord : l'œil tombe sur ce qui attend depuis le plus longtemps.
+  devis.sort((a, b) => b.sinceDays - a.sinceDays);
+  factures.sort((a, b) => b.sinceDays - a.sinceDays);
+
+  const history: HistoryEntry[] = logs.map((l) => ({
+    id: l.id,
+    quoteId: l.quoteId,
+    number: l.number,
+    client: l.client,
+    action: l.action,
+    detail: l.detail,
+    author: l.author,
+    at: l.createdAt.toISOString(),
+  }));
+
+  return <RelancesClient devis={devis} factures={factures} history={history} />;
 }

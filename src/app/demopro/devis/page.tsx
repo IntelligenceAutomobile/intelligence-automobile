@@ -63,6 +63,7 @@ export default function DemoDevisListPage() {
         expired: q.status === "envoye" && daysLeft < 0,
         factureNumber: factureByQuote.get(q.id) ?? null,
         relanceDue: relance !== null,
+        relanceSinceDays: relance?.sinceDays ?? null,
         relanceCount: 0,
         // La démonstration montre aussi le suivi de lecture : le devis envoyé
         // au client belge a été ouvert, celui de Sophie Marchand jamais.

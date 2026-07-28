@@ -1,6 +1,7 @@
 // Mappers entre le corps de requête / ligne Prisma et l'objet devis applicatif.
 // Module neutre (pas de dépendance Prisma/React).
 import { mergeBranding } from "./devis";
+import { parisDay } from "./vehicules";
 
 export function quoteToData(body: Record<string, unknown>) {
   const s = (v: unknown, d = "") => (typeof v === "string" ? v : d);
@@ -22,7 +23,10 @@ export function quoteToData(body: Record<string, unknown>) {
     clientAddress: s(body.clientAddress),
     clientEmail: s(body.clientEmail),
     clientPhone: s(body.clientPhone),
-    issueDate: s(body.issueDate) || new Date().toISOString().slice(0, 10),
+    // Format contrôlé : une date illisible rendait le document invisible du
+    // centre de relances, silencieusement et pour toujours. Repli en jour de
+    // Paris : le runtime UTC datait de la veille un document créé le soir.
+    issueDate: /^\d{4}-\d{2}-\d{2}$/.test(s(body.issueDate)) ? s(body.issueDate) : parisDay(new Date()).toISOString().slice(0, 10),
     validityDays: Math.round(num(body.validityDays, 30)),
     items: JSON.stringify(Array.isArray(body.items) ? body.items : []),
     tvaMode: s(body.tvaMode, "marge"),

@@ -149,6 +149,22 @@ model Quote {
   updatedAt DateTime @updatedAt
 }
 
+// Journal du centre de relances : chaque action (email envoyé, relance notée au
+// téléphone, report, arrêt, annulation) laisse une trace consultable à l'écran.
+model RelanceLog {
+  id      String @id @default(cuid())
+  quoteId String
+  number  String
+  client  String @default("")
+  action  String // email | telephone | report | arret | annulation
+  detail  String @default("")
+  author  String @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // ── CRM : clients et opportunités de vente ──
 
 model Client {

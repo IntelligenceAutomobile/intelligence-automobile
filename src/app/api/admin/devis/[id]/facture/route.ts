@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { reserveVehicleForQuote } from "@/lib/devis-effets";
 import { computeTotals, factureNumber, facturePrefix, FACTURE_KIND_LABEL, type FactureKind, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { parisDay } from "@/lib/vehicules";
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -61,7 +62,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       select: { number: true },
     });
     const number = factureNumber(year, taken.map((f) => f.number));
-    const issueDate = new Date().toISOString().slice(0, 10);
+    // Jour de Paris : la facture émise le soir datait de la veille, décalant son échéance.
+    const issueDate = parisDay(new Date()).toISOString().slice(0, 10);
 
     let newItems: QuoteItem[];
     let depositMode = "none";

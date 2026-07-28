@@ -46,6 +46,13 @@
   outline-offset: 2px;
 }
 
+/* Focus clavier des boutons pleins et liens de couverture (Relances) :
+   même langage que .adm-act, sans le survol qui blanchirait le texte. */
+.adm-btn-focus:focus-visible {
+  outline: 1px solid var(--adm-accent);
+  outline-offset: 2px;
+}
+
 /* Pastilles de filtre et boutons de vue : la pastille active garde son aplat. */
 .adm-chip:hover:not([aria-pressed="true"]) {
   border-color: var(--adm-accent-border) !important;

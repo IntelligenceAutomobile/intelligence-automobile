@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { nextNumber, quotePrefix } from "@/lib/devis";
+import { parisDay } from "@/lib/vehicules";
 
 // Duplique un devis pour repartir d'une base au lieu de tout resaisir : c'est le
 // geste courant quand deux clients demandent le même véhicule ou la même
@@ -32,7 +33,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         docType: "devis",
         factureKind: "complete",
         status: "brouillon",
-        issueDate: new Date().toISOString().slice(0, 10),
+        issueDate: parisDay(new Date()).toISOString().slice(0, 10),
         // Le suivi appartient au document d'origine : paiement, relances et
         // filiation repartent à zéro sur la copie.
         paymentStatus: "impayee",
