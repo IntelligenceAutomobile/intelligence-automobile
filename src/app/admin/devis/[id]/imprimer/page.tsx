@@ -17,11 +17,17 @@ const PRINT_CSS = `
   .devis-no-print { display: none !important; }
   .devis-screen-bg { background: #fff !important; padding: 0 !important; }
   html, body { background: #fff !important; }
-  @page { size: A4; margin: 0; }
-  /* La feuille vise 297mm à l'écran ; à l'impression, une hauteur exactement
-     égale à la page + marge 0 bascule en 2 pages au moindre arrondi de rendu.
-     3mm de mou : un devis courant tient sur une page, un devis long pagine. */
-  .devis-sheet { min-height: 294mm !important; }
+  /* Les marges sont portées par la PAGE et non par la feuille : posées sur la
+     feuille, elles ne valaient que pour la première page et le texte des pages
+     suivantes démarrait au ras du bord, dans la zone que les imprimantes rognent. */
+  @page { size: A4; margin: 15mm 16mm; }
+  .devis-sheet {
+    padding: 0 !important;
+    width: auto !important;
+    /* Hauteur utile de la page moins les marges, avec un peu de mou : un devis
+       courant tient sur une feuille, un devis long pagine proprement. */
+    min-height: 262mm !important;
+  }
   tr, .devis-avoid-break { break-inside: avoid; }
 }
 `;

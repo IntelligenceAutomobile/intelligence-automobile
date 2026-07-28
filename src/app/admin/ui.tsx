@@ -37,6 +37,9 @@ export const TONE = {
 export type Tone = keyof typeof TONE;
 
 /* ── Champs de formulaire ── */
+// `width: 100%` est repris par une trentaine d'écrans du back-office. Un champ
+// qui doit rester étroit passe par `{ ...fieldStyle, width: undefined }` plutôt
+// que par une classe de largeur, qui perdrait contre ce style direct.
 export const fieldStyle: CSSProperties = {
   backgroundColor: T.float,
   border: `1px solid ${T.border}`,
@@ -259,7 +262,9 @@ export function SkeletonStatCard() {
   );
 }
 
-export function SkeletonRows({ count = 5 }: { count?: number }) {
+// `thumb` réserve la place d'une vignette : utile au stock, trompeur ailleurs.
+// La liste des devis annonçait ainsi six photos qui n'arrivaient jamais.
+export function SkeletonRows({ count = 5, thumb = true }: { count?: number; thumb?: boolean }) {
   return (
     <div style={{ border: `1px solid ${T.border}` }}>
       {Array.from({ length: count }, (_, i) => (
@@ -268,12 +273,27 @@ export function SkeletonRows({ count = 5 }: { count?: number }) {
           className="flex items-center gap-4 px-4 py-4"
           style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
         >
-          <Skeleton w={64} h={48} />
+          {thumb ? <Skeleton w={64} h={48} /> : <Skeleton w={70} h={11} />}
           <div className="flex-1 space-y-2">
             <Skeleton w={180} h={12} />
             <Skeleton w={120} h={10} />
           </div>
           <Skeleton w={70} h={12} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Bandeau des chiffres de pilotage, en tête des listes.
+export function SkeletonTiles({ count = 3 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="px-4 py-3" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+          <Skeleton w={110} h={9} className="mb-2" />
+          <Skeleton w={130} h={22} className="mb-2" />
+          <Skeleton w={80} h={9} />
         </div>
       ))}
     </div>

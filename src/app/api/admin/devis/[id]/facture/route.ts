@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { computeTotals, factureNumber, type FactureKind, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { reserveVehicleForQuote } from "@/lib/devis-effets";
+import { computeTotals, factureNumber, facturePrefix, FACTURE_KIND_LABEL, type FactureKind, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -40,10 +41,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Ce devis ne prévoit pas d'acompte." }, { status: 400 });
     }
 
-    // Numéro de facture continu FAC-AAAA-NNN.
+    // Une facture du même type par devis : sans ce contrôle, un retour arrière du
+    // navigateur suivi d'un second clic créait un doublon et doublait l'encours.
+    const deja = await prisma.quote.findFirst({
+      where: { docType: "facture", sourceQuoteId: src.id, factureKind: kind },
+      select: { number: true },
+    });
+    if (deja) {
+      return NextResponse.json(
+        { error: `${FACTURE_KIND_LABEL[kind]} ${deja.number} existe déjà pour ce devis.` },
+        { status: 409 },
+      );
+    }
+
+    // Numéro de facture continu FAC-AAAA-NNN, calculé sur le plus grand déjà attribué.
     const year = new Date().getFullYear();
-    const count = await prisma.quote.count({ where: { docType: "facture", number: { startsWith: `FAC-${year}-` } } });
-    const number = factureNumber(year, count);
+    const taken = await prisma.quote.findMany({
+      where: { docType: "facture", number: { startsWith: facturePrefix(year) } },
+      select: { number: true },
+    });
+    const number = factureNumber(year, taken.map((f) => f.number));
     const issueDate = new Date().toISOString().slice(0, 10);
 
     let newItems: QuoteItem[];
@@ -89,7 +106,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         clientEmail: src.clientEmail,
         clientPhone: src.clientPhone,
         issueDate,
-        validityDays: 0,
+        // Sur une facture, ce champ porte le délai de règlement : sans lui, le
+        // document ne dit ni quand payer ni à partir de quand la créance est due.
+        validityDays: 30,
         items: JSON.stringify(newItems),
         tvaMode: src.tvaMode,
         tvaRate: src.tvaRate,
@@ -102,10 +121,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
 
-    // Le devis converti passe « accepté ».
+    // Le devis converti passe « accepté », et la voiture quitte le site.
     if (src.status !== "accepte") {
       await prisma.quote.update({ where: { id: src.id }, data: { status: "accepte" } });
     }
+    await reserveVehicleForQuote({ ...src, status: "accepte" });
 
     return NextResponse.json({ id: facture.id, number: facture.number });
   } catch {

@@ -32,6 +32,10 @@ export type RelanceRow = {
   status: string;
   paymentStatus: string;
   issueDate: string;
+  // Horodatage ISO de l'envoi au client. Un devis préparé le 1er et envoyé le 15
+  // arrivait dans les relances le jour même de son envoi, annoncé « 14 jours
+  // sans réponse » : le délai court depuis l'envoi réel.
+  sentAt?: string;
   lastRelanceDate: string;
   relanceSnoozeUntil: string;
 };
@@ -53,7 +57,8 @@ export function relanceDue(row: RelanceRow, todayIso: string): { kind: RelanceKi
     if (row.status !== "envoye") return null;
   }
 
-  const sinceIssue = daysSince(row.issueDate, todayIso);
+  const depart = (row.sentAt ?? "").slice(0, 10) || row.issueDate;
+  const sinceIssue = daysSince(depart, todayIso);
   if (sinceIssue < threshold) return null;
 
   // Déjà relancé récemment ?

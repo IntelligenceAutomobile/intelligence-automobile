@@ -2,10 +2,12 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can, asRole } from "@/lib/roles";
 import { mergeBranding, computeTotals, FACTURE_KIND_LABEL, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
 import ConvertActions from "../ConvertActions";
+import EnvoiButton from "../EnvoiButton";
 
 export default async function EditDevisPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin();
@@ -17,8 +19,14 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
 
   const vehicles = await prisma.vehicle.findMany({
     orderBy: { createdAt: "desc" },
-    select: { id: true, make: true, model: true, year: true, mileage: true, price: true, fuel: true, transmission: true, power: true },
+    select: { id: true, make: true, model: true, year: true, mileage: true, price: true, fuel: true, transmission: true, power: true, status: true },
   });
+
+  // Coût de revient par véhicule (achat + frais), pour la marge affichée au
+  // vendeur pendant la négociation. Jamais imprimée sur le document.
+  const costs = await prisma.vehicleCost.groupBy({ by: ["vehicleId"], _sum: { amountCents: true } });
+  const costByVehicle = new Map(costs.map((c) => [c.vehicleId, c._sum.amountCents ?? 0]));
+  const vehiclesWithCost = vehicles.map((v) => ({ ...v, costCents: costByVehicle.get(v.id) ?? 0 }));
 
   let items: QuoteItem[] = [];
   try {
@@ -44,6 +52,9 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
     paymentStatus: row.paymentStatus as PaymentStatus,
     paidDate: row.paidDate,
     sourceQuoteId: row.sourceQuoteId,
+    // Le lien vers la fiche CRM se perdait ici : absent de l'objet transmis à
+    // l'éditeur, il repartait vide au premier enregistrement.
+    clientId: row.clientId,
     clientName: row.clientName,
     clientCompany: row.clientCompany,
     clientAddress: row.clientAddress,
@@ -61,6 +72,13 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
     vehicleId: row.vehicleId,
     branding: mergeBranding(brandingRaw),
   };
+
+  const role = asRole(session.admin.role);
+
+  // Devis d'origine d'une facture : le lien de retour manquait dans les deux sens.
+  const sourceQuote = row.sourceQuoteId
+    ? await prisma.quote.findUnique({ where: { id: row.sourceQuoteId }, select: { id: true, number: true } })
+    : null;
 
   const isFacture = row.docType === "facture";
   const backHref = isFacture ? "/admin/factures" : "/admin/devis";
@@ -82,9 +100,42 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
       <PageHeader
         title={`${docLabel} ${row.number}`}
         subtitle={row.clientCompany || row.clientName || "Sans client"}
-        action={isFacture ? undefined : <ConvertActions quoteId={row.id} hasDeposit={totals.deposit > 0} />}
+        action={
+          isFacture ? undefined : (
+            <div className="flex flex-wrap items-center gap-2">
+              <EnvoiButton
+                quoteId={row.id}
+                number={row.number}
+                clientEmail={row.clientEmail}
+                clientName={row.clientName || row.clientCompany}
+                sentAt={row.sentAt}
+                viewCount={row.viewCount}
+                publicToken={row.publicToken}
+              />
+              <ConvertActions quoteId={row.id} hasDeposit={totals.deposit > 0} />
+            </div>
+          )
+        }
       />
-      <DevisEditor initial={initial} vehicles={vehicles} isEdit />
+      {row.signedAt && (
+        <div
+          className="flex flex-wrap items-center gap-3 px-4 py-3 mb-5"
+          style={{ backgroundColor: "rgba(78,209,161,0.10)", border: "1px solid rgba(78,209,161,0.40)" }}
+        >
+          <span className="text-sm" style={{ color: T.textDim }}>
+            Accepté en ligne par {row.signerName} le {new Date(row.signedAt).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}.
+          </span>
+        </div>
+      )}
+
+      <DevisEditor
+        initial={initial}
+        vehicles={vehiclesWithCost}
+        isEdit
+        sourceQuote={sourceQuote}
+        canFinance={can(role, "finances")}
+        canUnlock={role === "patron"}
+      />
     </AdminPage>
   );
 }

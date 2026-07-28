@@ -1,7 +1,6 @@
 // Rendu A4 du devis — composant présentiel SANS hook (importable serveur ET client).
 // Utilisé tel quel par l'aperçu live (éditeur) et par la page d'impression : rendu identique.
 import type { CSSProperties } from "react";
-import { COMPANY } from "@/lib/company";
 import {
   computeTotals,
   formatEuro,
@@ -12,6 +11,7 @@ import {
   lineGross,
   lineDiscount,
   blockBox,
+  headerHeightFor,
   type QuoteData,
   type HeaderBlockId,
 } from "@/lib/devis";
@@ -21,8 +21,13 @@ const C = {
   ink: "#16213A",
   muted: "#6B7280",
   border: "#D9DEE8",
-  zebra: "#F5F7FB",
+  hair: "#E7EBF2",
 };
+
+// Police du document : celle du site et du back-office, avec un repli sûr sur
+// les postes qui ne l'ont pas. « Segoe UI » changeait d'allure d'un ordinateur
+// à l'autre, donc d'un client à l'autre.
+const DOC_FONT = "'DM Sans', 'DM Sans Fallback', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif";
 
 // Éclaircit/assombrit une couleur hex (factor < 1 assombrit, > 1 éclaircit).
 function shade(hex: string, factor: number): string {
@@ -48,6 +53,9 @@ const labelMini: CSSProperties = {
   color: C.muted,
 };
 
+// Chiffres à largeur égale : les virgules s'alignent d'une ligne à l'autre.
+const tabular: CSSProperties = { fontVariantNumeric: "tabular-nums" };
+
 export default function DevisDocument({
   quote,
   editable = false,
@@ -72,19 +80,37 @@ export default function DevisDocument({
   const isFacture = docType === "facture";
   const isSolde = isFacture && factureKind === "solde";
   const paid = isFacture && quote.paymentStatus === "payee";
-  const title = docTitle(docType, factureKind);
-  const titleFont = title.length > 8 ? "12.5pt" : "20pt"; // « FACTURE D'ACOMPTE » tient sur une ligne
-  const titleSpacing = title.length > 8 ? "0.08em" : "0.18em";
+
+  // Titre à taille CONSTANTE : la qualification passe sur une seconde ligne.
+  // La taille variable donnait « FACTURE D'ACOMPTE » deux fois plus petit que « DEVIS ».
+  const full = docTitle(docType, factureKind);
+  const title = isFacture ? "FACTURE" : "DEVIS";
+  const subtitle = full !== title ? full.replace(/^FACTURE\s+/i, "") : "";
+
   const logoJustify = b.logoAlign === "center" ? "center" : b.logoAlign === "right" ? "flex-end" : "flex-start";
   const logoFree = b.logoX != null && b.logoY != null;
   const logoCursor = onLogoPointerDown ? "move" : "default";
+  const logoSrc = b.logoUrl || "";
+  // Réserve blanche : le logo devient une silhouette claire sur fond coloré.
+  const logoFilter = b.logoWhite ? "brightness(0) invert(1)" : undefined;
 
   // Palette dérivée de l'accent + du thème.
   const accent = b.accentColor || "#1E4FA3";
-  const headBg = b.theme === "colored" ? accent : b.theme === "minimal" ? "transparent" : shade(accent, 0.38);
-  const headFg = b.theme === "minimal" ? C.ink : "#FFFFFF";
-  const headBorder = b.theme === "minimal" ? `2px solid ${accent}` : undefined;
-  const zebra = b.theme === "minimal" ? "transparent" : C.zebra;
+  const theme = b.theme;
+  // « Coloré » : bandeau plein sur toute la zone d'en-tête, texte en réserve blanche.
+  const onBand = theme === "colored";
+  const headInk = onBand ? "#FFFFFF" : C.ink;
+  const headMuted = onBand ? "rgba(255,255,255,0.78)" : C.muted;
+  const titleColor = onBand ? "#FFFFFF" : accent;
+
+  // Tableau : un seul filet clair, jamais de zébrure en plus.
+  const rowRule = theme === "minimal" ? C.hair : C.border;
+  const thBg = theme === "colored" ? shade(accent, 0.55) : theme === "minimal" ? "transparent" : shade(accent, 0.38);
+  const thFg = theme === "minimal" ? C.ink : "#FFFFFF";
+  const thRule = theme === "minimal" ? `1.5pt solid ${accent}` : undefined;
+
+  const headerH = headerHeightFor(quote);
+  const dueDate = validUntilFr(quote.issueDate, quote.validityDays);
 
   // Style/handlers communs d'un bloc d'en-tête déplaçable + redimensionnable.
   function blockWrap(id: HeaderBlockId): CSSProperties {
@@ -95,9 +121,10 @@ export default function DevisDocument({
       top: `${box.y}mm`,
       width: `${box.w}mm`,
       cursor: editable ? "move" : "default",
-      outline: editable ? "1px dashed rgba(30,79,163,0.35)" : undefined,
+      outline: editable ? `1px dashed ${onBand ? "rgba(255,255,255,0.45)" : tint(accent, 0.45)}` : undefined,
       outlineOffset: "2px",
       touchAction: "none",
+      zIndex: 2,
     };
   }
   function resizeHandle(id: HeaderBlockId) {
@@ -105,7 +132,7 @@ export default function DevisDocument({
     return (
       <div
         onPointerDown={(e) => { e.stopPropagation(); onBlockResizePointerDown(id, e); }}
-        style={{ position: "absolute", right: "-4px", top: "50%", transform: "translateY(-50%)", width: 9, height: 22, background: accent, borderRadius: 2, cursor: "ew-resize", touchAction: "none" }}
+        style={{ position: "absolute", right: "-4px", top: "50%", transform: "translateY(-50%)", width: 9, height: 22, background: onBand ? "#FFFFFF" : accent, cursor: "ew-resize", touchAction: "none" }}
       />
     );
   }
@@ -120,7 +147,7 @@ export default function DevisDocument({
         color: C.ink,
         padding: "15mm 16mm",
         boxSizing: "border-box",
-        fontFamily: "'Segoe UI', system-ui, -apple-system, Arial, sans-serif",
+        fontFamily: DOC_FONT,
         fontSize: "10pt",
         lineHeight: 1.45,
         display: "flex",
@@ -132,39 +159,58 @@ export default function DevisDocument({
       <div
         style={{
           position: "relative",
-          height: `${b.headerHeight}mm`,
+          height: `${headerH}mm`,
           marginBottom: "4mm",
-          outline: editable ? "1px dashed rgba(30,79,163,0.18)" : undefined,
+          outline: editable ? `1px dashed ${onBand ? "rgba(255,255,255,0.3)" : "rgba(30,79,163,0.18)"}` : undefined,
         }}
       >
+        {/* Bandeau plein du thème « Coloré », débordant les marges de la feuille */}
+        {onBand && (
+          <div
+            style={{
+              position: "absolute",
+              left: "-16mm",
+              right: "-16mm",
+              top: "-15mm",
+              bottom: "-4mm",
+              backgroundColor: accent,
+              zIndex: 0,
+            }}
+          />
+        )}
+        {/* Filet d'accent du thème « Classique » */}
+        {theme === "classic" && (
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "2pt", backgroundColor: accent, zIndex: 1 }} />
+        )}
+
         {/* Logo : position libre (absolue) ou auto (alignée en haut) */}
-        {b.logoVisible &&
+        {b.logoVisible && logoSrc &&
           (logoFree ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={COMPANY.logoSrc}
+              src={logoSrc}
               alt={b.emitterName}
               onPointerDown={onLogoPointerDown}
               draggable={false}
-              style={{ position: "absolute", left: `${b.logoX}mm`, top: `${b.logoY}mm`, height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none", zIndex: 5 }}
+              style={{ position: "absolute", left: `${b.logoX}mm`, top: `${b.logoY}mm`, height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none", zIndex: 5, filter: logoFilter }}
             />
           ) : (
-            <div style={{ display: "flex", justifyContent: logoJustify }}>
+            <div style={{ display: "flex", justifyContent: logoJustify, position: "relative", zIndex: 5 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={COMPANY.logoSrc}
+                src={logoSrc}
                 alt={b.emitterName}
                 onPointerDown={onLogoPointerDown}
                 draggable={false}
-                style={{ height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none" }}
+                style={{ height: `${b.logoSize}mm`, objectFit: "contain", cursor: logoCursor, userSelect: "none", touchAction: "none", filter: logoFilter }}
               />
             </div>
           ))}
 
         {/* Émetteur */}
         <div style={blockWrap("emitter")} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("emitter", e) : undefined}>
-          <div style={{ fontWeight: 700, fontSize: "11pt" }}>{b.emitterName}</div>
-          <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1.5mm" }}>
+          <div style={{ fontWeight: 700, fontSize: "11pt", color: headInk }}>{b.emitterName}</div>
+          <div style={{ color: headMuted, fontSize: "8.5pt", marginTop: "1.5mm" }}>
             {addrLines.map((l, i) => (
               <div key={i}>{l}</div>
             ))}
@@ -179,30 +225,37 @@ export default function DevisDocument({
 
         {/* Bloc titre + métadonnées */}
         <div style={{ ...blockWrap("meta"), textAlign: "right" }} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("meta", e) : undefined}>
-          <div style={{ fontSize: titleFont, fontWeight: 300, letterSpacing: titleSpacing, color: accent }}>{title}</div>
-          <div style={{ width: 38, height: 2, backgroundColor: accent, marginLeft: "auto", marginTop: "2mm", marginBottom: "3mm" }} />
+          <div style={{ fontSize: "16pt", fontWeight: 300, letterSpacing: "0.18em", color: titleColor, lineHeight: 1.1 }}>{title}</div>
+          {subtitle && (
+            <div style={{ fontSize: "9pt", fontWeight: 400, letterSpacing: "0.06em", color: onBand ? "rgba(255,255,255,0.85)" : C.muted, marginTop: "0.5mm" }}>
+              {subtitle}
+            </div>
+          )}
+          <div style={{ width: 38, height: 2, backgroundColor: onBand ? "#FFFFFF" : accent, marginLeft: "auto", marginTop: "2mm", marginBottom: "3mm" }} />
           <table style={{ marginLeft: "auto", fontSize: "8.5pt", borderCollapse: "collapse" }}>
             <tbody>
               {quote.number && (
                 <tr>
-                  <td style={{ ...labelMini, paddingRight: "4mm", textAlign: "right" }}>N°</td>
-                  <td style={{ fontWeight: 600 }}>{quote.number}</td>
+                  <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>N°</td>
+                  <td style={{ fontWeight: 600, color: headInk, ...tabular }}>{quote.number}</td>
                 </tr>
               )}
               <tr>
-                <td style={{ ...labelMini, paddingRight: "4mm", textAlign: "right" }}>Date</td>
-                <td>{formatDateFr(quote.issueDate)}</td>
+                <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>Date</td>
+                <td style={{ color: headInk }}>{formatDateFr(quote.issueDate)}</td>
               </tr>
-              {!isFacture && (
+              {quote.validityDays > 0 && (
                 <tr>
-                  <td style={{ ...labelMini, paddingRight: "4mm", textAlign: "right" }}>Validité</td>
-                  <td>{validUntilFr(quote.issueDate, quote.validityDays)}</td>
+                  <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>
+                    {isFacture ? "Échéance" : "Validité"}
+                  </td>
+                  <td style={{ color: headInk }}>{dueDate}</td>
                 </tr>
               )}
             </tbody>
           </table>
           {paid && (
-            <div style={{ display: "inline-block", marginTop: "3mm", padding: "1mm 3mm", border: "1.5px solid #0F8A6A", color: "#0F8A6A", fontSize: "9pt", fontWeight: 700, letterSpacing: "0.12em", transform: "rotate(-4deg)" }}>
+            <div style={{ display: "inline-block", marginTop: "3mm", padding: "1mm 3mm", border: "1.5px solid #0F8A6A", color: "#0F8A6A", backgroundColor: "#FFFFFF", fontSize: "9pt", fontWeight: 700, letterSpacing: "0.12em", transform: "rotate(-4deg)" }}>
               PAYÉE{quote.paidDate ? ` — ${formatDateFr(quote.paidDate)}` : ""}
             </div>
           )}
@@ -211,19 +264,19 @@ export default function DevisDocument({
 
         {/* Destinataire */}
         <div style={blockWrap("client")} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("client", e) : undefined}>
-          <PartyBox label="Client" accent={accent}>
+          <PartyBox label="Client" accent={accent} onBand={onBand}>
             {quote.clientName || quote.clientCompany ? (
               <>
-                {quote.clientCompany && <div style={{ fontWeight: 600 }}>{quote.clientCompany}</div>}
-                {quote.clientName && <div style={{ fontWeight: quote.clientCompany ? 400 : 600 }}>{quote.clientName}</div>}
-                <div style={{ color: C.muted, fontSize: "8.5pt", marginTop: "1mm" }}>
+                {quote.clientCompany && <div style={{ fontWeight: 600, color: headInk }}>{quote.clientCompany}</div>}
+                {quote.clientName && <div style={{ fontWeight: quote.clientCompany ? 400 : 600, color: headInk }}>{quote.clientName}</div>}
+                <div style={{ color: headMuted, fontSize: "8.5pt", marginTop: "1mm" }}>
                   {quote.clientAddress && <div style={{ whiteSpace: "pre-line" }}>{quote.clientAddress}</div>}
                   {quote.clientEmail && <div>{quote.clientEmail}</div>}
                   {quote.clientPhone && <div>{quote.clientPhone}</div>}
                 </div>
               </>
             ) : (
-              <div style={{ color: "#B9C0CC", fontStyle: "italic", fontSize: "8.5pt" }}>Coordonnées du client…</div>
+              <div style={{ color: onBand ? "rgba(255,255,255,0.6)" : "#B9C0CC", fontStyle: "italic", fontSize: "8.5pt" }}>Coordonnées du client…</div>
             )}
           </PartyBox>
           {resizeHandle("client")}
@@ -233,7 +286,7 @@ export default function DevisDocument({
       {/* ── Tableau des lignes ── */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "8mm", fontSize: "9pt" }}>
         <thead>
-          <tr style={{ backgroundColor: headBg, color: headFg, borderBottom: headBorder }}>
+          <tr style={{ backgroundColor: thBg, color: thFg, borderBottom: thRule }}>
             <th style={thCell("left")}>Désignation</th>
             <th style={{ ...thCell("right"), width: "16mm" }}>Qté</th>
             <th style={{ ...thCell("right"), width: "30mm" }}>{showHT ? "P.U. HT" : "P.U."}</th>
@@ -243,17 +296,19 @@ export default function DevisDocument({
         <tbody>
           {quote.items.length === 0 ? (
             <tr>
-              <td colSpan={4} style={{ ...tdCell("left"), color: "#B9C0CC", fontStyle: "italic", textAlign: "center", padding: "8mm" }}>
-                Ajoutez une ligne (véhicule du stock ou prestation libre)…
+              <td colSpan={4} style={{ ...tdCell("left", rowRule), color: "#B9C0CC", fontStyle: "italic", textAlign: "center", padding: "8mm" }}>
+                Ajoutez une ligne (véhicule du stock, frais, ou ligne libre)…
               </td>
             </tr>
           ) : (
-            quote.items.map((it, i) => {
+            quote.items.map((it) => {
               const disc = lineDiscount(it);
+              const net = lineTotal(it);
+              const deduction = net < 0;
               return (
-                <tr key={it.id} style={{ backgroundColor: i % 2 ? zebra : "transparent" }}>
-                  <td style={tdCell("left")}>
-                    <div style={{ fontWeight: 600 }}>{it.designation || "—"}</div>
+                <tr key={it.id}>
+                  <td style={{ ...tdCell("left", rowRule), paddingLeft: deduction ? "6mm" : undefined }}>
+                    <div style={{ fontWeight: 600, color: deduction ? accent : C.ink }}>{it.designation || "—"}</div>
                     {it.detail && <div style={{ color: C.muted, fontSize: "8pt", marginTop: "0.5mm", whiteSpace: "pre-line" }}>{it.detail}</div>}
                     {disc > 0 && (
                       <div style={{ color: accent, fontSize: "8pt", marginTop: "0.5mm" }}>
@@ -261,14 +316,14 @@ export default function DevisDocument({
                       </div>
                     )}
                   </td>
-                  <td style={tdCell("right")}>
+                  <td style={{ ...tdCell("right", rowRule), ...tabular }}>
                     {it.qty}
                     {it.unit ? ` ${it.unit}` : ""}
                   </td>
-                  <td style={tdCell("right")}>{formatEuro(it.unitPrice)}</td>
-                  <td style={{ ...tdCell("right"), fontWeight: 600, whiteSpace: "nowrap" }}>
+                  <td style={{ ...tdCell("right", rowRule), ...tabular }}>{formatEuro(it.unitPrice)}</td>
+                  <td style={{ ...tdCell("right", rowRule), ...tabular, fontWeight: 600, whiteSpace: "nowrap", color: deduction ? accent : C.ink }}>
                     {disc > 0 && <span style={{ display: "block", color: "#AEB6C2", textDecoration: "line-through", fontWeight: 400, fontSize: "8pt" }}>{formatEuro(lineGross(it))}</span>}
-                    {formatEuro(lineTotal(it))}
+                    {formatEuro(net)}
                   </td>
                 </tr>
               );
@@ -279,41 +334,43 @@ export default function DevisDocument({
 
       {/* ── Totaux ── */}
       <div className="devis-avoid-break" style={{ display: "flex", justifyContent: "flex-end", marginTop: "6mm" }}>
-        <table style={{ width: "78mm", borderCollapse: "collapse", fontSize: "9.5pt" }}>
+        <table style={{ width: "84mm", borderCollapse: "collapse", fontSize: "9.5pt" }}>
           <tbody>
-            {showHT ? (
+            {showHT && (
               <>
-                <TotalRow label="Total HT" value={formatEuro(t.totalHT)} />
-                <TotalRow label={`TVA ${quote.tvaRate} %`} value={formatEuro(t.tvaAmount)} />
-                <TotalRow label="Total TTC" value={formatEuro(t.totalTTC)} grand barColor={accent} />
-              </>
-            ) : (
-              <>
-                <TotalRow label="Total" value={formatEuro(t.totalTTC)} grand barColor={accent} />
-                <tr>
-                  <td colSpan={2} style={{ fontSize: "7.5pt", color: C.muted, paddingTop: "1mm" }}>
-                    {quote.tvaMode === "marge"
-                      ? "TVA sur marge — non récupérable (art. 297 A du CGI)."
-                      : "Opération exonérée de TVA."}
-                  </td>
-                </tr>
+                <SubRow label="Total HT" value={formatEuro(t.totalHT)} />
+                <SubRow label={`TVA ${quote.tvaRate} %`} value={formatEuro(t.tvaAmount)} />
               </>
             )}
-            {t.deposit > 0 && (
+            {/* Le prix domine la page : bloc plein, pas une ligne de plus. */}
+            <GrandRow
+              label={isSolde ? "Solde à payer" : isFacture ? "Net à payer" : showHT ? "Total TTC" : "Total"}
+              value={formatEuro(t.deposit > 0 && isSolde ? t.balance : t.totalTTC)}
+              accent={accent}
+              minimal={theme === "minimal"}
+            />
+            {!showHT && (
+              <tr>
+                <td colSpan={2} style={{ fontSize: "7.5pt", color: C.muted, paddingTop: "1.5mm" }}>
+                  {quote.tvaMode === "marge"
+                    ? "TVA sur marge — non récupérable (art. 297 A du CGI)."
+                    : "Opération exonérée de TVA."}
+                </td>
+              </tr>
+            )}
+            {t.deposit > 0 && !isSolde && (
               <>
-                <TotalRow
-                  label={
-                    isSolde
-                      ? "Acompte déjà facturé"
-                      : quote.depositMode === "percent"
-                        ? `Acompte (${quote.depositValue} %)`
-                        : "Acompte"
-                  }
-                  value={isSolde ? `− ${formatEuro(t.deposit)}` : formatEuro(t.deposit)}
+                <SubRow
+                  label={quote.depositMode === "percent" ? `Acompte ${quote.depositValue} %` : "Acompte à verser"}
+                  value={formatEuro(t.deposit)}
                   spaced
+                  strong
                 />
-                <TotalRow label={isSolde ? "Solde à payer" : isFacture ? "Net à payer" : "Solde"} value={formatEuro(t.balance)} grand={isSolde} barColor={accent} />
+                <SubRow label={isFacture ? "Reste dû" : "Solde à la livraison"} value={formatEuro(t.balance)} />
               </>
+            )}
+            {t.deposit > 0 && isSolde && (
+              <SubRow label="Acompte déjà facturé" value={`− ${formatEuro(t.deposit)}`} spaced />
             )}
           </tbody>
         </table>
@@ -338,6 +395,15 @@ export default function DevisDocument({
         </div>
       )}
 
+      {/* ── Mentions obligatoires d'une facture ── */}
+      {isFacture && (
+        <div className="devis-avoid-break" style={{ marginTop: "6mm", fontSize: "7.5pt", color: C.muted, lineHeight: 1.45 }}>
+          Passé la date d&apos;échéance, tout règlement en retard donne lieu à des pénalités calculées au taux
+          d&apos;intérêt légal majoré, ainsi qu&apos;à une indemnité forfaitaire pour frais de recouvrement de 40 €
+          (art. L441-10 et D441-5 du Code de commerce). Escompte pour paiement anticipé : néant.
+        </div>
+      )}
+
       {/* ── Signatures (devis uniquement : une facture ne se signe pas) ── */}
       {!isFacture && (
         <div className="devis-avoid-break" style={{ display: "flex", justifyContent: "space-between", gap: "12mm", marginTop: "10mm" }}>
@@ -346,37 +412,56 @@ export default function DevisDocument({
         </div>
       )}
 
-      {/* ── Pied de page légal ── */}
+      {/* ── Pied de page : identité, règlement, mention légale ── */}
       <div
+        className="devis-avoid-break"
         style={{
           marginTop: "auto",
-          paddingTop: "6mm",
-          borderTop: `1px solid ${C.border}`,
+          paddingTop: "5mm",
+          borderTop: `1.5pt solid ${accent}`,
           color: C.muted,
           fontSize: "7pt",
-          lineHeight: 1.4,
+          lineHeight: 1.45,
+          display: "flex",
+          gap: "8mm",
         }}
       >
-        {COMPANY.legalFootnote}
+        <div style={{ flex: 1 }}>
+          <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>Émetteur</div>
+          <div style={{ color: C.ink, fontWeight: 600 }}>{b.emitterName}</div>
+          {b.emitterSiret && <div>SIRET {b.emitterSiret}</div>}
+          {b.emitterTva && <div>TVA {b.emitterTva}</div>}
+        </div>
+        {(b.emitterIban || b.emitterBic || b.emitterBank) && (
+          <div style={{ flex: 1 }}>
+            <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>Règlement</div>
+            {b.emitterBank && <div>{b.emitterBank}</div>}
+            {b.emitterIban && <div style={{ ...tabular, wordSpacing: "0.05em" }}>IBAN {b.emitterIban}</div>}
+            {b.emitterBic && <div style={tabular}>BIC {b.emitterBic}</div>}
+          </div>
+        )}
+        <div style={{ flex: 1.4 }}>
+          <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>Mentions</div>
+          <div>{b.legalFootnote}</div>
+        </div>
       </div>
     </div>
   );
 }
 
 /* ── Sous-composants ── */
-function PartyBox({ label, accent, children }: { label: string; accent?: string; children: React.ReactNode }) {
+function PartyBox({ label, accent, onBand, children }: { label: string; accent?: string; onBand?: boolean; children: React.ReactNode }) {
   return (
     <div
       style={{
         flex: 1,
-        border: `1px solid ${C.border}`,
-        borderLeft: accent ? `2.5px solid ${accent}` : `1px solid ${C.border}`,
-        borderRadius: 4,
+        border: `1px solid ${onBand ? "rgba(255,255,255,0.35)" : C.border}`,
+        borderLeft: onBand ? "2.5px solid #FFFFFF" : accent ? `2.5px solid ${accent}` : `1px solid ${C.border}`,
         padding: "4mm 5mm",
-        backgroundColor: accent ? tint(accent, 0.035) : undefined,
+        backgroundColor: onBand ? "rgba(255,255,255,0.10)" : accent ? tint(accent, 0.035) : undefined,
       }}
     >
-      <div style={{ ...labelMini, marginBottom: "2mm", color: accent ?? C.muted }}>{label}</div>
+      <div style={{ ...labelMini, marginBottom: "2mm", color: onBand ? "rgba(255,255,255,0.85)" : accent ?? C.muted }}>{label}</div>
       {children}
     </div>
   );
@@ -390,37 +475,32 @@ function SectionTitle({ children, color = "#1E4FA3" }: { children: React.ReactNo
   );
 }
 
-function TotalRow({ label, value, grand, spaced, barColor = "#0E2747" }: { label: string; value: string; grand?: boolean; spaced?: boolean; barColor?: string }) {
-  // Le total principal ressort sur une bande teintée à la couleur de l'accent.
-  const grandBg = grand ? tint(barColor, 0.07) : undefined;
+// Ligne secondaire des totaux (HT, TVA, acompte).
+function SubRow({ label, value, spaced, strong }: { label: string; value: string; spaced?: boolean; strong?: boolean }) {
+  const pad: CSSProperties = { padding: "1mm 2.5mm", paddingTop: spaced ? "3.5mm" : undefined, whiteSpace: "nowrap" };
   return (
     <tr>
-      <td
-        style={{
-          padding: grand ? "2mm 2.5mm" : "1mm 0",
-          paddingTop: spaced ? "4mm" : undefined,
-          borderTop: grand ? `2px solid ${barColor}` : undefined,
-          backgroundColor: grandBg,
-          color: grand ? C.ink : C.muted,
-          fontWeight: grand ? 700 : 400,
-          fontSize: grand ? "11pt" : undefined,
-        }}
-      >
-        {label}
-      </td>
-      <td
-        style={{
-          padding: grand ? "2mm 2.5mm" : "1mm 0",
-          paddingTop: spaced ? "4mm" : undefined,
-          borderTop: grand ? `2px solid ${barColor}` : undefined,
-          backgroundColor: grandBg,
-          textAlign: "right",
-          fontWeight: grand ? 700 : 600,
-          fontSize: grand ? "11pt" : undefined,
-        }}
-      >
-        {value}
-      </td>
+      <td style={{ ...pad, color: strong ? C.ink : C.muted, fontWeight: strong ? 600 : 400 }}>{label}</td>
+      <td style={{ ...pad, ...tabular, textAlign: "right", color: strong ? C.ink : C.muted, fontWeight: strong ? 700 : 600 }}>{value}</td>
+    </tr>
+  );
+}
+
+// Montant principal : bloc plein, le chiffre le plus gros de la page.
+function GrandRow({ label, value, accent, minimal }: { label: string; value: string; accent: string; minimal?: boolean }) {
+  const bg = minimal ? "transparent" : accent;
+  const fg = minimal ? C.ink : "#FFFFFF";
+  const cell: CSSProperties = {
+    backgroundColor: bg,
+    color: fg,
+    padding: "2.5mm 3mm",
+    borderTop: minimal ? `2pt solid ${accent}` : undefined,
+    borderBottom: minimal ? `2pt solid ${accent}` : undefined,
+  };
+  return (
+    <tr>
+      <td style={{ ...cell, ...labelMini, color: minimal ? C.muted : "rgba(255,255,255,0.85)", verticalAlign: "middle" }}>{label}</td>
+      <td style={{ ...cell, ...tabular, textAlign: "right", fontSize: "17pt", fontWeight: 700, whiteSpace: "nowrap", lineHeight: 1.1 }}>{value}</td>
     </tr>
   );
 }
@@ -437,7 +517,6 @@ function SignatureBox({ title, name, hint }: { title: string; name?: string; hin
       <div
         style={{
           border: `1px solid ${C.border}`,
-          borderRadius: 4,
           height: "20mm",
           backgroundColor: "#FBFCFE",
           display: "flex",
@@ -447,15 +526,16 @@ function SignatureBox({ title, name, hint }: { title: string; name?: string; hin
           color: C.muted,
         }}
       >
-        {name ?? " "}
+        {name ?? " "}
       </div>
     </div>
   );
 }
 
 function thCell(align: "left" | "right"): CSSProperties {
-  return { textAlign: align, padding: "2.5mm 3mm", fontSize: "7.5pt", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600 };
+  return { textAlign: align, padding: "2.5mm 3mm", fontSize: "8pt", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 };
 }
-function tdCell(align: "left" | "right"): CSSProperties {
-  return { textAlign: align, padding: "2.5mm 3mm", borderBottom: `1px solid ${C.border}`, verticalAlign: "top" };
+function tdCell(align: "left" | "right", rule: string): CSSProperties {
+  // Hauteur minimale de ligne : le tableau respire même sur des libellés courts.
+  return { textAlign: align, padding: "2.8mm 3mm", borderBottom: `1px solid ${rule}`, verticalAlign: "top", height: "9mm" };
 }

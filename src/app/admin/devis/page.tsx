@@ -1,44 +1,82 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, Printer } from "lucide-react";
+import { Plus } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { computeTotals, formatEuro, formatDateFr, STATUS_LABEL, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus } from "@/lib/devis";
 import { can, asRole } from "@/lib/roles";
-import { T, TONE, type Tone, AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle } from "../ui";
-import DeleteQuoteButton from "./DeleteQuoteButton";
+import {
+  computeTotals,
+  STATUS_LABEL,
+  type QuoteItem,
+  type TvaMode,
+  type DepositMode,
+  type QuoteStatus,
+} from "@/lib/devis";
+import { relanceDue, daysSince } from "@/lib/relances";
+import { parisDay } from "@/lib/vehicules";
+import { AdminPage, PageHeader, btnPrimaryClass, btnPrimaryStyle } from "../ui";
+import DevisList, { type DevisRow } from "./DevisList";
 
-const STATUS_TONE: Record<QuoteStatus, Tone> = {
-  brouillon: "muted",
-  envoye: "accent",
-  accepte: "success",
-  refuse: "danger",
-};
+const VALID_FILTERS = ["brouillon", "envoye", "accepte", "refuse", "expire", "a-relancer"];
+const VALID_SORTS = [
+  "recent", "numero-asc", "numero-desc", "client-asc", "client-desc",
+  "date-desc", "date-asc", "montant-desc", "montant-asc", "statut-asc", "statut-desc",
+  "validite-asc", "validite-desc",
+];
 
-function QuoteStatusBadge({ status }: { status: string }) {
-  const k = (status in STATUS_TONE ? status : "brouillon") as QuoteStatus;
-  const s = TONE[STATUS_TONE[k]];
-  return (
-    <span className="inline-block text-[10px] tracking-[0.15em] uppercase px-2.5 py-1 whitespace-nowrap" style={{ backgroundColor: s.bg, border: `1px solid ${s.bd}`, color: s.fg }}>
-      {STATUS_LABEL[k]}
-    </span>
-  );
-}
-
-export default async function DevisListPage() {
+export default async function DevisListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ statut?: string; q?: string; tri?: string }>;
+}) {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
   const canDelete = can(asRole(session.admin.role), "delete");
 
-  const rows = await prisma.quote.findMany({ where: { docType: { not: "facture" } }, orderBy: { updatedAt: "desc" } });
+  const { statut, q, tri } = await searchParams;
+  const initialFilter = statut && VALID_FILTERS.includes(statut) ? statut : "all";
+  const initialSort = tri && VALID_SORTS.includes(tri) ? tri : "recent";
 
-  const quotes = rows.map((r) => {
+  const [rows, factures] = await Promise.all([
+    prisma.quote.findMany({
+      where: { docType: { not: "facture" } },
+      orderBy: { updatedAt: "desc" },
+      // Sélection restreinte : la personnalisation de l'en-tête pèse plusieurs
+      // kilo-octets par devis et ne sert à rien dans une liste.
+      select: {
+        id: true, number: true, status: true, items: true, issueDate: true, validityDays: true,
+        clientName: true, clientCompany: true, clientEmail: true, vehicleId: true, updatedAt: true,
+        tvaMode: true, tvaRate: true, depositMode: true, depositValue: true,
+        docType: true, paymentStatus: true, relanceCount: true, lastRelanceDate: true, relanceSnoozeUntil: true,
+        sentAt: true, firstViewedAt: true, viewCount: true, signerName: true, signedAt: true,
+      },
+    }),
+    prisma.quote.findMany({
+      where: { docType: "facture", sourceQuoteId: { not: null } },
+      select: { number: true, sourceQuoteId: true },
+    }),
+  ]);
+
+  const vehicleIds = [...new Set(rows.map((r) => r.vehicleId).filter((v): v is string => !!v))];
+  const vehicles = vehicleIds.length
+    ? await prisma.vehicle.findMany({ where: { id: { in: vehicleIds } }, select: { id: true, make: true, model: true } })
+    : [];
+  const vehicleById = new Map(vehicles.map((v) => [v.id, `${v.make} ${v.model}`]));
+
+  const factureByQuote = new Map<string, string>();
+  for (const f of factures) {
+    if (f.sourceQuoteId && !factureByQuote.has(f.sourceQuoteId)) factureByQuote.set(f.sourceQuoteId, f.number);
+  }
+
+  const todayIso = parisDay(new Date()).toISOString().slice(0, 10);
+
+  const devis: DevisRow[] = rows.map((r) => {
     let items: QuoteItem[] = [];
     try {
       const p = JSON.parse(r.items);
       if (Array.isArray(p)) items = p;
     } catch {
-      /* ignore */
+      /* une ligne abîmée laisse le devis lisible, avec un total à zéro */
     }
     const totals = computeTotals({
       items,
@@ -47,14 +85,55 @@ export default async function DevisListPage() {
       depositMode: r.depositMode as DepositMode,
       depositValue: r.depositValue,
     });
-    return { ...r, totalTTC: totals.totalTTC, lineCount: totals.lineCount };
+
+    const ageDays = daysSince(r.issueDate, todayIso);
+    // Jours restants avant échéance : la date de fin de validité était calculée
+    // uniquement pour le papier, jamais pour la liste.
+    const daysLeft = r.validityDays > 0 ? r.validityDays - ageDays : null;
+    const relance = relanceDue(
+      {
+        docType: r.docType,
+        status: r.status,
+        paymentStatus: r.paymentStatus,
+        issueDate: r.issueDate,
+        sentAt: r.sentAt,
+        lastRelanceDate: r.lastRelanceDate,
+        relanceSnoozeUntil: r.relanceSnoozeUntil,
+      },
+      todayIso,
+    );
+
+    return {
+      id: r.id,
+      number: r.number,
+      client: r.clientCompany || r.clientName || "",
+      vehicle: r.vehicleId ? vehicleById.get(r.vehicleId) ?? "" : "",
+      issueDate: r.issueDate,
+      status: r.status,
+      statusLabel: STATUS_LABEL[r.status as QuoteStatus] ?? r.status,
+      total: totals.totalTTC,
+      deposit: totals.deposit,
+      lineCount: totals.lineCount,
+      ageDays,
+      daysLeft,
+      expired: r.status === "envoye" && daysLeft !== null && daysLeft < 0,
+      factureNumber: factureByQuote.get(r.id) ?? null,
+      relanceDue: relance !== null,
+      relanceCount: r.relanceCount,
+      sentAt: r.sentAt,
+      viewedDays: r.firstViewedAt ? daysSince(r.firstViewedAt.slice(0, 10), todayIso) : null,
+      viewCount: r.viewCount,
+      signerName: r.signerName,
+      hasEmail: !!r.clientEmail,
+      updatedAt: r.updatedAt.toISOString(),
+    };
   });
 
   return (
     <AdminPage>
       <PageHeader
         title="Devis"
-        subtitle={`${rows.length} devis au total.`}
+        subtitle={`${devis.length} devis au total.`}
         action={
           <Link href="/admin/devis/nouveau" className={btnPrimaryClass} style={btnPrimaryStyle}>
             <Plus size={14} />
@@ -62,34 +141,13 @@ export default async function DevisListPage() {
           </Link>
         }
       />
-
-      {quotes.length === 0 ? (
-        <div className="p-10 text-center text-sm" style={{ border: `1px solid ${T.border}`, color: T.textDim }}>
-          Aucun devis pour l&apos;instant.{" "}
-          <Link href="/admin/devis/nouveau" style={{ color: T.accent }}>Créer le premier.</Link>
-        </div>
-      ) : (
-        <div style={{ border: `1px solid ${T.border}` }}>
-          {quotes.map((qte, i) => (
-            <div key={qte.id} className="flex items-center gap-4 px-4 py-3" style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}>
-              <Link href={`/admin/devis/${qte.id}`} className="flex items-center gap-4 min-w-0 flex-1 transition-colors hover:text-[#F0F5FF]">
-                <span className="text-xs tracking-widest uppercase flex-shrink-0" style={{ color: T.accent, width: 92 }}>{qte.number}</span>
-                <span className="text-sm truncate min-w-0" style={{ color: T.text }}>
-                  {qte.clientCompany || qte.clientName || <span style={{ color: T.muted }}>Sans client</span>}
-                </span>
-                <span className="text-xs hidden sm:inline flex-shrink-0" style={{ color: T.muted }}>{formatDateFr(qte.issueDate)}</span>
-              </Link>
-              <span className="text-sm font-semibold hidden sm:inline flex-shrink-0" style={{ color: T.text }}>{formatEuro(qte.totalTTC)}</span>
-              <QuoteStatusBadge status={qte.status} />
-              <Link href={`/admin/devis/${qte.id}/imprimer`} target="_blank" className="items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF] hidden md:inline-flex" style={{ color: T.muted }}>
-                <Printer size={13} />
-                PDF
-              </Link>
-              {canDelete && <DeleteQuoteButton id={qte.id} />}
-            </div>
-          ))}
-        </div>
-      )}
+      <DevisList
+        devis={devis}
+        canDelete={canDelete}
+        initialFilter={initialFilter}
+        initialQuery={q ?? ""}
+        initialSort={initialSort}
+      />
     </AdminPage>
   );
 }

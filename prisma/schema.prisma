@@ -95,6 +95,15 @@ model Quote {
   paidDate      String  @default("")         // YYYY-MM-DD de paiement
   sourceQuoteId String?                        // devis d'origine (conversion)
 
+  // Envoi, lecture et signature en ligne
+  sentAt         String  @default("")  // horodatage ISO de l'envoi au client
+  firstViewedAt  String  @default("")  // première ouverture du lien par le client
+  viewCount      Int     @default(0)
+  publicToken    String? @unique       // jeton du lien de consultation public
+  signerName     String  @default("")
+  signedAt       String  @default("")
+  signedIp       String  @default("")
+
   // Relances (suivi commercial / paiement)
   relanceCount       Int    @default(0)
   lastRelanceDate    String @default("")      // YYYY-MM-DD de la dernière relance

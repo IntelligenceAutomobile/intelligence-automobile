@@ -4,7 +4,8 @@ import { COMPANY } from "./company";
 
 export type TvaMode = "marge" | "tva20" | "exonere";
 export type DepositMode = "percent" | "amount" | "none";
-export type QuoteStatus = "brouillon" | "envoye" | "accepte" | "refuse";
+export const QUOTE_STATUSES = ["brouillon", "envoye", "accepte", "refuse"] as const;
+export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
 export type DocType = "devis" | "facture";
 export type FactureKind = "complete" | "acompte" | "solde";
 export type PaymentStatus = "impayee" | "payee";
@@ -26,6 +27,8 @@ export type HeaderBlockId = "emitter" | "client" | "meta";
 export type BlockBox = { x: number; y: number; w: number }; // mm
 
 // Disposition par défaut des blocs (mm, repère = coin haut-gauche de la zone de contenu, largeur ~178mm).
+// Le bloc client garde un repère fixe uniquement pour la rétro-compatibilité :
+// sa position réelle se calcule sur la hauteur de l'émetteur (voir defaultBlockBox).
 export const DEFAULT_BLOCK_BOX: Record<HeaderBlockId, BlockBox> = {
   emitter: { x: 0, y: 22, w: 95 },
   meta: { x: 108, y: 22, w: 70 },
@@ -33,16 +36,99 @@ export const DEFAULT_BLOCK_BOX: Record<HeaderBlockId, BlockBox> = {
 };
 export const DEFAULT_HEADER_HEIGHT = 74; // mm
 
+/* ── Géométrie de l'en-tête ──
+   Les blocs sont posés en absolu sur la feuille : sans mesure de leur contenu,
+   l'encadré client passait par-dessus les coordonnées de l'émetteur, et le
+   recouvrement s'aggravait de deux lignes dès que le SIRET et le numéro de TVA
+   étaient renseignés, c'est-à-dire sur tout devis d'un professionnel. */
+const PT_MM = 0.3528; // 1 pt en millimètres
+const NAME_MM = 11 * PT_MM * 1.45; // le nom de l'émetteur est en 11 pt
+const LINE_MM = 8.5 * PT_MM * 1.45; // ses coordonnées en 8,5 pt
+const NAME_GAP_MM = 1.5;
+const BLOCK_GAP_MM = 6;
+
+// Lignes réellement imprimées sous le nom de l'émetteur.
+export function emitterLineCount(b: Branding): number {
+  const address = b.emitterAddress.split("\n").map((l) => l.trim()).filter(Boolean).length;
+  return (
+    address +
+    (b.emitterRepresentative ? 1 : 0) +
+    (b.emitterSiret ? 1 : 0) +
+    (b.emitterTva ? 1 : 0) +
+    (b.emitterEmail ? 1 : 0) +
+    (b.emitterPhone ? 1 : 0)
+  );
+}
+
+export function emitterHeight(b: Branding): number {
+  return NAME_MM + NAME_GAP_MM + emitterLineCount(b) * LINE_MM;
+}
+
+// Disposition automatique : le client se pose sous l'émetteur, quel qu'il soit.
+export function defaultBlockBox(b: Branding, id: HeaderBlockId): BlockBox {
+  if (id === "emitter") return DEFAULT_BLOCK_BOX.emitter;
+  if (id === "meta") return DEFAULT_BLOCK_BOX.meta;
+  const top = DEFAULT_BLOCK_BOX.emitter.y + emitterHeight(b) + BLOCK_GAP_MM;
+  return { x: 0, y: Math.round(top * 10) / 10, w: 95 };
+}
+
+// Lignes de l'encadré destinataire.
+type ClientLines = Pick<QuoteData, "clientName" | "clientCompany" | "clientAddress" | "clientEmail" | "clientPhone">;
+function clientBoxHeight(q: ClientLines): number {
+  const lines =
+    (q.clientCompany ? 1 : 0) +
+    (q.clientName ? 1 : 0) +
+    q.clientAddress.split("\n").map((l) => l.trim()).filter(Boolean).length +
+    (q.clientEmail ? 1 : 0) +
+    (q.clientPhone ? 1 : 0);
+  const FRAME_MM = 11; // marges intérieures + libellé « Client »
+  return FRAME_MM + Math.max(1, lines) * LINE_MM;
+}
+
+// Hauteur d'en-tête effective : la valeur enregistrée, relevée quand la
+// disposition demande davantage de place, pour que l'encadré client cesse de
+// déborder sur le tableau des lignes.
+export function headerHeightFor(q: QuoteData): number {
+  const client = blockBox(q.branding, "client");
+  return Math.max(q.branding.headerHeight, Math.ceil(client.y + clientBoxHeight(q) + 2));
+}
+
+// Lignes proposées en ajout rapide. Le prix indicatif reste modifiable.
+export type LinePreset = { designation: string; detail: string; unitPrice?: number; unit?: string };
+
+// Frais et options d'une vente de véhicule. Ce sont aussi les postes que la
+// réglementation impose de présenter en lignes distinctes du prix du véhicule.
+export const VEHICULE_PRESETS: LinePreset[] = [
+  { designation: "Carte grise et taxes", detail: "Immatriculation, facturée au réel", unit: "forfait" },
+  { designation: "Frais de dossier", detail: "", unitPrice: 390, unit: "forfait" },
+  { designation: "Frais de mise à la route", detail: "Révision, nettoyage complet, plein", unitPrice: 290, unit: "forfait" },
+  { designation: "Garantie 12 mois", detail: "Pièces et main d'œuvre", unitPrice: 690, unit: "forfait" },
+  { designation: "Extension de garantie 24 mois", detail: "Pièces et main d'œuvre", unitPrice: 1290, unit: "forfait" },
+  { designation: "Préparation esthétique", detail: "Polissage, traitement céramique", unitPrice: 490, unit: "forfait" },
+  { designation: "Contrôle technique", detail: "Réalisé depuis moins de 6 mois", unitPrice: 90, unit: "forfait" },
+  { designation: "Jeu de plaques d'immatriculation", detail: "Pose comprise", unitPrice: 60, unit: "forfait" },
+  { designation: "Livraison à domicile", detail: "Camion porte-voitures", unit: "forfait" },
+  { designation: "Convoyage par chauffeur", detail: "Trajet par la route", unit: "forfait" },
+];
+
 // Prestations proposées en ajout rapide (mode « Prestation »).
-export const PRESTATION_PRESETS: { designation: string; detail: string }[] = [
+export const PRESTATION_PRESETS: LinePreset[] = [
   { designation: "Création de site internet vitrine", detail: "Conception, développement responsive, mise en ligne" },
   { designation: "Développement web sur-mesure", detail: "Application / fonctionnalités spécifiques" },
   { designation: "Intégration d'un outil / agent IA", detail: "Mise en place et intégration" },
   { designation: "Reprise / refonte de site existant", detail: "" },
-  { designation: "Maintenance & support", detail: "Forfait mensuel" },
-  { designation: "Hébergement & nom de domaine", detail: "Forfait annuel" },
+  { designation: "Maintenance & support", detail: "Forfait mensuel", unit: "mois" },
+  { designation: "Hébergement & nom de domaine", detail: "Forfait annuel", unit: "forfait" },
   { designation: "Rédaction de contenu / SEO", detail: "" },
 ];
+
+// Bibliothèque affichée selon le type de devis.
+export function presetsFor(kind: QuoteKind): LinePreset[] {
+  return kind === "prestation" ? PRESTATION_PRESETS : VEHICULE_PRESETS;
+}
+
+// Désignation par défaut d'une ligne de reprise (montant en déduction).
+export const REPRISE_DESIGNATION = "Reprise de votre véhicule";
 
 // Personnalisation de l'en-tête : identité émetteur + réglages du logo.
 export type Branding = {
@@ -53,7 +139,20 @@ export type Branding = {
   emitterPhone: string;
   emitterSiret: string;
   emitterTva: string;
+  // Coordonnées bancaires : une facture sans elles oblige le client à rappeler
+  // pour savoir où payer.
+  emitterIban: string;
+  emitterBic: string;
+  emitterBank: string;
+  // Mention légale de pied de page, propre à l'émetteur.
+  legalFootnote: string;
+  // Logo du document. Chemin public ou adresse complète : c'est ce qui permet à
+  // un revendeur d'imprimer ses devis sous sa propre marque.
+  logoUrl: string;
   logoVisible: boolean;
+  // Passe le logo en réserve blanche : indispensable sur le thème à bandeau,
+  // où un logo sombre disparaît dans la couleur.
+  logoWhite: boolean;
   logoAlign: LogoAlign;
   logoSize: number; // hauteur en mm
   // Position libre (mm depuis le coin haut-gauche de la page). null = placement auto via logoAlign.
@@ -67,9 +166,9 @@ export type Branding = {
   theme: DocTheme;
 };
 
-// Boîte effective d'un bloc (valeur enregistrée ou défaut).
+// Boîte effective d'un bloc (valeur enregistrée ou disposition automatique).
 export function blockBox(b: Branding, id: HeaderBlockId): BlockBox {
-  return b.blocks[id] ?? DEFAULT_BLOCK_BOX[id];
+  return b.blocks[id] ?? defaultBlockBox(b, id);
 }
 
 export function defaultBranding(): Branding {
@@ -81,7 +180,13 @@ export function defaultBranding(): Branding {
     emitterPhone: COMPANY.phone,
     emitterSiret: COMPANY.siret,
     emitterTva: COMPANY.tvaNumber,
+    emitterIban: "",
+    emitterBic: "",
+    emitterBank: "",
+    legalFootnote: COMPANY.legalFootnote,
+    logoUrl: COMPANY.logoSrc,
     logoVisible: true,
+    logoWhite: false,
     logoAlign: "left",
     logoSize: 16,
     logoX: null,
@@ -122,6 +227,12 @@ export function mergeBranding(raw: unknown): Branding {
     emitterPhone: str(r.emitterPhone, base.emitterPhone),
     emitterSiret: str(r.emitterSiret, base.emitterSiret),
     emitterTva: str(r.emitterTva, base.emitterTva),
+    emitterIban: str(r.emitterIban, base.emitterIban),
+    emitterBic: str(r.emitterBic, base.emitterBic),
+    emitterBank: str(r.emitterBank, base.emitterBank),
+    legalFootnote: str(r.legalFootnote, base.legalFootnote),
+    logoUrl: str(r.logoUrl, base.logoUrl),
+    logoWhite: typeof r.logoWhite === "boolean" ? r.logoWhite : base.logoWhite,
     logoVisible: typeof r.logoVisible === "boolean" ? r.logoVisible : base.logoVisible,
     logoAlign: align,
     logoSize: Math.min(40, Math.max(6, size)),
@@ -172,6 +283,7 @@ export type QuoteData = {
   clientEmail: string;
   clientPhone: string;
   issueDate: string; // YYYY-MM-DD
+  // Devis : durée de validité. Facture : délai de règlement, en jours.
   validityDays: number;
   items: QuoteItem[];
   tvaMode: TvaMode;
@@ -186,6 +298,7 @@ export type QuoteData = {
 
 export type QuoteTotals = {
   lineCount: number;
+  discountTotal: number; // somme des remises de ligne
   subtotal: number; // somme qty × prix unitaire (HT en tva20, TTC sinon)
   totalHT: number;
   tvaAmount: number;
@@ -203,17 +316,25 @@ export function lineGross(item: QuoteItem): number {
 }
 
 // Montant de la remise appliquée à une ligne.
+// Une ligne en déduction (reprise) ne porte pas de remise : la remise en
+// pourcentage d'un montant négatif produirait une réduction négative.
 export function lineDiscount(item: QuoteItem): number {
   const d = Number(item.discount) || 0;
   if (d <= 0) return 0;
   const gross = lineGross(item);
+  if (gross <= 0) return 0;
   const amount = item.discountKind === "amount" ? d : gross * (d / 100);
   return round2(Math.min(gross, Math.max(0, amount)));
 }
 
 // Total net d'une ligne (après remise).
+// Un total négatif est conservé tel quel : c'est une reprise, qui vient en
+// déduction du devis. Le plancher à zéro reste sur les lignes positives, pour
+// qu'une remise supérieure au montant ne fasse jamais basculer une vente.
 export function lineTotal(item: QuoteItem): number {
-  return round2(Math.max(0, lineGross(item) - lineDiscount(item)));
+  const gross = lineGross(item);
+  if (gross < 0) return round2(gross);
+  return round2(Math.max(0, gross - lineDiscount(item)));
 }
 
 export function computeTotals(q: Pick<QuoteData, "items" | "tvaMode" | "tvaRate" | "depositMode" | "depositValue">): QuoteTotals {
@@ -232,13 +353,17 @@ export function computeTotals(q: Pick<QuoteData, "items" | "tvaMode" | "tvaRate"
     totalTTC = subtotal;
   }
 
-  let deposit = 0;
-  if (q.depositMode === "percent") deposit = round2(totalTTC * (Number(q.depositValue) || 0) / 100);
-  else if (q.depositMode === "amount") deposit = round2(Number(q.depositValue) || 0);
+  // L'acompte reste borné entre 0 et le total : un montant fixe saisi au-dessus
+  // du prix du véhicule imprimait jusqu'ici un solde négatif sur le document.
+  let rawDeposit = 0;
+  if (q.depositMode === "percent") rawDeposit = totalTTC * (Number(q.depositValue) || 0) / 100;
+  else if (q.depositMode === "amount") rawDeposit = Number(q.depositValue) || 0;
+  const deposit = round2(Math.min(Math.max(0, rawDeposit), Math.max(0, totalTTC)));
   const balance = round2(totalTTC - deposit);
 
   return {
     lineCount: q.items.length,
+    discountTotal: round2(q.items.reduce((s, it) => s + lineDiscount(it), 0)),
     subtotal,
     totalHT,
     tvaAmount,
@@ -285,9 +410,27 @@ export const FACTURE_KIND_LABEL: Record<FactureKind, string> = {
   solde: "Facture de solde",
 };
 
+// Numéro suivant d'une série annuelle, calculé sur le plus GRAND numéro déjà
+// attribué et jamais sur un comptage : supprimer un document faisait redescendre
+// le compteur et le numéro proposé entrait en collision avec un numéro existant.
+export function nextNumber(prefix: string, existing: readonly string[]): string {
+  const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`^${escaped}(\\d+)$`);
+  let max = 0;
+  for (const n of existing) {
+    const m = re.exec((n || "").trim());
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
+// Préfixes des deux séries annuelles.
+export const quotePrefix = (year: number) => `${year}-`;
+export const facturePrefix = (year: number) => `FAC-${year}-`;
+
 // Numéro de facture continu par année : FAC-2026-001.
-export function factureNumber(year: number, countThisYear: number): string {
-  return `FAC-${year}-${String(countThisYear + 1).padStart(3, "0")}`;
+export function factureNumber(year: number, existing: readonly string[]): string {
+  return nextNumber(facturePrefix(year), existing);
 }
 
 // Date YYYY-MM-DD -> "11 juin 2026"
@@ -334,6 +477,7 @@ export function emptyQuote(number: string, issueDate: string, branding?: Brandin
     paymentStatus: "impayee",
     paidDate: "",
     sourceQuoteId: null,
+    clientId: null,
     clientName: "",
     clientCompany: "",
     clientAddress: "",

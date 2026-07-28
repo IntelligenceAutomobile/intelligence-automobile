@@ -1,4 +1,4 @@
-import { AdminPage, Skeleton, SkeletonRows, T } from "../ui";
+import { AdminPage, Skeleton, SkeletonRows, SkeletonTiles, T } from "../ui";
 
 export default function Loading() {
   return (
@@ -8,7 +8,15 @@ export default function Loading() {
         <Skeleton w={120} h={26} className="mb-2" />
         <Skeleton w={160} h={12} />
       </div>
-      <SkeletonRows count={6} />
+      <SkeletonTiles />
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Skeleton w={240} h={42} />
+        <Skeleton w={92} h={38} />
+        <Skeleton w={112} h={38} />
+        <Skeleton w={104} h={38} />
+      </div>
+      {/* Une ligne de devis porte du texte, jamais de photo. */}
+      <SkeletonRows count={6} thumb={false} />
     </AdminPage>
   );
 }

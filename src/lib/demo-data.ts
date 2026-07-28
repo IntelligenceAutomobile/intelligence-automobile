@@ -343,6 +343,47 @@ export function getDemoQuotes(): DemoQuote[] {
       createdAt: daysAgo(9), updatedAt: daysAgo(9),
     },
     {
+      // Devis parti sans réponse depuis 45 jours : passé la validité de 30 jours,
+      // la liste le signale « expiré » et propose la relance.
+      ...QUOTE_BASE,
+      id: "q-035", number: `${year}-035`, status: "envoye", docType: "devis",
+      factureKind: null, paymentStatus: null, paidDate: null,
+      clientId: "cli-2", clientName: "Sophie Marchand", clientCompany: "",
+      clientEmail: "s.marchand@outlook.fr", clientPhone: "06 71 45 09 22",
+      issueDate: isoDay(-45), vehicleId: "veh-2",
+      items: [
+        { id: "it1", designation: `${v[1]?.make ?? "Véhicule"} ${v[1]?.model ?? ""}`.trim(), detail: v[1] ? `${v[1].year} · ${v[1].mileage} km` : "", qty: 1, unitPrice: v[1]?.price ?? 24900 },
+        { id: "it2", designation: "Carte grise et frais de dossier", detail: "Immatriculation incluse", qty: 1, unitPrice: 480 },
+      ],
+      createdAt: daysAgo(45), updatedAt: daysAgo(45),
+    },
+    {
+      // Brouillon en cours de rédaction, client encore à renseigner.
+      ...QUOTE_BASE,
+      id: "q-042", number: `${year}-042`, status: "brouillon", docType: "devis",
+      factureKind: null, paymentStatus: null, paidDate: null,
+      clientId: null, clientName: "", clientCompany: "",
+      clientEmail: "", clientPhone: "",
+      issueDate: isoDay(-1), vehicleId: "veh-1",
+      items: [
+        { id: "it1", designation: `${v[0]?.make ?? "Véhicule"} ${v[0]?.model ?? ""}`.trim(), detail: v[0] ? `${v[0].year} · ${v[0].mileage} km` : "", qty: 1, unitPrice: v[0]?.price ?? 18900 },
+      ],
+      createdAt: daysAgo(1), updatedAt: daysAgo(1),
+    },
+    {
+      // Refusé : le prospect est parti sur un autre modèle.
+      ...QUOTE_BASE,
+      id: "q-030", number: `${year}-030`, status: "refuse", docType: "devis",
+      factureKind: null, paymentStatus: null, paidDate: null,
+      clientId: "cli-3", clientName: "Julien Roy", clientCompany: "Roy Automobiles",
+      clientEmail: "contact@roy-automobiles.fr", clientPhone: "04 78 33 21 09",
+      issueDate: isoDay(-62), vehicleId: "veh-3",
+      items: [
+        { id: "it1", designation: `${v[2]?.make ?? "Véhicule"} ${v[2]?.model ?? ""}`.trim(), detail: v[2] ? `${v[2].year} · ${v[2].mileage} km` : "", qty: 1, unitPrice: v[2]?.price ?? 31900 },
+      ],
+      createdAt: daysAgo(62), updatedAt: daysAgo(60),
+    },
+    {
       ...QUOTE_BASE,
       id: "fac-001", number: `FAC-${year}-001`, status: "envoye", docType: "facture",
       factureKind: "complete", paymentStatus: "payee", paidDate: isoDay(-7),
