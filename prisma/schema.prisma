@@ -316,6 +316,52 @@ model LeadEvent {
   @@index([leadId])
 }
 
+// Réunions : le journal de bord de l'agence. Une réunion est le conteneur daté ;
+// ses décisions et ses actions sont des lignes de première classe, requêtables en
+// travers de l'année (registre des décisions, liste des actions ouvertes).
+// Les chiffres de la situation du jour sont FIGÉS par copie à la création, comme
+// les données véhicule d'un dossier Registration : relire une réunion de mars doit
+// montrer le stock de mars, pas celui d'aujourd'hui.
+model Meeting {
+  id          String   @id @default(cuid())
+  date        String                        // jour YYYY-MM-DD (saisi tel quel)
+  title       String   @default("")
+  kind        String   @default("interne")  // interne | banque | partenaire | fournisseur | client | autre
+  attendees   String   @default("[]")       // JSON string[] : participants
+  location    String   @default("")         // "Agence", "Visio", "BNP Paris 17e"
+  summary     String   @default("")         // relevé de discussion, texte libre
+  snapshot    String   @default("{}")       // JSON figé à la création (voir MeetingSnapshot)
+  attachments String   @default("[]")       // JSON [{ label, url }] — Vercel Blob
+  author      String   @default("")         // signature du créateur, posée côté serveur
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items MeetingItem[]
+
+  @@index([date])
+}
+
+// Décision prise ou action à mener pendant une réunion. La cascade suit le
+// précédent LeadEvent → Lead : une ligne meurt avec la réunion qui la porte.
+model MeetingItem {
+  id        String   @id @default(cuid())
+  meetingId String
+  type      String   @default("decision") // decision | action
+  content   String   @default("")
+  owner     String   @default("")         // responsable (actions)
+  dueDate   String   @default("")         // échéance YYYY-MM-DD (actions, optionnelle)
+  status    String   @default("a_faire")  // a_faire | fait — ignoré pour les décisions
+  doneAt    String   @default("")         // YYYY-MM-DD du passage à fait
+  position  Int      @default(0)          // ordre d'affichage dans la fiche
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId])
+  @@index([status])
+}
+
 // Comptes entre associés (César / Fab) : dépenses communes, avances, règlements.
 model LedgerEntry {
   id          String   @id @default(cuid())

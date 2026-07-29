@@ -6,7 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
-  Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, FileBadge, type LucideIcon,
+  Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, FileBadge,
+  NotebookPen, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -16,6 +17,7 @@ type Item = { icon: LucideIcon; label: string; hint: string; href: string; cap?:
 const STATIC_ITEMS: Item[] = [
   { icon: Plus, label: "Ajouter un véhicule", hint: "Action", href: "/admin/vehicules/nouveau" },
   { icon: Plus, label: "Nouveau devis", hint: "Action", href: "/admin/devis/nouveau" },
+  { icon: Plus, label: "Nouvelle réunion", hint: "Action", href: "/admin/reunions?nouvelle=1" },
   { icon: LayoutDashboard, label: "Tableau de bord", hint: "Page", href: "/admin" },
   { icon: Car, label: "Stock", hint: "Page", href: "/admin/vehicules" },
   { icon: FileText, label: "Devis", hint: "Page", href: "/admin/devis" },
@@ -29,6 +31,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: FileBadge, label: "Immatriculations", hint: "Page", href: "/admin/immatriculations" },
   { icon: Star, label: "Avis clients", hint: "Page", href: "/admin/avis" },
   { icon: MessagesSquare, label: "Atelier", hint: "Page", href: "/admin/atelier" },
+  { icon: NotebookPen, label: "Réunions", hint: "Page", href: "/admin/reunions" },
   { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes", cap: "finances" },
   { icon: UserCog, label: "Utilisateurs", hint: "Réglages", href: "/admin/utilisateurs", cap: "users" },
   // Maquette de référence sortie de l'en-tête du stock : la palette est une

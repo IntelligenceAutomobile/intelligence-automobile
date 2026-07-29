@@ -6,7 +6,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
-  CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge, type LucideIcon,
+  CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge,
+  NotebookPen, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -39,6 +40,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     section: "Équipe",
     items: [
       { icon: MessagesSquare, label: "Atelier", href: "/admin/atelier" },
+      { icon: NotebookPen, label: "Réunions", href: "/admin/reunions" },
       { icon: Wallet, label: "Comptes", href: "/admin/comptes", cap: "finances" },
     ],
   },
