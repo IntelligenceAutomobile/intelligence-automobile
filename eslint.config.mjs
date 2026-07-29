@@ -41,6 +41,29 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // ── Une seule porte de sortie pour les emails ──
+  // Des messages d'essai sont partis vers l'adresse d'un vrai prospect depuis
+  // un poste de développement. src/lib/mailer.ts retient tout ce qui pourrait
+  // atteindre une vraie personne hors production : personne d'autre ne parle
+  // au service d'envoi, sinon le garde-fou est contournable.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/mailer.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "resend",
+              message:
+                "Passez par sendMail() de src/lib/mailer.ts : hors production, il retient les messages qui pourraient atteindre une vraie adresse.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

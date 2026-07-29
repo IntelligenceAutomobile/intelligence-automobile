@@ -10,7 +10,7 @@ import {
   NotebookPen, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
-import { formatDateFr } from "@/lib/devis";
+import { formatDateFr, STATUS_LABEL, type QuoteStatus } from "@/lib/devis";
 import { T } from "./ui";
 
 type Item = { icon: LucideIcon; label: string; hint: string; href: string; cap?: Capability };
@@ -48,7 +48,7 @@ type MeetingLite = {
   decisions: { id: string; content: string }[];
 };
 type VehicleLite = { id: string; make: string; model: string; year: number; status: string };
-type QuoteLite = { id: string; number: string; clientName?: string | null; clientCompany?: string | null; status: string };
+type QuoteLite = { id: string; number: string; docType?: string; clientName?: string | null; clientCompany?: string | null; status: string };
 type ClientLite = { id: string; name: string; company: string; email: string };
 
 export default function CommandPalette({ role }: { role: Role }) {
@@ -69,7 +69,7 @@ export default function CommandPalette({ role }: { role: Role }) {
     try {
       const [vRes, qRes, cRes, rRes] = await Promise.all([
         fetch("/api/admin/vehicules"),
-        fetch("/api/admin/devis"),
+        fetch("/api/admin/devis?light=1"),
         fetch("/api/admin/clients"),
         fetch("/api/admin/reunions"),
       ]);
@@ -114,11 +114,14 @@ export default function CommandPalette({ role }: { role: Role }) {
       .filter((d) => q && `${d.number} ${d.clientName ?? ""} ${d.clientCompany ?? ""}`.toLowerCase().includes(q))
       .slice(0, 5)
       .map((d) => {
-        const isFac = d.number.startsWith("FAC-");
+        // Le type se lit sur docType : deviné au préfixe « FAC- », une facture
+        // renumérotée à la main s'affichait comme un devis, avec le mauvais lien.
+        const isFac = d.docType === "facture";
         return {
           icon: isFac ? ReceiptText : FileText,
           label: `${isFac ? "Facture" : "Devis"} ${d.number}${d.clientCompany || d.clientName ? ` — ${d.clientCompany || d.clientName}` : ""}`,
-          hint: isFac ? "Facture" : d.status,
+          // Le code interne « envoye » s'affichait tel quel dans la palette.
+          hint: isFac ? "Facture" : STATUS_LABEL[d.status as QuoteStatus] ?? d.status,
           href: `/admin/devis/${d.id}`,
         };
       });

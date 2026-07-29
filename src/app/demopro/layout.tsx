@@ -15,6 +15,22 @@ import { DemoStoreProvider } from "./store";
 import { DEMO_BASE } from "./demo";
 import "@/app/admin/admin.css";
 
+// Collé sur WhatsApp ou LinkedIn, le lien de démarchage affichait le titre et la
+// photo du site vitrine, « Import Premium Européen ». Il porte désormais le sien,
+// et reste hors des moteurs de recherche.
+export const metadata = {
+  title: "Back-office automobile — démonstration",
+  description:
+    "Explorez un back-office complet pour professionnels de l'automobile : stock, devis signés en ligne, factures, relances, CRM et planning atelier.",
+  robots: { index: false, follow: false },
+  openGraph: {
+    title: "Back-office automobile — démonstration",
+    description:
+      "Stock, devis signés en ligne, factures, relances, CRM et planning atelier, avec des données d'exemple.",
+    type: "website",
+  },
+};
+
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>

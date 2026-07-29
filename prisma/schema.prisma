@@ -161,6 +161,13 @@ model Quote {
   // Lien véhicule principal (optionnel)
   vehicleId String?
 
+  // Identité du véhicule imprimée sur le document (JSON) :
+  // { show, label, vin, plate, firstRegDate, mileageKm, energy, color, origin, photoUrl }
+  // Recopiée depuis la fiche du stock et le dossier d'immatriculation, puis
+  // figée : le devis doit continuer d'afficher ce qu'il affichait le jour de
+  // son envoi, même si la voiture a roulé ou quitté le stock depuis.
+  vehicleInfo String @default("{}")
+
   // Lien client CRM (optionnel)
   clientId String?
 
@@ -266,6 +273,25 @@ model BrandTheme {
   tagline    String   @default("Back-office")
   accent     String   @default("#6B9FEE")
   reviewLink String   @default("") // lien Google « laisser un avis »
+
+  // Identité portée par les DOCUMENTS (devis, factures). Sans elle, un revendeur
+  // obtenait un back-office à ses couleurs qui imprimait des devis au nom
+  // d'Intelligence Automobile. Un champ vide reprend la valeur de company.ts.
+  logoUrl               String @default("")
+  docAccent             String @default("") // vide = reprend `accent`
+  docTheme              String @default("classic")
+  emitterName           String @default("")
+  emitterAddress        String @default("")
+  emitterRepresentative String @default("")
+  emitterEmail          String @default("")
+  emitterPhone          String @default("")
+  emitterSiret          String @default("")
+  emitterTva            String @default("")
+  emitterIban           String @default("")
+  emitterBic            String @default("")
+  emitterBank           String @default("")
+  legalFootnote         String @default("")
+
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

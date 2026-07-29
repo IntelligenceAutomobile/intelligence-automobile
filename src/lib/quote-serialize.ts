@@ -1,6 +1,6 @@
 // Mappers entre le corps de requête / ligne Prisma et l'objet devis applicatif.
 // Module neutre (pas de dépendance Prisma/React).
-import { mergeBranding } from "./devis";
+import { mergeBranding, mergeVehicleBlock } from "./devis";
 import { parisDay } from "./vehicules";
 
 export function quoteToData(body: Record<string, unknown>) {
@@ -38,10 +38,13 @@ export function quoteToData(body: Record<string, unknown>) {
     vehicleId: body.vehicleId ? String(body.vehicleId) : null,
     clientId: body.clientId ? String(body.clientId) : null,
     branding: JSON.stringify(body.branding && typeof body.branding === "object" ? body.branding : {}),
+    // Identité du véhicule figée au document : nettoyée à l'entrée (capitales du
+    // numéro de série, bornes de longueur) plutôt qu'à chaque affichage.
+    vehicleInfo: JSON.stringify(mergeVehicleBlock(body.vehicle)),
   };
 }
 
-export function quoteFromRow<T extends { items: string; branding?: string }>(row: T) {
+export function quoteFromRow<T extends { items: string; branding?: string; vehicleInfo?: string }>(row: T) {
   let items: unknown[] = [];
   try {
     const p = JSON.parse(row.items);
@@ -55,5 +58,11 @@ export function quoteFromRow<T extends { items: string; branding?: string }>(row
   } catch {
     /* ignore */
   }
-  return { ...row, items, branding: mergeBranding(brandingRaw) };
+  let vehicleRaw: unknown = {};
+  try {
+    vehicleRaw = JSON.parse(row.vehicleInfo ?? "{}");
+  } catch {
+    /* ignore */
+  }
+  return { ...row, items, branding: mergeBranding(brandingRaw), vehicle: mergeVehicleBlock(vehicleRaw) };
 }

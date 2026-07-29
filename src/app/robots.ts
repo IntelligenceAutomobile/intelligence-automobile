@@ -6,7 +6,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/api"],
+      // /devis/<jeton> est un document nominatif, /demopro une vitrine de
+      // demarchage : ni l'un ni l'autre n'a sa place dans un moteur de recherche.
+      disallow: ["/admin", "/api", "/demopro", "/devis"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

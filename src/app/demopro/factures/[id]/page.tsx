@@ -19,7 +19,7 @@ import {
 } from "@/lib/devis";
 import { T, AdminPage, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
 import { DemoPageHeader } from "@/app/demopro/DemoPageHeader";
-import { getDemoQuote } from "@/lib/demo-data";
+import { getDemoQuote, getDemoVehicleBlock } from "@/lib/demo-data";
 import DevisDocument from "@/app/admin/devis/DevisDocument";
 import { DEMO_BASE } from "../../demo";
 import DemoActionButton from "@/app/demopro/DemoActionButton";
@@ -64,6 +64,8 @@ export default async function DemoFacturePage({ params }: { params: Promise<{ id
     paymentTerms: q.paymentTerms,
     notes: "",
     vehicleId: q.vehicleId,
+    // La facture porte le même véhicule que le devis, numéro de série compris.
+    vehicle: getDemoVehicleBlock(q.vehicleId),
     branding: defaultBranding(),
   };
 

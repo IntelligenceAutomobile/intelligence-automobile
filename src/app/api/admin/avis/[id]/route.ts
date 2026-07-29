@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendMail, MAIL_FROM } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { COMPANY } from "@/lib/company";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM ?? "Intelligence Automobile <contact@intelligenceautomobile.com>";
+const FROM = MAIL_FROM;
 
 function reviewEmail(opts: { clientName: string; brandName: string; reviewLink: string; accent: string }) {
   const { clientName, brandName, reviewLink, accent } = opts;
@@ -58,14 +57,15 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       accent: theme?.accent || "#6B9FEE",
     });
 
-    if (process.env.RESEND_API_KEY) {
-      await resend.emails.send({ from: FROM, to: client.email, replyTo: COMPANY.email, subject: `Votre avis sur ${theme?.name || "notre équipe"}`, html });
-    } else {
-      console.log(`[Avis ${client.name}] → ${client.email} (RESEND_API_KEY absent, non envoyé)`);
+    const envoi = await sendMail({ from: FROM, to: client.email, replyTo: COMPANY.email, subject: `Votre avis sur ${theme?.name || "notre équipe"}`, html });
+    // Service d'envoi joignable mais qui refuse : la demande reste à faire.
+    // La marquer « envoyée » retirait le client de la liste sans qu'il ait rien reçu.
+    if (envoi.error) {
+      return NextResponse.json({ error: "L'email n'est pas parti : la demande d'avis reste à faire." }, { status: 502 });
     }
 
     await prisma.client.update({ where: { id }, data: { reviewRequestedAt: new Date().toISOString().slice(0, 10) } });
-    return NextResponse.json({ ok: true, sent: !!process.env.RESEND_API_KEY });
+    return NextResponse.json({ ok: true, sent: envoi.sent });
   } catch {
     return NextResponse.json({ error: "Erreur lors de l'envoi." }, { status: 500 });
   }

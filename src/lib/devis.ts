@@ -198,6 +198,64 @@ export function defaultBranding(): Branding {
   };
 }
 
+// Identité de documents portée par la marque blanche. Un champ laissé vide dans
+// les réglages reprend la valeur de company.ts : le revendeur ne remplit que ce
+// qui le concerne, et son devis sort à son nom dès le premier réglage.
+export type BrandDocIdentity = {
+  logoUrl?: string | null;
+  docAccent?: string | null;
+  docTheme?: string | null;
+  emitterName?: string | null;
+  emitterAddress?: string | null;
+  emitterRepresentative?: string | null;
+  emitterEmail?: string | null;
+  emitterPhone?: string | null;
+  emitterSiret?: string | null;
+  emitterTva?: string | null;
+  emitterIban?: string | null;
+  emitterBic?: string | null;
+  emitterBank?: string | null;
+  legalFootnote?: string | null;
+  accent?: string | null;
+};
+
+// Personnalisation d'un nouveau document, à partir des réglages de la marque.
+// `layout` permet de conserver la mise en page (position des blocs, hauteur
+// d'en-tête, taille du logo) travaillée sur un devis précédent.
+export function brandingFromTheme(theme: BrandDocIdentity | null | undefined, layout?: Branding): Branding {
+  const base = defaultBranding();
+  const pick = (v: string | null | undefined, repli: string) => (v && v.trim() ? v.trim() : repli);
+  const accent = pick(theme?.docAccent, pick(theme?.accent, base.accentColor));
+  const themeDoc = theme?.docTheme === "colored" || theme?.docTheme === "minimal" ? theme.docTheme : "classic";
+  return {
+    ...base,
+    // La mise en page se garde d'un devis à l'autre, l'identité vient des réglages.
+    logoAlign: layout?.logoAlign ?? base.logoAlign,
+    logoSize: layout?.logoSize ?? base.logoSize,
+    logoX: layout?.logoX ?? base.logoX,
+    logoY: layout?.logoY ?? base.logoY,
+    logoVisible: layout?.logoVisible ?? base.logoVisible,
+    logoWhite: layout?.logoWhite ?? base.logoWhite,
+    headerHeight: layout?.headerHeight ?? base.headerHeight,
+    blocks: layout?.blocks ?? base.blocks,
+
+    logoUrl: pick(theme?.logoUrl, base.logoUrl),
+    emitterName: pick(theme?.emitterName, base.emitterName),
+    emitterAddress: pick(theme?.emitterAddress, base.emitterAddress),
+    emitterRepresentative: pick(theme?.emitterRepresentative, base.emitterRepresentative),
+    emitterEmail: pick(theme?.emitterEmail, base.emitterEmail),
+    emitterPhone: pick(theme?.emitterPhone, base.emitterPhone),
+    emitterSiret: pick(theme?.emitterSiret, base.emitterSiret),
+    emitterTva: pick(theme?.emitterTva, base.emitterTva),
+    emitterIban: pick(theme?.emitterIban, base.emitterIban),
+    emitterBic: pick(theme?.emitterBic, base.emitterBic),
+    emitterBank: pick(theme?.emitterBank, base.emitterBank),
+    legalFootnote: pick(theme?.legalFootnote, base.legalFootnote),
+    accentColor: accent,
+    theme: themeDoc as DocTheme,
+  };
+}
+
 // Complète n'importe quel objet partiel avec les valeurs par défaut (rétro-compat).
 export function mergeBranding(raw: unknown): Branding {
   const base = defaultBranding();
@@ -266,6 +324,64 @@ export type QuoteItem = {
 
 export const UNIT_OPTIONS = ["", "forfait", "jour", "heure", "mois", "unité"] as const;
 
+// ── Véhicule concerné ──
+// Identité du véhicule telle qu'elle figure sur le document. Recopiée depuis la
+// fiche du stock et le dossier d'immatriculation, puis FIGÉE : le devis de juin
+// doit continuer d'afficher le kilométrage de juin, même si la voiture a roulé
+// depuis, changé de plaque ou quitté le stock. C'est la règle déjà retenue pour
+// les dossiers d'immatriculation, pour la même raison.
+export type VehicleBlock = {
+  show: boolean;
+  label: string; // « BMW Série 3 320d — 2021 »
+  vin: string; // numéro de série (17 caractères)
+  plate: string; // immatriculation
+  firstRegDate: string; // 1re mise en circulation, YYYY-MM-DD
+  mileageKm: number;
+  energy: string; // « Diesel · Automatique »
+  color: string;
+  origin: string; // provenance
+  photoUrl: string;
+};
+
+export function emptyVehicleBlock(): VehicleBlock {
+  return { show: false, label: "", vin: "", plate: "", firstRegDate: "", mileageKm: 0, energy: "", color: "", origin: "", photoUrl: "" };
+}
+
+export function mergeVehicleBlock(raw: unknown): VehicleBlock {
+  const d = emptyVehicleBlock();
+  if (!raw || typeof raw !== "object") return d;
+  const v = raw as Record<string, unknown>;
+  type TexteDuBloc = Exclude<keyof VehicleBlock, "show" | "mileageKm">;
+  const str = (k: TexteDuBloc, max = 120) => (typeof v[k] === "string" ? (v[k] as string).slice(0, max) : d[k]);
+  return {
+    show: typeof v.show === "boolean" ? v.show : d.show,
+    label: str("label"),
+    // Un numéro de série s'écrit en capitales, sans espace : recopié d'un mail
+    // ou d'une carte grise, il arrivait en minuscules et coupé par des espaces.
+    vin: str("vin", 32).toUpperCase().replace(/\s+/g, ""),
+    plate: str("plate", 16).toUpperCase().trim(),
+    firstRegDate: str("firstRegDate", 10),
+    mileageKm: typeof v.mileageKm === "number" && isFinite(v.mileageKm) ? Math.max(0, Math.round(v.mileageKm)) : d.mileageKm,
+    energy: str("energy", 60),
+    color: str("color", 40),
+    origin: str("origin", 60),
+    photoUrl: str("photoUrl", 400),
+  };
+}
+
+// Vrai dès qu'une information mérite d'apparaître sur le document.
+export function vehicleBlockFilled(v: VehicleBlock): boolean {
+  return Boolean(v.label || v.vin || v.plate || v.firstRegDate || v.mileageKm > 0 || v.energy || v.color || v.origin || v.photoUrl);
+}
+
+// Numéro de série par groupes de lecture : 17 caractères d'affilée se
+// recopient de travers, l'œil perd sa place.
+export function formatVin(vin: string): string {
+  const v = vin.replace(/\s+/g, "").toUpperCase();
+  if (v.length < 12) return v;
+  return `${v.slice(0, 3)} ${v.slice(3, 9)} ${v.slice(9)}`;
+}
+
 export type QuoteData = {
   id?: string;
   number: string;
@@ -293,8 +409,29 @@ export type QuoteData = {
   paymentTerms: string;
   notes: string;
   vehicleId?: string | null;
+  // Identité du véhicule imprimée sur le document, figée au devis.
+  vehicle: VehicleBlock;
   branding: Branding;
 };
+
+// Ce qui manque à un devis pour pouvoir partir chez un client. Enregistrer un
+// brouillon incomplet reste permis, c'est le travail en cours ; l'envoyer ou le
+// facturer, non. Un devis vide à 0 € s'imprimait et se facturait sans un mot.
+export function quoteIssues(q: Pick<QuoteData, "clientName" | "clientCompany" | "items" | "tvaMode" | "tvaRate" | "depositMode" | "depositValue">): string[] {
+  const manques: string[] = [];
+  if (!q.clientName.trim() && !q.clientCompany.trim()) manques.push("le client");
+  const lignes = q.items.filter((it) => it.designation.trim() !== "");
+  if (lignes.length === 0) manques.push("au moins une ligne");
+  else if (computeTotals(q).totalTTC <= 0) manques.push("un montant");
+  return manques;
+}
+
+// Formulation prête à afficher : « le client et au moins une ligne ».
+export function issuesLabel(manques: readonly string[]): string {
+  if (manques.length === 0) return "";
+  if (manques.length === 1) return manques[0];
+  return `${manques.slice(0, -1).join(", ")} et ${manques[manques.length - 1]}`;
+}
 
 export type QuoteTotals = {
   lineCount: number;
@@ -304,6 +441,10 @@ export type QuoteTotals = {
   tvaAmount: number;
   totalTTC: number;
   deposit: number;
+  // Acompte exprimé hors taxe, tel que la facture d'acompte le portera. Sans
+  // lui, la route de facturation reconvertissait le TTC en HT de son côté et la
+  // somme acompte + solde s'écartait du devis d'un centime.
+  depositHT: number;
   balance: number;
   showTva: boolean;
 };
@@ -358,7 +499,13 @@ export function computeTotals(q: Pick<QuoteData, "items" | "tvaMode" | "tvaRate"
   let rawDeposit = 0;
   if (q.depositMode === "percent") rawDeposit = totalTTC * (Number(q.depositValue) || 0) / 100;
   else if (q.depositMode === "amount") rawDeposit = Number(q.depositValue) || 0;
-  const deposit = round2(Math.min(Math.max(0, rawDeposit), Math.max(0, totalTTC)));
+  let deposit = round2(Math.min(Math.max(0, rawDeposit), Math.max(0, totalTTC)));
+  // En TVA 20 %, l'acompte se pose d'abord en HT puis se recompose en TTC :
+  // c'est le seul moyen que la facture d'acompte et la facture de solde
+  // retombent exactement sur le total du devis.
+  const rate = showTva ? (Number(q.tvaRate) || 0) / 100 : 0;
+  const depositHT = showTva ? round2(deposit / (1 + rate)) : deposit;
+  if (showTva) deposit = round2(depositHT * (1 + rate));
   const balance = round2(totalTTC - deposit);
 
   return {
@@ -369,6 +516,7 @@ export function computeTotals(q: Pick<QuoteData, "items" | "tvaMode" | "tvaRate"
     tvaAmount,
     totalTTC,
     deposit,
+    depositHT,
     balance,
     showTva,
   };
@@ -493,6 +641,7 @@ export function emptyQuote(number: string, issueDate: string, branding?: Brandin
     paymentTerms: d.paymentTerms,
     notes: "",
     vehicleId: null,
+    vehicle: emptyVehicleBlock(),
     branding: branding ?? defaultBranding(),
   };
 }

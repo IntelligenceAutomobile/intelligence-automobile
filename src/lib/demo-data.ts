@@ -10,6 +10,7 @@
 // publics, aucune donnée personnelle). Le reste (clients, leads, RDV, devis,
 // factures, garanties, diffusion, comptes) est inventé ici, à titre d'exemple.
 import fixtures from "@/lib/showroom-fixtures.json";
+import { emptyVehicleBlock, type VehicleBlock } from "@/lib/devis";
 
 /* ────────────────────────── Dates relatives ──────────────────────────
    Recalculées à chaque requête pour que la démo reste « vivante »
@@ -67,6 +68,50 @@ export function getDemoVehicles(): DemoVehicle[] {
 
 export function getDemoVehicle(id: string): DemoVehicle | undefined {
   return getDemoVehicles().find((v) => v.id === id);
+}
+
+// Identités administratives d'exemple, pour les véhicules du catalogue de
+// démonstration qui n'ont pas de dossier d'immatriculation ouvert. Le dossier,
+// quand il existe, prime toujours : c'est la source réelle.
+const IDENTITES_DEMO: Record<string, { vin: string; plate: string; firstRegDate: string }> = {
+  "veh-2": { vin: "TRUZZZFV8K1006721", plate: "FT-118-QD", firstRegDate: "2019-04-22" },
+  "veh-3": { vin: "TRUZZZ8J0E1042318", plate: "EJ-902-MH", firstRegDate: "2014-09-08" },
+  "veh-4": { vin: "TRUZZZ8J0A1015904", plate: "CX-447-TB", firstRegDate: "2010-06-15" },
+  "veh-5": { vin: "WAUZZZ8V4LA073612", plate: "GH-236-VN", firstRegDate: "2020-02-27" },
+  "veh-6": { vin: "TRUZZZFV1J1008455", plate: "FQ-560-KR", firstRegDate: "2018-07-03" },
+};
+
+// Encart « Véhicule concerné » d'un devis d'exemple : la fiche du stock donne
+// la photo et les caractéristiques, le dossier d'immatriculation donne le
+// numéro de série et la plaque. C'est exactement le chemin du back-office.
+export function getDemoVehicleBlock(vehicleId: string | null): VehicleBlock {
+  const bloc = emptyVehicleBlock();
+  if (!vehicleId) return bloc;
+  const v = getDemoVehicle(vehicleId);
+  if (!v) return bloc;
+  const cle = `${v.make} ${v.model}`.toLowerCase();
+  const dossier = getDemoRegistrations().find((r) => r.vehicleLabel.toLowerCase().startsWith(cle));
+  let photo = "";
+  try {
+    const images = JSON.parse(v.images);
+    if (Array.isArray(images) && typeof images[0] === "string") photo = images[0];
+  } catch {
+    /* une fiche sans photo reste une fiche valide */
+  }
+  const repli = IDENTITES_DEMO[vehicleId];
+  return {
+    ...bloc,
+    show: true,
+    label: `${v.make} ${v.model} — ${v.year}`,
+    vin: dossier?.vin || repli?.vin || "",
+    plate: dossier?.plateFinal || dossier?.plateForeign || repli?.plate || "",
+    firstRegDate: dossier?.firstRegDate || repli?.firstRegDate || "",
+    mileageKm: v.mileage,
+    energy: [v.fuel, v.transmission].filter(Boolean).join(" · "),
+    color: v.color,
+    origin: v.origin,
+    photoUrl: photo,
+  };
 }
 
 /* ────────────────────────── Suivi véhicule ──────────────────────────

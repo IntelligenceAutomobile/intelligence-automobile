@@ -22,9 +22,8 @@ export type Acceptation = {
 
 const POLL_MS = 30_000;
 // Dernière signature dont la pastille a été consultée (visite de la liste).
+// La pastille, elle, survit aux rechargements : c'est le rappel durable.
 const KEY_VU = "ia_acceptations_vues";
-// Dernière signature pour laquelle la fenêtre s'est déjà ouverte.
-const KEY_ANNONCE = "ia_acceptations_annoncees";
 
 function lire(cle: string): string {
   try {
@@ -46,6 +45,10 @@ function ecrire(cle: string, valeur: string) {
    toute la mise en page. */
 let acceptations: Acceptation[] = [];
 let vuJusqua = "";
+// Repère posé à la première lecture de l'écran : la fenêtre ne s'ouvre que pour
+// les signatures arrivées APRÈS. Sans lui, ouvrir le back-office annonçait une
+// signature vieille de trois semaines comme une nouvelle.
+let annoncéJusqua: string | null = null;
 let compteur = 0;
 let abonnes: Array<() => void> = [];
 
@@ -96,9 +99,14 @@ export default function AcceptationsWatcher() {
       acceptations = Array.isArray(j.acceptations) ? j.acceptations : [];
       recalculer();
 
-      const annoncees = lire(KEY_ANNONCE);
-      const nouvelles = acceptations.filter((a) => a.signedAt > annoncees);
-      if (nouvelles.length > 0) setFile(nouvelles);
+      const dernier = acceptations[0]?.signedAt ?? "";
+      if (annoncéJusqua === null) {
+        // Première lecture : on note où l'on en est, sans rien annoncer.
+        annoncéJusqua = dernier;
+      } else {
+        const nouvelles = acceptations.filter((a) => a.signedAt > (annoncéJusqua ?? ""));
+        if (nouvelles.length > 0) setFile(nouvelles);
+      }
 
       // Après un rechargement complet, l'écran est déjà affiché quand la liste
       // arrive : sans ce rappel, la pastille survivait à la visite.
@@ -143,7 +151,7 @@ export default function AcceptationsWatcher() {
   function refermer() {
     // La fenêtre ne se rouvrira plus pour ces signatures-là.
     const dernier = file[0]?.signedAt ?? "";
-    if (dernier) ecrire(KEY_ANNONCE, dernier);
+    if (dernier) annoncéJusqua = dernier;
     setFile([]);
   }
 

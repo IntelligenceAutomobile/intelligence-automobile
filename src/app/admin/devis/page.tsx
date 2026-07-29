@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { can, asRole } from "@/lib/roles";
 import {
   computeTotals,
+  quoteIssues,
+  issuesLabel,
   STATUS_LABEL,
   type QuoteItem,
   type TvaMode,
@@ -119,6 +121,12 @@ export default async function DevisListPage({
       daysLeft,
       expired: r.status === "envoye" && daysLeft !== null && daysLeft < 0,
       factureNumber: factureByQuote.get(r.id) ?? null,
+      // Ce qu'il manque au devis pour pouvoir partir chez le client.
+      manque: issuesLabel(quoteIssues({
+        items, tvaMode: r.tvaMode as TvaMode, tvaRate: r.tvaRate,
+        depositMode: r.depositMode as DepositMode, depositValue: r.depositValue,
+        clientName: r.clientName, clientCompany: r.clientCompany,
+      })),
       relanceDue: relance !== null,
       relanceSinceDays: relance?.sinceDays ?? null,
       relanceCount: r.relanceCount,

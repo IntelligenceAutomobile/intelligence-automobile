@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { Resend } from "resend";
+import { sendMail, MAIL_FROM } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
-import { computeTotals, formatEuro, formatDateFr, validUntilFr, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { computeTotals, formatEuro, formatDateFr, validUntilFr, quoteIssues, issuesLabel, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 import { escapeHtml } from "@/lib/html";
 import { syncLeadForQuote } from "@/lib/devis-effets";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM ?? "Intelligence Automobile <contact@intelligenceautomobile.com>";
+const FROM = MAIL_FROM;
 
 // Adresse publique du site, pour composer le lien envoyé au client.
 function siteOrigin(req: NextRequest): string {
@@ -84,13 +83,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     } catch {
       /* un devis abîmé s'envoie quand même, avec un total à zéro */
     }
-    const totals = computeTotals({
+    const chiffres = {
       items,
       tvaMode: row.tvaMode as TvaMode,
       tvaRate: row.tvaRate,
       depositMode: row.depositMode as DepositMode,
       depositValue: row.depositValue,
-    });
+    };
+    const totals = computeTotals(chiffres);
+
+    // Un devis sans client, sans ligne ou à 0 € part quand même chez l'acheteur
+    // tant que rien ne l'arrête : il s'enregistre librement, il ne s'envoie pas.
+    const manques = quoteIssues({ ...chiffres, clientName: row.clientName, clientCompany: row.clientCompany });
+    if (manques.length > 0) {
+      return NextResponse.json(
+        { error: `Ce devis attend encore ${issuesLabel(manques)}.` },
+        { status: 400 },
+      );
+    }
 
     let branding: { emitterName?: string; accentColor?: string } = {};
     try {
@@ -115,17 +125,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       accent: branding.accentColor ?? "#6B9FEE",
     });
 
-    const sent = !!process.env.RESEND_API_KEY;
-    if (sent) {
-      // Resend signale ses échecs dans la réponse, jamais en exception : sans ce
-      // contrôle, un envoi raté passait pour réussi (statut, date, lien… posés).
-      const { error: sendError } = await resend.emails.send({ from: FROM, to, subject, html });
-      if (sendError) {
-        return NextResponse.json({ error: "L'email n'est pas parti : le devis reste à envoyer. Réessayez dans un instant." }, { status: 502 });
-      }
-    } else {
-      console.log(`[Envoi devis ${row.number}] → ${to} (RESEND_API_KEY absent, non envoyé)\n${link}`);
+    // Un envoi refusé par le service passait pour réussi (statut, date, lien…
+    // posés) : le devis disparaissait de la liste des choses à faire.
+    const envoi = await sendMail({ from: FROM, to, subject, html });
+    if (envoi.error) {
+      return NextResponse.json({ error: "L'email n'est pas parti : le devis reste à envoyer. Réessayez dans un instant." }, { status: 502 });
     }
+    const sent = envoi.sent;
+    if (!sent) console.log(`[Envoi devis ${row.number}] → ${to} retenu (${envoi.reason})\n${link}`);
 
     const updated = await prisma.quote.update({
       where: { id },

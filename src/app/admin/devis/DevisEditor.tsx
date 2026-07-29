@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Copy, FileText, GripVertical, Loader2, Lock, Maximize2, Move, RotateCcw, Trash2, Undo2, Users, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Copy, FileText, GripVertical, Loader2, Lock, Maximize2, Move, RefreshCw, RotateCcw, Send, Trash2, Undo2, Users, X } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { matchesSearch } from "@/lib/vehicules";
 import {
@@ -30,6 +30,8 @@ import {
   type LogoAlign,
   type QuoteKind,
   type HeaderBlockId,
+  type VehicleBlock,
+  emptyVehicleBlock,
 } from "@/lib/devis";
 import DevisDocument from "./DevisDocument";
 import {
@@ -47,6 +49,7 @@ import {
 } from "../ui";
 import { useToast } from "../toast";
 import { ConfirmDialog } from "../confirm";
+import EnvoiDialog from "./EnvoiDialog";
 
 export type VehicleLite = {
   id: string;
@@ -61,7 +64,37 @@ export type VehicleLite = {
   status?: string;
   // Achat + frais engagés, en centimes.
   costCents?: number;
+  color?: string;
+  origin?: string;
+  // Identité administrative, venue du dossier d'immatriculation.
+  vin?: string;
+  plate?: string;
+  firstRegDate?: string;
+  photoUrl?: string;
 };
+
+// Identité du véhicule à imprimer, recopiée d'une fiche du stock.
+function blockFromVehicle(v: VehicleLite, precedent: VehicleBlock): VehicleBlock {
+  const energie = [v.fuel, v.transmission].filter(Boolean).join(" · ");
+  return {
+    // Le devis affiche le véhicule dès qu'on le prend au stock : c'est la
+    // raison d'être de l'encart. Le choix contraire, une fois fait, se garde.
+    show: true,
+    label: `${v.make} ${v.model}${v.year ? ` — ${v.year}` : ""}`,
+    vin: v.vin ?? "",
+    plate: v.plate ?? "",
+    firstRegDate: v.firstRegDate ?? "",
+    mileageKm: v.mileage ?? 0,
+    energy: energie,
+    color: v.color ?? "",
+    origin: v.origin ?? "",
+    photoUrl: v.photoUrl ?? "",
+    // Ce qui a été saisi à la main et que le stock ignore se conserve.
+    ...(precedent.vin && !v.vin ? { vin: precedent.vin } : {}),
+    ...(precedent.plate && !v.plate ? { plate: precedent.plate } : {}),
+    ...(precedent.firstRegDate && !v.firstRegDate ? { firstRegDate: precedent.firstRegDate } : {}),
+  };
+}
 
 const A4_W = 793.7; // 210 mm @ 96 dpi
 // Marges de la feuille (voir .devis-sheet dans DevisDocument) : les positions
@@ -132,6 +165,9 @@ export default function DevisEditor({
   sourceQuote = null,
   canFinance = false,
   canUnlock = false,
+  canBranding = false,
+  sentAt = "",
+  publicToken = null,
 }: {
   initial: QuoteData;
   vehicles: VehicleLite[];
@@ -140,6 +176,12 @@ export default function DevisEditor({
   sourceQuote?: { id: string; number: string } | null;
   canFinance?: boolean;
   canUnlock?: boolean;
+  // L'identité du document appartient aux réglages de la marque : hors de ce
+  // droit, elle se consulte mais ne se réécrit pas devis par devis.
+  canBranding?: boolean;
+  // Envoi déjà effectué : la proposition d'envoyer cesse alors de revenir.
+  sentAt?: string;
+  publicToken?: string | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -154,6 +196,7 @@ export default function DevisEditor({
   );
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
   const [depositInput, setDepositInput] = useState(() => (initial.depositValue ? String(initial.depositValue) : ""));
+  const [kmInput, setKmInput] = useState(() => (initial.vehicle.mileageKm ? formatNumber(initial.vehicle.mileageKm) : ""));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -162,8 +205,13 @@ export default function DevisEditor({
   const [prestaOpen, setPrestaOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [leaveOpen, setLeaveOpen] = useState(false);
-  // Devis qui vient d'être créé : déclenche le message de confirmation.
-  const [created, setCreated] = useState<{ id: string; number: string } | null>(null);
+  // Devis qui vient d'être enregistré : déclenche le message de confirmation.
+  const [created, setCreated] = useState<{ id: string; number: string; nouveau: boolean } | null>(null);
+  // Fenêtre d'envoi, ouverte depuis cette confirmation.
+  const [envoiOpen, setEnvoiOpen] = useState(false);
+  // Reste faux tant que le client n'a rien reçu : c'est ce qui décide si l'on
+  // propose l'envoi après un enregistrement.
+  const [envoye, setEnvoye] = useState(!!sentAt);
   const [draftDismissed, setDraftDismissed] = useState(false);
   const savingRef = useRef(false);
 
@@ -276,6 +324,10 @@ export default function DevisEditor({
   }
   function updateBranding(patch: Partial<QuoteData["branding"]>) {
     setQ((prev) => ({ ...prev, branding: { ...prev.branding, ...patch } }));
+    setDirty(true);
+  }
+  function updateVehicle(patch: Partial<VehicleBlock>) {
+    setQ((prev) => ({ ...prev, vehicle: { ...prev.vehicle, ...patch } }));
     setDirty(true);
   }
   // Bascule le type de devis et applique les défauts (TVA + conditions) correspondants.
@@ -403,10 +455,14 @@ export default function DevisEditor({
       vehicleId: v.id,
     };
     setPriceInputs((p) => ({ ...p, [it.id]: v.price ? formatNumber(v.price) : "" }));
+    setKmInput(v.mileage ? formatNumber(v.mileage) : "");
     setQ((prev) => ({
       ...prev,
       items: [...prev.items, it],
       vehicleId: prev.vehicleId ?? v.id,
+      // Le premier véhicule pris au stock devient celui du document : numéro de
+      // série, plaque et 1re mise en circulation arrivent d'eux-mêmes.
+      vehicle: prev.vehicleId && prev.vehicleId !== v.id ? prev.vehicle : blockFromVehicle(v, prev.vehicle),
     }));
     setOpenDetail((s) => new Set(s).add(it.id));
     setDirty(true);
@@ -478,12 +534,14 @@ export default function DevisEditor({
         setSavedAt(new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
         clearDraft();
       }
-      if (isEdit) {
-        toast.success(`Devis ${saved.number ?? sent.number} enregistré.`);
+      const numero = saved.number ?? sent.number;
+      // Un devis qui vient d'être écrit sert à être envoyé : on le propose tant
+      // qu'il n'est pas parti. Une fois envoyé, l'enregistrement redevient
+      // silencieux pour ne plus interrompre le travail de correction.
+      if (!isEdit || !envoye) {
+        setCreated({ id: saved.id as string, number: numero, nouveau: !isEdit });
       } else {
-        // Création : on annonce clairement le résultat au lieu de laisser le
-        // vendeur devant son formulaire encore rempli, sans savoir où il en est.
-        setCreated({ id: saved.id as string, number: saved.number ?? sent.number });
+        toast.success(`Devis ${numero} enregistré.`);
       }
       router.refresh();
       return saved.id as string;
@@ -495,7 +553,7 @@ export default function DevisEditor({
       savingRef.current = false;
       setSaving(false);
     }
-  }, [isEdit, router, toast, clearDraft]);
+  }, [isEdit, router, toast, clearDraft, envoye]);
 
   async function saveAndPrint() {
     // L'onglet s'ouvre dans le geste de l'utilisateur : ouvert après l'attente
@@ -719,6 +777,10 @@ export default function DevisEditor({
 
   const pickerRows = filteredVehicles.slice(0, 40);
   const clampedPicker = Math.min(pickerIndex, Math.max(0, pickerRows.length - 1));
+
+  // Fiche du stock rattachée au devis : permet de reprendre l'identité du
+  // véhicule après une mise à jour du dossier d'immatriculation.
+  const stockVehicle = useMemo(() => vehicles.find((v) => v.id === q.vehicleId) ?? null, [vehicles, q.vehicleId]);
 
   // Flèches pour parcourir, Entrée pour choisir : le panneau se pilote au clavier.
   function onPickerKeyDown(e: React.KeyboardEvent) {
@@ -1288,6 +1350,107 @@ export default function DevisEditor({
           )}
         </SectionCard>
 
+        {/* ── Véhicule concerné ──
+            Le document annonçait « BMW Série 3 » et un prix, sans rien qui
+            désigne LA voiture. Un devis de véhicule identifie sa voiture :
+            numéro de série, immatriculation, première mise en circulation. */}
+        {q.kind === "vehicule" && (
+          <SectionCard title="Véhicule concerné">
+            <label className="flex items-center gap-2.5 text-sm cursor-pointer" style={{ color: T.textDim }}>
+              <input
+                type="checkbox"
+                checked={q.vehicle.show}
+                onChange={(e) => updateVehicle({ show: e.target.checked })}
+                style={{ accentColor: T.accent, width: 16, height: 16 }}
+              />
+              Afficher l&apos;encart véhicule sur le document
+            </label>
+
+            {q.vehicle.show && (
+              <>
+                {stockVehicle && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-[11px]" style={{ color: T.muted }}>
+                      Fiche du stock : {stockVehicle.make} {stockVehicle.model}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateVehicle(blockFromVehicle(stockVehicle, emptyVehicleBlock()));
+                        setKmInput(stockVehicle.mileage ? formatNumber(stockVehicle.mileage) : "");
+                      }}
+                      className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase"
+                      style={{ color: T.accent }}
+                    >
+                      <RefreshCw size={12} />
+                      Reprendre depuis la fiche
+                    </button>
+                  </div>
+                )}
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label="Désignation">
+                    <input className={fieldClass} style={fieldStyle} value={q.vehicle.label} onChange={(e) => updateVehicle({ label: e.target.value })} placeholder="BMW Série 3 320d — 2021" />
+                  </Field>
+                  <Field label="Immatriculation">
+                    <input className={fieldClass} style={fieldStyle} value={q.vehicle.plate} onChange={(e) => updateVehicle({ plate: e.target.value.toUpperCase() })} placeholder="AB-123-CD" />
+                  </Field>
+                  <Field label="Numéro de série (VIN)">
+                    <input
+                      className={fieldClass}
+                      style={{ ...fieldStyle, fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}
+                      value={q.vehicle.vin}
+                      onChange={(e) => updateVehicle({ vin: e.target.value.toUpperCase().replace(/\s+/g, "") })}
+                      placeholder="WBA8E9109GK000000"
+                      maxLength={17}
+                    />
+                  </Field>
+                  <Field label="1re mise en circulation">
+                    <input type="date" className={fieldClass} style={fieldStyle} value={q.vehicle.firstRegDate} onChange={(e) => updateVehicle({ firstRegDate: e.target.value })} />
+                  </Field>
+                  <Field label="Kilométrage">
+                    <input
+                      className={fieldClass}
+                      style={fieldStyle}
+                      value={kmInput}
+                      onChange={(e) => { setKmInput(e.target.value); updateVehicle({ mileageKm: Math.round(parseAmount(e.target.value)) }); }}
+                      onBlur={() => setKmInput(q.vehicle.mileageKm ? formatNumber(q.vehicle.mileageKm) : "")}
+                      placeholder="86 400"
+                      inputMode="numeric"
+                    />
+                  </Field>
+                  <Field label="Énergie et boîte">
+                    <input className={fieldClass} style={fieldStyle} value={q.vehicle.energy} onChange={(e) => updateVehicle({ energy: e.target.value })} placeholder="Diesel · Automatique" />
+                  </Field>
+                  <Field label="Couleur">
+                    <input className={fieldClass} style={fieldStyle} value={q.vehicle.color} onChange={(e) => updateVehicle({ color: e.target.value })} placeholder="Gris Sophisto" />
+                  </Field>
+                  <Field label="Provenance">
+                    <input className={fieldClass} style={fieldStyle} value={q.vehicle.origin} onChange={(e) => updateVehicle({ origin: e.target.value })} placeholder="Allemagne" />
+                  </Field>
+                </div>
+
+                <div className="flex items-end gap-3">
+                  {q.vehicle.photoUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={q.vehicle.photoUrl} alt="" className="w-24 h-16 object-cover flex-shrink-0" style={{ border: `1px solid ${T.border}` }} />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <Field label="Photo du document">
+                      <input className={fieldClass} style={fieldStyle} value={q.vehicle.photoUrl} onChange={(e) => updateVehicle({ photoUrl: e.target.value })} placeholder="/vehicules/ma-photo.jpg" />
+                    </Field>
+                  </div>
+                </div>
+                <p className="text-[11px]" style={{ color: T.muted }}>
+                  Le numéro de série et l&apos;immatriculation viennent du dossier d&apos;immatriculation
+                  quand il existe. Ce qui figure ici reste figé sur le devis, même si la fiche du stock
+                  évolue ensuite.
+                </p>
+              </>
+            )}
+          </SectionCard>
+        )}
+
         {/* Fiscalité & acompte */}
         <SectionCard title="Fiscalité & acompte">
           <div className="grid sm:grid-cols-2 gap-4">
@@ -1380,6 +1543,14 @@ export default function DevisEditor({
         </SectionCard>
 
         {/* Émetteur, logo & mise en page */}
+        <fieldset disabled={!canBranding} className="space-y-5 block" style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+        {!canBranding && (
+          <div className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ backgroundColor: T.float, border: `1px solid ${T.border}` }}>
+            <span className="text-[13px]" style={{ color: T.muted }}>
+              L&apos;identité du document vient des réglages de la marque.
+            </span>
+          </div>
+        )}
         <SectionCard title="Émetteur, logo & mise en page">
           <label className="flex items-center gap-2.5 text-sm cursor-pointer" style={{ color: T.textDim }}>
             <input type="checkbox" checked={q.branding.logoVisible} onChange={(e) => updateBranding({ logoVisible: e.target.checked })} style={{ accentColor: T.accent, width: 16, height: 16 }} />
@@ -1562,6 +1733,7 @@ export default function DevisEditor({
             </div>
           </Field>
         </SectionCard>
+        </fieldset>
 
       </fieldset>
 
@@ -1672,18 +1844,35 @@ export default function DevisEditor({
                   <Check size={22} />
                 </span>
               </div>
-              <p className="text-lg mb-1.5" style={{ color: T.text }}>Votre devis a été créé.</p>
-              <p className="text-[13px] mb-7" style={{ color: T.muted }}>
+              <p className="text-lg mb-1.5" style={{ color: T.text }}>
+                {created.nouveau ? "Votre devis a été créé." : "Votre devis a été enregistré."}
+              </p>
+              <p className="text-[13px] mb-2" style={{ color: T.muted }}>
                 Devis {created.number} · {formatEuro(totals.totalTTC)}
               </p>
+              <p className="text-[13px] mb-7" style={{ color: T.textDim }}>
+                {q.clientEmail
+                  ? `Vous pouvez l'envoyer tout de suite à ${q.clientEmail}.`
+                  : "Renseignez l'email du client pour pouvoir le lui envoyer."}
+              </p>
+
               <button
                 type="button"
                 autoFocus
-                onClick={() => { setCreated(null); router.push("/admin/devis"); }}
+                onClick={() => setEnvoiOpen(true)}
                 className={btnPrimaryClass + " w-full py-3.5"}
                 style={btnPrimaryStyle}
               >
-                OK
+                <Send size={14} />
+                Envoyer au client
+              </button>
+              <button
+                type="button"
+                onClick={() => { setCreated(null); router.push("/admin/devis"); }}
+                className={btnGhostClass + " w-full py-3 mt-2"}
+                style={btnGhostStyle}
+              >
+                Plus tard
               </button>
               <button
                 type="button"
@@ -1695,6 +1884,20 @@ export default function DevisEditor({
               </button>
             </div>
           </div>
+        )}
+
+        {/* Envoi proposé dans la foulée de l'enregistrement */}
+        {created && (
+          <EnvoiDialog
+            open={envoiOpen}
+            quoteId={created.id}
+            number={created.number}
+            clientEmail={q.clientEmail}
+            clientName={q.clientName || q.clientCompany}
+            publicToken={publicToken}
+            onClose={() => setEnvoiOpen(false)}
+            onSent={() => { setEnvoye(true); setCreated(null); router.push("/admin/devis"); }}
+          />
         )}
       </div>
 

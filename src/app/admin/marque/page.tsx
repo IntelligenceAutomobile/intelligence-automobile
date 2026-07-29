@@ -18,6 +18,20 @@ export default async function MarquePage() {
         tagline: theme?.tagline ?? "Back-office",
         accent: theme?.accent ?? "#6B9FEE",
         reviewLink: theme?.reviewLink ?? "",
+        logoUrl: theme?.logoUrl ?? "",
+        docAccent: theme?.docAccent ?? "",
+        docTheme: theme?.docTheme ?? "classic",
+        emitterName: theme?.emitterName ?? "",
+        emitterAddress: theme?.emitterAddress ?? "",
+        emitterRepresentative: theme?.emitterRepresentative ?? "",
+        emitterEmail: theme?.emitterEmail ?? "",
+        emitterPhone: theme?.emitterPhone ?? "",
+        emitterSiret: theme?.emitterSiret ?? "",
+        emitterTva: theme?.emitterTva ?? "",
+        emitterIban: theme?.emitterIban ?? "",
+        emitterBic: theme?.emitterBic ?? "",
+        emitterBank: theme?.emitterBank ?? "",
+        legalFootnote: theme?.legalFootnote ?? "",
       }}
     />
   );

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
   mergeBranding,
+  mergeVehicleBlock,
   formatEuro,
   computeTotals,
   validUntilFr,
@@ -63,6 +64,13 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
   } catch {
     /* repli sur les valeurs par défaut */
   }
+  let vehicleRaw: unknown = {};
+  try {
+    vehicleRaw = JSON.parse(row.vehicleInfo ?? "{}");
+  } catch {
+    /* repli sur un encart vide */
+  }
+
 
   const quote: QuoteData = {
     id: row.id,
@@ -90,6 +98,7 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
     paymentTerms: row.paymentTerms,
     notes: row.notes,
     vehicleId: row.vehicleId,
+    vehicle: mergeVehicleBlock(vehicleRaw),
     branding: mergeBranding(brandingRaw),
   };
 

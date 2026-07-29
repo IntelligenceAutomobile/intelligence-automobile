@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { reserveVehicleForQuote } from "@/lib/devis-effets";
-import { computeTotals, factureNumber, facturePrefix, FACTURE_KIND_LABEL, type FactureKind, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { computeTotals, factureNumber, facturePrefix, FACTURE_KIND_LABEL, quoteIssues, issuesLabel, type FactureKind, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 import { parisDay } from "@/lib/vehicules";
-
-const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 // Convertit un devis en facture (acompte / solde / complète).
 // Réutilise le moteur devis : la facture est une ligne Quote (docType=facture).
@@ -37,6 +35,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       depositMode: src.depositMode as DepositMode,
       depositValue: src.depositValue,
     });
+
+    // Facturer un devis vide produisait une facture à 0 € en toute discrétion.
+    const manques = quoteIssues({
+      items, tvaMode: src.tvaMode as TvaMode, tvaRate: src.tvaRate,
+      depositMode: src.depositMode as DepositMode, depositValue: src.depositValue,
+      clientName: src.clientName, clientCompany: src.clientCompany,
+    });
+    if (manques.length > 0) {
+      return NextResponse.json({ error: `Ce devis attend encore ${issuesLabel(manques)}.` }, { status: 400 });
+    }
 
     if (kind === "acompte" && totals.deposit <= 0) {
       return NextResponse.json({ error: "Ce devis ne prévoit pas d'acompte." }, { status: 400 });
@@ -71,9 +79,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     let paymentTerms = src.paymentTerms;
 
     if (kind === "acompte") {
-      // Une ligne = l'acompte. En TVA 20 %, le prix saisi est HT → on retire la TVA.
-      const isTva20 = src.tvaMode === "tva20";
-      const unitPrice = isTva20 ? round2(totals.deposit / (1 + (src.tvaRate || 0) / 100)) : totals.deposit;
+      // Une ligne = l'acompte. Le montant HT vient du calcul du devis lui-même :
+      // le reconvertir ici faisait diverger d'un centime la somme acompte + solde.
+      const unitPrice = totals.depositHT;
       let designation = "Acompte sur commande";
       if (src.vehicleId) {
         const v = await prisma.vehicle.findUnique({ where: { id: src.vehicleId }, select: { make: true, model: true } });
@@ -120,6 +128,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         notes: src.notes,
         branding: src.branding,
         vehicleId: src.vehicleId,
+        // La facture désigne la même voiture que le devis, avec le même numéro
+        // de série : c'est ce qui rattache la pièce comptable au véhicule.
+        vehicleInfo: src.vehicleInfo,
       },
     });
 

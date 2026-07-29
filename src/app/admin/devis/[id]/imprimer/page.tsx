@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { mergeBranding, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
+import { mergeBranding, mergeVehicleBlock, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
 import DevisDocument from "../../DevisDocument";
 import PrintToolbar from "./PrintToolbar";
 
@@ -63,6 +63,13 @@ export default async function ImprimerDevisPage({ params }: { params: Promise<{ 
   } catch {
     /* ignore */
   }
+  let vehicleRaw: unknown = {};
+  try {
+    vehicleRaw = JSON.parse(row.vehicleInfo ?? "{}");
+  } catch {
+    /* repli sur un encart vide */
+  }
+
 
   const quote: QuoteData = {
     id: row.id,
@@ -89,6 +96,7 @@ export default async function ImprimerDevisPage({ params }: { params: Promise<{ 
     paymentTerms: row.paymentTerms,
     notes: row.notes,
     vehicleId: row.vehicleId,
+    vehicle: mergeVehicleBlock(vehicleRaw),
     branding: mergeBranding(brandingRaw),
   };
 

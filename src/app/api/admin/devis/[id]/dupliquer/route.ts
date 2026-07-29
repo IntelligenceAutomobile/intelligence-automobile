@@ -42,6 +42,16 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         relanceCount: 0,
         lastRelanceDate: "",
         relanceSnoozeUntil: "",
+        // La copie n'a jamais été envoyée ni signée. Le jeton du lien public est
+        // unique en base : le recopier faisait échouer la duplication de tout
+        // devis déjà envoyé, et aurait fait pointer deux devis sur un même lien.
+        publicToken: null,
+        sentAt: "",
+        firstViewedAt: "",
+        viewCount: 0,
+        signerName: "",
+        signedAt: "",
+        signedIp: "",
       },
     });
     return NextResponse.json({ id: copy.id, number: copy.number });

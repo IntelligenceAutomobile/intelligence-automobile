@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { Resend } from "resend";
+import { sendMail, MAIL_FROM, canSendTo } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
@@ -10,8 +10,7 @@ import { parisDay } from "@/lib/vehicules";
 import { escapeHtml } from "@/lib/html";
 import { COMPANY } from "@/lib/company";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM ?? "Intelligence Automobile <contact@intelligenceautomobile.com>";
+const FROM = MAIL_FROM;
 
 // Adresse publique du site, pour composer le lien envoyé au client.
 function siteOrigin(req: NextRequest): string {
@@ -318,7 +317,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Hors service d'envoi, la relance est annulée : enregistrer une relance
     // jamais partie masquait le document une à deux semaines pour rien.
-    if (!process.env.RESEND_API_KEY) {
+    if (!canSendTo(row.clientEmail)) {
       return NextResponse.json({ error: "L'envoi d'emails est indisponible sur ce serveur : relance annulée." }, { status: 503 });
     }
 
@@ -334,21 +333,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const expired = row.docType !== "facture" && row.validityDays > 0 && daysSince(row.issueDate, today) > row.validityDays;
     const { subject, html } = buildRelanceEmail(row, { link, message, expired });
 
-    // Resend signale ses échecs dans la réponse, jamais en exception : sans ce
-    // contrôle, une clé révoquée enregistrait des relances fantômes en série.
-    const { data: sendData, error: sendError } = await resend.emails.send({
-      from: FROM,
-      to: row.clientEmail,
-      replyTo: COMPANY.email || undefined,
-      subject,
-      html,
-    });
-    if (sendError) {
-      await journal("echec", `Envoi refusé par le service d'email : ${sendError.message ?? "raison inconnue"}`);
+    // Le service signale ses échecs dans la réponse, jamais en exception : sans
+    // ce contrôle, une clé révoquée enregistrait des relances fantômes en série.
+    const envoi = await sendMail({ from: FROM, to: row.clientEmail, replyTo: COMPANY.email, subject, html });
+    if (envoi.sent === false) {
+      await journal("echec", `Envoi refusé par le service d'email : ${envoi.error ?? envoi.reason ?? "raison inconnue"}`);
       return NextResponse.json({ error: "L'email n'est pas parti : la relance reste à faire. Réessayez dans un instant." }, { status: 502 });
     }
 
-    await journal("email", `Email envoyé à ${row.clientEmail}${sendData?.id ? ` (réf. ${sendData.id})` : ""}`);
+    await journal("email", `Email envoyé à ${row.clientEmail}${envoi.id ? ` (réf. ${envoi.id})` : ""}`);
 
     try {
       await prisma.quote.update({

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendMail, MAIL_FROM } from "@/lib/mailer";
 import { createLeadFromSite } from "@/lib/crm-intake";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const TO   = process.env.RESEND_TO   ?? "contact@intelligenceautomobile.com";
-const FROM = process.env.RESEND_FROM ?? "Intelligence Automobile <contact@intelligenceautomobile.com>";
+const FROM = MAIL_FROM;
 
 export async function POST(req: NextRequest) {
   try {
@@ -120,20 +118,16 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`;
 
-    // Envoi email via Resend
-    if (process.env.RESEND_API_KEY) {
-      console.log(`[Resend] FROM=${FROM} TO=${TO}`);
-      const { data, error } = await resend.emails.send({
-        from: FROM,
-        to: TO,
-        replyTo: email,
-        subject: `${lien ? "Reprise d'annonce" : "Aide à la vente"} — ${marque} ${modele} (${annee}) — ${prenom} ${nom}`,
-        html,
-      });
-      if (error) console.error("[Resend] Erreur:", JSON.stringify(error));
-      else console.log("[Resend] Envoyé, id:", data?.id);
-    } else {
-      console.log("=== Aide à la vente (RESEND_API_KEY manquant) ===");
+    const envoi = await sendMail({
+      from: FROM,
+      to: TO,
+      replyTo: email,
+      subject: `${lien ? "Reprise d'annonce" : "Aide à la vente"} — ${marque} ${modele} (${annee}) — ${prenom} ${nom}`,
+      html,
+    });
+    if (envoi.sent) console.log("[email] Aide à la vente envoyée, réf.", envoi.id);
+    else {
+      console.log(`=== Aide à la vente (email non parti : ${envoi.reason ?? envoi.error}) ===`);
       console.log({ prenom, nom, email, telephone, marque, modele, annee, kilometrage, etat, prix });
     }
 

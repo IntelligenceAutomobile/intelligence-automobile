@@ -18,7 +18,7 @@ import {
 } from "@/lib/devis";
 import { T, AdminPage, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
 import { DemoPageHeader } from "@/app/demopro/DemoPageHeader";
-import { getDemoQuote } from "@/lib/demo-data";
+import { getDemoQuote, getDemoVehicleBlock } from "@/lib/demo-data";
 import DevisDocument from "@/app/admin/devis/DevisDocument";
 import { DEMO_BASE } from "../../demo";
 import DemoActionButton from "../DemoActionButton";
@@ -63,6 +63,9 @@ export default async function DemoDevisPage({ params }: { params: Promise<{ id: 
     paymentTerms: q.paymentTerms,
     notes: "",
     vehicleId: q.vehicleId,
+    // L'encart véhicule fait partie de ce qu'on montre : c'est ce qui distingue
+    // un devis d'automobile d'un devis générique.
+    vehicle: getDemoVehicleBlock(q.vehicleId),
     branding: defaultBranding(),
   };
 

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendMail, MAIL_FROM } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { reserveVehicleForQuote, syncLeadForQuote } from "@/lib/devis-effets";
 import { COMPANY } from "@/lib/company";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM ?? "Intelligence Automobile <contact@intelligenceautomobile.com>";
+const FROM = MAIL_FROM;
 
 // Acceptation d'un devis par le client, depuis la page publique.
 // Route ouverte par nature : le jeton du lien tient lieu d'identification.
@@ -52,18 +51,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       /* repli */
     }
     const notify = branding.emitterEmail || COMPANY.email;
-    if (process.env.RESEND_API_KEY && notify) {
+    if (notify) {
       const client = row.clientCompany || row.clientName || signerName;
-      await resend.emails
-        .send({
-          from: FROM,
-          to: notify,
-          subject: `Devis ${row.number} accepté par ${client}`,
-          html: `<p>Le devis <strong>${row.number}</strong> vient d'être accepté en ligne par <strong>${signerName}</strong> (${client}).</p>`,
-        })
-        .catch(() => {
-          /* l'accord du client prime sur la notification */
-        });
+      // L'accord du client prime sur la notification : un échec d'envoi reste sans
+      // conséquence ici, l'acceptation est déjà enregistrée.
+      await sendMail({
+        from: FROM,
+        to: notify,
+        subject: `Devis ${row.number} accepté par ${client}`,
+        html: `<p>Le devis <strong>${row.number}</strong> vient d'être accepté en ligne par <strong>${signerName}</strong> (${client}).</p>`,
+      });
     }
 
     return NextResponse.json({ ok: true });

@@ -34,6 +34,8 @@ export type DevisRow = {
   daysLeft: number | null;
   expired: boolean;
   factureNumber: string | null;
+  // Ce qui manque au devis, prêt à afficher (« le client et au moins une ligne »).
+  manque: string;
   relanceDue: boolean;
   // Jours sans réponse depuis l'envoi réel (calcul du centre de relances) : le
   // libellé « N j sans réponse » affichait l'âge depuis l'émission.
@@ -94,7 +96,7 @@ function trackOf(d: DevisRow): { text: string; tone: "muted" | "warning" | "dang
   if (d.sentAt && d.status === "envoye") return { text: "Envoyé, en attente de lecture", tone: "muted" };
   if (d.factureNumber) return { text: `Facturé · ${d.factureNumber}`, tone: "accent" };
   if (d.status === "envoye") return { text: `Envoyé il y a ${formatDays(d.ageDays)}`, tone: "muted" };
-  if (d.status === "brouillon" && !d.client) return { text: "Client à renseigner", tone: "muted" };
+  if (d.manque) return { text: `Brouillon incomplet · ${d.manque} à renseigner`, tone: "muted" };
   return { text: "", tone: "muted" };
 }
 

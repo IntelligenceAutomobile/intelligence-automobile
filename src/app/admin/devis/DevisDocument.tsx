@@ -12,9 +12,13 @@ import {
   lineDiscount,
   blockBox,
   headerHeightFor,
+  formatVin,
+  vehicleBlockFilled,
+  mergeVehicleBlock,
   type QuoteData,
   type HeaderBlockId,
 } from "@/lib/devis";
+import { formatNumber } from "@/lib/format";
 
 /* Palette « papier » neutre (sur fond blanc) — l'accent est dérivé du branding. */
 const C = {
@@ -111,6 +115,9 @@ export default function DevisDocument({
 
   const headerH = headerHeightFor(quote);
   const dueDate = validUntilFr(quote.issueDate, quote.validityDays);
+  // Devis d'avant l'encart : la valeur manque, le repli la remplace par un bloc
+  // vide, donc masqué.
+  const vehicule = mergeVehicleBlock(quote.vehicle);
 
   // Style/handlers communs d'un bloc d'en-tête déplaçable + redimensionnable.
   function blockWrap(id: HeaderBlockId): CSSProperties {
@@ -282,6 +289,51 @@ export default function DevisDocument({
           {resizeHandle("client")}
         </div>
       </div>
+
+      {/* ── Véhicule concerné ──
+          Un devis d'automobile désigne SA voiture : numéro de série,
+          immatriculation, première mise en circulation. Sans cet encart, le
+          document annonçait une marque, un modèle et un prix, rien de plus. */}
+      {vehicule.show && vehicleBlockFilled(vehicule) && (
+        <div
+          className="devis-avoid-break"
+          style={{
+            display: "flex",
+            gap: "5mm",
+            marginTop: "7mm",
+            padding: "4mm",
+            border: `1px solid ${C.border}`,
+            borderLeft: `2.5px solid ${accent}`,
+            backgroundColor: tint(accent, 0.03),
+          }}
+        >
+          {vehicule.photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={vehicule.photoUrl}
+              alt=""
+              style={{ width: "42mm", height: "28mm", objectFit: "cover", flexShrink: 0, border: `1px solid ${C.border}` }}
+            />
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...labelMini, color: accent, marginBottom: "1.5mm" }}>Véhicule concerné</div>
+            {vehicule.label && (
+              <div style={{ fontWeight: 700, fontSize: "11pt", color: C.ink, marginBottom: "2mm" }}>{vehicule.label}</div>
+            )}
+            <table style={{ borderCollapse: "collapse", fontSize: "8.5pt", width: "100%" }}>
+              <tbody>
+                <VehiculeRow label="N° de série" value={vehicule.vin ? formatVin(vehicule.vin) : ""} mono />
+                <VehiculeRow label="Immatriculation" value={vehicule.plate} mono />
+                <VehiculeRow label="1re mise en circulation" value={vehicule.firstRegDate ? formatDateFr(vehicule.firstRegDate) : ""} />
+                <VehiculeRow label="Kilométrage" value={vehicule.mileageKm > 0 ? `${formatNumber(vehicule.mileageKm)} km` : ""} />
+                <VehiculeRow label="Énergie" value={vehicule.energy} />
+                <VehiculeRow label="Couleur" value={vehicule.color} />
+                <VehiculeRow label="Provenance" value={vehicule.origin} />
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── Tableau des lignes ── */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "8mm", fontSize: "9pt" }}>
@@ -464,6 +516,20 @@ function PartyBox({ label, accent, onBand, children }: { label: string; accent?:
       <div style={{ ...labelMini, marginBottom: "2mm", color: onBand ? "rgba(255,255,255,0.85)" : accent ?? C.muted }}>{label}</div>
       {children}
     </div>
+  );
+}
+
+// Ligne de l'encart véhicule : disparaît quand l'information manque, plutôt que
+// d'imprimer une étiquette suivie d'un vide.
+function VehiculeRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  if (!value) return null;
+  return (
+    <tr>
+      <td style={{ ...labelMini, fontSize: "7pt", paddingRight: "4mm", paddingBottom: "0.8mm", whiteSpace: "nowrap", verticalAlign: "top", width: "36mm" }}>
+        {label}
+      </td>
+      <td style={{ color: C.ink, paddingBottom: "0.8mm", fontWeight: mono ? 600 : 400, ...(mono ? tabular : {}) }}>{value}</td>
+    </tr>
   );
 }
 

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendMail, MAIL_FROM } from "@/lib/mailer";
 import { createLeadFromSite } from "@/lib/crm-intake";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const TO   = process.env.RESEND_TO   ?? "contact@intelligenceautomobile.com";
-const FROM = process.env.RESEND_FROM ?? "Intelligence Automobile <contact@intelligenceautomobile.com>";
+const FROM = MAIL_FROM;
 
 const SUJETS: Record<string, string> = {
   achat:  "Achat d'un véhicule",
@@ -75,17 +73,10 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`;
 
-    if (process.env.RESEND_API_KEY) {
-      await resend.emails.send({
-        from: FROM,
-        to: TO,
-        replyTo: email,
-        subject: `${sujetLabel} — ${nom}`,
-        html,
-      });
-    } else {
-      console.log("=== Contact (RESEND_API_KEY manquant) ===");
-      console.log({ nom, email, telephone, sujet, message });
+    const envoi = await sendMail({ from: FROM, to: TO, replyTo: email, subject: `${sujetLabel} — ${nom}`, html });
+    if (!envoi.sent) {
+      console.log("=== Contact (email non parti) ===");
+      console.log({ nom, email, telephone, sujet, message, raison: envoi.reason ?? envoi.error });
     }
 
     // Notification WhatsApp optionnelle

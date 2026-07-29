@@ -3,9 +3,10 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can, asRole } from "@/lib/roles";
-import { mergeBranding, computeTotals, formatDateFr, FACTURE_KIND_LABEL, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
+import { mergeBranding, mergeVehicleBlock, computeTotals, formatDateFr, FACTURE_KIND_LABEL, type QuoteData, type QuoteItem, type TvaMode, type DepositMode, type QuoteStatus, type QuoteKind, type DocType, type FactureKind, type PaymentStatus } from "@/lib/devis";
 import { daysSince } from "@/lib/relances";
 import { parisDay } from "@/lib/vehicules";
+import { loadStockForQuotes } from "@/lib/devis-stock";
 import { T, AdminPage, PageHeader } from "../../ui";
 import DevisEditor from "../DevisEditor";
 import ConvertActions from "../ConvertActions";
@@ -19,16 +20,8 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
   const row = await prisma.quote.findUnique({ where: { id } });
   if (!row) notFound();
 
-  const vehicles = await prisma.vehicle.findMany({
-    orderBy: { createdAt: "desc" },
-    select: { id: true, make: true, model: true, year: true, mileage: true, price: true, fuel: true, transmission: true, power: true, status: true },
-  });
-
-  // Coût de revient par véhicule (achat + frais), pour la marge affichée au
-  // vendeur pendant la négociation. Jamais imprimée sur le document.
-  const costs = await prisma.vehicleCost.groupBy({ by: ["vehicleId"], _sum: { amountCents: true } });
-  const costByVehicle = new Map(costs.map((c) => [c.vehicleId, c._sum.amountCents ?? 0]));
-  const vehiclesWithCost = vehicles.map((v) => ({ ...v, costCents: costByVehicle.get(v.id) ?? 0 }));
+  // Stock + coût de revient + identité administrative du véhicule.
+  const vehicles = await loadStockForQuotes();
 
   let items: QuoteItem[] = [];
   try {
@@ -40,6 +33,12 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
   let brandingRaw: unknown = {};
   try {
     brandingRaw = JSON.parse(row.branding ?? "{}");
+  } catch {
+    /* ignore */
+  }
+  let vehicleRaw: unknown = {};
+  try {
+    vehicleRaw = JSON.parse(row.vehicleInfo ?? "{}");
   } catch {
     /* ignore */
   }
@@ -72,6 +71,7 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
     paymentTerms: row.paymentTerms,
     notes: row.notes,
     vehicleId: row.vehicleId,
+    vehicle: mergeVehicleBlock(vehicleRaw),
     branding: mergeBranding(brandingRaw),
   };
 
@@ -146,11 +146,14 @@ export default async function EditDevisPage({ params }: { params: Promise<{ id: 
 
       <DevisEditor
         initial={initial}
-        vehicles={vehiclesWithCost}
+        vehicles={vehicles}
         isEdit
         sourceQuote={sourceQuote}
         canFinance={can(role, "finances")}
         canUnlock={role === "patron"}
+        canBranding={can(role, "settings")}
+        sentAt={row.sentAt}
+        publicToken={row.publicToken}
       />
     </AdminPage>
   );

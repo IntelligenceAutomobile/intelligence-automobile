@@ -62,6 +62,7 @@ export default function DemoDevisListPage() {
         daysLeft,
         expired: q.status === "envoye" && daysLeft < 0,
         factureNumber: factureByQuote.get(q.id) ?? null,
+        manque: q.clientName || q.clientCompany ? "" : "le client",
         relanceDue: relance !== null,
         relanceSinceDays: relance?.sinceDays ?? null,
         relanceCount: 0,

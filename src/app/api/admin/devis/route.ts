@@ -11,6 +11,19 @@ export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get("type");
   const where = type === "facture" ? { docType: "facture" } : type === "devis" ? { docType: { not: "facture" } } : undefined;
 
+  // ?light=1 : juste de quoi peupler la palette de commandes. Sans ce mode, elle
+  // téléchargeait TOUS les devis avec leurs lignes et leur mise en page, pour
+  // n'en afficher que cinq.
+  if (req.nextUrl.searchParams.get("light") === "1") {
+    const legers = await prisma.quote.findMany({
+      where,
+      orderBy: { updatedAt: "desc" },
+      take: 200,
+      select: { id: true, number: true, docType: true, status: true, clientName: true, clientCompany: true },
+    });
+    return NextResponse.json(legers);
+  }
+
   const rows = await prisma.quote.findMany({ where, orderBy: { updatedAt: "desc" } });
   return NextResponse.json(rows.map(quoteFromRow));
 }
