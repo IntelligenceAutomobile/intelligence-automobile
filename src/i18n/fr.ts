@@ -220,7 +220,7 @@ export const fr = {
     processLabel: "Un processus simple",
     processSteps: [
       { n: "01", title: "Vous choisissez", desc: "Parmi notre stock ou via mandat." },
-      { n: "02", title: "Prise en charge", desc: "Achat, transport, homologation, immatriculation." },
+      { n: "02", title: "Nous prenons en charge", desc: "Achat, transport, homologation, immatriculation." },
       { n: "03", title: "Vous conduisez", desc: "Livraison à domicile sous 2 à 3 semaines." },
     ],
     processLink: "Notre méthode complète →",
