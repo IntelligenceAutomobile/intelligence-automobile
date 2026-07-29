@@ -360,7 +360,7 @@ export const en: Translations = {
       "Zero fees before your validation",
       "Complete inspection report provided",
       "Administrative procedures included",
-      "A single point of contact from start to delivery",
+      "A dedicated point of contact through to delivery",
       "Fixed, transparent, upfront commission",
     ],
     marketsLabel: "Markets covered",
@@ -578,6 +578,13 @@ export const en: Translations = {
     delayLabel: "Delivery timeframe",
     delay: "D+1 to D+3 depending on distance · By appointment",
     form: {
+      linkRowLabel: "Have the listing for the vehicle to transport?",
+      linkRowCta: "Share the link →",
+      linkLabel: "Listing link",
+      linkPlaceholder: "https://…",
+      linkNoteTitle: "Got it.",
+      linkNoteText:
+        "We pull the pickup location and the vehicle details straight from the listing, to prepare your quote faster.",
       tripSection: "The journey",
       vehicleSection: "The vehicle",
       coordsSection: "Your details",
@@ -727,7 +734,7 @@ export const en: Translations = {
       {
         id: "demarches",
         num: "04",
-        title: "Administrative procedures (COC, CPI, ANTS files)",
+        title: "Administrative procedures (COC, CPI, tax clearance)",
         subtitle: "Import without the paperwork.",
         paragraphs: [
           "Importing a vehicle takes close to twenty documents and four procedures that follow one another in a precise order: conformity, tax, provisional registration, filing. We compile the whole file and submit it on your behalf.",

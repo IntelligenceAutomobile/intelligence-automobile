@@ -363,7 +363,7 @@ export const fr = {
       "Zéro frais avant votre validation",
       "Rapport d'inspection complet fourni",
       "Démarches administratives incluses",
-      "Un interlocuteur unique du début à la livraison",
+      "Un interlocuteur dédié jusqu'à la livraison",
       "Commission fixe, transparente, annoncée",
     ],
     marketsLabel: "Marchés couverts",
@@ -581,6 +581,13 @@ export const fr = {
     delayLabel: "Délai de livraison",
     delay: "J+1 à J+3 selon la distance · Sur rendez-vous",
     form: {
+      linkRowLabel: "Vous avez l'annonce du véhicule à transporter ?",
+      linkRowCta: "Partager le lien →",
+      linkLabel: "Lien de l'annonce",
+      linkPlaceholder: "https://…",
+      linkNoteTitle: "C'est noté.",
+      linkNoteText:
+        "Nous récupérons le lieu de prise en charge et les caractéristiques du véhicule directement depuis l'annonce, pour établir votre devis plus vite.",
       tripSection: "Le trajet",
       vehicleSection: "Le véhicule",
       coordsSection: "Vos coordonnées",
@@ -730,7 +737,7 @@ export const fr = {
       {
         id: "demarches",
         num: "04",
-        title: "Démarches administratives (COC, CPI, Dossiers ANTS)",
+        title: "Démarches administratives (COC, CPI, Quitus fiscal)",
         subtitle: "L'import sans la paperasse.",
         paragraphs: [
           "Importer un véhicule demande près de vingt pièces et quatre démarches qui s'enchaînent dans un ordre précis : conformité, fiscalité, immatriculation provisoire, dépôt du dossier. Nous montons l'ensemble et nous le déposons à votre place.",

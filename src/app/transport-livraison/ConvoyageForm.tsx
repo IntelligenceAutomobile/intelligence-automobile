@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale } from "@/i18n/context";
 import YearField from "@/components/YearField";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { LienAnnonceField, useLienAnnonce } from "@/components/LienAnnonce";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -51,14 +52,18 @@ export default function ConvoyageForm() {
   const f = t.transport.form;
   const [status, setStatus] = useState<Status>("idle");
 
+  // Le client partage le lien de l'annonce du véhicule à transporter.
+  const annonce = useLienAnnonce();
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("sending");
     const form = e.currentTarget;
     const d = new FormData(form);
+    const lienSaisi = String(d.get("lien") ?? "").trim();
 
     const message = `CONVOYAGE
-
+${lienSaisi ? `\nAnnonce partagée : ${lienSaisi}\n` : ""}
 Trajet :
 — Lieu de prise en charge : ${d.get("depart")}
 — Lieu de livraison : ${d.get("arrivee")}
@@ -86,6 +91,7 @@ Notes : ${d.get("notes") || "Aucune"}`;
       if (!res.ok) throw new Error();
       setStatus("success");
       form.reset();
+      annonce.reset();
     } catch {
       setStatus("error");
     }
@@ -122,6 +128,21 @@ Notes : ${d.get("notes") || "Aucune"}`;
   return (
     <form onSubmit={handleSubmit} className="ia-convoyage-form space-y-4" style={{ fontFamily: "var(--font-inter)" }}>
       <style>{`.ia-convoyage-form ::placeholder { color: #9FB7D8; opacity: 1; }`}</style>
+
+      {/* Partage du lien de l'annonce, en tête du formulaire. Pas de bandeau
+          stock ici : le client fait transporter son véhicule, il n'en cherche pas. */}
+      <LienAnnonceField
+        state={annonce}
+        labels={{
+          rowLabel: f.linkRowLabel,
+          rowCta: f.linkRowCta,
+          label: f.linkLabel,
+          placeholder: f.linkPlaceholder,
+          noteTitle: f.linkNoteTitle,
+          noteText: f.linkNoteText,
+        }}
+      />
+
       <SectionCard title={f.tripSection}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
