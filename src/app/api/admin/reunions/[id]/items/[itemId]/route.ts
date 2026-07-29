@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { can, asRole } from "@/lib/roles";
 import { parisDay } from "@/lib/vehicules";
-import { isDateKey, isItemStatus } from "@/lib/reunions";
+import { isDateKey, isItemStatus, isItemType } from "@/lib/reunions";
 
 // Modification partielle d'une décision ou d'une action.
 // L'identifiant de la réunion fait partie du chemin : une ligne ne peut être
@@ -29,6 +29,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     if ("owner" in body) data.owner = String(body.owner ?? "").trim().slice(0, 60);
+
+    // Bascule décision ⇄ action : en réunion, on note souvent dans le mauvais
+    // bloc. Seul le type change. Responsable, échéance et état sont CONSERVÉS :
+    // une décision ne les affiche simplement pas. Les effacer rendait la bascule
+    // irréversible, et un clic de trop perdait définitivement le responsable et
+    // la date de réalisation d'une action déjà soldée.
+    if ("type" in body) {
+      if (!isItemType(body.type)) return NextResponse.json({ error: "Type de ligne inconnu." }, { status: 400 });
+      data.type = body.type;
+    }
 
     if ("dueDate" in body) {
       const raw = String(body.dueDate ?? "").trim();

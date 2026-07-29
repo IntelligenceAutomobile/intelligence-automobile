@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
   CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge,
-  NotebookPen, type LucideIcon,
+  NotebookPen, Check, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -16,20 +16,31 @@ import { ConfirmDialog } from "./confirm";
 import { useToast } from "./toast";
 import { useAcceptationCount } from "./AcceptationsWatcher";
 
-type NavItem = { icon: LucideIcon; label: string; href?: string; exact?: boolean; soon?: boolean; cap?: Capability };
+// `revu` marque les modules repris et audités ces derniers jours : une coche
+// verte dans la barre sert de repère pour savoir où le travail est passé.
+// La date est celle de la dernière refonte, lisible au survol.
+type NavItem = {
+  icon: LucideIcon;
+  label: string;
+  href?: string;
+  exact?: boolean;
+  soon?: boolean;
+  cap?: Capability;
+  revu?: string;
+};
 
 const NAV: { section: string; items: NavItem[] }[] = [
   { section: "Pilotage", items: [{ icon: LayoutDashboard, label: "Tableau de bord", href: "/admin", exact: true }] },
   {
     section: "Activité",
     items: [
-      { icon: Car, label: "Stock", href: "/admin/vehicules" },
-      { icon: FileText, label: "Devis", href: "/admin/devis" },
-      { icon: ReceiptText, label: "Factures", href: "/admin/factures" },
-      { icon: BellRing, label: "Relances", href: "/admin/relances" },
+      { icon: Car, label: "Stock", href: "/admin/vehicules", revu: "28 juillet 2026" },
+      { icon: FileText, label: "Devis", href: "/admin/devis", revu: "29 juillet 2026" },
+      { icon: ReceiptText, label: "Factures", href: "/admin/factures", revu: "28 juillet 2026" },
+      { icon: BellRing, label: "Relances", href: "/admin/relances", revu: "28 juillet 2026" },
       { icon: Users, label: "Clients & leads", href: "/admin/clients" },
       { icon: HandCoins, label: "Reprises", href: "/admin/reprises" },
-      { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning" },
+      { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning", revu: "28 juillet 2026" },
       { icon: Radio, label: "Diffusion", href: "/admin/diffusion" },
       { icon: ShieldCheck, label: "Garanties", href: "/admin/garanties" },
       { icon: FileBadge, label: "Immatriculations", href: "/admin/immatriculations" },
@@ -39,8 +50,8 @@ const NAV: { section: string; items: NavItem[] }[] = [
   {
     section: "Équipe",
     items: [
-      { icon: MessagesSquare, label: "Atelier", href: "/admin/atelier" },
-      { icon: NotebookPen, label: "Réunions", href: "/admin/reunions" },
+      { icon: MessagesSquare, label: "Atelier", href: "/admin/atelier", revu: "29 juillet 2026" },
+      { icon: NotebookPen, label: "Réunions", href: "/admin/reunions", revu: "29 juillet 2026" },
       { icon: Wallet, label: "Comptes", href: "/admin/comptes", cap: "finances" },
     ],
   },
@@ -138,6 +149,16 @@ export default function Sidebar({
                     )}
                     <item.icon size={15} style={{ color: active ? T.accent : T.muted, flexShrink: 0 }} />
                     <span className="truncate">{item.label}</span>
+                    {item.revu && (
+                      <span
+                        title={`Repris et audité le ${item.revu}`}
+                        aria-label={`Repris et audité le ${item.revu}`}
+                        className="flex-shrink-0 inline-flex"
+                        style={{ color: T.success }}
+                      >
+                        <Check size={12} strokeWidth={3} />
+                      </span>
+                    )}
                     {item.soon && (
                       <span
                         className="ml-auto text-[8px] tracking-[0.14em] uppercase px-1.5 py-0.5 flex-shrink-0"

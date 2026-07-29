@@ -6,16 +6,37 @@ import { parisDay } from "@/lib/vehicules";
 import { buildSnapshot } from "@/lib/reunions-server";
 import { isDateKey, isMeetingKind } from "@/lib/reunions";
 
-// Liste légère : alimente la recherche de la palette de commandes.
+// Liste légère : alimente la recherche de la palette de commandes (Ctrl+K).
+// Les décisions voyagent avec, pour qu'une décision se retrouve depuis n'importe
+// quelle page du back-office : c'est le geste le plus fréquent des mois plus tard.
 export async function GET() {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const rows = await prisma.meeting.findMany({
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-    select: { id: true, date: true, title: true, kind: true },
+    select: {
+      id: true,
+      date: true,
+      title: true,
+      kind: true,
+      items: {
+        where: { type: "decision" },
+        orderBy: [{ position: "asc" }],
+        select: { id: true, content: true },
+      },
+    },
   });
-  return NextResponse.json(rows);
+
+  return NextResponse.json(
+    rows.map((m) => ({
+      id: m.id,
+      date: m.date,
+      title: m.title,
+      kind: m.kind,
+      decisions: m.items.map((i) => ({ id: i.id, content: i.content })),
+    })),
+  );
 }
 
 // Création en un clic : la fiche naît datée du jour, signée, avec sa photo de
@@ -51,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     // Une photo absente s'écrit « {} » : la carte « Où on en était » se replie
     // alors qu'une rangée de zéros ferait croire à une agence vide.
-    const snapshot = await buildSnapshot();
+    const snapshot = await buildSnapshot(today);
 
     const meeting = await prisma.meeting.create({
       data: {

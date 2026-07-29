@@ -5,6 +5,7 @@ import { upload } from "@vercel/blob/client";
 import { T } from "@/app/admin/ui";
 import { parseAttachments, type Attachment, type AttachmentKind } from "@/lib/collab-attachments";
 import LinksView, { LINKS_COLOR } from "./Links";
+import ReunionsView, { REUNIONS_COLOR } from "./Reunions";
 
 type Status = "todo" | "doing" | "done";
 
@@ -129,6 +130,7 @@ export default function Board({ authorName }: { authorName: string }) {
   const [overlay, setOverlay]           = useState<{ urls: string[]; index: number } | null>(null);
   const [undoStack, setUndoStack]       = useState<UndoAction[]>([]);
   const [linksCount, setLinksCount]     = useState<number | null>(null);
+  const [reunionsCount, setReunionsCount] = useState<number | null>(null);
 
   // Load lastSeen from localStorage and mark initial category seen
   useEffect(() => {
@@ -156,6 +158,15 @@ export default function Board({ authorName }: { authorName: string }) {
       .catch(() => {});
   }, []);
 
+  // Actions de réunion encore ouvertes : le compteur est visible dès l'arrivée
+  // sur l'atelier, sans avoir à ouvrir la section (la vue le tient à jour ensuite).
+  useEffect(() => {
+    fetch("/api/admin/reunions/actions")
+      .then(r => (r.ok ? r.json() : []))
+      .then((a: { status: string }[]) => setReunionsCount(a.filter(x => x.status !== "fait").length))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!overlay) return;
     const onKey = (e: KeyboardEvent) => {
@@ -178,7 +189,7 @@ export default function Board({ authorName }: { authorName: string }) {
 
   function selectCategory(catId: string) {
     setSelectedCat(catId);
-    if (catId === "__trash__" || catId === "__links__") return;
+    if (catId === "__trash__" || catId === "__links__" || catId === "__reunions__") return;
     setLastSeen(prev => {
       const updated = { ...prev, [catId]: new Date().toISOString() };
       localStorage.setItem(LS_KEY, JSON.stringify(updated));
@@ -402,6 +413,23 @@ export default function Board({ authorName }: { authorName: string }) {
             )}
           </button>
           <button
+            onClick={() => selectCategory("__reunions__")}
+            className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 whitespace-nowrap"
+            style={{
+              fontSize: "13px",
+              borderRadius: "999px",
+              border: `1px solid ${selectedCat === "__reunions__" ? REUNIONS_COLOR : "#1B3055"}`,
+              backgroundColor: selectedCat === "__reunions__" ? "#112240" : "transparent",
+              color: selectedCat === "__reunions__" ? REUNIONS_COLOR : "#C8D8EE",
+            }}
+          >
+            <span style={{ fontSize: "11px" }}>🗓</span>
+            <span>Réunions</span>
+            {reunionsCount !== null && reunionsCount > 0 && (
+              <span style={{ fontSize: "10px", lineHeight: 1, padding: "2px 6px", borderRadius: "9px", backgroundColor: "#1B3055", color: "#C8D8EE" }}>{reunionsCount}</span>
+            )}
+          </button>
+          <button
             onClick={() => selectCategory("__trash__")}
             className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 whitespace-nowrap"
             style={{
@@ -528,6 +556,48 @@ export default function Board({ authorName }: { authorName: string }) {
               </span>
             )}
           </button>
+
+          {/* Réunions : ce qui a été décidé ailleurs et qui attend l'équipe ici */}
+          <div style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 8px", margin: "20px 0 8px" }}>
+            Réunions
+          </div>
+          <button
+            onClick={() => selectCategory("__reunions__")}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "7px 8px",
+              fontSize: "13px",
+              textAlign: "left",
+              backgroundColor: selectedCat === "__reunions__" ? "#112240" : "transparent",
+              color: selectedCat === "__reunions__" ? REUNIONS_COLOR : "#C8D8EE",
+              borderLeft: `2px solid ${selectedCat === "__reunions__" ? REUNIONS_COLOR : "transparent"}`,
+              transition: "background 0.1s",
+            }}
+            onMouseEnter={e => { if (selectedCat !== "__reunions__") e.currentTarget.style.backgroundColor = "#0D1E38"; }}
+            onMouseLeave={e => { if (selectedCat !== "__reunions__") e.currentTarget.style.backgroundColor = "transparent"; }}
+          >
+            <span style={{ fontSize: "11px", lineHeight: 1, flexShrink: 0 }}>🗓</span>
+            <span style={{ flex: 1 }}>Actions à faire</span>
+            {reunionsCount !== null && reunionsCount > 0 && (
+              <span
+                title={`${reunionsCount} action${reunionsCount > 1 ? "s" : ""} décidée${reunionsCount > 1 ? "s" : ""} en réunion et encore ouverte${reunionsCount > 1 ? "s" : ""}`}
+                style={{
+                  fontSize: "10px",
+                  lineHeight: 1,
+                  padding: "2px 6px",
+                  borderRadius: "9px",
+                  backgroundColor: "#1B3055",
+                  color: selectedCat === "__reunions__" ? REUNIONS_COLOR : "#C8D8EE",
+                  flexShrink: 0,
+                }}
+              >
+                {reunionsCount}
+              </span>
+            )}
+          </button>
         </nav>
 
         {/* Corbeille */}
@@ -592,6 +662,14 @@ export default function Board({ authorName }: { authorName: string }) {
                 {linksCount !== null && linksCount > 0 ? `${linksCount} lien${linksCount > 1 ? "s" : ""}` : ""}
               </span>
             </>
+          ) : selectedCat === "__reunions__" ? (
+            <>
+              <span style={{ fontSize: "12px" }}>🗓</span>
+              <span style={{ fontSize: "15px", fontWeight: 400 }}>Réunions</span>
+              <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
+                {reunionsCount !== null && reunionsCount > 0 ? `${reunionsCount} action${reunionsCount > 1 ? "s" : ""} à faire` : ""}
+              </span>
+            </>
           ) : (
             <>
               <span style={{ color: activeCat.color, fontSize: "8px" }}>●</span>
@@ -623,7 +701,8 @@ export default function Board({ authorName }: { authorName: string }) {
             <TrashView notes={trashNotes ?? []} loading={loadingTrash} onOpenImage={(urls, index) => setOverlay({ urls, index })} onRestore={restoreFromTrash} />
           )}
           {selectedCat === "__links__" && <LinksView onCount={setLinksCount} />}
-          {selectedCat !== "__trash__" && selectedCat !== "__links__" && <>
+          {selectedCat === "__reunions__" && <ReunionsView onCount={setReunionsCount} />}
+          {selectedCat !== "__trash__" && selectedCat !== "__links__" && selectedCat !== "__reunions__" && <>
           {/* Formulaire */}
           <form onSubmit={addNote} className="mb-8 border" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
             <div className="p-4">

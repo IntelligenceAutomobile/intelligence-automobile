@@ -20,7 +20,10 @@ export default async function ReunionPage({ params }: { params: Promise<{ id: st
 
   // Réunions voisines : rejouer l'année de proche en proche sans repasser par la
   // liste. Le départage par date de création évite qu'un même jour boucle sur place.
-  const [older, newer] = await Promise.all([
+  // Le reste à faire des réunions ANTÉRIEURES ouvre le point : c'est le premier
+  // geste d'une réunion récurrente. Les lignes restent chez leur réunion d'origine
+  // plutôt que d'être recopiées, sans quoi elles compteraient double partout.
+  const [older, newer, pending] = await Promise.all([
     prisma.meeting.findFirst({
       where: {
         id: { not: row.id },
@@ -37,7 +40,28 @@ export default async function ReunionPage({ params }: { params: Promise<{ id: st
       orderBy: [{ date: "asc" }, { createdAt: "asc" }],
       select: { id: true },
     }),
+    prisma.meetingItem.findMany({
+      where: { type: "action", status: { not: "fait" }, meeting: { date: { lt: row.date } } },
+      orderBy: [{ createdAt: "asc" }],
+      select: {
+        id: true,
+        content: true,
+        owner: true,
+        dueDate: true,
+        status: true,
+        doneAt: true,
+        meeting: { select: { id: true, title: true, date: true } },
+      },
+    }),
   ]);
+
+  // Les échéances d'abord, de la plus ancienne à la plus lointaine ; les actions
+  // sans date ferment la marche, comme partout ailleurs dans le module. Trié en
+  // base, la chaîne vide se classait AVANT les dates et les retards se retrouvaient
+  // en bas du bloc censé les mettre en avant.
+  const pendingSorted = [...pending]
+    .sort((a, b) => (a.dueDate || "9999-99-99").localeCompare(b.dueDate || "9999-99-99"))
+    .slice(0, 20);
 
   return (
     <ReunionFiche
@@ -66,6 +90,18 @@ export default async function ReunionPage({ params }: { params: Promise<{ id: st
       canDelete={can(asRole(session.admin.role), "delete")}
       olderId={older?.id ?? null}
       newerId={newer?.id ?? null}
+      pending={pendingSorted.map((p) => ({
+        id: p.id,
+        type: "action",
+        content: p.content,
+        owner: p.owner,
+        dueDate: p.dueDate,
+        status: p.status,
+        doneAt: p.doneAt,
+        meetingId: p.meeting.id,
+        meetingTitle: p.meeting.title,
+        meetingDate: p.meeting.date,
+      }))}
     />
   );
 }

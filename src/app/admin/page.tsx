@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, XCircle, Send, Users } from "lucide-react";
+import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, NotebookPen, XCircle, Send, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
@@ -10,7 +10,7 @@ import { relancesDues } from "@/lib/relances-server";
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
 import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, authorColor, signatureOf, type AppointmentType } from "@/lib/planning";
-import { missingEssentials } from "@/lib/vehicules";
+import { missingEssentials, parisDay } from "@/lib/vehicules";
 import { deadlines as regDeadlines, isRegType } from "@/lib/immatriculation";
 import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
 import { KpiTile, AreaChart, Donut, Bars } from "./charts";
@@ -130,7 +130,7 @@ export default async function AdminDashboard() {
   warrantyToDate.setDate(warrantyToDate.getDate() + 60);
   const warrantyTo = warrantyToDate.toISOString().slice(0, 10);
 
-  const [disponibles, reserves, vendus, valueAgg, recent, tousVehicules, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, openRegistrations] =
+  const [disponibles, reserves, vendus, valueAgg, recent, tousVehicules, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, lateMeetingActions, openRegistrations] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -170,6 +170,11 @@ export default async function AdminDashboard() {
       }),
       prisma.quote.findMany({ where: { docType: "facture", paymentStatus: "impayee" } }),
       prisma.warranty.count({ where: { endDate: { gte: warrantyFrom, lte: warrantyTo } } }),
+      // Actions décidées en réunion dont l'échéance est dépassée : elles se
+      // perdaient jusqu'ici entre deux points, faute de rappel au quotidien.
+      prisma.meetingItem.count({
+        where: { type: "action", status: { not: "fait" }, dueDate: { lt: parisDay(new Date()).toISOString().slice(0, 10), not: "" } },
+      }),
       // Dossiers d'immatriculation encore ouverts : les délais légaux courent
       // tant que l'immatriculation n'est pas obtenue.
       prisma.registration.findMany({
@@ -387,6 +392,28 @@ export default async function AdminDashboard() {
             </span>
             <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
               Voir les factures
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        )}
+
+        {/* Alerte actions de réunion en retard */}
+        {lateMeetingActions > 0 && (
+          <Link
+            href="/admin/reunions?vue=actions"
+            className="adm-enter flex items-center gap-3 px-5 py-3 mb-5"
+            style={{ backgroundColor: T.surface, border: "1px solid rgba(240,180,90,0.4)" }}
+          >
+            <NotebookPen size={16} style={{ color: T.warning }} />
+            <span className="text-sm" style={{ color: T.textDim }}>
+              <span className="font-semibold" style={{ color: T.warning }}>
+                {lateMeetingActions} action{lateMeetingActions > 1 ? "s" : ""} de réunion en retard
+              </span>
+              {" · décidée"}
+              {lateMeetingActions > 1 ? "s" : ""} en réunion, échéance dépassée
+            </span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Voir les actions
               <ChevronRight size={12} />
             </span>
           </Link>

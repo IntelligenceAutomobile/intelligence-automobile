@@ -53,6 +53,10 @@ export function isItemStatus(v: unknown): v is MeetingItemStatus {
 // Ajouter un champ plus tard laissera les anciennes réunions sans lui, d'où les
 // replis à zéro de parseSnapshot ; en retirer un perdrait un chiffre déjà écrit.
 export type MeetingSnapshot = {
+  // Jour où les chiffres ont été relevés. Il vaut la date de création, qui peut
+  // différer de la date de la réunion quand celle-ci est saisie après coup :
+  // étiqueter la carte avec la date de la réunion faisait alors mentir la photo.
+  takenOn: string;
   stockCount: number; // véhicules encore en stock (hors vendus)
   stockValue: number; // valeur du stock en euros
   quotesPendingCount: number; // devis envoyés en attente de réponse
@@ -76,6 +80,9 @@ export function parseSnapshot(raw: string | null | undefined): MeetingSnapshot |
     const o = p as Record<string, unknown>;
     if (Object.keys(o).length === 0) return null;
     return {
+      // Les réunions créées avant l'ajout de ce champ le laissent vide :
+      // l'affichage retombe alors sur la date de la réunion.
+      takenOn: isDateKey(o.takenOn) ? o.takenOn : "",
       stockCount: num(o.stockCount),
       stockValue: num(o.stockValue),
       quotesPendingCount: num(o.quotesPendingCount),
@@ -152,6 +159,62 @@ export function yearOf(date: string): string {
   return (date || "").slice(0, 4);
 }
 
+/* ── Choix d'une échéance à la souris ──
+   Le calendrier du sélecteur d'échéance se construit ici : les dates de ce
+   module sont des chaînes AAAA-MM-JJ, jamais des objets Date locaux, sinon un
+   clic sur « 1er août » à 23 h donnerait le 31 juillet. */
+
+export const MONTH_LABELS = MONTHS;
+
+// Jours de la semaine, lundi en tête comme le planning atelier.
+export const WEEKDAY_INITIALS = ["L", "M", "M", "J", "V", "S", "D"];
+
+export function dateKeyOf(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+// Décale une date d'un nombre de jours, en restant sur des jours calendaires.
+export function addDaysToKey(date: string, days: number): string {
+  if (!isDateKey(date)) return "";
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return dateKeyOf(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+// Dernier jour du mois de la date donnée.
+export function endOfMonthKey(date: string): string {
+  if (!isDateKey(date)) return "";
+  const [y, m] = date.split("-").map(Number);
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return dateKeyOf(y, m - 1, last);
+}
+
+// Semaines du mois, lundi en première colonne. Les cases vides valent null.
+export function monthMatrix(year: number, month: number): (number | null)[][] {
+  const first = new Date(Date.UTC(year, month, 1));
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  // getUTCDay() met dimanche à 0 : on décale pour commencer le lundi.
+  const offset = (first.getUTCDay() + 6) % 7;
+
+  const cells: (number | null)[] = Array.from({ length: offset }, () => null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const weeks: (number | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
+
+// « 20 août » : format court du bouton d'échéance. L'année s'ajoute dès qu'elle
+// diffère de celle du jour, pour qu'une échéance lointaine reste sans ambiguïté.
+export function shortDateFr(date: string, today?: string): string {
+  const m = DATE_RE.exec(date || "");
+  if (!m) return "";
+  const [y, mo, d] = date.split("-").map(Number);
+  const label = `${d} ${(MONTHS[mo - 1] ?? "").toLowerCase()}`;
+  return today && yearOf(today) !== String(y) ? `${label} ${y}` : label;
+}
+
 // Médaillon de date du fil : « 12 » + « VEN ». Construit en UTC pour que le jour
 // affiché reste celui qui est écrit en base, quel que soit le fuseau du poste.
 export function dayParts(date: string): { day: string; weekday: string } {
@@ -163,6 +226,17 @@ export function dayParts(date: string): { day: string; weekday: string } {
     .replace(/\./g, "")
     .toUpperCase();
   return { day: String(d.getUTCDate()), weekday };
+}
+
+// Mois abrégé pour le médaillon : « SEPT ». Sert quand la liste n'est PAS
+// groupée par mois (les actions, rangées par urgence) : le jour de la semaine
+// y serait ambigu, « MAR » se lisant aussi bien mardi que mars.
+export function monthShortFr(date: string): string {
+  if (!DATE_RE.test(date || "")) return "";
+  return new Date(`${date}T00:00:00Z`)
+    .toLocaleDateString("fr-FR", { month: "short", timeZone: "UTC" })
+    .replace(/\./g, "")
+    .toUpperCase();
 }
 
 // Écart en jours entre deux jours calendaires, sans passer par l'heure locale.

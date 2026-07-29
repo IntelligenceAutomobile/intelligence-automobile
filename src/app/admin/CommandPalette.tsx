@@ -10,6 +10,7 @@ import {
   NotebookPen, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
+import { formatDateFr } from "@/lib/devis";
 import { T } from "./ui";
 
 type Item = { icon: LucideIcon; label: string; hint: string; href: string; cap?: Capability };
@@ -39,6 +40,13 @@ const STATIC_ITEMS: Item[] = [
   { icon: Car, label: "Aperçu ancienne modale véhicule", hint: "Maquette", href: "/admin/vehicules/modale-apercu" },
 ];
 
+type MeetingLite = {
+  id: string;
+  date: string;
+  title: string;
+  kind: string;
+  decisions: { id: string; content: string }[];
+};
 type VehicleLite = { id: string; make: string; model: string; year: number; status: string };
 type QuoteLite = { id: string; number: string; clientName?: string | null; clientCompany?: string | null; status: string };
 type ClientLite = { id: string; name: string; company: string; email: string };
@@ -51,6 +59,7 @@ export default function CommandPalette({ role }: { role: Role }) {
   const [vehicles, setVehicles] = useState<VehicleLite[] | null>(null);
   const [quotes, setQuotes] = useState<QuoteLite[] | null>(null);
   const [clients, setClients] = useState<ClientLite[] | null>(null);
+  const [meetings, setMeetings] = useState<MeetingLite[] | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef(false);
 
@@ -58,14 +67,16 @@ export default function CommandPalette({ role }: { role: Role }) {
     if (loadedRef.current) return;
     loadedRef.current = true;
     try {
-      const [vRes, qRes, cRes] = await Promise.all([
+      const [vRes, qRes, cRes, rRes] = await Promise.all([
         fetch("/api/admin/vehicules"),
         fetch("/api/admin/devis"),
         fetch("/api/admin/clients"),
+        fetch("/api/admin/reunions"),
       ]);
       if (vRes.ok) setVehicles(await vRes.json());
       if (qRes.ok) setQuotes(await qRes.json());
       if (cRes.ok) setClients(await cRes.json());
+      if (rRes.ok) setMeetings(await rRes.json());
     } catch {
       /* la palette reste utilisable avec les actions statiques */
     }
@@ -120,8 +131,32 @@ export default function CommandPalette({ role }: { role: Role }) {
         hint: "Client",
         href: `/admin/clients/${c.id}`,
       }));
-    return [...stat.slice(0, q ? 4 : 9), ...veh, ...cls, ...qts];
-  }, [query, vehicles, quotes, clients, role]);
+    // Réunions et décisions. Une décision prise il y a six mois se retrouve en
+    // tapant trois mots, depuis n'importe quelle page.
+    const reu: Item[] = [];
+    if (q) {
+      for (const m of meetings ?? []) {
+        const titre = m.title.trim() || `Réunion du ${formatDateFr(m.date)}`;
+        if (`${titre} ${m.kind} ${formatDateFr(m.date)}`.toLowerCase().includes(q)) {
+          reu.push({ icon: NotebookPen, label: titre, hint: `Réunion · ${formatDateFr(m.date)}`, href: `/admin/reunions/${m.id}` });
+        }
+        for (const d of m.decisions) {
+          if (reu.length >= 6) break;
+          if (d.content.toLowerCase().includes(q)) {
+            reu.push({
+              icon: NotebookPen,
+              label: d.content,
+              hint: `Décision · ${formatDateFr(m.date)}`,
+              href: `/admin/reunions/${m.id}`,
+            });
+          }
+        }
+        if (reu.length >= 6) break;
+      }
+    }
+
+    return [...stat.slice(0, q ? 4 : 9), ...veh, ...cls, ...qts, ...reu.slice(0, 6)];
+  }, [query, vehicles, quotes, clients, meetings, role]);
 
   function go(item: Item) {
     setOpen(false);
@@ -168,7 +203,7 @@ export default function CommandPalette({ role }: { role: Role }) {
                   if (e.key === "ArrowUp") { e.preventDefault(); setSelected((s) => Math.max(s - 1, 0)); }
                   if (e.key === "Enter" && results[selected]) go(results[selected]);
                 }}
-                placeholder="Rechercher un véhicule, un devis, une action…"
+                placeholder="Rechercher un véhicule, un devis, une décision…"
                 className="w-full pl-11 pr-4 py-3.5 text-sm outline-none bg-transparent"
                 style={{ color: T.text }}
               />
@@ -180,6 +215,16 @@ export default function CommandPalette({ role }: { role: Role }) {
                 results.map((r, i) => (
                   <div
                     key={r.href + r.label}
+                    // La ligne choisie se ramène dans la zone visible : les
+                    // résultats du bas (réunions, décisions) restaient hors champ,
+                    // la flèche bas descendait sans que rien ne défile.
+                    ref={
+                      i === selected
+                        ? (el) => {
+                            el?.scrollIntoView({ block: "nearest" });
+                          }
+                        : undefined
+                    }
                     className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
                     style={{ backgroundColor: i === selected ? "rgba(107,159,238,0.10)" : "transparent", color: T.textDim }}
                     onMouseEnter={() => setSelected(i)}

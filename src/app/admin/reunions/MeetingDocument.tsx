@@ -4,6 +4,7 @@
 import type { CSSProperties } from "react";
 import { formatEuro, formatDateFr } from "@/lib/devis";
 import { formatNumber } from "@/lib/format";
+import { COMPANY } from "@/lib/company";
 import { KIND_LABEL, isMeetingKind, meetingTitle, type MeetingAttachment, type MeetingSnapshot } from "@/lib/reunions";
 
 /* Palette « papier » neutre (sur fond blanc) — identique au devis. */
@@ -25,6 +26,17 @@ const labelMini: CSSProperties = {
 
 const tabular: CSSProperties = { fontVariantNumeric: "tabular-nums" };
 
+// Assombrit une couleur hex (même recette que DevisDocument). L'accent du
+// back-office est un bleu clair pensé pour un fond sombre : posé tel quel sur du
+// papier blanc, les titres et l'en-tête du tableau ressortaient délavés.
+function shade(hex: string, factor: number): string {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return hex;
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  const c = (h: string) => clamp(parseInt(h, 16) * factor).toString(16).padStart(2, "0");
+  return `#${c(m[1])}${c(m[2])}${c(m[3])}`;
+}
+
 export type DocumentMeeting = {
   date: string;
   title: string;
@@ -45,7 +57,8 @@ export default function MeetingDocument({
   meeting: DocumentMeeting;
   brand: { name: string; tagline: string; accent: string };
 }) {
-  const accent = brand.accent || "#1E4FA3";
+  // Version « papier » de l'accent : lisible en noir sur blanc comme sur le devis.
+  const accent = shade(brand.accent || "#1E4FA3", 0.62);
   const decisions = meeting.items.filter((i) => i.type === "decision");
   const actions = meeting.items.filter((i) => i.type === "action");
   const kindLabel = isMeetingKind(meeting.kind) ? KIND_LABEL[meeting.kind] : meeting.kind;
@@ -72,12 +85,19 @@ export default function MeetingDocument({
       {/* ── En-tête ── */}
       <div className="devis-avoid-break" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "8mm" }}>
         <div>
-          <div style={{ fontSize: "12pt", letterSpacing: "0.24em", textTransform: "uppercase", fontWeight: 600 }}>
-            {brand.name}
-          </div>
-          {brand.tagline && (
-            <div style={{ ...labelMini, marginTop: "1mm", letterSpacing: "0.34em" }}>{brand.tagline}</div>
+          {/* Le vrai logo, comme sur le devis : un compte rendu remis à la banque
+              se présente avec la même identité que les documents commerciaux. */}
+          {COMPANY.logoSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={COMPANY.logoSrc} alt={brand.name} style={{ height: "14mm", width: "auto", display: "block" }} />
+          ) : (
+            <div style={{ fontSize: "12pt", letterSpacing: "0.24em", textTransform: "uppercase", fontWeight: 600 }}>
+              {brand.name}
+            </div>
           )}
+          {/* La signature du back-office (« Back-office ») reste à l'écran : sur
+              un papier remis à la banque, seule l'identité de l'émetteur compte. */}
+          <div style={{ ...labelMini, marginTop: "2mm" }}>{COMPANY.legalName}</div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: "14pt", letterSpacing: "0.08em", textTransform: "uppercase", color: accent, fontWeight: 600 }}>
@@ -120,7 +140,7 @@ export default function MeetingDocument({
           className="devis-avoid-break"
           style={{ marginTop: "6mm", border: `1px solid ${C.border}`, padding: "4mm 5mm", backgroundColor: "#FBFCFE" }}
         >
-          <div style={labelMini}>Situation de l&apos;agence au {formatDateFr(meeting.date)}</div>
+          <div style={labelMini}>Situation de l&apos;agence au {formatDateFr(snap.takenOn || meeting.date)}</div>
           <table style={{ width: "100%", marginTop: "3mm", borderCollapse: "collapse", fontSize: "9pt" }}>
             <tbody>
               <tr>

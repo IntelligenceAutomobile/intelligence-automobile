@@ -44,7 +44,7 @@ function totalOf(r: QuoteRow, useBalance: boolean): number {
 // Renvoie null quand la base bronche : la création prime sur le comptage, et une
 // photo absente se replie proprement là où une photo de zéros ferait croire à une
 // agence vide en relisant la réunion des années plus tard.
-export async function buildSnapshot(): Promise<MeetingSnapshot | null> {
+export async function buildSnapshot(today: string): Promise<MeetingSnapshot | null> {
   try {
     const [stock, pendingQuotes, unpaidInvoices, leads] = await Promise.all([
       prisma.vehicle.findMany({
@@ -63,6 +63,7 @@ export async function buildSnapshot(): Promise<MeetingSnapshot | null> {
     ]);
 
     return {
+      takenOn: today,
       stockCount: stock.length,
       stockValue: stock.reduce((s, v) => s + (v.price ?? 0), 0),
       quotesPendingCount: pendingQuotes.length,

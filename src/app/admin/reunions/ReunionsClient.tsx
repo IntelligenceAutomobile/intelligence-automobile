@@ -14,11 +14,13 @@ import {
   KIND_TONE,
   MEETING_KINDS,
   dayParts,
+  daysBetweenKeys,
   dueSentence,
   isMeetingKind,
   isOverdue,
   meetingHaystack,
   meetingTitle,
+  monthShortFr,
   monthKeyOf,
   monthLabel,
   yearOf,
@@ -62,6 +64,102 @@ function AuthorDot({ name, size = 7 }: { name: string; size?: number }) {
       className="inline-block flex-shrink-0"
       style={{ width: size, height: size, borderRadius: "50%", backgroundColor: authorColor(name) }}
     />
+  );
+}
+
+/* ── Anatomie commune aux trois vues ──
+   Réunions, Décisions et Actions se lisent avec les mêmes repères : un
+   intertitre, un rail vertical, puis des lignes ouvertes par le même médaillon
+   de date. Les trois listes se parcourent ainsi du même œil. */
+
+function DateMedallion({
+  date,
+  tone,
+  // « weekday » quand la liste est déjà groupée par mois ; « month » sinon,
+  // sans quoi un médaillon « 1 MAR » laisse ignorer de quel mois il parle.
+  sub = "weekday",
+}: {
+  date: string;
+  tone?: "warning";
+  sub?: "weekday" | "month";
+}) {
+  const { day, weekday } = dayParts(date);
+  const legend = sub === "month" ? monthShortFr(date) : weekday;
+  const warn = tone === "warning";
+  return (
+    <div
+      className="flex flex-col items-center justify-center flex-shrink-0"
+      style={{
+        width: 46,
+        height: 46,
+        backgroundColor: T.float,
+        border: `1px solid ${warn ? TONE.warning.bd : T.border}`,
+      }}
+    >
+      <span
+        className="text-[17px] font-light leading-none"
+        style={{ color: warn ? T.warning : T.textDim, fontVariantNumeric: "tabular-nums" }}
+      >
+        {day}
+      </span>
+      {legend && (
+        <span className="text-[8px] tracking-[0.14em] uppercase mt-1" style={{ color: T.muted }}>
+          {legend}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function GroupHeading({ label, tone }: { label: string; tone?: "accent" | "warning" }) {
+  return (
+    <div
+      className="text-[10px] tracking-[0.28em] uppercase mb-3"
+      style={{ color: tone === "warning" ? T.warning : tone === "accent" ? T.accent : T.muted }}
+    >
+      {label}
+    </div>
+  );
+}
+
+function Rail({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative pl-4" style={{ borderLeft: `2px solid ${T.border}` }}>
+      {children}
+    </div>
+  );
+}
+
+// Une ligne de liste : médaillon à gauche, contenu au centre, actions à droite.
+// Le lien de couverture porte toute la ligne ; ce qui est cliquable par-dessus
+// remonte en z-10 avec les évènements réactivés.
+function TimelineRow({
+  href,
+  ariaLabel,
+  medallion,
+  children,
+  trailing,
+}: {
+  href?: string;
+  ariaLabel?: string;
+  medallion: React.ReactNode;
+  children: React.ReactNode;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <div
+      className="group relative transition-colors duration-200 hover:bg-[rgba(107,159,238,0.06)]"
+      style={{ borderBottom: `1px solid ${T.border}` }}
+    >
+      {href && <Link href={href} className="absolute inset-0 z-0" aria-label={ariaLabel} />}
+      <div className={`flex items-center gap-4 px-4 py-3.5 ${href ? "pointer-events-none" : ""}`}>
+        {medallion}
+        <div className="min-w-0 flex-1">{children}</div>
+        {trailing && (
+          <div className="flex items-center gap-1 flex-shrink-0 relative z-10 pointer-events-auto">{trailing}</div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -315,6 +413,29 @@ export default function ReunionsClient({
 
   const lateCount = openActions.filter(({ item }) => isOverdue(item.dueDate, today)).length;
 
+  // Regroupement par urgence, comme la section Réunions de l'atelier : les deux
+  // écrans montrent la même liste, ils doivent la découper pareil.
+  const actionBuckets = useMemo(() => {
+    const late: typeof visibleActions = [];
+    const week: typeof visibleActions = [];
+    const later: typeof visibleActions = [];
+    const undated: typeof visibleActions = [];
+
+    for (const a of visibleActions) {
+      if (!a.item.dueDate) undated.push(a);
+      else if (isOverdue(a.item.dueDate, today)) late.push(a);
+      else if (daysBetweenKeys(today, a.item.dueDate) <= 7) week.push(a);
+      else later.push(a);
+    }
+
+    return [
+      { key: "late", label: "En retard", tone: "warning" as const, items: late },
+      { key: "week", label: "Cette semaine", tone: undefined, items: week },
+      { key: "later", label: "Plus tard", tone: undefined, items: later },
+      { key: "undated", label: "À planifier", tone: undefined, items: undated },
+    ].filter((b) => b.items.length > 0);
+  }, [visibleActions, today]);
+
   /* ── Groupement par mois ── */
   const byMonth = useMemo(() => {
     const map = new Map<string, MeetingRow[]>();
@@ -546,13 +667,8 @@ export default function ReunionsClient({
               <div className="space-y-8">
                 {byMonth.map(([mKey, list]) => (
                   <div key={mKey}>
-                    <div
-                      className="text-[10px] tracking-[0.28em] uppercase mb-3"
-                      style={{ color: mKey === currentMonth ? T.accent : T.muted }}
-                    >
-                      {monthLabel(mKey)}
-                    </div>
-                    <div className="relative pl-4" style={{ borderLeft: `2px solid ${T.border}` }}>
+                    <GroupHeading label={monthLabel(mKey)} tone={mKey === currentMonth ? "accent" : undefined} />
+                    <Rail>
                       {list.map((m) => (
                         <MeetingLine
                           key={m.id}
@@ -562,7 +678,7 @@ export default function ReunionsClient({
                           onDelete={() => setConfirmDelete(m)}
                         />
                       ))}
-                    </div>
+                    </Rail>
                   </div>
                 ))}
               </div>
@@ -579,45 +695,25 @@ export default function ReunionsClient({
               <div className="space-y-8">
                 {decisionsByMonth.map(([mKey, list]) => (
                   <div key={mKey}>
-                    <div
-                      className="text-[10px] tracking-[0.28em] uppercase mb-3"
-                      style={{ color: mKey === currentMonth ? T.accent : T.muted }}
-                    >
-                      {monthLabel(mKey)}
-                    </div>
-                    <div style={{ border: `1px solid ${T.border}` }}>
-                      {list.map(({ item, meeting }, i) => (
-                        <div
+                    <GroupHeading label={monthLabel(mKey)} tone={mKey === currentMonth ? "accent" : undefined} />
+                    <Rail>
+                      {list.map(({ item, meeting }) => (
+                        <TimelineRow
                           key={item.id}
-                          className="flex items-start gap-4 px-4 py-3.5"
-                          style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
+                          href={`/admin/reunions/${meeting.id}`}
+                          ariaLabel={`Ouvrir ${meetingTitle(meeting)} du ${formatDateFr(meeting.date)}`}
+                          medallion={<DateMedallion date={meeting.date} />}
+                          trailing={<ChevronRight size={14} style={{ color: T.muted }} />}
                         >
-                          <span
-                            className="text-[11px] flex-shrink-0 pt-0.5 w-20"
-                            style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}
-                          >
-                            {formatDateFr(meeting.date)}
-                          </span>
-                          <p
-                            className="text-sm flex-1 min-w-0 pl-3"
-                            style={{ color: T.textDim, borderLeft: `2px solid ${T.accent}` }}
-                          >
+                          <p className="text-sm" style={{ color: T.text }}>
                             {item.content}
                           </p>
-                          {/* Le titre disparaît sous le seuil sm : l'intitulé
-                              accessible reste porté par le lien lui-même. */}
-                          <Link
-                            href={`/admin/reunions/${meeting.id}`}
-                            aria-label={`Ouvrir ${meetingTitle(meeting)} du ${formatDateFr(meeting.date)}`}
-                            className="adm-act text-[11px] tracking-widest uppercase flex-shrink-0 inline-flex items-center gap-1 p-1 -m-1"
-                            style={{ color: T.muted }}
-                          >
-                            <span className="hidden sm:inline">{meetingTitle(meeting)}</span>
-                            <ChevronRight size={12} />
-                          </Link>
-                        </div>
+                          <div className="text-[11px] mt-1 truncate" style={{ color: T.muted }}>
+                            {meetingTitle(meeting)}
+                          </div>
+                        </TimelineRow>
                       ))}
-                    </div>
+                    </Rail>
                   </div>
                 ))}
               </div>
@@ -644,58 +740,64 @@ export default function ReunionsClient({
                 </p>
               </div>
             ) : (
-              <div style={{ border: `1px solid ${T.border}` }}>
-                {visibleActions.map(({ item, meeting }, i) => {
-                  const late = isOverdue(item.dueDate, today);
-                  return (
-                    <div
-                      key={item.id}
-                      className="group flex items-start gap-3 px-4 py-3.5"
-                      style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
-                    >
-                      {/* La cible fait 32 px avec sa marge intérieure, et la
-                          coche reste visible au doigt comme au clavier : la
-                          révélation au survol la rendait invisible sur mobile. */}
-                      <button
-                        type="button"
-                        onClick={() => toggleAction(meeting.id, item)}
-                        title="Marquer faite"
-                        aria-label={`Marquer faite : ${item.content}`}
-                        className="adm-act flex items-center justify-center flex-shrink-0 p-2 -m-1"
-                        style={{ color: T.muted }}
-                      >
-                        <span
-                          className="flex items-center justify-center"
-                          style={{ width: 16, height: 16, border: `1px solid ${T.border}` }}
-                        >
-                          <Check size={12} />
-                        </span>
-                      </button>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm" style={{ color: T.text }}>
-                          {item.content}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px]" style={{ color: T.muted }}>
-                          {item.owner && (
-                            <span className="inline-flex items-center gap-1.5">
-                              <AuthorDot name={item.owner} />
-                              {item.owner}
-                            </span>
-                          )}
-                          {item.dueDate && (
-                            <span style={{ color: late ? T.warning : T.muted }}>
-                              {dueSentence(item.dueDate, today)}
-                            </span>
-                          )}
-                          <Link href={`/admin/reunions/${meeting.id}`} className="adm-act" style={{ color: T.muted }}>
-                            {meetingTitle(meeting)} · {formatDateFr(meeting.date)}
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="space-y-8">
+                {actionBuckets.map((b) => (
+                  <div key={b.key}>
+                    <GroupHeading label={b.label} tone={b.tone} />
+                    <Rail>
+                      {b.items.map(({ item, meeting }) => {
+                        const late = isOverdue(item.dueDate, today);
+                        return (
+                          <TimelineRow
+                            key={item.id}
+                            href={`/admin/reunions/${meeting.id}`}
+                            ariaLabel={`Ouvrir ${meetingTitle(meeting)} du ${formatDateFr(meeting.date)}`}
+                            // Le médaillon porte l'échéance : c'est la date qui
+                            // compte pour agir. Une action sans échéance affiche
+                            // un tiret plutôt qu'une date d'emprunt.
+                            medallion={<DateMedallion date={item.dueDate} tone={late ? "warning" : undefined} sub="month" />}
+                            trailing={
+                              <button
+                                type="button"
+                                onClick={() => toggleAction(meeting.id, item)}
+                                title="Marquer faite"
+                                aria-label={`Marquer faite : ${item.content}`}
+                                className="adm-act group/tick flex items-center justify-center p-2"
+                                style={{ color: T.muted }}
+                              >
+                                {/* La coche reste très pâle tant que l'action est
+                                    ouverte : à pleine opacité, la case se lisait
+                                    comme déjà faite. Elle s'affirme au survol. */}
+                                <span
+                                  className="flex items-center justify-center transition-opacity duration-150 opacity-25 group-hover/tick:opacity-100"
+                                  style={{ width: 16, height: 16, border: `1px solid ${T.border}` }}
+                                >
+                                  <Check size={12} />
+                                </span>
+                              </button>
+                            }
+                          >
+                            <p className="text-sm" style={{ color: T.text }}>
+                              {item.content}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px]" style={{ color: T.muted }}>
+                              {item.owner && (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <AuthorDot name={item.owner} />
+                                  {item.owner}
+                                </span>
+                              )}
+                              {item.dueDate && (
+                                <span style={{ color: late ? T.warning : T.muted }}>{dueSentence(item.dueDate, today)}</span>
+                              )}
+                              <span className="truncate">{meetingTitle(meeting)}</span>
+                            </div>
+                          </TimelineRow>
+                        );
+                      })}
+                    </Rail>
+                  </div>
+                ))}
               </div>
             ))}
         </>
@@ -750,7 +852,6 @@ function MeetingLine({
   canDelete: boolean;
   onDelete: () => void;
 }) {
-  const { day, weekday } = dayParts(meeting.date);
   const decisions = meeting.items.filter((i) => i.type === "decision").length;
   const actions = meeting.items.filter((i) => i.type === "action");
   const openCount = actions.filter((i) => i.status !== "fait").length;
@@ -768,58 +869,13 @@ function MeetingLine({
   }
   const summary = parts.join(" · ");
 
-  // Un simple fond au survol : adm-card ferait décoller chaque ligne de 2 px avec
-  // une ombre de carte, et la liste ondulerait au passage de la souris.
   return (
-    <div
-      className="group relative transition-colors duration-200 hover:bg-[rgba(107,159,238,0.06)]"
-      style={{ borderBottom: `1px solid ${T.border}` }}
-    >
-      {/* Lien de couverture : toute la ligne mène à la fiche, les actions passent au-dessus */}
-      <Link href={`/admin/reunions/${meeting.id}`} className="absolute inset-0 z-0" aria-label={meetingTitle(meeting)} />
-
-      <div className="flex items-center gap-4 px-4 py-3.5 pointer-events-none">
-        {/* Médaillon de date */}
-        <div
-          className="flex flex-col items-center justify-center flex-shrink-0"
-          style={{ width: 46, height: 46, backgroundColor: T.float, border: `1px solid ${T.border}` }}
-        >
-          <span className="text-[17px] font-light leading-none" style={{ color: T.textDim, fontVariantNumeric: "tabular-nums" }}>
-            {day}
-          </span>
-          <span className="text-[8px] tracking-[0.14em] uppercase mt-1" style={{ color: T.muted }}>
-            {weekday}
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-sm font-light truncate" style={{ color: T.text }}>
-              {meetingTitle(meeting)}
-            </span>
-            <Tag tone={KIND_TONE[mk]}>{KIND_LABEL[mk]}</Tag>
-            {meeting.attendees.length > 0 && (
-              <span className="inline-flex items-center gap-1">
-                {meeting.attendees.slice(0, 4).map((a) => (
-                  <AuthorDot key={a} name={a} />
-                ))}
-                {meeting.attendees.length > 4 && (
-                  <span className="text-[10px]" style={{ color: T.muted }}>
-                    +{meeting.attendees.length - 4}
-                  </span>
-                )}
-              </span>
-            )}
-          </div>
-          {summary && (
-            <div className="text-[11px] mt-1" style={{ color: lateHere ? T.warning : openCount > 0 ? T.textDim : T.muted }}>
-              {summary}
-            </div>
-          )}
-        </div>
-
-        {/* Actions de ligne, révélées au survol */}
-        <div className="adm-row-actions flex items-center gap-1 flex-shrink-0 relative z-10 pointer-events-auto">
+    <TimelineRow
+      href={`/admin/reunions/${meeting.id}`}
+      ariaLabel={meetingTitle(meeting)}
+      medallion={<DateMedallion date={meeting.date} />}
+      trailing={
+        <div className="adm-row-actions flex items-center gap-1">
           <Link
             href={`/admin/reunions/${meeting.id}/imprimer`}
             target="_blank"
@@ -835,8 +891,34 @@ function MeetingLine({
             </button>
           )}
         </div>
+      }
+    >
+      <div className="flex items-center gap-2.5 flex-wrap">
+        <span className="text-sm truncate" style={{ color: T.text }}>
+          {meetingTitle(meeting)}
+        </span>
+        <Tag tone={KIND_TONE[mk]}>{KIND_LABEL[mk]}</Tag>
+        {/* Les prénoms s'écrivent en clair dès que la place le permet : réduits à
+            des pastilles, ils restaient muets, l'infobulle ne se déclenchant pas
+            sous le lien de couverture de la ligne. */}
+        {meeting.attendees.length > 0 && (
+          <span className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: T.muted }}>
+            {meeting.attendees.slice(0, 3).map((a) => (
+              <span key={a} className="inline-flex items-center gap-1">
+                <AuthorDot name={a} />
+                <span className="hidden md:inline">{a}</span>
+              </span>
+            ))}
+            {meeting.attendees.length > 3 && <span>+{meeting.attendees.length - 3}</span>}
+          </span>
+        )}
       </div>
-    </div>
+      {summary && (
+        <div className="text-[11px] mt-1" style={{ color: lateHere ? T.warning : openCount > 0 ? T.textDim : T.muted }}>
+          {summary}
+        </div>
+      )}
+    </TimelineRow>
   );
 }
 
