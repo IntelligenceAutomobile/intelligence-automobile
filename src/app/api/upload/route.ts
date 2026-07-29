@@ -1,7 +1,14 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextRequest, NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/auth";
+import { uploadRule } from "@/lib/upload-rules";
 
+// Délivre un jeton d'écriture sur le stockage de fichiers. Le cloisonnement se
+// fait ici et dans src/lib/upload-rules.ts : le dépôt n'a aucun middleware, et
+// sans cette garde n'importe qui obtenait un jeton pour écrire où il voulait,
+// jusqu'à 25 Mo par fichier.
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const session = await getAdminSession();
   const body = (await req.json()) as HandleUploadBody;
 
   try {
@@ -9,37 +16,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       body,
       request: req,
       onBeforeGenerateToken: async (pathname) => {
-        // Les pièces jointes (documents/…) acceptent PDF, images et bureautique.
-        // Les photos du véhicule (vehicules/…) restent strictement des images.
-        const isDocument = pathname.startsWith("documents/");
-        const imageTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp",
-          "image/heic",
-          "image/heif",
-          "image/gif",
-          "image/tiff",
-          "image/bmp",
-          "image/avif",
-        ];
-        if (isDocument) {
-          return {
-            allowedContentTypes: [
-              "application/pdf",
-              ...imageTypes,
-              "application/msword",
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-              "application/vnd.ms-excel",
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            ],
-            maximumSizeInBytes: 25 * 1024 * 1024, // 25 Mo par document (PDF scannés)
-          };
-        }
-        return {
-          allowedContentTypes: imageTypes,
-          maximumSizeInBytes: 15 * 1024 * 1024, // 15 Mo par photo
-        };
+        const rule = uploadRule(pathname, session !== null);
+        if (!rule) throw new Error("Envoi réservé aux utilisateurs connectés.");
+        return rule;
       },
       onUploadCompleted: async () => {},
     });

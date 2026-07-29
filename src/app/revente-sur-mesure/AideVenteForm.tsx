@@ -77,7 +77,9 @@ export default function AideVenteForm() {
     try {
       const blobUrls = await Promise.all(
         photos.map((file) =>
-          upload(`documents/${file.name}`, file, {
+          // Dossier dédié au formulaire public : c'est le seul où /api/upload
+          // accepte un envoi sans session.
+          upload(`aide-vente/${file.name}`, file, {
             access: "public",
             handleUploadUrl: "/api/upload",
           }).then((b) => b.url)
