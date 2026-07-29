@@ -194,7 +194,7 @@ export default async function ContactV2Page({
                       <span style={{ fontSize: "0.875rem", color: "#F0F5FF" }}>
                         {item.value.startsWith("+") ? (
                           <a
-                            href="https://wa.me/qr/M27WU5KOY6H5D1"
+                            href="https://wa.me/33620243879"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="wa-phone inline-flex items-center gap-2"

@@ -77,7 +77,7 @@ export default function Footer() {
             <ul className="space-y-3.5 text-sm" style={{ color: "#D4E2F4", fontWeight: 400 }}>
               <li>
                 <a
-                  href="https://wa.me/qr/M27WU5KOY6H5D1"
+                  href="https://wa.me/33620243879"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 transition-colors duration-200"
