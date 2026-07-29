@@ -81,6 +81,25 @@ model CollabComment {
   replies   CollabComment[] @relation("CommentReplies")
 }
 
+// Liens utiles de l'atelier : veille concurrents, idées, inspiration, outils.
+// L'aperçu (title, description, imageUrl…) est capturé au moment de l'ajout et
+// figé en base : il reste stable même si le site visé change ou disparaît.
+model CollabLink {
+  id          String    @id @default(cuid())
+  url         String
+  note        String    @default("")
+  tag         String    @default("") // "" | concurrent | idée | inspiration | outil
+  title       String    @default("")
+  description String    @default("")
+  imageUrl    String?
+  siteName    String    @default("")
+  domain      String    @default("")
+  author      String
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Quote {
   id     String @id @default(cuid())
   number String @unique

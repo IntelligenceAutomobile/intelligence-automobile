@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { upload } from "@vercel/blob/client";
 import { T } from "@/app/admin/ui";
 import { parseAttachments, type Attachment, type AttachmentKind } from "@/lib/collab-attachments";
+import LinksView, { LINKS_COLOR } from "./Links";
 
 type Status = "todo" | "doing" | "done";
 
@@ -127,6 +128,7 @@ export default function Board({ authorName }: { authorName: string }) {
   const [adding, setAdding]             = useState(false);
   const [overlay, setOverlay]           = useState<{ urls: string[]; index: number } | null>(null);
   const [undoStack, setUndoStack]       = useState<UndoAction[]>([]);
+  const [linksCount, setLinksCount]     = useState<number | null>(null);
 
   // Load lastSeen from localStorage and mark initial category seen
   useEffect(() => {
@@ -144,6 +146,15 @@ export default function Board({ authorName }: { authorName: string }) {
   }, []);
 
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
+
+  // Compteur de la bibliothèque de liens, affiché dans la barre latérale dès
+  // l'arrivée sur l'atelier (la vue Liens le tient à jour ensuite).
+  useEffect(() => {
+    fetch("/api/collab/links")
+      .then(r => (r.ok ? r.json() : []))
+      .then((l: unknown[]) => setLinksCount(l.length))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!overlay) return;
@@ -167,7 +178,7 @@ export default function Board({ authorName }: { authorName: string }) {
 
   function selectCategory(catId: string) {
     setSelectedCat(catId);
-    if (catId === "__trash__") return;
+    if (catId === "__trash__" || catId === "__links__") return;
     setLastSeen(prev => {
       const updated = { ...prev, [catId]: new Date().toISOString() };
       localStorage.setItem(LS_KEY, JSON.stringify(updated));
@@ -374,6 +385,23 @@ export default function Board({ authorName }: { authorName: string }) {
             );
           })}
           <button
+            onClick={() => selectCategory("__links__")}
+            className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 whitespace-nowrap"
+            style={{
+              fontSize: "13px",
+              borderRadius: "999px",
+              border: `1px solid ${selectedCat === "__links__" ? LINKS_COLOR : "#1B3055"}`,
+              backgroundColor: selectedCat === "__links__" ? "#112240" : "transparent",
+              color: selectedCat === "__links__" ? LINKS_COLOR : "#C8D8EE",
+            }}
+          >
+            <span style={{ fontSize: "11px" }}>🔗</span>
+            <span>Liens</span>
+            {linksCount !== null && linksCount > 0 && (
+              <span style={{ fontSize: "10px", lineHeight: 1, padding: "2px 6px", borderRadius: "9px", backgroundColor: "#1B3055", color: "#C8D8EE" }}>{linksCount}</span>
+            )}
+          </button>
+          <button
             onClick={() => selectCategory("__trash__")}
             className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 whitespace-nowrap"
             style={{
@@ -458,6 +486,48 @@ export default function Board({ authorName }: { authorName: string }) {
               </button>
             );
           })}
+
+          {/* Ressources : bibliothèque de liens durable, hors flux de tâches */}
+          <div style={{ color: "#1B3055", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 8px", margin: "20px 0 8px" }}>
+            Ressources
+          </div>
+          <button
+            onClick={() => selectCategory("__links__")}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "7px 8px",
+              fontSize: "13px",
+              textAlign: "left",
+              backgroundColor: selectedCat === "__links__" ? "#112240" : "transparent",
+              color: selectedCat === "__links__" ? LINKS_COLOR : "#C8D8EE",
+              borderLeft: `2px solid ${selectedCat === "__links__" ? LINKS_COLOR : "transparent"}`,
+              transition: "background 0.1s",
+            }}
+            onMouseEnter={e => { if (selectedCat !== "__links__") e.currentTarget.style.backgroundColor = "#0D1E38"; }}
+            onMouseLeave={e => { if (selectedCat !== "__links__") e.currentTarget.style.backgroundColor = "transparent"; }}
+          >
+            <span style={{ fontSize: "11px", lineHeight: 1, flexShrink: 0 }}>🔗</span>
+            <span style={{ flex: 1 }}>Liens</span>
+            {linksCount !== null && linksCount > 0 && (
+              <span
+                title={`${linksCount} lien${linksCount > 1 ? "s" : ""} enregistré${linksCount > 1 ? "s" : ""}`}
+                style={{
+                  fontSize: "10px",
+                  lineHeight: 1,
+                  padding: "2px 6px",
+                  borderRadius: "9px",
+                  backgroundColor: "#1B3055",
+                  color: selectedCat === "__links__" ? LINKS_COLOR : "#C8D8EE",
+                  flexShrink: 0,
+                }}
+              >
+                {linksCount}
+              </span>
+            )}
+          </button>
         </nav>
 
         {/* Corbeille */}
@@ -514,6 +584,14 @@ export default function Board({ authorName }: { authorName: string }) {
                 {trashNotes ? `${trashNotes.length} note${trashNotes.length > 1 ? "s" : ""}` : ""}
               </span>
             </>
+          ) : selectedCat === "__links__" ? (
+            <>
+              <span style={{ fontSize: "12px" }}>🔗</span>
+              <span style={{ fontSize: "15px", fontWeight: 400 }}>Liens</span>
+              <span style={{ color: "#1B3055", fontSize: "12px", marginLeft: "4px" }}>
+                {linksCount !== null && linksCount > 0 ? `${linksCount} lien${linksCount > 1 ? "s" : ""}` : ""}
+              </span>
+            </>
           ) : (
             <>
               <span style={{ color: activeCat.color, fontSize: "8px" }}>●</span>
@@ -544,7 +622,8 @@ export default function Board({ authorName }: { authorName: string }) {
           {selectedCat === "__trash__" && (
             <TrashView notes={trashNotes ?? []} loading={loadingTrash} onOpenImage={(urls, index) => setOverlay({ urls, index })} onRestore={restoreFromTrash} />
           )}
-          {selectedCat !== "__trash__" && <>
+          {selectedCat === "__links__" && <LinksView onCount={setLinksCount} />}
+          {selectedCat !== "__trash__" && selectedCat !== "__links__" && <>
           {/* Formulaire */}
           <form onSubmit={addNote} className="mb-8 border" style={{ borderColor: "#1B3055", backgroundColor: "#112240" }}>
             <div className="p-4">
