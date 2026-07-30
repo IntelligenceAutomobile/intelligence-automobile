@@ -173,9 +173,16 @@ export default function EmailsClient({
         </div>
         <p className="text-[12px] mb-3" style={{ color: T.muted }}>
           Aucun message ne part vers ces adresses ni ces domaines, y compris depuis le site en ligne.
-          Une entrée de domaine couvre toutes ses adresses.
+          Une entrée de domaine couvre toutes ses adresses. Vous ajoutez et retirez librement : un
+          partenaire suspendu aujourd&apos;hui redevient joignable d&apos;un clic.
         </p>
 
+        {totalBloque === 0 ? (
+          <div className="p-6 text-sm inline-flex items-center gap-2" style={{ border: `1px solid ${T.border}`, color: T.textDim }}>
+            <ShieldCheck size={15} style={{ color: T.success }} />
+            Tous vos clients peuvent recevoir vos messages. Ajoutez une adresse ci-dessous pour en suspendre un.
+          </div>
+        ) : (
         <div style={{ border: `1px solid ${T.border}` }}>
           {fixedEntries.map((v, i) => (
             <div
@@ -212,8 +219,8 @@ export default function EmailsClient({
                   type="button"
                   onClick={() => setRemoving(b)}
                   disabled={busy}
-                  title="Retirer de la liste rouge"
-                  aria-label={`Retirer ${b.value} de la liste rouge`}
+                  title={`Débloquer ${b.value}`}
+                  aria-label={`Débloquer ${b.value}`}
                   className="adm-act-danger inline-flex items-center justify-center w-8 h-8 disabled:opacity-40"
                   style={{ color: T.muted }}
                 >
@@ -223,6 +230,7 @@ export default function EmailsClient({
             </div>
           ))}
         </div>
+        )}
 
         {canEdit && (
           <div className="mt-4">

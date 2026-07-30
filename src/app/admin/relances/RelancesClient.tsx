@@ -7,47 +7,32 @@
 // temps de la session : interrompu au milieu de ses relances, on retrouve ce
 // qui est déjà fait.
 import { useEffect, useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Send, Clock, FileText, ReceiptText, CheckCircle2, MailPlus, Loader2, Phone, ChevronDown, History, RotateCcw, XCircle, AlertTriangle, Ban } from "lucide-react";
-import { formatEuro, formatDateFr } from "@/lib/devis";
-import { DEVIS_RELANCE_DAYS, FACTURE_RELANCE_DAYS } from "@/lib/relances";
-import { T, Tag, AdminPage, PageHeader } from "../ui";
+import { Send, Clock, FileText, ReceiptText, CheckCircle2, Loader2, Phone, ChevronDown, type LucideIcon } from "lucide-react";
+import { formatDateFr } from "@/lib/devis";
+import { T, AdminPage, PageHeader } from "../ui";
 import { ConfirmDialog } from "../confirm";
 import { useToast } from "../toast";
 import { ApiError, RelanceDialog, relanceApi, type RelancePreview } from "./RelanceDialog";
+import {
+  RelanceLine,
+  RelanceSection,
+  HistorySection,
+  relancesSubtitle,
+  ghostBtnClass,
+  ghostBorder,
+  primaryBtnClass,
+  RELANCES_VIDE,
+  HINT_DEVIS,
+  HINT_FACTURES,
+  type RelanceView,
+  type HistoryView,
+} from "./presentation";
 
-export type RelanceItem = {
-  id: string;
-  number: string;
-  client: string;
-  clientEmail: string;
-  clientPhone: string;
-  amount: number;
-  kind: "devis" | "facture";
-  // Jours sans réponse (devis) ou jours de retard après échéance (facture).
-  sinceDays: number;
-  relanceCount: number;
-  lastRelanceDate: string;
-  // Date affichée comme point de départ : envoi réel du devis, émission de la facture.
-  startDate: string;
-  // Validité du devis dépassée : un renvoi vaut mieux qu'une relance.
-  expired: boolean;
-  // Destinataire en liste rouge : aucun email ne peut partir vers lui.
-  blocked: boolean;
-};
-
-// Une ligne du journal des actions, telle qu'elle vient du serveur.
-export type HistoryEntry = {
-  id: string;
-  quoteId: string;
-  number: string;
-  client: string;
-  action: string;
-  detail: string;
-  author: string;
-  at: string;
-};
+// Le back-office ajoute le téléphone du client aux valeurs affichées : il sert à
+// proposer l'appel quand l'email est écarté.
+export type RelanceItem = RelanceView & { clientPhone: string };
+export type HistoryEntry = HistoryView;
 
 type TreatedAction = "relance" | "manual" | "snooze" | "mute";
 type Treated = { item: RelanceItem; action: TreatedAction; at: string; until?: string };
@@ -56,7 +41,6 @@ type RowBusy = BusyKind | null;
 
 type Preview = { it: RelanceItem; data: RelancePreview };
 
-const ghostBorder = "rgba(159,179,212,0.45)";
 
 /* ── Menu du bouton « Reporter » : durées, arrêt, relance téléphonique ── */
 function ReportMenu({
@@ -108,10 +92,9 @@ function ReportMenu({
   );
 }
 
-/* ── Une ligne du centre ── */
-function Row({
+/* ── Actions d'une ligne : ce que le back-office met dans l'habillage partagé ── */
+function RowActions({
   it,
-  first,
   busy,
   menuOpen,
   treated,
@@ -122,7 +105,6 @@ function Row({
   onUndo,
 }: {
   it: RelanceItem;
-  first: boolean;
   busy: RowBusy;
   menuOpen: boolean;
   treated: Treated | undefined;
@@ -133,196 +115,110 @@ function Row({
   onUndo: (t: Treated) => void;
 }) {
   const isFacture = it.kind === "facture";
-  const tone = isFacture
-    ? it.sinceDays >= FACTURE_RELANCE_DAYS ? "danger" : "warning"
-    : it.sinceDays >= DEVIS_RELANCE_DAYS * 2 ? "danger" : "warning";
-  const ageText = isFacture ? `retard ${it.sinceDays} j` : `${it.sinceDays} j`;
-  const ageTitle = isFacture
-    ? `Échéance dépassée depuis ${it.sinceDays} jour${it.sinceDays > 1 ? "s" : ""}`
-    : `Sans réponse depuis ${it.sinceDays} jour${it.sinceDays > 1 ? "s" : ""}`;
 
-  const montant = (
-    <span className="text-sm font-semibold whitespace-nowrap" style={{ color: T.text, fontVariantNumeric: "tabular-nums" }}>
-      {formatEuro(it.amount)}
-    </span>
-  );
-
-  const ghostBtnClass =
-    "adm-btn-focus inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase px-3.5 py-2.5 border transition-colors hover:border-[#6B9FEE] disabled:opacity-50";
+  // Ligne déjà traitée : l'état remplace les boutons, avec l'heure de l'action.
+  if (treated) {
+    return (
+      <span
+        id={`relance-done-${it.id}`}
+        tabIndex={-1}
+        className="relative z-10 inline-flex items-center gap-1.5 text-[11px] outline-none"
+        style={{ color: treated.action === "relance" || treated.action === "manual" ? T.success : T.muted }}
+      >
+        {treated.action === "relance" && <><CheckCircle2 size={13} /> Relance envoyée à {treated.at}</>}
+        {treated.action === "manual" && <><Phone size={13} /> Relance notée (téléphone) à {treated.at}</>}
+        {treated.action === "snooze" && <><Clock size={13} /> {isFacture ? "Reportée" : "Reporté"} · reviendra le {treated.until ? formatDateFr(treated.until) : "bientôt"}</>}
+        {treated.action === "mute" && <><Clock size={13} /> Relances arrêtées</>}
+        {(treated.action === "snooze" || treated.action === "mute") && (
+          <button
+            type="button"
+            className="adm-act underline disabled:opacity-50"
+            style={{ color: T.textDim }}
+            disabled={busy !== null}
+            onClick={() => onUndo(treated)}
+          >
+            {busy === "undo" ? <Loader2 size={11} className="animate-spin inline" /> : null} Annuler
+          </button>
+        )}
+      </span>
+    );
+  }
 
   return (
-    <div
-      className="group relative grid items-center px-4 py-3 gap-x-3 gap-y-2
-                 grid-cols-[1fr_auto]
-                 @[800px]:grid-cols-[96px_minmax(120px,1fr)_110px_118px_auto]"
-      style={{ borderTop: first ? "none" : `1px solid ${T.border}`, opacity: treated ? 0.55 : 1 }}
-    >
-      {/* Lien de couverture : toute la ligne ouvre la fiche, sauf les actions */}
-      <Link
-        href={`/admin/devis/${it.id}`}
-        className="absolute inset-0 adm-btn-focus"
-        aria-label={`Ouvrir ${isFacture ? "la facture" : "le devis"} ${it.number}`}
-        style={{ zIndex: 0 }}
-      />
-
-      <span className="text-xs tracking-widest uppercase whitespace-nowrap" style={{ color: T.accent }}>
-        {it.number}
-      </span>
-
-      {/* Ancienneté, calée à droite sur téléphone */}
-      <span className="@[800px]:hidden justify-self-end" title={ageTitle}>
-        <Tag tone={tone}>{ageText}</Tag>
-      </span>
-
-      <div className="min-w-0 col-span-2 @[800px]:col-span-1">
-        <div className="text-sm truncate" style={{ color: it.client ? T.text : T.muted }}>
-          {it.client || "Sans client"}
-        </div>
-        <div className="text-[11px] flex items-center gap-2 min-w-0" style={{ color: T.muted }}>
-          <span className="whitespace-nowrap">{isFacture ? "Émise" : "Envoyé"} le {formatDateFr(it.startDate)}</span>
-          {it.clientEmail ? (
-            <span className="truncate">{it.clientEmail}</span>
-          ) : (
-            <Link
-              href={`/admin/devis/${it.id}`}
-              className="adm-act relative z-10 inline-flex items-center gap-1 whitespace-nowrap"
-              style={{ color: T.warning }}
-            >
-              <MailPlus size={11} />
-              Ajouter un email
-            </Link>
-          )}
-          {it.blocked && (
-            <span className="inline-flex items-center gap-1 whitespace-nowrap" style={{ color: T.danger }}>
-              <Ban size={11} />
-              Liste rouge
-            </span>
-          )}
-          {it.expired && (
-            <span className="whitespace-nowrap" style={{ color: T.danger }}>Validité dépassée</span>
-          )}
-          {it.relanceCount > 0 && (
-            <span className="whitespace-nowrap" style={{ color: T.warning }}>
-              {isFacture ? "Relancée" : "Relancé"} ×{it.relanceCount}
-              {it.lastRelanceDate ? ` le ${formatDateFr(it.lastRelanceDate)}` : ""}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <span className="hidden @[800px]:block text-right">{montant}</span>
-
-      <span className="hidden @[800px]:block" title={ageTitle}>
-        <Tag tone={tone}>{ageText}</Tag>
-      </span>
-
-      {/* Barre d'actions : à part sur téléphone (montant inclus), en fin de ligne ensuite */}
-      <div
-        className="flex flex-wrap @[800px]:flex-nowrap items-center gap-x-3 gap-y-2 col-span-2 @[800px]:col-span-1 justify-between @[800px]:justify-end
-                   border-t @[800px]:border-t-0 pt-2 @[800px]:pt-0"
-        style={{ borderColor: T.border }}
-      >
-        <span className="@[800px]:hidden">{montant}</span>
-        {treated ? (
-          <span
-            id={`relance-done-${it.id}`}
-            tabIndex={-1}
-            className="relative z-10 inline-flex items-center gap-1.5 text-[11px] outline-none"
-            style={{ color: treated.action === "relance" || treated.action === "manual" ? T.success : T.muted }}
-          >
-            {treated.action === "relance" && <><CheckCircle2 size={13} /> Relance envoyée à {treated.at}</>}
-            {treated.action === "manual" && <><Phone size={13} /> Relance notée (téléphone) à {treated.at}</>}
-            {treated.action === "snooze" && <><Clock size={13} /> {isFacture ? "Reportée" : "Reporté"} · reviendra le {treated.until ? formatDateFr(treated.until) : "bientôt"}</>}
-            {treated.action === "mute" && <><Clock size={13} /> Relances arrêtées</>}
-            {(treated.action === "snooze" || treated.action === "mute") && (
-              <button
-                type="button"
-                className="adm-act underline disabled:opacity-50"
-                style={{ color: T.textDim }}
-                disabled={busy !== null}
-                onClick={() => onUndo(treated)}
-              >
-                {busy === "undo" ? <Loader2 size={11} className="animate-spin inline" /> : null} Annuler
-              </button>
-            )}
-          </span>
-        ) : (
-          <div className="relative z-10 flex items-center gap-2">
-            {it.blocked ? (
-              // Destinataire en liste rouge : l'envoi par email est écarté, la
-              // relance téléphonique reste possible.
-              <button
-                type="button"
-                onClick={() => onManual(it)}
-                disabled={busy !== null}
-                aria-label={`${it.clientEmail} est en liste rouge : noter ${it.number} comme ${isFacture ? "relancée" : "relancé"} par téléphone`}
-                title={`${it.clientEmail} est en liste rouge : aucun email ne part vers ce destinataire.`}
-                className={ghostBtnClass}
-                style={{ borderColor: "rgba(255,107,53,0.45)", color: T.danger }}
-              >
-                {busy === "manual" ? <Loader2 size={13} className="animate-spin" /> : <Phone size={13} />}
-                Par téléphone
-              </button>
-            ) : it.clientEmail ? (
-              <button
-                type="button"
-                onClick={() => onRelance(it)}
-                disabled={busy !== null}
-                aria-label={`Relancer ${it.number} (${it.client || "sans client"}) par email`}
-                className="adm-btn-focus inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase px-3.5 py-2.5 transition-opacity hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: T.accent, color: T.bg }}
-              >
-                {busy === "preview" || busy === "send" ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-                Relancer
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onManual(it)}
-                disabled={busy !== null}
-                aria-label={`Noter ${it.number} comme ${isFacture ? "relancée" : "relancé"} par téléphone`}
-                className={ghostBtnClass}
-                style={{ borderColor: ghostBorder, color: T.textDim }}
-              >
-                {busy === "manual" ? <Loader2 size={13} className="animate-spin" /> : <Phone size={13} />}
-                {isFacture ? "Relancée" : "Relancé"} par tél.
-              </button>
-            )}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => onMenuToggle(menuOpen ? null : it.id)}
-                disabled={busy !== null}
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                aria-label={`Reporter ou arrêter les relances de ${it.number}`}
-                className={ghostBtnClass}
-                style={{ borderColor: ghostBorder, color: T.textDim }}
-              >
-                {busy === "snooze" || busy === "mute" ? <Loader2 size={13} className="animate-spin" /> : <Clock size={13} />}
-                Reporter
-                <ChevronDown size={12} />
-              </button>
-              {menuOpen && (
-                <ReportMenu
-                  withPhone={Boolean(it.clientEmail) && !it.blocked}
-                  feminin={isFacture}
-                  onPick={(choice) => onMenuPick(it, choice)}
-                  onClose={() => onMenuToggle(null)}
-                />
-              )}
-            </div>
-          </div>
+    <div className="relative z-10 flex items-center gap-2">
+      {it.blocked ? (
+        // Destinataire en liste rouge : l'envoi par email est écarté, la relance
+        // téléphonique reste possible. Le déblocage se fait dans Réglages → Emails.
+        <button
+          type="button"
+          onClick={() => onManual(it)}
+          disabled={busy !== null}
+          aria-label={`${it.clientEmail} est en liste rouge : noter ${it.number} comme ${isFacture ? "relancée" : "relancé"} par téléphone`}
+          title={`${it.clientEmail} est en liste rouge : aucun email ne part vers ce destinataire. Réglages → Emails pour le débloquer.`}
+          className={ghostBtnClass}
+          style={{ borderColor: "rgba(255,107,53,0.45)", color: T.danger }}
+        >
+          {busy === "manual" ? <Loader2 size={13} className="animate-spin" /> : <Phone size={13} />}
+          Par téléphone
+        </button>
+      ) : it.clientEmail ? (
+        <button
+          type="button"
+          onClick={() => onRelance(it)}
+          disabled={busy !== null}
+          aria-label={`Relancer ${it.number} (${it.client || "sans client"}) par email`}
+          className={primaryBtnClass}
+          style={{ backgroundColor: T.accent, color: T.bg }}
+        >
+          {busy === "preview" || busy === "send" ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+          Relancer
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onManual(it)}
+          disabled={busy !== null}
+          aria-label={`Noter ${it.number} comme ${isFacture ? "relancée" : "relancé"} par téléphone`}
+          className={ghostBtnClass}
+          style={{ borderColor: ghostBorder, color: T.textDim }}
+        >
+          {busy === "manual" ? <Loader2 size={13} className="animate-spin" /> : <Phone size={13} />}
+          {isFacture ? "Relancée" : "Relancé"} par tél.
+        </button>
+      )}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => onMenuToggle(menuOpen ? null : it.id)}
+          disabled={busy !== null}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-label={`Reporter ou arrêter les relances de ${it.number}`}
+          className={ghostBtnClass}
+          style={{ borderColor: ghostBorder, color: T.textDim }}
+        >
+          {busy === "snooze" || busy === "mute" ? <Loader2 size={13} className="animate-spin" /> : <Clock size={13} />}
+          Reporter
+          <ChevronDown size={12} />
+        </button>
+        {menuOpen && (
+          <ReportMenu
+            withPhone={Boolean(it.clientEmail) && !it.blocked}
+            feminin={isFacture}
+            onPick={(choice) => onMenuPick(it, choice)}
+            onClose={() => onMenuToggle(null)}
+          />
         )}
       </div>
     </div>
   );
 }
 
+/* ── Une section du centre : l'habillage vient du module partagé ── */
 function Section({
   title,
   hint,
-  icon: Icon,
+  icon,
   items,
   treated,
   treatedMap,
@@ -336,7 +232,7 @@ function Section({
 }: {
   title: string;
   hint: string;
-  icon: typeof FileText;
+  icon: LucideIcon;
   items: RelanceItem[];
   treated: Treated[];
   treatedMap: Map<string, Treated>;
@@ -355,136 +251,41 @@ function Section({
   const itemIds = new Set(items.map((i) => i.id));
   const appended = treated.filter((t) => !itemIds.has(t.item.id));
 
-  return (
-    <div className="mb-8">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon size={15} style={{ color: T.accent }} />
-        <h2 className="text-[15px] font-semibold" style={{ color: T.text }}>{title}</h2>
-        <span className="text-xs" style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}>
-          · {remaining.length}
-          {remaining.length > 0 && ` · ${formatEuro(sum)}`}
-        </span>
-      </div>
-      {items.length === 0 && appended.length === 0 ? (
-        <div className="p-6 text-sm inline-flex items-center gap-2" style={{ border: `1px solid ${T.border}`, color: T.textDim }}>
-          <CheckCircle2 size={15} style={{ color: T.success }} />
-          {hint}
-        </div>
-      ) : (
-        <div className="@container" style={{ border: `1px solid ${T.border}` }}>
-          {items.map((it, i) => (
-            <Row
-              key={it.id}
-              it={it}
-              first={i === 0}
-              treated={treatedMap.get(it.id)}
-              busy={busy && busy.id === it.id ? busy.kind : null}
-              menuOpen={menuId === it.id}
-              onRelance={onRelance}
-              onMenuToggle={onMenuToggle}
-              onMenuPick={onMenuPick}
-              onManual={onManual}
-              onUndo={onUndo}
-            />
-          ))}
-          {appended.map((t, i) => (
-            <Row
-              key={t.item.id}
-              it={t.item}
-              first={items.length === 0 && i === 0}
-              treated={t}
-              busy={busy && busy.id === t.item.id ? busy.kind : null}
-              menuOpen={false}
-              onRelance={onRelance}
-              onMenuToggle={onMenuToggle}
-              onMenuPick={onMenuPick}
-              onManual={onManual}
-              onUndo={onUndo}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+  const ligne = (it: RelanceItem, first: boolean, t: Treated | undefined) => (
+    <RelanceLine
+      key={it.id}
+      it={it}
+      first={first}
+      href={`/admin/devis/${it.id}`}
+      faded={Boolean(t)}
+      actions={
+        <RowActions
+          it={it}
+          treated={t}
+          busy={busy && busy.id === it.id ? busy.kind : null}
+          menuOpen={menuId === it.id}
+          onRelance={onRelance}
+          onMenuToggle={onMenuToggle}
+          onMenuPick={onMenuPick}
+          onManual={onManual}
+          onUndo={onUndo}
+        />
+      }
+    />
   );
-}
-
-/* ── Journal des actions : ce qui est parti, quand, et à qui ── */
-const HISTORY_STYLE: Record<string, { icon: typeof Send; label: string; color: string }> = {
-  email: { icon: Send, label: "Relance envoyée", color: T.success },
-  telephone: { icon: Phone, label: "Relance par téléphone", color: T.success },
-  report: { icon: Clock, label: "Report", color: T.muted },
-  arret: { icon: XCircle, label: "Relances arrêtées", color: T.muted },
-  annulation: { icon: RotateCcw, label: "Report annulé", color: T.muted },
-  echec: { icon: AlertTriangle, label: "Envoi en échec", color: T.danger },
-  bloque: { icon: Ban, label: "Envoi bloqué", color: T.danger },
-};
-
-function HistorySection({ entries }: { entries: HistoryEntry[] }) {
-  const [open, setOpen] = useState(false);
-  const shown = open ? entries : entries.slice(0, 6);
-
-  const stamp = (iso: string) => {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "";
-    return new Intl.DateTimeFormat("fr-FR", {
-      timeZone: "Europe/Paris",
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(d);
-  };
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center gap-2 mb-3">
-        <History size={15} style={{ color: T.accent }} />
-        <h2 className="text-[15px] font-semibold" style={{ color: T.text }}>Historique des actions</h2>
-        <span className="text-xs" style={{ color: T.muted }}>· {entries.length}</span>
-      </div>
-      {entries.length === 0 ? (
-        <div className="p-6 text-sm" style={{ border: `1px solid ${T.border}`, color: T.textDim }}>
-          Vos relances, reports et appels s&apos;inscriront ici, avec la date, l&apos;heure et le destinataire.
-        </div>
-      ) : (
-        <div style={{ border: `1px solid ${T.border}` }}>
-          {shown.map((e, i) => {
-            const s = HISTORY_STYLE[e.action] ?? { icon: History, label: e.action, color: T.muted };
-            const Icon = s.icon;
-            return (
-              <div
-                key={e.id}
-                className="relative flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5"
-                style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
-              >
-                <Link href={`/admin/devis/${e.quoteId}`} className="absolute inset-0 adm-btn-focus" aria-label={`Ouvrir ${e.number}`} style={{ zIndex: 0 }} />
-                <span className="text-[11px] whitespace-nowrap" style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}>
-                  {stamp(e.at)}
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-[12px] whitespace-nowrap" style={{ color: s.color }}>
-                  <Icon size={12} />
-                  {s.label}
-                </span>
-                <span className="text-[12px] whitespace-nowrap" style={{ color: T.accent }}>{e.number}</span>
-                {e.client && <span className="text-[12px] truncate min-w-0" style={{ color: T.textDim }}>{e.client}</span>}
-                {e.detail && <span className="text-[11px] truncate min-w-0" style={{ color: T.muted }}>{e.detail}</span>}
-                {e.author && <span className="text-[11px] ml-auto whitespace-nowrap" style={{ color: T.muted }}>{e.author}</span>}
-              </div>
-            );
-          })}
-          {entries.length > 6 && (
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="adm-btn-focus w-full px-4 py-2.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
-              style={{ borderTop: `1px solid ${T.border}`, color: T.textDim }}
-            >
-              {open ? "Réduire" : `Afficher les ${entries.length - 6} actions précédentes`}
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+    <RelanceSection
+      title={title}
+      hint={hint}
+      icon={icon}
+      count={remaining.length}
+      sum={sum}
+      empty={items.length === 0 && appended.length === 0}
+    >
+      {items.map((it, i) => ligne(it, i === 0, treatedMap.get(it.id)))}
+      {appended.map((t, i) => ligne(t.item, items.length === 0 && i === 0, t))}
+    </RelanceSection>
   );
 }
 
@@ -659,23 +460,19 @@ export default function RelancesClient({
     <AdminPage>
       <PageHeader
         title="Relances"
-        subtitle={
-          remainingCount === 0
-            ? "Tout est à jour."
-            : `${remainingCount} relance${remainingCount > 1 ? "s" : ""} à faire · ${formatEuro(remainingSum)} en attente.`
-        }
+        subtitle={relancesSubtitle(remainingCount, remainingSum)}
       />
 
       {empty ? (
         <div className="p-10 text-center text-sm inline-flex items-center gap-2 w-full justify-center mb-8" style={{ border: `1px solid ${T.border}`, color: T.textDim }}>
           <CheckCircle2 size={16} style={{ color: T.success }} />
-          Tout est à jour. Le centre se remplit tout seul dès qu&apos;un devis attend une réponse ou qu&apos;une facture dépasse son échéance.
+          {RELANCES_VIDE}
         </div>
       ) : (
         <>
           <Section
             title="Devis en attente de réponse"
-            hint="Tous vos devis ont reçu une réponse ou une relance récente."
+            hint={HINT_DEVIS}
             icon={FileText}
             items={devis}
             treated={treated.filter((t) => t.item.kind === "devis")}
@@ -683,7 +480,7 @@ export default function RelancesClient({
           />
           <Section
             title="Factures impayées"
-            hint="Toutes vos factures sont réglées ou relancées récemment."
+            hint={HINT_FACTURES}
             icon={ReceiptText}
             items={factures}
             treated={treated.filter((t) => t.item.kind === "facture")}
@@ -692,7 +489,7 @@ export default function RelancesClient({
         </>
       )}
 
-      <HistorySection entries={history} />
+      <HistorySection entries={history} hrefOf={(e) => `/admin/devis/${e.quoteId}`} />
 
       {preview && (
         <RelanceDialog

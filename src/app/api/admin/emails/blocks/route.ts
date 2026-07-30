@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     if (!ENTREE.test(value)) {
       return NextResponse.json({ error: "Indiquez une adresse email ou un domaine, par exemple exemple.fr." }, { status: 400 });
     }
-    // Déjà couvert par le socle inscrit dans le code : rien à ajouter.
-    if (LISTE_ROUGE_FIXE.includes(value as (typeof LISTE_ROUGE_FIXE)[number])) {
+    // Déjà couvert par une valeur épinglée dans le code : rien à ajouter.
+    if (LISTE_ROUGE_FIXE.includes(value)) {
       return NextResponse.json({ error: `${value} est déjà bloqué de façon permanente.` }, { status: 409 });
     }
 

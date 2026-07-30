@@ -52,15 +52,21 @@ export function mailMode(env: NodeJS.ProcessEnv = process.env): MailMode {
 }
 
 // ── Liste rouge ───────────────────────────────────────────────────────────
-// Destinataires auxquels aucun message ne doit plus jamais partir, EN
-// PRODUCTION COMME AILLEURS. Le mode atelier ne protège que le poste de
-// développement : un envoi depuis le site en ligne, lui, passait tout droit.
-// Une entrée vaut pour une adresse exacte (« achat@exemple.be ») ou pour un
-// domaine entier et ses sous-domaines (« exemple.be »).
+// Destinataires auxquels aucun message ne part, EN PRODUCTION COMME AILLEURS.
+// Le mode atelier ne protège que le poste de développement : un envoi depuis le
+// site en ligne, lui, passait tout droit. Une entrée vaut pour une adresse
+// exacte (« achat@exemple.be ») ou pour un domaine entier et ses sous-domaines
+// (« exemple.be »).
 //
-// Ces valeurs-ci sont dans le code : elles survivent à une base indisponible,
-// à une variable d'environnement effacée et à une suppression depuis l'écran.
-export const LISTE_ROUGE_FIXE = ["transakauto.be", "transakauto.com"] as const;
+// La liste appartient à l'utilisateur : elle se tient depuis l'écran Réglages →
+// Emails (table EmailBlock), et tout s'y débloque. Un partenaire suspendu
+// aujourd'hui redevient joignable demain sans passer par le code.
+//
+// Ce tableau-ci reste vide à dessein. Il sert à épingler une valeur dans le code
+// lorsqu'un blocage doit résister à tout, y compris à un clic depuis l'écran :
+// une adresse d'essai récurrente, par exemple. Protéger un vrai client d'un
+// envoi de test n'en a pas besoin, c'est le rôle du mode atelier ci-dessus.
+export const LISTE_ROUGE_FIXE: readonly string[] = [];
 
 function normalise(v: string): string {
   return String(v ?? "").trim().toLowerCase().replace(/^@/, "").replace(/\.$/, "");

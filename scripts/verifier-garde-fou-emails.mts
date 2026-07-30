@@ -54,16 +54,22 @@ check("voisine refusee", blockReason("toi@monagence.fr", permis) !== null, "true
 
 console.log("\n-- Un seul destinataire risque suffit a retenir --");
 check("liste mixte", blockReason(["essai@exemple.invalid", "achat@transakauto.be"], atelier) !== null, "true");
-check("emballage dans un tableau", blockReason(["ok@transcar.be", "TransakAuto <achat@transakauto.be>"], live) !== null, "true");
+check("emballage dans un tableau", blockReason(["ok@transcar.be", "TransakAuto <achat@transakauto.be>"], live, ["transakauto.be"]) !== null, "true");
 check("destinataires refuses, emballage compris",
-  blockedByRedList(["ok@transcar.be", "TransakAuto <achat@transakauto.be>"], live).length, "1");
+  blockedByRedList(["ok@transcar.be", "TransakAuto <achat@transakauto.be>"], live, ["transakauto.be"]).length, "1");
 
 console.log("\n-- En production, seule la liste rouge bloque --");
 check("boite perso", blockReason("fabrice.ferrando@gmail.com", live), "null");
 check("client reel hors liste", blockReason("m.dubois@transcar.be", live), "null");
 
+// La liste appartient à l'utilisateur : elle vit en base (écran Réglages →
+// Emails), donc les contrôles la simulent par le paramètre d'ajouts. Le tableau
+// épinglé dans le code reste vide, ce qui est le réglage voulu.
+const BLOQUE = ["transakauto.be", "transakauto.com"];
+const rouge = (to: string | string[], env = live) => blockReason(to, env, BLOQUE);
+
 console.log("\n-- Liste rouge : bloquee EN PRODUCTION aussi --");
-console.log(`     socle du code : ${LISTE_ROUGE_FIXE.join(", ")}`);
+check("aucune valeur epinglee dans le code", LISTE_ROUGE_FIXE.length, "0");
 for (const a of [
   "achat@transakauto.be",
   "bruxelles@transakauto.com",
@@ -71,12 +77,13 @@ for (const a of [
   "n.importe.qui@transakauto.be",
   "contact@mail.transakauto.be",
 ]) {
-  check(`${a} refusee en live`, blockReason(a, live) !== null, "true");
+  check(`${a} refusee en live`, rouge(a) !== null, "true");
 }
-check("domaine voisin non couvert", blockReason("contact@transakauto.be.fr", live), "null");
-check("nom qui contient seulement le mot", blockReason("contact@transakauto-bis.fr", live), "null");
-check("liste mixte : un seul suffit", blockReason(["ok@transcar.be", "achat@transakauto.be"], live) !== null, "true");
-check("destinataires refuses listes", blockedByRedList(["ok@transcar.be", "achat@transakauto.be"], live).join(","), "achat@transakauto.be");
+check("domaine voisin non couvert", rouge("contact@transakauto.be.fr"), "null");
+check("nom qui contient seulement le mot", rouge("contact@transakauto-bis.fr"), "null");
+check("liste mixte : un seul suffit", rouge(["ok@transcar.be", "achat@transakauto.be"]) !== null, "true");
+check("destinataires refuses listes", blockedByRedList(["ok@transcar.be", "achat@transakauto.be"], live, BLOQUE).join(","), "achat@transakauto.be");
+check("liste vide : rien n'est bloque", blockReason("achat@transakauto.be", live), "null");
 
 // Un carnet d'adresses colle volontiers « Nom <adresse> ». Cette forme
 // traversait la liste rouge et le message partait vraiment.
@@ -88,7 +95,7 @@ for (const a of [
   "  ACHAT@TransakAuto.BE  ",
   '"Achat" <achat@transakauto.be>',
 ]) {
-  check(`${JSON.stringify(a)} refusee`, blockReason(a, live) !== null, "true");
+  check(`${JSON.stringify(a)} refusee`, rouge(a) !== null, "true");
 }
 console.log("   -- deux adresses collees dans une seule chaine : refus, pas de devinette --");
 for (const a of [
@@ -96,11 +103,11 @@ for (const a of [
   "moi@ailleurs.fr, achat@transakauto.be",
   "moi@ailleurs.fr; achat@transakauto.be",
 ]) {
-  check(`${JSON.stringify(a)} refusee`, blockReason(a, live) !== null, "true");
+  check(`${JSON.stringify(a)} refusee`, rouge(a) !== null, "true");
 }
-check("une adresse simple hors liste passe toujours", blockReason("quelquun@transcar.be", live), "null");
-check("adresse illisible refusee", blockReason("pas une adresse", live) !== null, "true");
-check("emballage hors liste : accepte", blockReason("Marc Dubois <m.dubois@transcar.be>", live), "null");
+check("une adresse simple hors liste passe toujours", rouge("quelquun@transcar.be"), "null");
+check("adresse illisible refusee", rouge("pas une adresse") !== null, "true");
+check("emballage hors liste : accepte", rouge("Marc Dubois <m.dubois@transcar.be>"), "null");
 
 console.log("\n-- Liste rouge par variable d'environnement --");
 const avecEnv = env({ NODE_ENV: "production", VERCEL_ENV: "production", MAIL_BLOCKLIST: "exemple-bloque.fr, precis@ailleurs.fr" });
@@ -111,7 +118,7 @@ check("voisine de l'adresse exacte", blockReason("autre@ailleurs.fr", avecEnv), 
 console.log("\n-- Liste rouge par ajout d'ecran (parametre) --");
 check("ajout pris en compte", blockReason("client@ajoute.fr", live, ["ajoute.fr"]) !== null, "true");
 check("liste d'exception ne peut pas ouvrir la porte",
-  blockReason("achat@transakauto.be", env({ NODE_ENV: "development", MAIL_ALLOWLIST: "achat@transakauto.be" })) !== null, "true");
+  blockReason("achat@transakauto.be", env({ NODE_ENV: "development", MAIL_ALLOWLIST: "achat@transakauto.be" }), BLOQUE) !== null, "true");
 
 // Épreuve du chemin réel : clé d'envoi PRESENTE (factice, donc incapable
 // d'expédier quoi que ce soit) et destinataire d'apparence réelle. C'est la
@@ -129,8 +136,11 @@ check("atelier : rien d'envoye", retenu.sent, "false");
 check("atelier : le service n'est pas appele", retenu.error === undefined, "true");
 
 // Le cas qui compte : en PRODUCTION, vers un destinataire en liste rouge, le
-// message doit être retenu avant même d'atteindre le service d'envoi.
+// message doit être retenu avant même d'atteindre le service d'envoi. La liste
+// passe ici par la variable d'environnement, pour que le contrôle ne dépende pas
+// du contenu de la base du poste.
 process.env.MAIL_MODE = "live";
+process.env.MAIL_BLOCKLIST = "transakauto.be";
 const rougeLive = await sendMail({ to: "achat@transakauto.be", subject: "Epreuve de la liste rouge", html: "<p>Rien ne doit partir.</p>" });
 check("live + liste rouge : retenu", rougeLive.blocked, "true");
 check("live + liste rouge : rien d'envoye", rougeLive.sent, "false");
@@ -139,6 +149,7 @@ console.log(`     motif : ${rougeLive.reason}`);
 
 // Hors liste rouge, en production, le message atteint bien le service : la
 // différence prouve que c'est la liste rouge qui arrête, pas autre chose.
+delete process.env.MAIL_BLOCKLIST;
 const passe = await sendMail({ to: "quelquun@transcar.be", subject: "Epreuve du garde-fou", html: "<p>La cle factice arrete ici.</p>" });
 check("live hors liste : le garde-fou laisse passer", passe.blocked, "false");
 check("live hors liste : le service refuse la cle factice", passe.error !== undefined, "true");
