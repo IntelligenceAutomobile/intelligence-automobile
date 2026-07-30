@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeTotals, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 import { relanceDue, daysSince, parisDayOf } from "@/lib/relances";
+import { blockedByRedList, ajoutsListeRouge } from "@/lib/mailer";
 import { parisDay } from "@/lib/vehicules";
 import RelancesClient, { type RelanceItem, type HistoryEntry } from "./RelancesClient";
 
@@ -26,6 +27,8 @@ export default async function RelancesPage() {
 
   const devis: RelanceItem[] = [];
   const factures: RelanceItem[] = [];
+  // Liste rouge : la ligne annonce l'envoi impossible au lieu de le découvrir au clic.
+  const ajoutsRouge = await ajoutsListeRouge();
 
   for (const r of candidates) {
     const due = relanceDue(
@@ -74,6 +77,8 @@ export default async function RelancesPage() {
       startDate: (r.sentAt ? parisDayOf(r.sentAt) : "") || r.issueDate,
       // Un devis dont la validité est passée mérite un renvoi plutôt qu'une relance.
       expired: due.kind === "devis" && r.validityDays > 0 && daysSince(r.issueDate, today) > r.validityDays,
+      // Destinataire en liste rouge : la relance par email est impossible.
+      blocked: Boolean(r.clientEmail) && blockedByRedList(r.clientEmail, process.env, ajoutsRouge).length > 0,
     };
     if (due.kind === "facture") factures.push(item);
     else devis.push(item);

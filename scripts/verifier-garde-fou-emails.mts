@@ -1,5 +1,5 @@
-// Contrôle du garde-fou d'envoi : mode retenu et adresses refusées.
-import { mailMode, blockReason, sendMail } from "../src/lib/mailer";
+// Contrôle du garde-fou d'envoi : mode retenu, liste rouge, adresses refusées.
+import { mailMode, blockReason, sendMail, blockedByRedList, LISTE_ROUGE_FIXE } from "../src/lib/mailer";
 
 let ko = 0;
 const check = (label: string, got: unknown, want: unknown) => {
@@ -54,10 +54,64 @@ check("voisine refusee", blockReason("toi@monagence.fr", permis) !== null, "true
 
 console.log("\n-- Un seul destinataire risque suffit a retenir --");
 check("liste mixte", blockReason(["essai@exemple.invalid", "achat@transakauto.be"], atelier) !== null, "true");
+check("emballage dans un tableau", blockReason(["ok@transcar.be", "TransakAuto <achat@transakauto.be>"], live) !== null, "true");
+check("destinataires refuses, emballage compris",
+  blockedByRedList(["ok@transcar.be", "TransakAuto <achat@transakauto.be>"], live).length, "1");
 
-console.log("\n-- En production, rien ne bloque --");
-check("client reel", blockReason("achat@transakauto.be", live), "null");
+console.log("\n-- En production, seule la liste rouge bloque --");
 check("boite perso", blockReason("fabrice.ferrando@gmail.com", live), "null");
+check("client reel hors liste", blockReason("m.dubois@transcar.be", live), "null");
+
+console.log("\n-- Liste rouge : bloquee EN PRODUCTION aussi --");
+console.log(`     socle du code : ${LISTE_ROUGE_FIXE.join(", ")}`);
+for (const a of [
+  "achat@transakauto.be",
+  "bruxelles@transakauto.com",
+  "BRUXELLES@TransakAuto.COM",
+  "n.importe.qui@transakauto.be",
+  "contact@mail.transakauto.be",
+]) {
+  check(`${a} refusee en live`, blockReason(a, live) !== null, "true");
+}
+check("domaine voisin non couvert", blockReason("contact@transakauto.be.fr", live), "null");
+check("nom qui contient seulement le mot", blockReason("contact@transakauto-bis.fr", live), "null");
+check("liste mixte : un seul suffit", blockReason(["ok@transcar.be", "achat@transakauto.be"], live) !== null, "true");
+check("destinataires refuses listes", blockedByRedList(["ok@transcar.be", "achat@transakauto.be"], live).join(","), "achat@transakauto.be");
+
+// Un carnet d'adresses colle volontiers « Nom <adresse> ». Cette forme
+// traversait la liste rouge et le message partait vraiment.
+console.log("\n-- Emballages et formes tordues, en production --");
+for (const a of [
+  "TransakAuto <achat@transakauto.be>",
+  "<achat@transakauto.be>",
+  "achat@transakauto.be.",
+  "  ACHAT@TransakAuto.BE  ",
+  '"Achat" <achat@transakauto.be>',
+]) {
+  check(`${JSON.stringify(a)} refusee`, blockReason(a, live) !== null, "true");
+}
+console.log("   -- deux adresses collees dans une seule chaine : refus, pas de devinette --");
+for (const a of [
+  "achat@transakauto.be, moi@ailleurs.fr",
+  "moi@ailleurs.fr, achat@transakauto.be",
+  "moi@ailleurs.fr; achat@transakauto.be",
+]) {
+  check(`${JSON.stringify(a)} refusee`, blockReason(a, live) !== null, "true");
+}
+check("une adresse simple hors liste passe toujours", blockReason("quelquun@transcar.be", live), "null");
+check("adresse illisible refusee", blockReason("pas une adresse", live) !== null, "true");
+check("emballage hors liste : accepte", blockReason("Marc Dubois <m.dubois@transcar.be>", live), "null");
+
+console.log("\n-- Liste rouge par variable d'environnement --");
+const avecEnv = env({ NODE_ENV: "production", VERCEL_ENV: "production", MAIL_BLOCKLIST: "exemple-bloque.fr, precis@ailleurs.fr" });
+check("domaine ajoute", blockReason("qui@exemple-bloque.fr", avecEnv) !== null, "true");
+check("adresse exacte ajoutee", blockReason("precis@ailleurs.fr", avecEnv) !== null, "true");
+check("voisine de l'adresse exacte", blockReason("autre@ailleurs.fr", avecEnv), "null");
+
+console.log("\n-- Liste rouge par ajout d'ecran (parametre) --");
+check("ajout pris en compte", blockReason("client@ajoute.fr", live, ["ajoute.fr"]) !== null, "true");
+check("liste d'exception ne peut pas ouvrir la porte",
+  blockReason("achat@transakauto.be", env({ NODE_ENV: "development", MAIL_ALLOWLIST: "achat@transakauto.be" })) !== null, "true");
 
 // Épreuve du chemin réel : clé d'envoi PRESENTE (factice, donc incapable
 // d'expédier quoi que ce soit) et destinataire d'apparence réelle. C'est la
@@ -74,11 +128,21 @@ check("atelier : retenu", retenu.blocked, "true");
 check("atelier : rien d'envoye", retenu.sent, "false");
 check("atelier : le service n'est pas appele", retenu.error === undefined, "true");
 
+// Le cas qui compte : en PRODUCTION, vers un destinataire en liste rouge, le
+// message doit être retenu avant même d'atteindre le service d'envoi.
 process.env.MAIL_MODE = "live";
-const passe = await sendMail({ to: "achat@transakauto.be", subject: "Epreuve du garde-fou", html: "<p>La cle factice arrete ici.</p>" });
-check("live : le garde-fou laisse passer", passe.blocked, "false");
-check("live : le service refuse la cle factice", passe.error !== undefined, "true");
-check("live : rien d'envoye non plus", passe.sent, "false");
+const rougeLive = await sendMail({ to: "achat@transakauto.be", subject: "Epreuve de la liste rouge", html: "<p>Rien ne doit partir.</p>" });
+check("live + liste rouge : retenu", rougeLive.blocked, "true");
+check("live + liste rouge : rien d'envoye", rougeLive.sent, "false");
+check("live + liste rouge : le service n'est pas appele", rougeLive.error === undefined, "true");
+console.log(`     motif : ${rougeLive.reason}`);
+
+// Hors liste rouge, en production, le message atteint bien le service : la
+// différence prouve que c'est la liste rouge qui arrête, pas autre chose.
+const passe = await sendMail({ to: "quelquun@transcar.be", subject: "Epreuve du garde-fou", html: "<p>La cle factice arrete ici.</p>" });
+check("live hors liste : le garde-fou laisse passer", passe.blocked, "false");
+check("live hors liste : le service refuse la cle factice", passe.error !== undefined, "true");
+check("live hors liste : rien d'envoye non plus", passe.sent, "false");
 console.log(`     refus du service : ${passe.error}`);
 
 console.log(ko === 0 ? "\nTOUT PASSE" : `\n${ko} ECHEC(S)`);

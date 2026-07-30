@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendMail, MAIL_FROM } from "@/lib/mailer";
+import { sendMail, MAIL_FROM, blockedByRedList, ajoutsListeRouge, journaliseRefus } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { COMPANY } from "@/lib/company";
@@ -57,11 +57,25 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       accent: theme?.accent || "#6B9FEE",
     });
 
-    const envoi = await sendMail({ from: FROM, to: client.email, replyTo: COMPANY.email, subject: `Votre avis sur ${theme?.name || "notre équipe"}`, html });
-    // Service d'envoi joignable mais qui refuse : la demande reste à faire.
-    // La marquer « envoyée » retirait le client de la liste sans qu'il ait rien reçu.
-    if (envoi.error) {
-      return NextResponse.json({ error: "L'email n'est pas parti : la demande d'avis reste à faire." }, { status: 502 });
+    // Liste rouge : la demande n'est ni envoyée ni marquée comme faite.
+    if (blockedByRedList(client.email, process.env, await ajoutsListeRouge(true)).length > 0) {
+      const motif = `liste rouge : aucun message ne part vers ${client.email}`;
+      await journaliseRefus({ to: client.email, subject: "Votre avis", reason: motif, origin: "demande-avis" });
+      return NextResponse.json(
+        { error: `${client.email} est en liste rouge : aucun message ne part vers ce destinataire.` },
+        { status: 409 },
+      );
+    }
+
+    const envoi = await sendMail({ from: FROM, to: client.email, replyTo: COMPANY.email, subject: `Votre avis sur ${theme?.name || "notre équipe"}`, html, origin: "demande-avis" });
+    // Rien n'est parti : la demande reste à faire. La marquer « envoyée »
+    // retirait le client de la liste sans qu'il ait rien reçu. Un message
+    // simplement retenu revient sans « error », d'où le test sur l'envoi lui-même.
+    if (envoi.sent === false) {
+      return NextResponse.json(
+        { error: envoi.blocked ? `L'email n'est pas parti : ${envoi.reason}` : "L'email n'est pas parti : la demande d'avis reste à faire." },
+        { status: envoi.blocked ? 409 : 502 },
+      );
     }
 
     await prisma.client.update({ where: { id }, data: { reviewRequestedAt: new Date().toISOString().slice(0, 10) } });

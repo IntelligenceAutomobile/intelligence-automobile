@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { sendMail, MAIL_FROM, canSendTo } from "@/lib/mailer";
+import { sendMail, MAIL_FROM, refusEnvoi, blockedByRedList, ajoutsListeRouge, journaliseRefus } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
@@ -214,6 +214,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!dueOf(row, today)) return NextResponse.json({ error: motifRefus(row, today) }, { status: 409 });
     if (!row.clientEmail) return NextResponse.json({ error: "Ce client n'a pas d'adresse email." }, { status: 400 });
 
+    // Liste rouge : l'aperçu lui-même est refusé, il n'y a rien à relire.
+    if (blockedByRedList(row.clientEmail, process.env, await ajoutsListeRouge(true)).length > 0) {
+      return NextResponse.json(
+        { error: `${row.clientEmail} est en liste rouge : aucun message ne part vers ce destinataire.` },
+        { status: 409 },
+      );
+    }
+
     // Le jeton public du devis est posé dès l'aperçu : le lien montré est le lien envoyé.
     let publicToken = row.publicToken;
     if (row.docType !== "facture" && !publicToken) {
@@ -315,10 +323,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!dueOf(row, today)) return NextResponse.json({ error: motifRefus(row, today) }, { status: 409 });
     if (!row.clientEmail) return NextResponse.json({ error: "Ce client n'a pas d'adresse email." }, { status: 400 });
 
-    // Hors service d'envoi, la relance est annulée : enregistrer une relance
-    // jamais partie masquait le document une à deux semaines pour rien.
-    if (!canSendTo(row.clientEmail)) {
-      return NextResponse.json({ error: "L'envoi d'emails est indisponible sur ce serveur : relance annulée." }, { status: 503 });
+    // Destinataire en liste rouge, ou service d'envoi absent : la relance est
+    // annulée. Enregistrer une relance jamais partie masquait le document une à
+    // deux semaines pour rien.
+    const refus = await refusEnvoi(row.clientEmail);
+    if (refus) {
+      const rouge = blockedByRedList(row.clientEmail, process.env, await ajoutsListeRouge(true)).length > 0;
+      await journal("bloque", `Envoi annulé : ${refus}`);
+      await journaliseRefus({ to: row.clientEmail, subject: `Relance ${row.number}`, reason: refus, origin: "relance" });
+      return NextResponse.json(
+        {
+          error: rouge
+            ? `${row.clientEmail} est en liste rouge : aucun message ne part vers ce destinataire.`
+            : "L'envoi d'emails est indisponible sur ce serveur : relance annulée.",
+        },
+        { status: rouge ? 409 : 503 },
+      );
     }
 
     // Le jeton reste stable d'un envoi à l'autre : un lien déjà transmis continue de fonctionner.
@@ -335,7 +355,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Le service signale ses échecs dans la réponse, jamais en exception : sans
     // ce contrôle, une clé révoquée enregistrait des relances fantômes en série.
-    const envoi = await sendMail({ from: FROM, to: row.clientEmail, replyTo: COMPANY.email, subject, html });
+    const envoi = await sendMail({ from: FROM, to: row.clientEmail, replyTo: COMPANY.email, subject, html, origin: "relance" });
     if (envoi.sent === false) {
       await journal("echec", `Envoi refusé par le service d'email : ${envoi.error ?? envoi.reason ?? "raison inconnue"}`);
       return NextResponse.json({ error: "L'email n'est pas parti : la relance reste à faire. Réessayez dans un instant." }, { status: 502 });

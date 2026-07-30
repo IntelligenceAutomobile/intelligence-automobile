@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { sendMail, MAIL_FROM } from "@/lib/mailer";
+import { sendMail, MAIL_FROM, blockedByRedList, ajoutsListeRouge, journaliseRefus } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
@@ -76,6 +76,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const to = String(body.to ?? row.clientEmail ?? "").trim();
     if (!to) return NextResponse.json({ error: "Renseignez l'adresse email du client." }, { status: 400 });
 
+    // Liste rouge : le devis ne part pas, et son statut ne bouge pas. Un message
+    // retenu laissait pourtant le devis marqué « envoyé ».
+    if (blockedByRedList(to, process.env, await ajoutsListeRouge(true)).length > 0) {
+      const motif = `liste rouge : aucun message ne part vers ${to}`;
+      await journaliseRefus({ to, subject: `Votre devis ${row.number}`, reason: motif, origin: "envoi-devis" });
+      return NextResponse.json(
+        { error: `${to} est en liste rouge : aucun message ne part vers ce destinataire.` },
+        { status: 409 },
+      );
+    }
+
     let items: QuoteItem[] = [];
     try {
       const p = JSON.parse(row.items);
@@ -127,7 +138,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Un envoi refusé par le service passait pour réussi (statut, date, lien…
     // posés) : le devis disparaissait de la liste des choses à faire.
-    const envoi = await sendMail({ from: FROM, to, subject, html });
+    const envoi = await sendMail({ from: FROM, to, subject, html, origin: "envoi-devis" });
     if (envoi.error) {
       return NextResponse.json({ error: "L'email n'est pas parti : le devis reste à envoyer. Réessayez dans un instant." }, { status: 502 });
     }

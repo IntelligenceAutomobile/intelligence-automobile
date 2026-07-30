@@ -51,6 +51,105 @@ export function mailMode(env: NodeJS.ProcessEnv = process.env): MailMode {
   return env.NODE_ENV === "production" ? "live" : "atelier";
 }
 
+// ── Liste rouge ───────────────────────────────────────────────────────────
+// Destinataires auxquels aucun message ne doit plus jamais partir, EN
+// PRODUCTION COMME AILLEURS. Le mode atelier ne protège que le poste de
+// développement : un envoi depuis le site en ligne, lui, passait tout droit.
+// Une entrée vaut pour une adresse exacte (« achat@exemple.be ») ou pour un
+// domaine entier et ses sous-domaines (« exemple.be »).
+//
+// Ces valeurs-ci sont dans le code : elles survivent à une base indisponible,
+// à une variable d'environnement effacée et à une suppression depuis l'écran.
+export const LISTE_ROUGE_FIXE = ["transakauto.be", "transakauto.com"] as const;
+
+function normalise(v: string): string {
+  return String(v ?? "").trim().toLowerCase().replace(/^@/, "").replace(/\.$/, "");
+}
+
+// Une adresse simple, et rien d'autre : un caractère avant l'arobase, un
+// domaine avec un point, aucun espace ni séparateur.
+const ADRESSE_SIMPLE = /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/;
+
+/**
+ * Adresse réelle d'un destinataire, qu'il soit écrit « adresse »,
+ * « <adresse> » ou « Nom <adresse> ». Renvoie "" quand la valeur ne contient
+ * pas exactement une adresse : un carnet d'adresses colle volontiers
+ * « Nom <adresse> », et cette forme traversait la liste rouge.
+ */
+export function adresseSeule(v: string): string {
+  const brut = String(v ?? "").trim();
+  const chevrons = brut.match(/<([^<>]*)>/);
+  const candidat = (chevrons ? chevrons[1] : brut).trim().replace(/[.,;]+$/, "").toLowerCase();
+  return ADRESSE_SIMPLE.test(candidat) ? candidat : "";
+}
+
+// Liste rouge complète : le socle du code, les ajouts de l'environnement
+// (MAIL_BLOCKLIST) et ceux ajoutés depuis l'écran (passés en paramètre).
+export function listeRouge(env: NodeJS.ProcessEnv = process.env, ajouts: string[] = []): string[] {
+  // Virgule, point-virgule ou espace : une liste écrite à la main se sépare
+  // comme son auteur l'entend.
+  return [...LISTE_ROUGE_FIXE, ...(env.MAIL_BLOCKLIST ?? "").split(/[,;\s]+/), ...ajouts]
+    .map(normalise)
+    .filter(Boolean);
+}
+
+// Une entrée couvre l'adresse exacte, son domaine et les sous-domaines de
+// celui-ci : « exemple.be » couvre « x@mail.exemple.be », jamais « exemple.be.fr ».
+// L'adresse est d'abord dégagée de son éventuel emballage « Nom <adresse> ».
+function correspond(adresse: string, entree: string): boolean {
+  const a = adresseSeule(adresse);
+  if (!a || !entree) return false;
+  if (a === entree) return true;
+  // Le domaine se lit après le dernier arobase.
+  const domaine = a.slice(a.lastIndexOf("@") + 1);
+  if (!domaine) return false;
+  return domaine === entree || domaine.endsWith(`.${entree}`);
+}
+
+/** Destinataires refusés par la liste rouge, quel que soit le mode d'envoi. */
+export function blockedByRedList(
+  to: string | string[],
+  env: NodeJS.ProcessEnv = process.env,
+  ajouts: string[] = [],
+): string[] {
+  const liste = listeRouge(env, ajouts);
+  return recipients(to).filter((a) => liste.some((e) => correspond(a, e)));
+}
+
+/**
+ * Destinataires dont l'adresse ne se lit pas : deux adresses collées, texte
+ * libre, arobase manquant… Ils sont refusés plutôt que devinés, sinon la liste
+ * rouge se contourne avec « achat@bloque.be, moi@ailleurs.fr ».
+ */
+export function destinatairesIllisibles(to: string | string[]): string[] {
+  return recipients(to).filter((a) => adresseSeule(a) === "");
+}
+
+// Ajouts de la base, relus au plus une fois par minute. Une base muette ne doit
+// jamais ouvrir la porte : en cas d'échec, la dernière liste connue reste, et à
+// défaut le socle du code s'applique seul.
+let cacheRouge: { at: number; valeurs: string[] } | null = null;
+
+// `frais` force une lecture : au moment d'envoyer, une adresse bloquée il y a
+// dix secondes doit déjà être refusée (chaque instance du serveur a sa propre
+// mémoire, vider le cache ici ne suffirait pas).
+export async function ajoutsListeRouge(frais = false): Promise<string[]> {
+  if (!frais && cacheRouge && Date.now() - cacheRouge.at < 60_000) return cacheRouge.valeurs;
+  try {
+    const { prisma } = await import("./prisma");
+    const rows = await prisma.emailBlock.findMany({ select: { value: true } });
+    cacheRouge = { at: Date.now(), valeurs: rows.map((r) => r.value) };
+    return cacheRouge.valeurs;
+  } catch {
+    return cacheRouge?.valeurs ?? [];
+  }
+}
+
+/** Vide le cache de la liste rouge, après un ajout ou un retrait à l'écran. */
+export function oublierListeRouge(): void {
+  cacheRouge = null;
+}
+
 // Domaines qui n'atteignent personne, par construction :
 //   .invalid, .test, .localhost, .example  → réservés (RFC 2606 et RFC 6761)
 //   example.com / .net / .org              → réservés à la documentation
@@ -75,12 +174,27 @@ export function recipients(to: string | string[]): string[] {
  * Raison pour laquelle ces destinataires sont refusés, ou null si l'envoi peut
  * se faire. Exporté pour être vérifiable directement par un test.
  */
-export function blockReason(to: string | string[], env: NodeJS.ProcessEnv = process.env): string | null {
+export function blockReason(
+  to: string | string[],
+  env: NodeJS.ProcessEnv = process.env,
+  ajoutsRouge: string[] = [],
+): string | null {
+  // La liste rouge passe avant tout, y compris en production.
+  const rouge = blockedByRedList(to, env, ajoutsRouge);
+  if (rouge.length > 0) return `liste rouge : aucun message ne part vers ${rouge.join(", ")}`;
+
+  // Une valeur illisible pourrait cacher une adresse de la liste rouge : on
+  // refuse au lieu de deviner.
+  const illisibles = destinatairesIllisibles(to);
+  if (illisibles.length > 0) {
+    return `destinataire illisible : ${illisibles.join(", ")} (attendu une seule adresse simple)`;
+  }
+
   if (mailMode(env) === "live") return null;
   const permis = allowlist(env);
-  const risque = recipients(to).filter(
-    (a) => SANS_DESTINATAIRE.test(a) === false && permis.includes(a.toLowerCase()) === false,
-  );
+  const risque = recipients(to)
+    .map(adresseSeule)
+    .filter((a) => SANS_DESTINATAIRE.test(a) === false && permis.includes(a) === false);
   if (risque.length === 0) return null;
   return `mode atelier : ${risque.join(", ")} peut appartenir à une vraie personne`;
 }
@@ -102,6 +216,66 @@ export function canSendTo(to: string | string[]): boolean {
 }
 
 /**
+ * Motif de refus en tenant compte des ajouts enregistrés en base, ou null si
+ * l'envoi peut se faire. À préférer dans les routes : c'est la même décision
+ * que celle prise par sendMail().
+ */
+export async function refusEnvoi(to: string | string[]): Promise<string | null> {
+  const reason = blockReason(to, process.env, await ajoutsListeRouge(true));
+  if (reason) return reason;
+  return resendClient() === null ? "aucune clé d'envoi configurée sur ce serveur" : null;
+}
+
+// Journal de tous les emails du site : ce qui est parti, ce qui a été retenu,
+// ce que le service a refusé. « Est-ce que le message est parti ? » se lisait
+// nulle part.
+async function journalise(entry: {
+  to: string[];
+  subject: string;
+  outcome: "envoye" | "retenu" | "refuse";
+  reason?: string;
+  origin?: string;
+  messageId?: string;
+}): Promise<void> {
+  try {
+    const { prisma } = await import("./prisma");
+    await prisma.emailLog.create({
+      data: {
+        recipients: entry.to.join(", ").slice(0, 500),
+        subject: (entry.subject ?? "").slice(0, 300),
+        outcome: entry.outcome,
+        reason: (entry.reason ?? "").slice(0, 400),
+        origin: (entry.origin ?? "").slice(0, 60),
+        messageId: entry.messageId ?? "",
+        mode: mailMode(),
+      },
+    });
+  } catch {
+    /* le journal ne doit jamais empêcher ni faire échouer un envoi */
+  }
+}
+
+/**
+ * Inscrit au journal un envoi écarté avant même d'appeler sendMail (refus d'une
+ * route : liste rouge, document plus éligible…). Sans cela, l'écran Emails
+ * ignorait les refus les plus intéressants.
+ */
+export async function journaliseRefus(entry: {
+  to: string | string[];
+  subject: string;
+  reason: string;
+  origin?: string;
+}): Promise<void> {
+  await journalise({
+    to: recipients(entry.to),
+    subject: entry.subject,
+    outcome: "retenu",
+    reason: entry.reason,
+    origin: entry.origin,
+  });
+}
+
+/**
  * Envoie un email. Seul appel autorisé au service d'envoi dans tout le projet.
  * Ne lève jamais : l'échec se lit dans le résultat.
  */
@@ -111,35 +285,49 @@ export async function sendMail(opts: {
   html: string;
   replyTo?: string;
   from?: string;
+  /** Provenance, pour le journal : « relance », « envoi-devis », « contact »… */
+  origin?: string;
 }): Promise<MailResult> {
   const to = recipients(opts.to);
   if (to.length === 0) return { sent: false, blocked: true, reason: "aucun destinataire" };
 
-  const reason = blockReason(to);
+  const reason = blockReason(to, process.env, await ajoutsListeRouge(true));
   if (reason) {
     console.log(`[email retenu] « ${opts.subject} » → ${to.join(", ")} · ${reason}`);
+    await journalise({ to, subject: opts.subject, outcome: "retenu", reason, origin: opts.origin });
     return { sent: false, blocked: true, reason };
   }
 
   const r = resendClient();
   if (!r) {
-    console.log(`[email simulé] « ${opts.subject} » → ${to.join(", ")} · aucune clé d'envoi`);
-    return { sent: false, blocked: true, reason: "aucune clé d'envoi configurée sur ce serveur" };
+    const sansCle = "aucune clé d'envoi configurée sur ce serveur";
+    console.log(`[email simulé] « ${opts.subject} » → ${to.join(", ")} · ${sansCle}`);
+    await journalise({ to, subject: opts.subject, outcome: "retenu", reason: sansCle, origin: opts.origin });
+    return { sent: false, blocked: true, reason: sansCle };
   }
 
   try {
     // Le service signale ses échecs dans la réponse, jamais en exception : sans
-    // ce contrôle, un envoi refusé passe pour réussi.
+    // ce contrôle, un envoi refusé passe pour réussi. Les adresses partent
+    // dégagées de leur emballage : le service ne reçoit que ce qui a été
+    // confronté à la liste rouge.
     const { data, error } = await r.emails.send({
       from: opts.from ?? MAIL_FROM,
-      to,
+      to: to.map(adresseSeule),
       replyTo: opts.replyTo || undefined,
       subject: opts.subject,
       html: opts.html,
     });
-    if (error) return { sent: false, blocked: false, error: error.message ?? "raison inconnue" };
+    if (error) {
+      const motif = error.message ?? "raison inconnue";
+      await journalise({ to, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
+      return { sent: false, blocked: false, error: motif };
+    }
+    await journalise({ to, subject: opts.subject, outcome: "envoye", origin: opts.origin, messageId: data?.id });
     return { sent: true, blocked: false, id: data?.id };
   } catch (e) {
-    return { sent: false, blocked: false, error: e instanceof Error ? e.message : "envoi impossible" };
+    const motif = e instanceof Error ? e.message : "envoi impossible";
+    await journalise({ to, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
+    return { sent: false, blocked: false, error: motif };
   }
 }

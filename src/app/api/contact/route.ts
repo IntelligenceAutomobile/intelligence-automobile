@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`;
 
-    const envoi = await sendMail({ from: FROM, to: TO, replyTo: email, subject: `${sujetLabel} — ${nom}`, html });
+    const envoi = await sendMail({ from: FROM, to: TO, replyTo: email, subject: `${sujetLabel} — ${nom}`, html, origin: "contact" });
     if (!envoi.sent) {
       console.log("=== Contact (email non parti) ===");
       console.log({ nom, email, telephone, sujet, message, raison: envoi.reason ?? envoi.error });

@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Send, Clock, FileText, ReceiptText, CheckCircle2, MailPlus, Loader2, Phone, ChevronDown, History, RotateCcw, XCircle, AlertTriangle } from "lucide-react";
+import { Send, Clock, FileText, ReceiptText, CheckCircle2, MailPlus, Loader2, Phone, ChevronDown, History, RotateCcw, XCircle, AlertTriangle, Ban } from "lucide-react";
 import { formatEuro, formatDateFr } from "@/lib/devis";
 import { DEVIS_RELANCE_DAYS, FACTURE_RELANCE_DAYS } from "@/lib/relances";
 import { T, Tag, AdminPage, PageHeader } from "../ui";
@@ -33,6 +33,8 @@ export type RelanceItem = {
   startDate: string;
   // Validité du devis dépassée : un renvoi vaut mieux qu'une relance.
   expired: boolean;
+  // Destinataire en liste rouge : aucun email ne peut partir vers lui.
+  blocked: boolean;
 };
 
 // Une ligne du journal des actions, telle qu'elle vient du serveur.
@@ -190,6 +192,12 @@ function Row({
               Ajouter un email
             </Link>
           )}
+          {it.blocked && (
+            <span className="inline-flex items-center gap-1 whitespace-nowrap" style={{ color: T.danger }}>
+              <Ban size={11} />
+              Liste rouge
+            </span>
+          )}
           {it.expired && (
             <span className="whitespace-nowrap" style={{ color: T.danger }}>Validité dépassée</span>
           )}
@@ -240,7 +248,22 @@ function Row({
           </span>
         ) : (
           <div className="relative z-10 flex items-center gap-2">
-            {it.clientEmail ? (
+            {it.blocked ? (
+              // Destinataire en liste rouge : l'envoi par email est écarté, la
+              // relance téléphonique reste possible.
+              <button
+                type="button"
+                onClick={() => onManual(it)}
+                disabled={busy !== null}
+                aria-label={`${it.clientEmail} est en liste rouge : noter ${it.number} comme ${isFacture ? "relancée" : "relancé"} par téléphone`}
+                title={`${it.clientEmail} est en liste rouge : aucun email ne part vers ce destinataire.`}
+                className={ghostBtnClass}
+                style={{ borderColor: "rgba(255,107,53,0.45)", color: T.danger }}
+              >
+                {busy === "manual" ? <Loader2 size={13} className="animate-spin" /> : <Phone size={13} />}
+                Par téléphone
+              </button>
+            ) : it.clientEmail ? (
               <button
                 type="button"
                 onClick={() => onRelance(it)}
@@ -282,7 +305,7 @@ function Row({
               </button>
               {menuOpen && (
                 <ReportMenu
-                  withPhone={Boolean(it.clientEmail)}
+                  withPhone={Boolean(it.clientEmail) && !it.blocked}
                   feminin={isFacture}
                   onPick={(choice) => onMenuPick(it, choice)}
                   onClose={() => onMenuToggle(null)}
@@ -393,6 +416,7 @@ const HISTORY_STYLE: Record<string, { icon: typeof Send; label: string; color: s
   arret: { icon: XCircle, label: "Relances arrêtées", color: T.muted },
   annulation: { icon: RotateCcw, label: "Report annulé", color: T.muted },
   echec: { icon: AlertTriangle, label: "Envoi en échec", color: T.danger },
+  bloque: { icon: Ban, label: "Envoi bloqué", color: T.danger },
 };
 
 function HistorySection({ entries }: { entries: HistoryEntry[] }) {

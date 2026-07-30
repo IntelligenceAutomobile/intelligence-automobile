@@ -191,6 +191,33 @@ model RelanceLog {
   @@index([createdAt])
 }
 
+// Liste rouge des destinataires : aucun message ne part vers ces adresses ni
+// ces domaines, en production comme ailleurs. Complète la liste inscrite dans
+// le code (src/lib/mailer.ts), qui elle ne peut pas être retirée.
+model EmailBlock {
+  id        String   @id @default(cuid())
+  value     String   @unique // adresse complète, ou domaine (sous-domaines inclus)
+  reason    String   @default("")
+  author    String   @default("")
+  createdAt DateTime @default(now())
+}
+
+// Journal de tous les emails du site : envoyés, retenus avant l'envoi, refusés
+// par le service. Écrit par la porte de sortie unique (src/lib/mailer.ts).
+model EmailLog {
+  id         String   @id @default(cuid())
+  recipients String
+  subject    String   @default("")
+  outcome    String // envoye | retenu | refuse
+  reason     String   @default("")
+  origin     String   @default("") // relance | envoi-devis | contact | …
+  messageId  String   @default("")
+  mode       String   @default("") // live | atelier
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // ── CRM : clients et opportunités de vente ──
 
 model Client {
