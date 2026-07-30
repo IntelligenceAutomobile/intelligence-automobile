@@ -17,6 +17,7 @@ export function organizationJsonLd() {
     "@id": ORG_ID,
     name: SITE_NAME,
     legalName: "SASU Intelligence Automobile",
+    vatID: "FR08108086646",
     url: SITE_URL,
     logo: LOGO,
     image: `${SITE_URL}/og/accueil.jpg`,

@@ -43,7 +43,7 @@ export const fr = {
       {
         heading: "Préambule",
         blocks: [
-          { text: "SASU Intelligence Automobile, société par actions simplifiée à associé unique au capital de 2 000 €, dont le siège social est établi à Paris 17ᵉ, France, immatriculée au Registre du commerce et des sociétés de Paris sous le numéro 108 086 646, SIRET 108 086 646 00016. Courriel : contact@intelligenceautomobile.com · Téléphone : +33 6 20 24 38 79 · Site : intelligenceautomobile.fr (ci-après « le Prestataire »)." },
+          { text: "SASU Intelligence Automobile, société par actions simplifiée à associé unique au capital de 2 000 €, dont le siège social est établi à Paris 17ᵉ, France, immatriculée au Registre du commerce et des sociétés de Paris sous le numéro 108 086 646, SIRET 108 086 646 00016, numéro de TVA intracommunautaire FR08108086646. Courriel : contact@intelligenceautomobile.com · Téléphone : +33 6 20 24 38 79 · Site : intelligenceautomobile.fr (ci-après « le Prestataire »)." },
         ],
       },
       {
@@ -183,7 +183,7 @@ export const fr = {
         heading: "Éditeur du site",
         paragraphs: [
           "Le site intelligenceautomobile.fr est édité par la SASU Intelligence Automobile, société par actions simplifiée à associé unique au capital de 2 000 €, dont le siège social est établi à Paris 17ᵉ, France.",
-          "Immatriculée au Registre du commerce et des sociétés de Paris le 28 juillet 2026 sous le numéro 108 086 646 · SIRET 108 086 646 00016 · Identifiant européen EUID FR7501.108086646.",
+          "Immatriculée au Registre du commerce et des sociétés de Paris le 28 juillet 2026 sous le numéro 108 086 646 · SIRET 108 086 646 00016 · TVA intracommunautaire FR08108086646 · Identifiant européen EUID FR7501.108086646.",
           "Contact : contact@intelligenceautomobile.com · +33 6 20 24 38 79",
         ],
       },

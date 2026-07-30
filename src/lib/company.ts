@@ -9,10 +9,9 @@ export const COMPANY = {
   addressLines: ["30 rue Pouchet", "75017 Paris", "France"],
   representative: "César Vachon",
   siret: "108 086 646 00016",
-  // Laisser vide tant que non attribué : les lignes vides ne s'affichent pas.
-  // La clé calculée donne FR08 108 086 646, mais le numéro reste absent de la
-  // base européenne VIES : à renseigner sur confirmation du service des impôts.
-  tvaNumber: "",
+  // Sans espaces : c'est la forme qu'un client recopie dans le vérificateur
+  // européen VIES. Les lignes vides ne s'affichent pas sur le document.
+  tvaNumber: "FR08108086646",
   rcs: "Paris 108 086 646",
   email: "",
   phone: "+33 6 20 24 38 79",

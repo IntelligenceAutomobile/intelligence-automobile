@@ -45,7 +45,7 @@ export const en: Translations = {
       {
         heading: "Preamble",
         blocks: [
-          { text: "SASU Intelligence Automobile, a simplified joint-stock company with a sole shareholder and share capital of €2,000, whose registered office is located in Paris 17th, France, registered with the Paris Trade and Companies Register under number 108 086 646, SIRET 108 086 646 00016. Email: contact@intelligenceautomobile.com · Phone: +33 6 20 24 38 79 · Website: intelligenceautomobile.fr (hereinafter “the Provider”)." },
+          { text: "SASU Intelligence Automobile, a simplified joint-stock company with a sole shareholder and share capital of €2,000, whose registered office is located in Paris 17th, France, registered with the Paris Trade and Companies Register under number 108 086 646, SIRET 108 086 646 00016, intra-community VAT number FR08108086646. Email: contact@intelligenceautomobile.com · Phone: +33 6 20 24 38 79 · Website: intelligenceautomobile.fr (hereinafter “the Provider”)." },
         ],
       },
       {
@@ -185,7 +185,7 @@ export const en: Translations = {
         heading: "Site publisher",
         paragraphs: [
           "The website intelligenceautomobile.fr is published by SASU Intelligence Automobile, a simplified joint-stock company with a sole shareholder and share capital of €2,000, whose registered office is located in Paris 17th, France.",
-          "Registered with the Paris Trade and Companies Register on 28 July 2026 under number 108 086 646 · SIRET 108 086 646 00016 · European identifier EUID FR7501.108086646.",
+          "Registered with the Paris Trade and Companies Register on 28 July 2026 under number 108 086 646 · SIRET 108 086 646 00016 · Intra-community VAT FR08108086646 · European identifier EUID FR7501.108086646.",
           "Contact: contact@intelligenceautomobile.com · +33 6 20 24 38 79",
         ],
       },
