@@ -14,10 +14,10 @@ import {
 import { relanceDue, daysSince } from "@/lib/relances";
 import { parisDay } from "@/lib/vehicules";
 import { T, AdminPage, PageHeader } from "@/app/admin/ui";
+import { HistorySection } from "@/app/admin/relances/RelanceHistory";
 import {
   RelanceLine,
   RelanceSection,
-  HistorySection,
   relancesSubtitle,
   ghostBtnClass,
   ghostBorder,
@@ -115,7 +115,10 @@ export default function DemoRelancesPage() {
 
   const somme = (l: RelanceView[]) => l.reduce((s, it) => s + it.amount, 0);
   const total = devis.length + factures.length;
-  const history: HistoryView[] = getDemoRelanceLog();
+  const history: HistoryView[] = getDemoRelanceLog().map((e) => ({
+    ...e,
+    href: e.number.startsWith("FAC") ? `${DEMO_BASE}/factures` : `${DEMO_BASE}/devis/${e.quoteId}`,
+  }));
 
   const lignes = (items: RelanceView[]) =>
     items.map((it, i) => (
@@ -161,7 +164,7 @@ export default function DemoRelancesPage() {
         </>
       )}
 
-      <HistorySection entries={history} hrefOf={(e) => (e.number.startsWith("FAC") ? `${DEMO_BASE}/factures` : `${DEMO_BASE}/devis/${e.quoteId}`)} />
+      <HistorySection entries={history} />
     </AdminPage>
   );
 }

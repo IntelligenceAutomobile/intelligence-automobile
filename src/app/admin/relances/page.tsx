@@ -116,6 +116,7 @@ export default async function RelancesPage() {
     detail: l.detail,
     author: l.author,
     at: l.createdAt.toISOString(),
+    href: `/admin/devis/${l.quoteId}`,
   }));
 
   return <RelancesClient devis={devis} factures={factures} history={history} />;

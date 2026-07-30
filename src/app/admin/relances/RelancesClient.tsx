@@ -14,10 +14,10 @@ import { T, AdminPage, PageHeader } from "../ui";
 import { ConfirmDialog } from "../confirm";
 import { useToast } from "../toast";
 import { ApiError, RelanceDialog, relanceApi, type RelancePreview } from "./RelanceDialog";
+import { HistorySection } from "./RelanceHistory";
 import {
   RelanceLine,
   RelanceSection,
-  HistorySection,
   relancesSubtitle,
   ghostBtnClass,
   ghostBorder,
@@ -489,7 +489,7 @@ export default function RelancesClient({
         </>
       )}
 
-      <HistorySection entries={history} hrefOf={(e) => `/admin/devis/${e.quoteId}`} />
+      <HistorySection entries={history} />
 
       {preview && (
         <RelanceDialog
