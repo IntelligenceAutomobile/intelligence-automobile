@@ -245,8 +245,23 @@ export function StockSimilaire({
               <span style={{ display: "block", fontSize: "0.72rem", color: "#9FB7D8", marginTop: "4px" }}>
                 {v.year} · {formatNumber(v.mileage)} km
               </span>
-              <span style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#6B9FEE", marginTop: "6px" }}>
-                {formatNumber(v.price)} €
+              {/* Prix et repère « Test » sur la même ligne. Ces vignettes n'affichent
+                  aucun statut : l'API ne renvoie que des fiches publiées et
+                  disponibles, le repère y est donc systématique. */}
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px", marginTop: "6px" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#6B9FEE" }}>
+                  {formatNumber(v.price)} €
+                </span>
+                <span
+                  style={{
+                    fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase",
+                    fontWeight: 600, padding: "2px 6px", color: "#FF6B35",
+                    border: "1px solid rgba(255,107,53,0.45)",
+                    backgroundColor: "rgba(255,107,53,0.1)", whiteSpace: "nowrap",
+                  }}
+                >
+                  Test
+                </span>
               </span>
             </span>
           </a>

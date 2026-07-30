@@ -513,8 +513,17 @@ export default async function HomePage() {
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #070F1E 0%, transparent 55%)" }} />
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "20px 22px 24px" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
-                          <span style={{ fontSize: "10px", letterSpacing: "0.3em", textTransform: "uppercase", fontWeight: 700, color: "#6B9FEE" }}>{v.make}</span>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
+                          {/* Marque et repère « Test » collés : l'année et le kilométrage
+                              restent calés à droite de la rangée. La condition suit celle
+                              des autres surfaces, même si la requête ci-dessus ne remonte
+                              déjà que des fiches publiées. */}
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "10px", letterSpacing: "0.3em", textTransform: "uppercase", fontWeight: 700, color: "#6B9FEE" }}>{v.make}</span>
+                            {v.isPublished && (
+                              <span style={{ fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 600, padding: "2px 7px", color: "#FF6B35", border: "1px solid rgba(255,107,53,0.45)", backgroundColor: "rgba(255,107,53,0.1)", whiteSpace: "nowrap" }}>Test</span>
+                            )}
+                          </span>
                           <span style={{ fontSize: "10px", letterSpacing: "0.06em", color: "#7A9CC8", whiteSpace: "nowrap" }}>{v.year} · {formatNumber(v.mileage)} km</span>
                         </div>
                         <h3 style={{ fontSize: "1.05rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em", color: "#F0F5FF", marginBottom: "auto", lineHeight: 1.15 }}>{v.model}</h3>
