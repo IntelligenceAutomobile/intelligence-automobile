@@ -36,21 +36,22 @@ export const fr = {
   },
 
   cgv: {
-    metaTitle: "Conditions Générales de Prestation de Services — Intelligence Automobile",
-    title: "Conditions Générales de Prestation de Services",
-    updated: "Dernière mise à jour : 1ᵉʳ juillet 2026",
+    metaTitle: "Conditions Générales de Vente et de Prestation de Services — Intelligence Automobile",
+    title: "Conditions Générales de Vente et de Prestation de Services",
+    updated: "Dernière mise à jour : 30 juillet 2026",
     sections: [
       {
         heading: "Préambule",
         blocks: [
-          { text: "SASU Intelligence Automobile, société par actions simplifiée unipersonnelle au capital de 1 000 €, dont le siège social est établi à Paris, France. SIRET, RCS et numéro de TVA intracommunautaire : en cours d'immatriculation. Courriel : contact@intelligenceautomobile.com · Téléphone : +33 6 20 24 38 79 · Site : intelligenceautomobile.com (ci-après « le Prestataire »)." },
+          { text: "SASU Intelligence Automobile, société par actions simplifiée à associé unique au capital de 2 000 €, dont le siège social est établi à Paris 17ᵉ, France, immatriculée au Registre du commerce et des sociétés de Paris sous le numéro 108 086 646, SIRET 108 086 646 00016. Courriel : contact@intelligenceautomobile.com · Téléphone : +33 6 20 24 38 79 · Site : intelligenceautomobile.fr (ci-après « le Prestataire »)." },
         ],
       },
       {
         heading: "Article 1 — Champ d'application",
         blocks: [
-          { text: "Les présentes Conditions Générales s'appliquent, sans restriction ni réserve, à toute prestation de services souscrite auprès du Prestataire par un client consommateur ou non-professionnel (« le Client »), à savoir :" },
+          { text: "Les présentes Conditions Générales s'appliquent, sans restriction ni réserve, à toute vente de véhicule et à toute prestation de services souscrite auprès du Prestataire par un client consommateur ou non-professionnel (« le Client »), à savoir :" },
           { list: [
+            "Vente de véhicules : cession d'un véhicule appartenant au Prestataire, sélectionné, contrôlé et importé par ses soins, présenté dans la rubrique « Nos véhicules » ou acquis dans le cadre d'une recherche ;",
             "Recherche et accompagnement à l'achat : mise en relation avec des vendeurs particuliers ou professionnels, en France et dans l'Union européenne, en vue de l'acquisition d'un véhicule ;",
             "Accompagnement à la revente d'un véhicule appartenant au Client : mise en valeur, diffusion, filtrage des acheteurs, sécurisation de la transaction ;",
             "Transport et livraison de véhicule.",
@@ -61,19 +62,20 @@ export const fr = {
       {
         heading: "Article 2 — Commandes",
         blocks: [
-          { text: "Le Client transmet au Prestataire ses critères de recherche ou les informations relatives à son véhicule, ainsi que ses coordonnées (nom, prénom, adresse, téléphone, courriel). La prestation n'est définitive qu'après établissement d'un devis détaillé par le Prestataire (valable 30 jours), puis validation écrite du devis par le Client (courriel, courrier ou signature électronique). Cette validation forme un contrat conclu à distance. Une fois acceptée, la commande n'est ni modifiable ni annulable, hors force majeure et sous réserve du droit de rétractation prévu à l'article 7." },
+          { text: "Le Client transmet au Prestataire ses critères de recherche ou les informations relatives à son véhicule, ainsi que ses coordonnées (nom, prénom, adresse, téléphone, courriel). La prestation n'est définitive qu'après établissement d'un devis détaillé par le Prestataire (valable 30 jours), puis validation écrite du devis par le Client (courriel, courrier ou signature électronique). Cette validation forme un contrat conclu à distance. Une fois acceptée, la commande n'est ni modifiable ni annulable, hors force majeure et sous réserve du droit de rétractation prévu à l'article 8." },
         ],
       },
       {
         heading: "Article 3 — Tarifs et honoraires",
         blocks: [
           { text: "Les prestations sont fournies au tarif du devis en vigueur à la commande, exprimé en euros toutes taxes comprises (mention HT et TTC le cas échéant). Les honoraires du Prestataire sont annoncés avant tout engagement. Les prestations complémentaires (transport, immatriculation…) font l'objet d'une facturation distincte sur devis. Une facture est remise au Client." },
+          { text: "Les véhicules d'occasion vendus par le Prestataire relèvent, le cas échéant, du régime de la taxe sur la valeur ajoutée applicable aux biens d'occasion (article 297 A du code général des impôts) : la facture porte alors la mention correspondante et la taxe demeure non récupérable par le Client. Le régime retenu figure sur le devis puis sur la facture." },
         ],
       },
       {
         heading: "Article 4 — Paiement",
         blocks: [
-          { text: "Le prix comprend un acompte versé à la commande, au moment de la signature du devis, et le solde payable à la réception de la prestation (livraison du véhicule ou remise de la prestation), selon les modalités précisées au devis. Les paiements s'effectuent par virement, carte bancaire (lien de paiement sécurisé) ou tout autre moyen convenu. Le Prestataire n'est pas tenu de débuter la prestation avant encaissement de l'acompte. En cas de non-respect des conditions de paiement, le Prestataire peut suspendre ou annuler la prestation." },
+          { text: "Le prix comprend un acompte versé à la commande, au moment de la signature du devis, et le solde payable à la réception de la prestation (livraison du véhicule ou remise de la prestation), selon les modalités précisées au devis. Les paiements s'effectuent par virement, carte bancaire (lien de paiement sécurisé) ou tout autre moyen convenu. Le Prestataire n'est pas tenu de débuter la prestation avant encaissement de l'acompte. Pour une vente de véhicule, le solde est exigible avant la remise des clés. En cas de non-respect des conditions de paiement, le Prestataire peut suspendre ou annuler la prestation." },
         ],
       },
       {
@@ -81,6 +83,7 @@ export const fr = {
         blocks: [
           { text: "Le Prestataire est tenu d'une obligation de moyens : il s'engage à mettre en œuvre ses meilleurs efforts pour fournir les prestations dans le délai indiqué au devis." },
           { list: [
+            "Vente d'un véhicule du Prestataire : contrôle technique et documentaire, remise du véhicule accompagné de son dossier complet (certificat de conformité, justificatif d'acquisition, quitus fiscal, contrôle technique, procès-verbal de livraison), accomplissement des formalités d'immatriculation lorsqu'elles figurent au devis. Le délai de livraison annoncé relève d'une obligation de moyens.",
             "Recherche et achat : recherche et proposition de véhicules correspondant aux critères, vérification de la disponibilité auprès du vendeur, tentative de négociation, contrôle documentaire et technique, transmission du contrat de vente édité par le vendeur. Sans résultat, sans frais : si aucun véhicule correspondant n'est trouvé, les honoraires de recherche ne sont pas dus, ou sont remboursés, sauf si un véhicule a été trouvé et a fait l'objet d'un contrat signé entre le Client et le vendeur.",
             "Revente : estimation, mise en valeur, diffusion ciblée, filtrage des acheteurs, accompagnement de la transaction, dans le cadre d'une obligation de moyens sur le délai et le prix de vente.",
             "Transport : acheminement du véhicule par conducteur professionnel assuré, état des lieux avant départ et à la livraison, au tarif fixe du devis.",
@@ -88,64 +91,84 @@ export const fr = {
         ],
       },
       {
-        heading: "Article 6 — Responsabilité du Prestataire",
+        heading: "Article 6 — Qualité du Prestataire et responsabilité",
         blocks: [
-          { text: "Le Prestataire agit en qualité de courtier et mandataire, intermédiaire indépendant : il met en relation les parties sans être partie au contrat de vente et n'est pas revendeur des véhicules. En conséquence :" },
+          { text: "Le Prestataire intervient à deux titres, précisés sur chaque devis :" },
+          { list: [
+            "En qualité de vendeur, lorsque le véhicule lui appartient : la vente est alors conclue entre le Client et le Prestataire, qui répond des garanties énoncées à l'article 7.",
+            "En qualité de courtier et mandataire, intermédiaire indépendant, lorsqu'il met le Client en relation avec un vendeur tiers : la vente est alors conclue directement entre le Client et ce vendeur, le Prestataire demeurant étranger au contrat de vente.",
+          ] },
+          { text: "Dans le cadre de l'intermédiation :" },
           { list: [
             "Le vendeur du véhicule est seul responsable de la conformité du descriptif, de la garantie légale de conformité et de la garantie des vices cachés ; toute réclamation portant sur le véhicule lui est adressée directement.",
             "La négociation du prix relève d'une obligation de moyens, sans garantie de résultat.",
             "Les prestations réalisées par des tiers (contrôle technique, transporteur, immatriculation) relèvent de la responsabilité de ces tiers.",
           ] },
-          { text: "La responsabilité du Prestataire ne peut être engagée en cas d'inexécution imputable au vendeur, au Client ou à un tiers." },
+          { text: "La responsabilité du Prestataire ne peut être engagée en cas d'inexécution imputable au vendeur tiers, au Client ou à un tiers." },
         ],
       },
       {
-        heading: "Article 7 — Droit de rétractation",
+        heading: "Article 7 — Vente d'un véhicule par le Prestataire",
         blocks: [
-          { text: "Conformément aux articles L221-18 et suivants du Code de la consommation, le Client dispose d'un délai de 14 jours à compter de la conclusion du contrat pour se rétracter, sans avoir à justifier de motif ni à payer de pénalité, au moyen du formulaire figurant en annexe ou de toute déclaration non ambiguë adressée à contact@intelligenceautomobile.com. Si, à sa demande expresse, l'exécution de la prestation a commencé avant la fin du délai, le Client reste redevable du service déjà fourni ; une prestation pleinement exécutée avant la fin du délai fait perdre le droit de rétractation. Le remboursement intervient dans un délai de 14 jours à compter de la notification." },
+          { text: "Lorsque le Prestataire est vendeur, le véhicule est délivré dans l'état décrit au procès-verbal de livraison signé par les deux parties, accompagné de son dossier complet. Le transfert de propriété intervient au paiement intégral du prix, le Prestataire se réservant la propriété du véhicule jusqu'à cet encaissement (article 2367 du Code civil) ; le transfert des risques intervient à la remise du véhicule au Client ou au transporteur qu'il a désigné." },
+          { text: "Le Client consommateur bénéficie de plein droit :" },
+          { list: [
+            "De la garantie légale de conformité (articles L217-3 et suivants du Code de la consommation) : elle s'exerce pendant deux ans à compter de la délivrance du véhicule et ouvre droit à sa réparation ou à son remplacement, sans frais. Pour un véhicule d'occasion, les défauts qui apparaissent dans les douze mois suivant la délivrance sont présumés exister au jour de la délivrance.",
+            "De la garantie légale des vices cachés (articles 1641 et suivants du Code civil) : elle permet, dans les deux ans de la découverte du vice, de rendre le véhicule contre restitution du prix ou d'en obtenir une réduction.",
+            "Le cas échéant, de la garantie commerciale souscrite auprès d'un partenaire assureur : sa durée, son étendue, ses exclusions et ses modalités de mise en œuvre figurent au contrat remis avec le véhicule, en sus des garanties légales.",
+          ] },
+          { text: "Ces garanties s'exercent auprès du Prestataire, à contact@intelligenceautomobile.com. Un véhicule d'occasion est vendu avec l'usure correspondant à son âge et à son kilométrage, décrite au procès-verbal de livraison ; l'entretien courant et les pièces d'usure restent à la charge du Client à compter de la délivrance." },
         ],
       },
       {
-        heading: "Article 8 — Données personnelles",
+        heading: "Article 8 — Droit de rétractation",
+        blocks: [
+          { text: "Prestations de services : conformément aux articles L221-18 et suivants du Code de la consommation, le Client dispose d'un délai de 14 jours à compter de la conclusion du contrat pour se rétracter, sans avoir à justifier de motif ni à payer de pénalité, au moyen du formulaire figurant en annexe ou de toute déclaration non ambiguë adressée à contact@intelligenceautomobile.com. Si, à sa demande expresse, l'exécution de la prestation a commencé avant la fin du délai, le Client reste redevable du service déjà fourni ; une prestation pleinement exécutée avant la fin du délai fait perdre le droit de rétractation. Le remboursement intervient dans un délai de 14 jours à compter de la notification." },
+          { text: "Vente d'un véhicule : lorsque la vente est conclue à distance ou hors établissement, le délai de 14 jours court à compter de la réception du véhicule par le Client. Celui-ci restitue le véhicule dans les 14 jours suivant sa déclaration de rétractation ; les frais de retour et le rapatriement demeurent à sa charge, de même que la dépréciation résultant de manipulations excédant celles nécessaires pour établir la nature et les caractéristiques du véhicule. Le remboursement intervient dans les 14 jours de la récupération du véhicule. Les véhicules neufs commandés selon une configuration choisie par le Client relèvent de l'article L221-28 3° du Code de la consommation, qui écarte le droit de rétractation. Une vente conclue dans les locaux du Prestataire, en présence du Client, ouvre les garanties légales de l'article 7 selon les règles du droit commun." },
+        ],
+      },
+      {
+        heading: "Article 9 — Données personnelles",
         blocks: [
           { text: "Les données collectées (nom, prénom, courriel, téléphone, informations sur le projet ou le véhicule) sont nécessaires au traitement de la demande et à la facturation. Elles ne sont pas cédées à des tiers à des fins commerciales. Le Client dispose des droits d'accès, de rectification, d'effacement, d'opposition et de portabilité, exerçables à contact@intelligenceautomobile.com. Le détail des traitements figure dans nos mentions légales." },
         ],
       },
       {
-        heading: "Article 9 — Propriété intellectuelle",
+        heading: "Article 10 — Propriété intellectuelle et marque",
         blocks: [
-          { text: "Le contenu du site (textes, photographies, logo, identité visuelle) est la propriété du Prestataire et protégé par le droit de la propriété intellectuelle. Toute reproduction, totale ou partielle, sans autorisation préalable est interdite." },
+          { text: "Le contenu du site (textes, photographies, logo, identité visuelle) est la propriété du Prestataire et protégé par le droit de la propriété intellectuelle. Toute reproduction, totale ou partielle, demeure soumise à autorisation écrite préalable." },
+          { text: "« Intelligence Automobile » est une marque verbale déposée auprès de l'INPI le 27 juin 2026 sous le numéro national 26 5272824, publiée au Bulletin officiel de la propriété industrielle n° 26/29 du 17 juillet 2026 pour les classes 9, 12, 35, 36, 37, 39 et 42, et exploitée par le Prestataire. Son usage demeure soumis à autorisation écrite préalable." },
         ],
       },
       {
-        heading: "Article 10 — Force majeure, imprévision, résolution",
+        heading: "Article 11 — Force majeure, imprévision, résolution",
         blocks: [
           { text: "Aucune Partie n'est responsable d'un manquement dû à un cas de force majeure au sens de l'article 1218 du Code civil. En cas de changement de circonstances imprévisible lors de la conclusion du contrat (article 1195), une renégociation peut être demandée. En cas d'inexécution suffisamment grave, la Partie lésée peut résoudre le contrat après une mise en demeure restée infructueuse pendant huit jours (article 1224)." },
         ],
       },
       {
-        heading: "Article 11 — Droit applicable et langue",
+        heading: "Article 12 — Droit applicable et langue",
         blocks: [
           { text: "Les présentes Conditions Générales sont régies par le droit français et rédigées en langue française. En cas de traduction, seule la version française fait foi en cas de litige." },
         ],
       },
       {
-        heading: "Article 12 — Litiges et médiation",
+        heading: "Article 13 — Litiges et médiation",
         blocks: [
-          { text: "En cas de litige non résolu à l'amiable, le Client peut recourir gratuitement à un médiateur de la consommation : [médiateur à désigner]. À défaut d'accord, les tribunaux compétents sont saisis dans les conditions du droit commun. Une plateforme européenne de règlement en ligne des litiges est disponible à l'adresse ec.europa.eu/consumers/odr." },
+          { text: "Le Client adresse d'abord sa réclamation au Prestataire, à contact@intelligenceautomobile.com. Faute de solution amiable dans un délai de deux mois, il peut recourir gratuitement au médiateur de la consommation dont relève le Prestataire : Médiation de la consommation & patrimoine (MCP), 12 square Desnouettes, 75015 Paris, mcpmediation.org. À défaut d'accord, les tribunaux compétents sont saisis dans les conditions du droit commun. Une plateforme européenne de règlement en ligne des litiges est disponible à l'adresse ec.europa.eu/consumers/odr." },
         ],
       },
       {
-        heading: "Article 13 — Information précontractuelle",
+        heading: "Article 14 — Information précontractuelle",
         blocks: [
-          { text: "Le Client reconnaît avoir reçu, préalablement à la commande et de manière lisible et compréhensible, les présentes Conditions Générales ainsi que les informations prévues à l'article L221-5 du Code de la consommation : caractéristiques et prix des prestations, frais annexes, délais, identité et coordonnées du Prestataire, garanties légales, droit de rétractation et formulaire type, médiation, et moyens de paiement acceptés." },
+          { text: "Le Client reconnaît avoir reçu, préalablement à la commande et de manière lisible et compréhensible, les présentes Conditions Générales ainsi que les informations prévues à l'article L221-5 du Code de la consommation : caractéristiques et prix du véhicule et des prestations, frais annexes, délais, identité et coordonnées du Prestataire, garanties légales, droit de rétractation et formulaire type, médiation, et moyens de paiement acceptés." },
         ],
       },
       {
         heading: "Annexe — Formulaire de rétractation",
         blocks: [
           { text: "À compléter et renvoyer uniquement en cas de rétractation, à SASU Intelligence Automobile (contact@intelligenceautomobile.com)." },
-          { text: "Je notifie par la présente la rétractation du contrat portant sur la prestation ci-dessous : Devis du … · Numéro de devis … · Nom du Client … · Adresse … · Date … · Signature du Client." },
+          { text: "Je notifie par la présente la rétractation du contrat portant sur la vente ou la prestation ci-dessous : Devis du … · Numéro de devis … · Véhicule concerné … · Date de réception … · Nom du Client … · Adresse … · Date … · Signature du Client." },
         ],
       },
     ],
@@ -154,19 +177,19 @@ export const fr = {
   legal: {
     metaTitle: "Mentions légales & Confidentialité — Intelligence Automobile",
     title: "Mentions légales & Confidentialité",
-    updated: "Dernière mise à jour : 1ᵉʳ juillet 2026",
+    updated: "Dernière mise à jour : 30 juillet 2026",
     sections: [
       {
         heading: "Éditeur du site",
         paragraphs: [
-          "Le site intelligenceautomobile.fr est édité par SASU Intelligence Automobile, société par actions simplifiée unipersonnelle au capital de 1 000 €, dont le siège social est établi à Paris, France.",
-          "SIRET, RCS et numéro de TVA intracommunautaire : en cours d'immatriculation, communiqués dès leur attribution.",
+          "Le site intelligenceautomobile.fr est édité par la SASU Intelligence Automobile, société par actions simplifiée à associé unique au capital de 2 000 €, dont le siège social est établi à Paris 17ᵉ, France.",
+          "Immatriculée au Registre du commerce et des sociétés de Paris le 28 juillet 2026 sous le numéro 108 086 646 · SIRET 108 086 646 00016 · Identifiant européen EUID FR7501.108086646.",
           "Contact : contact@intelligenceautomobile.com · +33 6 20 24 38 79",
         ],
       },
       {
         heading: "Directeur de la publication",
-        paragraphs: ["César Vachon, en qualité de fondateur."],
+        paragraphs: ["César Vachon, Président de la SASU Intelligence Automobile."],
       },
       {
         heading: "Hébergeur",
@@ -175,9 +198,16 @@ export const fr = {
         ],
       },
       {
+        heading: "Marque",
+        paragraphs: [
+          "« Intelligence Automobile » est une marque verbale déposée auprès de l'INPI le 27 juin 2026 sous le numéro national 26 5272824, publiée au Bulletin officiel de la propriété industrielle n° 26/29 du 17 juillet 2026 pour les classes 9, 12, 35, 36, 37, 39 et 42, et exploitée par la SASU Intelligence Automobile.",
+          "Le nom, le logo et l'identité visuelle qui s'y rattachent demeurent protégés : leur reproduction ou leur usage reste soumis à autorisation écrite préalable.",
+        ],
+      },
+      {
         heading: "Propriété intellectuelle",
         paragraphs: [
-          "L'ensemble des éléments du site (textes, photographies, logo, identité visuelle, structure) est protégé par le droit de la propriété intellectuelle et demeure la propriété d'Intelligence Automobile, sauf mention contraire. Toute reproduction ou réutilisation, totale ou partielle, sans autorisation préalable est interdite.",
+          "L'ensemble des éléments du site (textes, photographies, logo, identité visuelle, structure) est protégé par le droit de la propriété intellectuelle et demeure la propriété d'Intelligence Automobile, sauf mention contraire. Toute reproduction ou réutilisation, totale ou partielle, demeure soumise à autorisation écrite préalable.",
         ],
       },
       {
@@ -191,6 +221,13 @@ export const fr = {
         heading: "Cookies",
         paragraphs: [
           "Le site n'utilise aucun cookie de suivi publicitaire ni outil de mesure d'audience. Seul un cookie technique de préférence de langue est déposé pour améliorer votre navigation. Vous pouvez le supprimer à tout moment via les réglages de votre navigateur.",
+        ],
+      },
+      {
+        heading: "Médiation de la consommation",
+        paragraphs: [
+          "Adressez d'abord votre réclamation à contact@intelligenceautomobile.com. Faute de solution amiable dans un délai de deux mois, vous pouvez recourir gratuitement au médiateur de la consommation dont relève la société : Médiation de la consommation & patrimoine (MCP), 12 square Desnouettes, 75015 Paris, mcpmediation.org.",
+          "La plateforme européenne de règlement en ligne des litiges reste accessible à l'adresse ec.europa.eu/consumers/odr.",
         ],
       },
     ],

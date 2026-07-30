@@ -8,18 +8,36 @@ export async function generateMetadata() {
   return { title: t.cgv.metaTitle };
 }
 
-// Rend un texte en transformant l'email en lien cliquable.
+// Rend un texte en transformant l'email et les adresses de site en liens.
+// Le site du médiateur et la plateforme européenne doivent rester atteignables
+// d'un clic : c'est ce que la loi attend d'une information « accessible ».
 function linkify(text: string) {
-  const parts = text.split(/(contact@intelligenceautomobile\.com)/g);
-  return parts.map((part, i) =>
-    part === "contact@intelligenceautomobile.com" ? (
-      <a key={i} href={`mailto:${part}`} style={{ color: "#6B9FEE" }}>
-        {part}
-      </a>
-    ) : (
-      part
-    )
+  const parts = text.split(
+    /(contact@intelligenceautomobile\.com|mcpmediation\.org|ec\.europa\.eu\/consumers\/odr)/g
   );
+  return parts.map((part, i) => {
+    if (part === "contact@intelligenceautomobile.com") {
+      return (
+        <a key={i} href={`mailto:${part}`} style={{ color: "#6B9FEE" }}>
+          {part}
+        </a>
+      );
+    }
+    if (part === "mcpmediation.org" || part === "ec.europa.eu/consumers/odr") {
+      return (
+        <a
+          key={i}
+          href={`https://${part}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#6B9FEE" }}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
 }
 
 export default async function CgvPage() {

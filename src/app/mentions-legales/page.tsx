@@ -10,7 +10,7 @@ export async function generateMetadata() {
 
 // Rend un paragraphe en transformant l'email et les URL en liens cliquables.
 function linkify(text: string) {
-  const parts = text.split(/(contact@intelligenceautomobile\.com|vercel\.com|intelligenceautomobile\.fr|intelligenceautomobile\.com)/g);
+  const parts = text.split(/(contact@intelligenceautomobile\.com|vercel\.com|mcpmediation\.org|ec\.europa\.eu\/consumers\/odr|intelligenceautomobile\.fr|intelligenceautomobile\.com)/g);
   return parts.map((part, i) => {
     if (part === "contact@intelligenceautomobile.com") {
       return (
@@ -19,7 +19,13 @@ function linkify(text: string) {
         </a>
       );
     }
-    if (part === "vercel.com" || part === "intelligenceautomobile.com" || part === "intelligenceautomobile.fr") {
+    if (
+      part === "vercel.com" ||
+      part === "mcpmediation.org" ||
+      part === "ec.europa.eu/consumers/odr" ||
+      part === "intelligenceautomobile.com" ||
+      part === "intelligenceautomobile.fr"
+    ) {
       return (
         <a
           key={i}

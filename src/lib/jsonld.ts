@@ -16,6 +16,7 @@ export function organizationJsonLd() {
     "@type": "AutoDealer",
     "@id": ORG_ID,
     name: SITE_NAME,
+    legalName: "SASU Intelligence Automobile",
     url: SITE_URL,
     logo: LOGO,
     image: `${SITE_URL}/og/accueil.jpg`,
@@ -26,6 +27,7 @@ export function organizationJsonLd() {
     address: {
       "@type": "PostalAddress",
       addressLocality: "Paris",
+      postalCode: "75017",
       addressCountry: "FR",
     },
     areaServed: { "@type": "Country", name: "France" },

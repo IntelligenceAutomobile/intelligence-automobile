@@ -38,21 +38,22 @@ export const en: Translations = {
   },
 
   cgv: {
-    metaTitle: "General Terms of Service — Intelligence Automobile",
-    title: "General Terms of Service",
-    updated: "Last updated: July 1, 2026",
+    metaTitle: "General Terms of Sale and Service — Intelligence Automobile",
+    title: "General Terms of Sale and Service",
+    updated: "Last updated: July 30, 2026",
     sections: [
       {
         heading: "Preamble",
         blocks: [
-          { text: "SASU Intelligence Automobile, a simplified single-shareholder company with share capital of €1,000, whose registered office is located in Paris, France. SIRET, RCS and intra-community VAT number: registration in progress. Email: contact@intelligenceautomobile.com · Phone: +33 6 20 24 38 79 · Website: intelligenceautomobile.com (hereinafter “the Provider”)." },
+          { text: "SASU Intelligence Automobile, a simplified joint-stock company with a sole shareholder and share capital of €2,000, whose registered office is located in Paris 17th, France, registered with the Paris Trade and Companies Register under number 108 086 646, SIRET 108 086 646 00016. Email: contact@intelligenceautomobile.com · Phone: +33 6 20 24 38 79 · Website: intelligenceautomobile.fr (hereinafter “the Provider”)." },
         ],
       },
       {
         heading: "Article 1 — Scope",
         blocks: [
-          { text: "These General Terms apply, without restriction or reservation, to any service subscribed with the Provider by a consumer or non-professional client (“the Client”), namely:" },
+          { text: "These General Terms apply, without restriction or reservation, to any vehicle sale and any service subscribed with the Provider by a consumer or non-professional client (“the Client”), namely:" },
           { list: [
+            "Vehicle sale: transfer of a vehicle owned by the Provider, selected, inspected and imported by it, shown in the “Our vehicles” section or acquired as part of a search;",
             "Vehicle search and purchase assistance: connecting the Client with private or professional sellers, in France and within the European Union, with a view to acquiring a vehicle;",
             "Resale assistance for a vehicle owned by the Client: enhancement, listing, buyer screening, securing the transaction;",
             "Vehicle transport and delivery.",
@@ -63,19 +64,20 @@ export const en: Translations = {
       {
         heading: "Article 2 — Orders",
         blocks: [
-          { text: "The Client provides the Provider with search criteria or information about their vehicle, along with their contact details (name, address, phone, email). The service becomes final only after the Provider issues a detailed quote (valid for 30 days), then the Client validates the quote in writing (email, mail or electronic signature). This validation forms a contract concluded at a distance. Once accepted, the order can neither be modified nor cancelled, except in cases of force majeure and subject to the right of withdrawal set out in Article 7." },
+          { text: "The Client provides the Provider with search criteria or information about their vehicle, along with their contact details (name, address, phone, email). The service becomes final only after the Provider issues a detailed quote (valid for 30 days), then the Client validates the quote in writing (email, mail or electronic signature). This validation forms a contract concluded at a distance. Once accepted, the order can neither be modified nor cancelled, except in cases of force majeure and subject to the right of withdrawal set out in Article 8." },
         ],
       },
       {
         heading: "Article 3 — Prices and fees",
         blocks: [
           { text: "Services are provided at the price of the quote in force at the time of the order, expressed in euros including all taxes (excl./incl. tax where applicable). The Provider's fees are announced before any commitment. Additional services (transport, registration, etc.) are invoiced separately by quote. An invoice is issued to the Client." },
+          { text: "Used vehicles sold by the Provider may fall under the value added tax margin scheme for second-hand goods (Article 297 A of the French General Tax Code): the invoice then bears the corresponding statement and the tax remains non-recoverable by the Client. The applicable scheme is stated on the quote and then on the invoice." },
         ],
       },
       {
         heading: "Article 4 — Payment",
         blocks: [
-          { text: "The price includes a deposit paid at the time of the order, when the quote is signed, and the balance payable upon delivery of the service (vehicle delivery or handover of the service), according to the terms set out in the quote. Payments are made by bank transfer, credit card (secure payment link) or any other agreed means. The Provider is not required to begin the service before the deposit is received. In the event of non-compliance with the payment terms, the Provider may suspend or cancel the service." },
+          { text: "The price includes a deposit paid at the time of the order, when the quote is signed, and the balance payable upon delivery of the service (vehicle delivery or handover of the service), according to the terms set out in the quote. Payments are made by bank transfer, credit card (secure payment link) or any other agreed means. The Provider is not required to begin the service before the deposit is received. For a vehicle sale, the balance is due before the keys are handed over. In the event of non-compliance with the payment terms, the Provider may suspend or cancel the service." },
         ],
       },
       {
@@ -83,6 +85,7 @@ export const en: Translations = {
         blocks: [
           { text: "The Provider is bound by an obligation of means: it undertakes to use its best efforts to provide the services within the timeframe indicated in the quote." },
           { list: [
+            "Sale of a vehicle owned by the Provider: technical and documentary checks, handover of the vehicle with its complete file (certificate of conformity, proof of purchase, tax clearance, technical inspection, delivery report), completion of the registration formalities where they appear on the quote. The announced delivery time is an obligation of means.",
             "Search and purchase: searching for and proposing vehicles matching the criteria, checking availability with the seller, attempting to negotiate, documentary and technical checks, forwarding the sales contract issued by the seller. No result, no fee: if no matching vehicle is found, the search fees are not due, or are refunded, unless a vehicle was found and a contract was signed between the Client and the seller.",
             "Resale: valuation, enhancement, targeted listing, buyer screening, transaction support, within an obligation of means as to timeframe and sale price.",
             "Transport: transport of the vehicle by an insured professional driver, condition report before departure and on delivery, at the fixed price of the quote.",
@@ -90,64 +93,84 @@ export const en: Translations = {
         ],
       },
       {
-        heading: "Article 6 — Liability of the Provider",
+        heading: "Article 6 — Capacity of the Provider and liability",
         blocks: [
-          { text: "The Provider acts as a broker and agent, an independent intermediary: it connects the parties without being a party to the sales contract and is not a reseller of the vehicles. Consequently:" },
+          { text: "The Provider acts in two capacities, specified on each quote:" },
+          { list: [
+            "As seller, where the vehicle belongs to it: the sale is then concluded between the Client and the Provider, which owes the guarantees set out in Article 7.",
+            "As broker and agent, an independent intermediary, where it connects the Client with a third-party seller: the sale is then concluded directly between the Client and that seller, the Provider remaining outside the sales contract.",
+          ] },
+          { text: "Where the Provider acts as intermediary:" },
           { list: [
             "The seller of the vehicle is solely responsible for the accuracy of the description, the legal guarantee of conformity and the guarantee against hidden defects; any claim regarding the vehicle is addressed directly to the seller.",
             "Price negotiation is an obligation of means, with no guarantee of result.",
             "Services performed by third parties (technical inspection, carrier, registration) are the responsibility of those third parties.",
           ] },
-          { text: "The Provider's liability cannot be engaged in the event of non-performance attributable to the seller, the Client or a third party." },
+          { text: "The Provider's liability cannot be engaged in the event of non-performance attributable to the third-party seller, the Client or a third party." },
         ],
       },
       {
-        heading: "Article 7 — Right of withdrawal",
+        heading: "Article 7 — Sale of a vehicle by the Provider",
         blocks: [
-          { text: "In accordance with Articles L221-18 et seq. of the French Consumer Code, the Client has a period of 14 days from the conclusion of the contract to withdraw, without giving reasons or paying a penalty, using the form provided in the appendix or any unambiguous statement sent to contact@intelligenceautomobile.com. If, at the Client's express request, performance of the service began before the end of the period, the Client remains liable for the service already provided; a service fully performed before the end of the period causes the right of withdrawal to be lost. Reimbursement is made within 14 days of notification." },
+          { text: "Where the Provider is the seller, the vehicle is delivered in the condition described in the delivery report signed by both parties, together with its complete file. Ownership is transferred upon full payment of the price, the Provider retaining title to the vehicle until that payment is received (Article 2367 of the French Civil Code); risk passes when the vehicle is handed over to the Client or to the carrier appointed by the Client." },
+          { text: "A consumer Client benefits as of right:" },
+          { list: [
+            "From the legal guarantee of conformity (Articles L217-3 et seq. of the French Consumer Code): it applies for two years from delivery of the vehicle and gives the right to its repair or replacement, free of charge. For a used vehicle, defects appearing within twelve months of delivery are presumed to have existed on the day of delivery.",
+            "From the legal guarantee against hidden defects (Articles 1641 et seq. of the French Civil Code): within two years of discovering the defect, it allows the vehicle to be returned against a refund of the price, or a price reduction to be obtained.",
+            "Where applicable, from the commercial warranty taken out with an insurance partner: its duration, scope, exclusions and claim procedure are set out in the contract handed over with the vehicle, in addition to the legal guarantees.",
+          ] },
+          { text: "These guarantees are exercised with the Provider, at contact@intelligenceautomobile.com. A used vehicle is sold with the wear corresponding to its age and mileage, as described in the delivery report; routine servicing and wear parts are borne by the Client from delivery onwards." },
         ],
       },
       {
-        heading: "Article 8 — Personal data",
+        heading: "Article 8 — Right of withdrawal",
+        blocks: [
+          { text: "Services: in accordance with Articles L221-18 et seq. of the French Consumer Code, the Client has a period of 14 days from the conclusion of the contract to withdraw, without giving reasons or paying a penalty, using the form provided in the appendix or any unambiguous statement sent to contact@intelligenceautomobile.com. If, at the Client's express request, performance of the service began before the end of the period, the Client remains liable for the service already provided; a service fully performed before the end of the period causes the right of withdrawal to be lost. Reimbursement is made within 14 days of notification." },
+          { text: "Vehicle sale: where the sale is concluded at a distance or off-premises, the 14-day period runs from receipt of the vehicle by the Client. The Client returns the vehicle within 14 days of the withdrawal statement; return and repatriation costs are borne by the Client, as is any depreciation resulting from handling beyond what is necessary to establish the nature and characteristics of the vehicle. Reimbursement is made within 14 days of recovery of the vehicle. New vehicles ordered to a configuration chosen by the Client fall under Article L221-28 3° of the French Consumer Code, which sets aside the right of withdrawal. A sale concluded on the Provider's premises, in the Client's presence, opens the legal guarantees of Article 7 under ordinary law." },
+        ],
+      },
+      {
+        heading: "Article 9 — Personal data",
         blocks: [
           { text: "The data collected (name, email, phone, information about the project or vehicle) is necessary to process the request and for invoicing. It is not transferred to third parties for commercial purposes. The Client has the rights of access, rectification, erasure, objection and portability, which can be exercised at contact@intelligenceautomobile.com. Details of the processing are set out in our legal notice." },
         ],
       },
       {
-        heading: "Article 9 — Intellectual property",
+        heading: "Article 10 — Intellectual property and trademark",
         blocks: [
-          { text: "The content of the site (text, photographs, logo, visual identity) is the property of the Provider and protected by intellectual property law. Any reproduction, in whole or in part, without prior authorisation is prohibited." },
+          { text: "The content of the site (text, photographs, logo, visual identity) is the property of the Provider and protected by intellectual property law. Any reproduction, in whole or in part, remains subject to prior written authorisation." },
+          { text: "“Intelligence Automobile” is a word mark filed with the INPI on 27 June 2026 under national number 26 5272824, published in the French Official Industrial Property Bulletin no. 26/29 of 17 July 2026 for classes 9, 12, 35, 36, 37, 39 and 42, and used by the Provider. Its use remains subject to prior written authorisation." },
         ],
       },
       {
-        heading: "Article 10 — Force majeure, hardship, termination",
+        heading: "Article 11 — Force majeure, hardship, termination",
         blocks: [
           { text: "Neither Party is liable for a breach caused by an event of force majeure within the meaning of Article 1218 of the French Civil Code. In the event of an unforeseeable change of circumstances at the conclusion of the contract (Article 1195), a renegotiation may be requested. In the event of a sufficiently serious non-performance, the aggrieved Party may terminate the contract after a formal notice that has remained unsatisfied for eight days (Article 1224)." },
         ],
       },
       {
-        heading: "Article 11 — Governing law and language",
+        heading: "Article 12 — Governing law and language",
         blocks: [
           { text: "These General Terms are governed by French law and drafted in French. In the event of translation, only the French version shall prevail in the event of a dispute." },
         ],
       },
       {
-        heading: "Article 12 — Disputes and mediation",
+        heading: "Article 13 — Disputes and mediation",
         blocks: [
-          { text: "In the event of a dispute not resolved amicably, the Client may use, free of charge, a consumer mediator: [mediator to be designated]. Failing agreement, the competent courts are seised under ordinary law. A European online dispute resolution platform is available at ec.europa.eu/consumers/odr." },
+          { text: "The Client first addresses their complaint to the Provider, at contact@intelligenceautomobile.com. Failing an amicable solution within two months, the Client may use, free of charge, the consumer mediator to which the Provider belongs: Médiation de la consommation & patrimoine (MCP), 12 square Desnouettes, 75015 Paris, mcpmediation.org. Failing agreement, the competent courts are seised under ordinary law. A European online dispute resolution platform is available at ec.europa.eu/consumers/odr." },
         ],
       },
       {
-        heading: "Article 13 — Pre-contractual information",
+        heading: "Article 14 — Pre-contractual information",
         blocks: [
-          { text: "The Client acknowledges having received, prior to the order and in a legible and comprehensible manner, these General Terms as well as the information provided for in Article L221-5 of the French Consumer Code: essential characteristics and price of the services, additional costs, timeframes, identity and contact details of the Provider, legal guarantees, right of withdrawal and standard form, mediation, and accepted means of payment." },
+          { text: "The Client acknowledges having received, prior to the order and in a legible and comprehensible manner, these General Terms as well as the information provided for in Article L221-5 of the French Consumer Code: essential characteristics and price of the vehicle and the services, additional costs, timeframes, identity and contact details of the Provider, legal guarantees, right of withdrawal and standard form, mediation, and accepted means of payment." },
         ],
       },
       {
         heading: "Appendix — Withdrawal form",
         blocks: [
           { text: "To be completed and returned only in the event of withdrawal, to SASU Intelligence Automobile (contact@intelligenceautomobile.com)." },
-          { text: "I hereby give notice of withdrawal from the contract for the service below: Quote dated … · Quote number … · Client name … · Address … · Date … · Client signature." },
+          { text: "I hereby give notice of withdrawal from the contract for the sale or service below: Quote dated … · Quote number … · Vehicle concerned … · Date of receipt … · Client name … · Address … · Date … · Client signature." },
         ],
       },
     ],
@@ -156,19 +179,19 @@ export const en: Translations = {
   legal: {
     metaTitle: "Legal Notice & Privacy — Intelligence Automobile",
     title: "Legal Notice & Privacy",
-    updated: "Last updated: July 1, 2026",
+    updated: "Last updated: July 30, 2026",
     sections: [
       {
         heading: "Site publisher",
         paragraphs: [
-          "The website intelligenceautomobile.fr is published by SASU Intelligence Automobile, a simplified single-shareholder company with share capital of €1,000, whose registered office is located in Paris, France.",
-          "SIRET, RCS and intra-community VAT number: registration in progress, provided as soon as they are issued.",
+          "The website intelligenceautomobile.fr is published by SASU Intelligence Automobile, a simplified joint-stock company with a sole shareholder and share capital of €2,000, whose registered office is located in Paris 17th, France.",
+          "Registered with the Paris Trade and Companies Register on 28 July 2026 under number 108 086 646 · SIRET 108 086 646 00016 · European identifier EUID FR7501.108086646.",
           "Contact: contact@intelligenceautomobile.com · +33 6 20 24 38 79",
         ],
       },
       {
         heading: "Publication director",
-        paragraphs: ["César Vachon, as founder."],
+        paragraphs: ["César Vachon, President of SASU Intelligence Automobile."],
       },
       {
         heading: "Hosting provider",
@@ -177,9 +200,16 @@ export const en: Translations = {
         ],
       },
       {
+        heading: "Trademark",
+        paragraphs: [
+          "“Intelligence Automobile” is a word mark filed with the INPI on 27 June 2026 under national number 26 5272824, published in the French Official Industrial Property Bulletin no. 26/29 of 17 July 2026 for classes 9, 12, 35, 36, 37, 39 and 42, and used by SASU Intelligence Automobile.",
+          "The name, logo and visual identity attached to it remain protected: their reproduction or use is subject to prior written authorisation.",
+        ],
+      },
+      {
         heading: "Intellectual property",
         paragraphs: [
-          "All elements of the site (text, photographs, logo, visual identity, structure) are protected by intellectual property law and remain the property of Intelligence Automobile, unless otherwise stated. Any reproduction or reuse, in whole or in part, without prior authorisation is prohibited.",
+          "All elements of the site (text, photographs, logo, visual identity, structure) are protected by intellectual property law and remain the property of Intelligence Automobile, unless otherwise stated. Any reproduction or reuse, in whole or in part, remains subject to prior written authorisation.",
         ],
       },
       {
@@ -193,6 +223,13 @@ export const en: Translations = {
         heading: "Cookies",
         paragraphs: [
           "The site uses no advertising or analytics cookies. Only a technical language-preference cookie is stored to improve your browsing. You can delete it at any time via your browser settings.",
+        ],
+      },
+      {
+        heading: "Consumer mediation",
+        paragraphs: [
+          "Please first send your complaint to contact@intelligenceautomobile.com. Failing an amicable solution within two months, you may use, free of charge, the consumer mediator to which the company belongs: Médiation de la consommation & patrimoine (MCP), 12 square Desnouettes, 75015 Paris, mcpmediation.org.",
+          "The European online dispute resolution platform remains available at ec.europa.eu/consumers/odr.",
         ],
       },
     ],
