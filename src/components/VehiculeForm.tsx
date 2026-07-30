@@ -1132,7 +1132,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
               Fermer l&apos;aperçu
             </button>
           </div>
-          <VehiculeDetailView model={previewModel} t={t} isPreview />
+          <VehiculeDetailView model={previewModel} t={t} isPreview isOnline={isPublished} />
         </div>
       )}
     </div>

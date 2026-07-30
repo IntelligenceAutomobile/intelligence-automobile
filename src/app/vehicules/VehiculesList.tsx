@@ -56,6 +56,7 @@ function VehicleCard({
   price,
   isSold,
   isHidden,
+  isOnline,
   onClick,
 }: {
   images: string[];
@@ -71,6 +72,7 @@ function VehicleCard({
   price: string;
   isSold?: boolean;
   isHidden?: boolean;
+  isOnline?: boolean;
   onClick: () => void;
 }) {
   const { t } = useLocale();
@@ -196,7 +198,9 @@ function VehicleCard({
       >
         <div className="flex flex-col gap-1.5 min-w-0">
           {/* Suréligne : marque + badge statut */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          {/* Autorisé à passer sur deux lignes : sur les cartes les plus étroites,
+              marque longue + statut + repère « Test » dépassent la largeur dispo. */}
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 min-w-0">
             <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
             <span
               className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
@@ -208,6 +212,20 @@ function VehicleCard({
             >
               {isSold ? tv.soldBadge : tv.availableBadge}
             </span>
+            {/* Repère « Test » : orange comme le badge « Masqué », pour qu'il se lise
+                comme un marqueur et pas comme un état du véhicule. */}
+            {isOnline && (
+              <span
+                className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
+                style={{
+                  color: "#FF6B35",
+                  border: "1px solid rgba(255,107,53,0.45)",
+                  backgroundColor: "rgba(255,107,53,0.1)",
+                }}
+              >
+                Test
+              </span>
+            )}
           </div>
           {/* Modèle précis — mis en avant, casse respectée, peut passer sur 2 lignes */}
           <h3 className="font-extrabold text-[15px] @[29rem]:text-[16px] leading-[1.2] break-words" style={{ color: "#F0F5FF", letterSpacing: "-0.01em" }}>
@@ -702,6 +720,7 @@ export default function VehiculesList({
               price={v.price > 0 ? `${v.price.toLocaleString("fr-FR")} €` : tv.priceOnRequest}
               isSold={v.status === "vendu"}
               isHidden={isAdmin && !v.isPublished}
+              isOnline={v.isPublished}
               onClick={() => router.push(`/vehicules/${v.id}`)}
             />
           );

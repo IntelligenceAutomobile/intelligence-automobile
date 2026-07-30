@@ -106,10 +106,14 @@ export default function VehiculeDetailView({
   model,
   t,
   isPreview = false,
+  isOnline = false,
 }: {
   model: VehiculeDetailModel;
   t: Translations;
   isPreview?: boolean;
+  /** Fiche publiée : porte le repère « Test » à côté du statut. Une annonce
+   *  masquée que consulte un admin reste sans repère. */
+  isOnline?: boolean;
 }) {
   const images = model.images;
   const { name, subtitle } = parseTitle(model.make, model.model, model.power);
@@ -189,18 +193,33 @@ export default function VehiculeDetailView({
               {td.backLink}
             </Link>
 
-            <span className={`gap-2 ${pillClass}`} style={{ ...heroPill, border: `1px solid ${statusTone.border}`, color: statusTone.fg }}>
-              <span
-                aria-hidden
-                style={{
-                  width: "5px",
-                  height: "5px",
-                  borderRadius: "50%",
-                  backgroundColor: statusTone.fg,
-                  boxShadow: `0 0 8px ${statusTone.fg}`,
-                }}
-              />
-              {isAvailable ? tm.available : isSold ? tm.sold : td.reserved}
+            {/* Statut et repère « Test » forment un seul bloc : la barre haute
+                répartit ses deux enfants aux extrémités, le retour et ce groupe.
+                Il se replie sur deux lignes quand la fenêtre devient étroite. */}
+            <span className="flex flex-wrap items-start justify-end gap-x-1.5 gap-y-2 lg:gap-x-2">
+              <span className={`gap-2 ${pillClass}`} style={{ ...heroPill, border: `1px solid ${statusTone.border}`, color: statusTone.fg }}>
+                <span
+                  aria-hidden
+                  style={{
+                    width: "5px",
+                    height: "5px",
+                    borderRadius: "50%",
+                    backgroundColor: statusTone.fg,
+                    boxShadow: `0 0 8px ${statusTone.fg}`,
+                  }}
+                />
+                {isAvailable ? tm.available : isSold ? tm.sold : td.reserved}
+              </span>
+              {isOnline && (
+                // Un peu plus resserrée que les autres pastilles : sur un écran de
+                // téléphone, la barre haute tient sur une seule ligne à ce prix-là.
+                <span
+                  className="inline-flex items-center px-2 py-2 lg:px-4 lg:py-2.5 text-[9px] lg:text-[10px] tracking-[0.2em] lg:tracking-[0.28em] uppercase whitespace-nowrap"
+                  style={{ ...heroPill, border: "1px solid rgba(255,107,53,0.45)", color: "#FF6B35" }}
+                >
+                  Test
+                </span>
+              )}
             </span>
           </>
         }
