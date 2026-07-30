@@ -43,6 +43,9 @@ export function quoteToData(body: Record<string, unknown>) {
     notes: s(body.notes),
     vehicleId: body.vehicleId ? String(body.vehicleId) : null,
     clientId: body.clientId ? String(body.clientId) : null,
+    // Opportunité que ce devis fait avancer : sans elle, l'effet de bord vise
+    // « la dernière opportunité ouverte touchée » et peut se tromper de dossier.
+    leadId: body.leadId ? String(body.leadId) : null,
     branding: JSON.stringify(body.branding && typeof body.branding === "object" ? body.branding : {}),
     // Identité du véhicule figée au document : nettoyée à l'entrée (capitales du
     // numéro de série, bornes de longueur) plutôt qu'à chaque affichage.

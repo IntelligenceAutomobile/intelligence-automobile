@@ -48,6 +48,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       vehicleId: l.vehicleId,
       budget: l.budget,
       updatedAt: l.updatedAt.toISOString(),
+      nextActionAt: l.nextActionAt,
+      nextActionLabel: l.nextActionLabel,
+      closedAt: l.closedAt,
+      lostReason: l.lostReason,
       events: l.events.map((e) => ({
         id: e.id,
         type: e.type,

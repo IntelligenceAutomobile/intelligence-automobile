@@ -179,8 +179,17 @@ model Quote {
   // Lien client CRM (optionnel)
   clientId String?
 
+  // Opportunité que ce devis fait avancer. Sans ce lien, l'effet de bord
+  // choisissait « la dernière opportunité ouverte touchée » : chez un client
+  // qui a deux dossiers en cours, une recherche de voiture et la reprise de son
+  // ancienne, le devis pouvait faire avancer le mauvais.
+  leadId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([leadId])
 }
 
 // Journal du centre de relances : chaque action (email envoyé, relance notée au
@@ -236,9 +245,19 @@ model Client {
   phone            String   @default("")
   notes            String   @default("")
   reviewRequestedAt String  @default("") // YYYY-MM-DD : demande d'avis Google envoyée
+
+  // Dernière activité commerciale réelle. `updatedAt` ne bougeait que si la
+  // fiche elle-même était retouchée : le carnet, trié dessus, laissait tout en
+  // bas un client dont on venait de noter un appel.
+  lastActivityAt DateTime?
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   leads            Lead[]
+
+  // La déduplication à l'admission cherche par email puis par téléphone.
+  @@index([email])
+  @@index([lastActivityAt])
 }
 
 model Lead {
@@ -249,6 +268,20 @@ model Lead {
   title     String      @default("")        // objet (ex: "Recherche SUV hybride")
   vehicleId String?                          // véhicule du stock concerné (optionnel)
   budget    Int?                             // budget indicatif en euros
+
+  // Prochaine action : la seule chose qui empêche d'oublier un prospect. Rien
+  // dans le module ne portait de date future, donc une affaire pouvait dormir
+  // six mois sans que l'écran le dise.
+  nextActionAt    String @default("") // jour YYYY-MM-DD, vide = rien de prévu
+  nextActionLabel String @default("") // « Rappeler », « Relancer le devis »…
+
+  // Issue : sans jour de clôture, aucun délai de vente n'est mesurable, et les
+  // compteurs « gagné » comptaient depuis toujours faute de date sur quoi
+  // borner un mois glissant. Le motif de perte, lui, est le seul moyen de
+  // savoir plus tard si l'on perd sur le prix ou sur les délais.
+  closedAt   String @default("") // jour YYYY-MM-DD, posé au passage en gagné/perdu
+  lostReason String @default("") // prix | delai | vendu_ailleurs | reporte | financement | autre
+
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   client    Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -256,6 +289,7 @@ model Lead {
 
   @@index([clientId])
   @@index([stage])
+  @@index([nextActionAt])
 }
 
 // Suivi par véhicule : frais engagés (pour la marge) et journal d'enquête

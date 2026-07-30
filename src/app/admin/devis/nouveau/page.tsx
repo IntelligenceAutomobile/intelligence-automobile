@@ -57,6 +57,19 @@ export default async function NouveauDevisPage({
       initial.clientCompany = crmClient.company;
       initial.clientEmail = crmClient.email;
       initial.clientPhone = crmClient.phone;
+
+      // Le devis se rattache à l'opportunité qu'il fait avancer, quand elle ne
+      // fait aucun doute. Sans ce lien, l'envoi visait « la dernière
+      // opportunité ouverte touchée » : chez un client suivant deux dossiers,
+      // une recherche de voiture et la reprise de son ancienne, le devis
+      // pouvait faire avancer le mauvais. À deux dossiers ouverts on s'abstient,
+      // et l'ancien comportement s'applique.
+      const ouvertes = await prisma.lead.findMany({
+        where: { clientId: crmClient.id, stage: { notIn: ["gagne", "perdu"] } },
+        select: { id: true },
+        take: 2,
+      });
+      if (ouvertes.length === 1) initial.leadId = ouvertes[0].id;
     }
   }
 

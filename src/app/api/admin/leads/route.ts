@@ -28,6 +28,11 @@ export async function POST(req: NextRequest) {
       },
       include: { events: true },
     });
+    await prisma.client
+      .update({ where: { id: clientId }, data: { lastActivityAt: new Date() } })
+      .catch(() => {
+        /* la création prime sur la mise à jour du classement */
+      });
     return NextResponse.json(lead);
   } catch {
     return NextResponse.json({ error: "Erreur lors de la création." }, { status: 500 });

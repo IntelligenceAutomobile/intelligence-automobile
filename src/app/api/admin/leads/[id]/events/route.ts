@@ -27,8 +27,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         author: collab?.name ?? "",
       },
     });
-    // Remonte le lead dans le tri « activité récente ».
+    // Remonte le lead ET sa fiche client dans les tris « activité récente ».
     await prisma.lead.update({ where: { id }, data: { updatedAt: new Date() } });
+    await prisma.client
+      .update({ where: { id: lead.clientId }, data: { lastActivityAt: new Date() } })
+      .catch(() => {
+        /* noter l'échange prime sur la mise à jour du classement */
+      });
     return NextResponse.json(event);
   } catch {
     return NextResponse.json({ error: "Erreur lors de l'ajout." }, { status: 500 });

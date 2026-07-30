@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
 import { isSource, isStage } from "@/lib/crm";
+import { normaliserEmail, trouverClientExistant } from "@/lib/crm-intake";
 
 // Liste des clients avec leurs leads (pipeline + palette de commandes).
 export async function GET() {
@@ -26,6 +27,25 @@ export async function POST(req: NextRequest) {
     const name = String(body.name ?? "").trim();
     if (!name) return NextResponse.json({ error: "Le nom est requis." }, { status: 400 });
 
+    const email = normaliserEmail(body.email);
+    const phone = String(body.phone ?? "").trim();
+
+    // La création manuelle ne cherchait aucun doublon : le même prospect
+    // finissait en deux fiches, ses opportunités éclatées entre les deux.
+    // On prévient, on ne bloque pas : `force` permet de passer outre.
+    if (!body.force) {
+      const existant = await trouverClientExistant(email, phone);
+      if (existant) {
+        return NextResponse.json(
+          {
+            error: "Une fiche proche existe déjà.",
+            doublon: { id: existant.id, name: existant.name, email: existant.email, phone: existant.phone },
+          },
+          { status: 409 },
+        );
+      }
+    }
+
     const collab = await getCollabSession();
     const author = collab?.name ?? "";
 
@@ -33,9 +53,10 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         company: String(body.company ?? "").trim(),
-        email: String(body.email ?? "").trim(),
-        phone: String(body.phone ?? "").trim(),
+        email,
+        phone,
         notes: String(body.notes ?? "").trim(),
+        lastActivityAt: new Date(),
       },
     });
 

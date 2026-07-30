@@ -12,7 +12,8 @@ import {
 import { formatNumber } from "@/lib/format";
 import {
   STAGES, STAGE_LABEL, STAGE_TONE, SOURCE_LABEL, SOURCES, EVENT_LABEL,
-  type Stage, type Source, type EventType,
+  LOST_REASON_LABEL,
+  type Stage, type Source, type EventType, type LostReason,
 } from "@/lib/crm";
 import { STATUS_LABEL, formatDateFr, type QuoteStatus } from "@/lib/devis";
 import { T, TONE, Tag, AdminPage, PageHeader, SectionCard, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../../ui";
@@ -28,6 +29,10 @@ export type LeadFull = {
   vehicleId: string | null;
   budget: number | null;
   updatedAt: string;
+  nextActionAt: string;
+  nextActionLabel: string;
+  closedAt: string;
+  lostReason: string;
   events: LeadEventRow[];
 };
 export type ClientFull = {
@@ -120,7 +125,10 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [form, setForm] = useState({ title: "", source: "manuel" as Source, budget: "", vehicleId: "" });
+  const [form, setForm] = useState({
+    title: "", source: "manuel" as Source, budget: "", vehicleId: "",
+    nextActionAt: "", nextActionLabel: "",
+  });
   // `busy` ne devient vrai qu'au rendu suivant : trois Entrée d'affilée passaient
   // toutes les trois avant que le bouton se désactive, et créaient trois notes
   // identiques. Ce verrou-ci se ferme dans le même tour d'exécution.
@@ -135,6 +143,8 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
       source: (lead.source as Source) ?? "manuel",
       budget: lead.budget == null ? "" : String(lead.budget),
       vehicleId: lead.vehicleId ?? "",
+      nextActionAt: lead.nextActionAt,
+      nextActionLabel: lead.nextActionLabel,
     });
     setEditing(true);
   }
@@ -173,6 +183,8 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
           source: form.source,
           budget,
           vehicleId: form.vehicleId || null,
+          nextActionAt: form.nextActionAt,
+          nextActionLabel: form.nextActionLabel,
         }),
       });
       if (!res.ok) throw new Error();
@@ -238,7 +250,19 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
               <span>· {vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.year})` : "Véhicule retiré du stock"}</span>
             )}
             {lead.budget != null && <span>· Budget {formatNumber(lead.budget)} €</span>}
+            {lead.lostReason && (
+              <span>· Perdue : {LOST_REASON_LABEL[lead.lostReason as LostReason] ?? lead.lostReason}</span>
+            )}
+            {lead.closedAt && <span>· Conclue le {formatDateFr(lead.closedAt)}</span>}
           </div>
+          {lead.nextActionAt && (
+            <div className="flex items-center gap-1.5 mt-1.5 text-[12px]" style={{ color: T.accent }}>
+              <CalendarClock size={12} style={{ flexShrink: 0 }} />
+              <span>
+                {lead.nextActionLabel || "À faire"} · {formatDateFr(lead.nextActionAt)}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* L'étape s'écrivait deux fois côte à côte, une pastille collée à un menu
@@ -336,6 +360,35 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
               ))}
             </select>
           </div>
+          {/* Prochaine action : la seule chose qui empêche d'oublier un
+              prospect. Rien dans le module ne portait de date future. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
+            <div>
+              <label className={labelClass} style={{ color: T.textDim }} htmlFor={`action-${lead.id}`}>
+                Prochaine action
+              </label>
+              <input
+                id={`action-${lead.id}`}
+                value={form.nextActionLabel}
+                onChange={(e) => setForm((f) => ({ ...f, nextActionLabel: e.target.value }))}
+                placeholder="Ex : Rappeler pour l'essai"
+                className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full"
+                style={fieldStyle}
+              />
+            </div>
+            <div>
+              <label className={labelClass} style={{ color: T.textDim }} htmlFor={`echeance-${lead.id}`}>Le</label>
+              <input
+                id={`echeance-${lead.id}`}
+                type="date"
+                value={form.nextActionAt}
+                onChange={(e) => setForm((f) => ({ ...f, nextActionAt: e.target.value }))}
+                className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full"
+                style={fieldStyle}
+              />
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
             <button type="button" onClick={saveLead} disabled={busy} className={btnPrimaryClass} style={btnPrimaryStyle}>
               {busy ? "…" : "Enregistrer"}

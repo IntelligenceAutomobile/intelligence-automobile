@@ -39,6 +39,33 @@ export const SOURCE_LABEL: Record<Source, string> = {
   autre: "Autre",
 };
 
+// Motifs de perte. « Perdu » était un bouton sec : on savait qu'une affaire
+// échouait, jamais pourquoi, donc rien ne permettait de dire au bout d'un an
+// si l'on perd sur le prix ou sur les délais.
+export const LOST_REASONS = ["prix", "delai", "vendu_ailleurs", "reporte", "financement", "autre"] as const;
+export type LostReason = (typeof LOST_REASONS)[number];
+
+export const LOST_REASON_LABEL: Record<LostReason, string> = {
+  prix: "Prix",
+  delai: "Délai",
+  vendu_ailleurs: "Acheté ailleurs",
+  reporte: "Projet reporté",
+  financement: "Financement",
+  autre: "Autre",
+};
+
+export function isLostReason(v: unknown): v is LostReason {
+  return typeof v === "string" && (LOST_REASONS as readonly string[]).includes(v);
+}
+
+// Étapes qui referment une opportunité : elles posent un jour de clôture.
+export const CLOSED_STAGES: Stage[] = ["gagne", "perdu"];
+
+// Un jour au format YYYY-MM-DD, tel que le rend un <input type="date">.
+export function isDay(v: unknown): v is string {
+  return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+}
+
 export const EVENT_TYPES = ["note", "appel", "email", "rdv", "etape", "creation"] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 

@@ -625,6 +625,7 @@ export type QuoteData = {
   // l'affichage seulement : il se lit sur l'autre ligne, il ne se recopie pas.
   sourceNumber?: string;
   clientId?: string | null; // lien CRM optionnel
+  leadId?: string | null; // opportunité que ce devis fait avancer (optionnel)
   clientName: string;
   clientCompany: string;
   clientAddress: string;
@@ -1037,6 +1038,7 @@ export function emptyQuote(number: string, issueDate: string, branding?: Brandin
     paidDate: "",
     sourceQuoteId: null,
     clientId: null,
+    leadId: null,
     clientName: "",
     clientCompany: "",
     clientAddress: "",

@@ -8,7 +8,19 @@ export default function Loading() {
         <Skeleton w={200} h={26} className="mb-2" />
         <Skeleton w={160} h={12} />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-10">
+      {/* Mêmes points de rupture que les vraies tuiles, sinon l'écran saute de
+          deux à trois colonnes au moment où la page arrive. */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="px-4 py-3" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+            <Skeleton w={110} h={9} className="mb-2" />
+            <Skeleton w={130} h={24} className="mb-2" />
+            <Skeleton w={90} h={10} />
+          </div>
+        ))}
+      </div>
+      <div className="mb-6 max-w-md"><Skeleton h={46} /></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {Array.from({ length: 4 }, (_, i) => (
           <div key={i}>
             <Skeleton h={40} className="mb-3" />

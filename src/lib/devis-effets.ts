@@ -11,6 +11,7 @@ type QuoteLike = {
   docType: string;
   clientId: string | null;
   vehicleId: string | null;
+  leadId?: string | null;
 };
 
 // Un devis accepté réserve la voiture et la retire du site : sans cela, la même
@@ -54,14 +55,26 @@ export async function syncLeadForQuote(quote: QuoteLike, author: string): Promis
   if (!stage) return;
 
   try {
-    const lead = await prisma.lead.findFirst({
-      where: { clientId: quote.clientId, stage: { notIn: ["gagne", "perdu"] } },
-      orderBy: { updatedAt: "desc" },
-      select: { id: true, stage: true },
-    });
+    // Le devis désigne son opportunité quand le lien existe. À défaut, on
+    // retombe sur « la dernière opportunité ouverte touchée », qui se trompe
+    // chez un client suivant deux dossiers en même temps.
+    const lead = quote.leadId
+      ? await prisma.lead.findUnique({ where: { id: quote.leadId }, select: { id: true, stage: true } })
+      : await prisma.lead.findFirst({
+          where: { clientId: quote.clientId, stage: { notIn: ["gagne", "perdu"] } },
+          orderBy: { updatedAt: "desc" },
+          select: { id: true, stage: true },
+        });
     if (!lead || lead.stage === stage) return;
 
-    await prisma.lead.update({ where: { id: lead.id }, data: { stage } });
+    await prisma.lead.update({
+      where: { id: lead.id },
+      // Un devis accepté conclut l'affaire : elle mérite son jour de clôture,
+      // comme si le geste avait été fait à la main depuis le pipeline.
+      data: stage === "gagne"
+        ? { stage, closedAt: new Date().toISOString().slice(0, 10), nextActionAt: "", nextActionLabel: "" }
+        : { stage },
+    });
     await prisma.leadEvent.create({
       data: {
         leadId: lead.id,
