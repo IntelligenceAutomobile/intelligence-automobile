@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
   Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, FileBadge,
-  NotebookPen, type LucideIcon,
+  NotebookPen, Undo2, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
 import { formatDateFr, STATUS_LABEL, type QuoteStatus } from "@/lib/devis";
@@ -117,11 +117,13 @@ export default function CommandPalette({ role }: { role: Role }) {
         // Le type se lit sur docType : deviné au préfixe « FAC- », une facture
         // renumérotée à la main s'affichait comme un devis, avec le mauvais lien.
         const isFac = d.docType === "facture";
+        const isAvoir = d.docType === "avoir";
+        const typeLabel = isAvoir ? "Avoir" : isFac ? "Facture" : "Devis";
         return {
-          icon: isFac ? ReceiptText : FileText,
-          label: `${isFac ? "Facture" : "Devis"} ${d.number}${d.clientCompany || d.clientName ? ` — ${d.clientCompany || d.clientName}` : ""}`,
+          icon: isAvoir ? Undo2 : isFac ? ReceiptText : FileText,
+          label: `${typeLabel} ${d.number}${d.clientCompany || d.clientName ? ` — ${d.clientCompany || d.clientName}` : ""}`,
           // Le code interne « envoye » s'affichait tel quel dans la palette.
-          hint: isFac ? "Facture" : STATUS_LABEL[d.status as QuoteStatus] ?? d.status,
+          hint: isFac || isAvoir ? typeLabel : STATUS_LABEL[d.status as QuoteStatus] ?? d.status,
           href: `/admin/devis/${d.id}`,
         };
       });

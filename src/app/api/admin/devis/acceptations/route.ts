@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { computeTotals, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { computeTotals, DOCS_HORS_DEVIS, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 
 // Devis signés en ligne par le client, plus récents que l'horodatage fourni.
 // Interrogée en boucle par le back-office pour annoncer une acceptation où que
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const rows = await prisma.quote.findMany({
     where: {
-      docType: { not: "facture" },
+      docType: { notIn: [...DOCS_HORS_DEVIS] },
       signedAt: since ? { gt: since } : { not: "" },
     },
     orderBy: { signedAt: "desc" },

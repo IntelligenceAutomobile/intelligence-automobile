@@ -1,12 +1,40 @@
 // Types et calculs partagés du devis (module neutre : importable côté serveur ET client).
 // Aucune dépendance React/Next ici.
 import { COMPANY } from "./company";
+// La règle « neuf fiscalement » (moins de 6 mois OU moins de 6 000 km, jugée au
+// jour près) vit dans le module Immatriculations : une seule définition pour les
+// deux modules, sinon les deux écrans se contredisent sur le même véhicule.
+import { assessVat } from "./immatriculation";
 
-export type TvaMode = "marge" | "tva20" | "exonere";
+export type TvaMode = "marge" | "tva20" | "exonere" | "intracom";
 export type DepositMode = "percent" | "amount" | "none";
 export const QUOTE_STATUSES = ["brouillon", "envoye", "accepte", "refuse"] as const;
 export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
-export type DocType = "devis" | "facture";
+// « avoir » : facture d'avoir, le seul document qui corrige une facture émise.
+// Une facture ne se modifie ni ne se supprime, la comptabilité l'interdit.
+export type DocType = "devis" | "facture" | "avoir";
+
+// Langue du document remis au client. Le back-office reste en français : c'est
+// la feuille imprimée, l'email d'envoi et la page publique qui basculent.
+export type DocLang = "fr" | "en";
+export const DOC_LANGS = ["fr", "en"] as const;
+export const DOC_LANG_LABEL: Record<DocLang, string> = { fr: "Français", en: "Anglais" };
+
+// Documents qui ne sont PAS des devis. Sert de filtre unique en base : écrit à la
+// main à chaque requête, un type oublié faisait apparaître les avoirs dans la
+// liste des devis et dans le centre de relances.
+export const DOCS_HORS_DEVIS = ["facture", "avoir"] as const;
+
+// Motifs d'avoir proposés à la saisie. Le motif n'est pas décoratif : c'est lui
+// qui explique au client et au comptable pourquoi la facture est corrigée.
+export const AVOIR_REASONS = [
+  "Annulation de la commande",
+  "Geste commercial",
+  "Remise accordée après facturation",
+  "Retour de marchandise",
+  "Erreur de facturation",
+  "Prestation non réalisée",
+] as const;
 export type FactureKind = "complete" | "acompte" | "solde";
 export type PaymentStatus = "impayee" | "payee";
 export type LogoAlign = "left" | "center" | "right";
@@ -73,12 +101,17 @@ export function defaultBlockBox(b: Branding, id: HeaderBlockId): BlockBox {
 }
 
 // Lignes de l'encadré destinataire.
-type ClientLines = Pick<QuoteData, "clientName" | "clientCompany" | "clientAddress" | "clientEmail" | "clientPhone">;
+type ClientLines = Pick<QuoteData, "clientName" | "clientCompany" | "clientAddress" | "clientEmail" | "clientPhone"> &
+  Partial<Pick<QuoteData, "clientCountry" | "clientVatNumber">>;
 function clientBoxHeight(q: ClientLines): number {
   const lines =
     (q.clientCompany ? 1 : 0) +
     (q.clientName ? 1 : 0) +
     q.clientAddress.split("\n").map((l) => l.trim()).filter(Boolean).length +
+    // Pays et numéro de TVA occupent une ligne chacun : sans les compter,
+    // l'encadré client débordait sur le tableau des lignes.
+    (q.clientCountry && q.clientCountry !== "FR" ? 1 : 0) +
+    (q.clientVatNumber ? 1 : 0) +
     (q.clientEmail ? 1 : 0) +
     (q.clientPhone ? 1 : 0);
   const FRAME_MM = 11; // marges intérieures + libellé « Client »
@@ -382,6 +415,202 @@ export function formatVin(vin: string): string {
   return `${v.slice(0, 3)} ${v.slice(3, 9)} ${v.slice(9)}`;
 }
 
+// ── Pays et TVA intracommunautaire ──
+// Vendre une voiture à un professionnel belge sans TVA française suppose trois
+// choses : que le client soit assujetti dans son pays, que son numéro de TVA
+// soit valide, et que le véhicule quitte réellement la France. Le document doit
+// porter la mention exacte, sinon l'administration requalifie et réclame la TVA
+// au vendeur.
+
+// États membres de l'Union, avec le format de leur numéro de TVA.
+// Le préfixe vaut le code pays, sauf la Grèce (EL) et l'Irlande du Nord (XI).
+export const EU_COUNTRIES: { code: string; name: string; vatPrefix: string; vatBody: RegExp }[] = [
+  { code: "FR", name: "France", vatPrefix: "FR", vatBody: /^[0-9A-Z]{2}[0-9]{9}$/ },
+  { code: "BE", name: "Belgique", vatPrefix: "BE", vatBody: /^[0-9]{10}$/ },
+  { code: "LU", name: "Luxembourg", vatPrefix: "LU", vatBody: /^[0-9]{8}$/ },
+  { code: "DE", name: "Allemagne", vatPrefix: "DE", vatBody: /^[0-9]{9}$/ },
+  { code: "IT", name: "Italie", vatPrefix: "IT", vatBody: /^[0-9]{11}$/ },
+  { code: "ES", name: "Espagne", vatPrefix: "ES", vatBody: /^[0-9A-Z][0-9]{7}[0-9A-Z]$/ },
+  { code: "NL", name: "Pays-Bas", vatPrefix: "NL", vatBody: /^[0-9]{9}B[0-9]{2}$/ },
+  { code: "PT", name: "Portugal", vatPrefix: "PT", vatBody: /^[0-9]{9}$/ },
+  { code: "AT", name: "Autriche", vatPrefix: "AT", vatBody: /^U[0-9]{8}$/ },
+  { code: "PL", name: "Pologne", vatPrefix: "PL", vatBody: /^[0-9]{10}$/ },
+  { code: "IE", name: "Irlande", vatPrefix: "IE", vatBody: /^[0-9A-Z+*]{8,9}$/ },
+  { code: "DK", name: "Danemark", vatPrefix: "DK", vatBody: /^[0-9]{8}$/ },
+  { code: "SE", name: "Suède", vatPrefix: "SE", vatBody: /^[0-9]{12}$/ },
+  { code: "FI", name: "Finlande", vatPrefix: "FI", vatBody: /^[0-9]{8}$/ },
+  { code: "CZ", name: "Tchéquie", vatPrefix: "CZ", vatBody: /^[0-9]{8,10}$/ },
+  { code: "SK", name: "Slovaquie", vatPrefix: "SK", vatBody: /^[0-9]{10}$/ },
+  { code: "SI", name: "Slovénie", vatPrefix: "SI", vatBody: /^[0-9]{8}$/ },
+  { code: "HU", name: "Hongrie", vatPrefix: "HU", vatBody: /^[0-9]{8}$/ },
+  { code: "RO", name: "Roumanie", vatPrefix: "RO", vatBody: /^[0-9]{2,10}$/ },
+  { code: "BG", name: "Bulgarie", vatPrefix: "BG", vatBody: /^[0-9]{9,10}$/ },
+  { code: "GR", name: "Grèce", vatPrefix: "EL", vatBody: /^[0-9]{9}$/ },
+  { code: "HR", name: "Croatie", vatPrefix: "HR", vatBody: /^[0-9]{11}$/ },
+  { code: "LT", name: "Lituanie", vatPrefix: "LT", vatBody: /^([0-9]{9}|[0-9]{12})$/ },
+  { code: "LV", name: "Lettonie", vatPrefix: "LV", vatBody: /^[0-9]{11}$/ },
+  { code: "EE", name: "Estonie", vatPrefix: "EE", vatBody: /^[0-9]{9}$/ },
+  { code: "CY", name: "Chypre", vatPrefix: "CY", vatBody: /^[0-9]{8}[A-Z]$/ },
+  { code: "MT", name: "Malte", vatPrefix: "MT", vatBody: /^[0-9]{8}$/ },
+];
+
+export function countryName(code: string): string {
+  return EU_COUNTRIES.find((c) => c.code === code)?.name ?? code;
+}
+
+// Noms anglais des États membres, pour le document remis à un client anglophone.
+const COUNTRY_EN: Record<string, string> = {
+  FR: "France", BE: "Belgium", LU: "Luxembourg", DE: "Germany", IT: "Italy",
+  ES: "Spain", NL: "Netherlands", PT: "Portugal", AT: "Austria", PL: "Poland",
+  IE: "Ireland", DK: "Denmark", SE: "Sweden", FI: "Finland", CZ: "Czechia",
+  SK: "Slovakia", SI: "Slovenia", HU: "Hungary", RO: "Romania", BG: "Bulgaria",
+  GR: "Greece", HR: "Croatia", LT: "Lithuania", LV: "Latvia", EE: "Estonia",
+  CY: "Cyprus", MT: "Malta",
+};
+
+/** Nom du pays dans la langue du document. */
+export function countryNameIn(lang: DocLang, code: string): string {
+  if (lang === "en") return COUNTRY_EN[code] ?? code;
+  return countryName(code);
+}
+
+export function isEuCountry(code: string): boolean {
+  return EU_COUNTRIES.some((c) => c.code === code);
+}
+
+// Numéro de TVA nettoyé : capitales, sans espace ni point. Recopié d'un mail ou
+// d'un en-tête de facture, il arrive en « BE 0123.456.749 ».
+export function normalizeVat(raw: string): string {
+  return String(raw ?? "").toUpperCase().replace(/[^0-9A-Z+*]/g, "");
+}
+
+/**
+ * Ce qui empêche ce numéro de TVA d'être accepté, ou null s'il est plausible.
+ * Contrôle de forme seulement : la validité réelle se vérifie auprès du service
+ * européen VIES (voir /api/admin/tva-intracom).
+ */
+export function vatIssue(country: string, raw: string): string | null {
+  const num = normalizeVat(raw);
+  if (!num) return "Renseignez le numéro de TVA du client.";
+  const pays = EU_COUNTRIES.find((c) => c.code === country);
+  if (!pays) return "Choisissez un pays de l'Union européenne.";
+  if (!num.startsWith(pays.vatPrefix)) {
+    return `Un numéro ${pays.name} commence par ${pays.vatPrefix}.`;
+  }
+  if (!pays.vatBody.test(num.slice(pays.vatPrefix.length))) {
+    return `Ce numéro ne correspond pas au format ${pays.name}.`;
+  }
+  return null;
+}
+
+// Numéro affiché sur le document : groupes de 4 après le préfixe pays, pour
+// qu'un numéro à dix chiffres se relise et se recopie sans erreur.
+export function formatVat(raw: string): string {
+  const num = normalizeVat(raw);
+  if (num.length < 5) return num;
+  const prefix = num.slice(0, 2);
+  const body = num.slice(2).replace(/(.{4})/g, "$1 ").trim();
+  return `${prefix} ${body}`;
+}
+
+// ── Régime fiscal du document ──
+
+export type FiscalRegime = {
+  /** Mention obligatoire à imprimer sous le total. */
+  mention: string;
+  /** Sa traduction anglaise. Sur un document en anglais, les deux s'impriment :
+   *  la version française reste celle qui fait foi. */
+  mentionEn: string;
+  /** Les montants du document s'entendent hors taxe. */
+  htLabels: boolean;
+  /** Le client doit déclarer la TVA chez lui. */
+  reverseCharge: boolean;
+  /** Ce qui bloque encore le régime choisi, à corriger avant d'envoyer. */
+  blocking: string[];
+  /** Avertissements à afficher au vendeur, sans bloquer. */
+  warnings: string[];
+};
+
+export type FiscalInput = Pick<QuoteData, "tvaMode" | "clientCountry" | "clientVatNumber" | "clientCompany" | "issueDate" | "vehicle" | "kind">;
+
+/**
+ * Qualifie le régime de TVA du document : la phrase à imprimer, ce qui manque,
+ * et les pièges. Un véhicule « neuf fiscalement » (moins de 6 mois OU moins de
+ * 6 000 km) suit une règle à part : la TVA est due dans le pays de l'acheteur,
+ * quel que soit son statut, y compris un particulier.
+ */
+export function fiscalRegime(q: FiscalInput): FiscalRegime {
+  const blocking: string[] = [];
+  const warnings: string[] = [];
+  const pays = q.clientCountry || "FR";
+  const etranger = pays !== "FR" && isEuCountry(pays);
+
+  // « Neuf fiscalement » : la même règle que les dossiers d'immatriculation,
+  // jugée au jour près, en prenant la date d'émission comme référence.
+  const vb = q.vehicle;
+  const jour = /^\d{4}-\d{2}-\d{2}$/;
+  const neufFiscal =
+    q.kind === "vehicule" && jour.test(vb?.firstRegDate ?? "") && jour.test(q.issueDate) && vb.mileageKm > 0
+      ? assessVat(vb.firstRegDate, vb.mileageKm, q.issueDate).regime === "neuf"
+      : false;
+
+  if (q.tvaMode === "intracom") {
+    if (!etranger) {
+      blocking.push("un client établi dans un autre État membre");
+    }
+    const souci = vatIssue(pays, q.clientVatNumber);
+    if (souci) blocking.push("un numéro de TVA intracommunautaire valide");
+    if (!q.clientCompany.trim()) {
+      warnings.push("Une livraison intracommunautaire s'adresse à un professionnel : renseignez la raison sociale du client.");
+    }
+    warnings.push("Conservez la preuve que le véhicule a quitté la France (lettre de voiture, bon de livraison signé) et reportez la vente sur votre état récapitulatif.");
+    return {
+      mention: neufFiscal
+        ? "Exonération de TVA — Moyen de transport neuf (art. 298 sexies du CGI). TVA due par l'acquéreur dans son État membre."
+        : "Exonération de TVA — Livraison intracommunautaire (art. 262 ter I du CGI). Autoliquidation par le preneur.",
+      mentionEn: neufFiscal
+        ? "VAT exempt — New means of transport (Article 298 sexies of the French Tax Code). VAT payable by the purchaser in their own Member State."
+        : "VAT exempt — Intra-Community supply (Article 262 ter I of the French Tax Code). Reverse charge applies to the customer.",
+      htLabels: true,
+      reverseCharge: true,
+      blocking,
+      warnings,
+    };
+  }
+
+  if (q.tvaMode === "marge") {
+    // Piège classique : le régime de la marge s'applique aux biens d'occasion.
+    // Un véhicule neuf fiscalement en sort, la TVA est alors due sur le prix total.
+    if (neufFiscal) {
+      warnings.push("Ce véhicule est neuf fiscalement (moins de 6 mois ou moins de 6 000 km) : le régime de la marge ne s'y applique pas. Passez en TVA 20 %, ou en livraison intracommunautaire si l'acheteur est établi dans un autre État membre.");
+    }
+    if (etranger) {
+      warnings.push(`Client ${countryName(pays)} : le régime de la marge exclut l'exonération intracommunautaire. La vente reste taxée en France sur la marge.`);
+    }
+    return {
+      mention: "TVA sur marge — non récupérable (art. 297 A du CGI).",
+      mentionEn: "Second-hand margin scheme — VAT not recoverable (Article 297 A of the French Tax Code).",
+      htLabels: false,
+      reverseCharge: false,
+      blocking,
+      warnings,
+    };
+  }
+
+  if (q.tvaMode === "exonere") {
+    if (etranger) {
+      warnings.push(`Client ${countryName(pays)} : pour une exonération intracommunautaire en règle, choisissez « Livraison intracommunautaire ». « Exonéré » n'imprime aucune base légale.`);
+    }
+    return { mention: "Opération exonérée de TVA.", mentionEn: "Transaction exempt from VAT.", htLabels: false, reverseCharge: false, blocking, warnings };
+  }
+
+  // TVA 20 % : régime de droit commun.
+  if (etranger) {
+    warnings.push(`Client ${countryName(pays)} : si le véhicule quitte la France et que l'acheteur est assujetti, la vente s'exonère en livraison intracommunautaire.`);
+  }
+  return { mention: "", mentionEn: "", htLabels: true, reverseCharge: false, blocking, warnings };
+}
+
 export type QuoteData = {
   id?: string;
   number: string;
@@ -392,12 +621,21 @@ export type QuoteData = {
   paymentStatus: PaymentStatus;
   paidDate: string;
   sourceQuoteId?: string | null;
+  // Numéro du document d'origine (facture créditée par un avoir). Servi pour
+  // l'affichage seulement : il se lit sur l'autre ligne, il ne se recopie pas.
+  sourceNumber?: string;
   clientId?: string | null; // lien CRM optionnel
   clientName: string;
   clientCompany: string;
   clientAddress: string;
   clientEmail: string;
   clientPhone: string;
+  // Pays du client (code à deux lettres) et numéro de TVA intracommunautaire :
+  // ce qui décide si la vente peut sortir sans TVA française.
+  clientCountry: string;
+  clientVatNumber: string;
+  // Langue du document remis au client (le back-office reste en français).
+  docLang: DocLang;
   issueDate: string; // YYYY-MM-DD
   // Devis : durée de validité. Facture : délai de règlement, en jours.
   validityDays: number;
@@ -417,12 +655,30 @@ export type QuoteData = {
 // Ce qui manque à un devis pour pouvoir partir chez un client. Enregistrer un
 // brouillon incomplet reste permis, c'est le travail en cours ; l'envoyer ou le
 // facturer, non. Un devis vide à 0 € s'imprimait et se facturait sans un mot.
-export function quoteIssues(q: Pick<QuoteData, "clientName" | "clientCompany" | "items" | "tvaMode" | "tvaRate" | "depositMode" | "depositValue">): string[] {
+export function quoteIssues(
+  q: Pick<QuoteData, "clientName" | "clientCompany" | "items" | "tvaMode" | "tvaRate" | "depositMode" | "depositValue"> &
+    Partial<Pick<QuoteData, "clientCountry" | "clientVatNumber" | "issueDate" | "vehicle" | "kind">>,
+): string[] {
   const manques: string[] = [];
   if (!q.clientName.trim() && !q.clientCompany.trim()) manques.push("le client");
   const lignes = q.items.filter((it) => it.designation.trim() !== "");
   if (lignes.length === 0) manques.push("au moins une ligne");
   else if (computeTotals(q).totalTTC <= 0) manques.push("un montant");
+  // Une exonération intracommunautaire sans numéro de TVA valide se retourne
+  // contre le vendeur : l'administration réclame la TVA française.
+  if (q.tvaMode === "intracom") {
+    manques.push(
+      ...fiscalRegime({
+        tvaMode: q.tvaMode,
+        clientCountry: q.clientCountry ?? "FR",
+        clientVatNumber: q.clientVatNumber ?? "",
+        clientCompany: q.clientCompany,
+        issueDate: q.issueDate ?? "",
+        vehicle: q.vehicle ?? emptyVehicleBlock(),
+        kind: q.kind ?? "vehicule",
+      }).blocking,
+    );
+  }
   return manques;
 }
 
@@ -446,7 +702,11 @@ export type QuoteTotals = {
   // somme acompte + solde s'écartait du devis d'un centime.
   depositHT: number;
   balance: number;
+  // Vrai quand le document détaille HT + TVA + TTC (régime de droit commun).
   showTva: boolean;
+  // Vrai quand les montants s'entendent hors taxe, TVA détaillée ou pas :
+  // couvre la livraison intracommunautaire, où la TVA est due chez l'acheteur.
+  htLabels: boolean;
 };
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -481,6 +741,9 @@ export function lineTotal(item: QuoteItem): number {
 export function computeTotals(q: Pick<QuoteData, "items" | "tvaMode" | "tvaRate" | "depositMode" | "depositValue">): QuoteTotals {
   const subtotal = round2(q.items.reduce((s, it) => s + lineTotal(it), 0));
   const showTva = q.tvaMode === "tva20";
+  // En livraison intracommunautaire, aucune TVA française n'apparaît, mais les
+  // montants sont bien hors taxe : c'est l'acheteur qui la déclare chez lui.
+  const htLabels = showTva || q.tvaMode === "intracom";
 
   let totalHT: number, tvaAmount: number, totalTTC: number;
   if (showTva) {
@@ -519,6 +782,7 @@ export function computeTotals(q: Pick<QuoteData, "items" | "tvaMode" | "tvaRate"
     depositHT,
     balance,
     showTva,
+    htLabels,
   };
 }
 
@@ -535,6 +799,7 @@ export const TVA_MODE_LABEL: Record<TvaMode, string> = {
   marge: "TVA sur marge (art. 297 A du CGI)",
   tva20: "TVA 20 %",
   exonere: "Exonéré de TVA",
+  intracom: "Livraison intracommunautaire (autoliquidation)",
 };
 
 export const STATUS_LABEL: Record<QuoteStatus, string> = {
@@ -547,6 +812,7 @@ export const STATUS_LABEL: Record<QuoteStatus, string> = {
 // Titre du document A4 selon le type.
 export function docTitle(docType: DocType, factureKind: FactureKind): string {
   if (docType === "devis") return "DEVIS";
+  if (docType === "avoir") return "AVOIR";
   if (factureKind === "acompte") return "FACTURE D'ACOMPTE";
   if (factureKind === "solde") return "FACTURE DE SOLDE";
   return "FACTURE";
@@ -557,6 +823,85 @@ export const FACTURE_KIND_LABEL: Record<FactureKind, string> = {
   acompte: "Facture d'acompte",
   solde: "Facture de solde",
 };
+
+// ── Le document en français ou en anglais ──
+// Vendre à un acheteur néerlandophone ou anglophone suppose un document qu'il
+// lise. Seule la feuille remise au client bascule : le back-office reste en
+// français. Les montants gardent le format français (« 15 490,00 € ») : c'est
+// un document français, et deux formats de nombre sur un même dossier
+// s'annulent en confusion.
+export type DocTexts = ReturnType<typeof docTexts>;
+
+export function docTexts(lang: DocLang) {
+  if (lang === "en") {
+    return {
+      devis: "QUOTATION", facture: "INVOICE", avoir: "CREDIT NOTE",
+      acompteSuffix: "DEPOSIT", soldeSuffix: "BALANCE",
+      number: "No.", date: "Date", validity: "Valid until", dueDate: "Due date",
+      onInvoice: "Against invoice",
+      client: "Customer", clientPlaceholder: "Customer details…",
+      paid: "PAID",
+      vehicle: "Vehicle concerned",
+      vin: "Chassis number", plate: "Registration", firstReg: "First registered",
+      mileage: "Mileage", energy: "Fuel", colour: "Colour", origin: "Imported from",
+      designation: "Description", qty: "Qty", unitPrice: "Unit price", unitPriceHT: "Unit price excl. VAT",
+      lineTotal: "Amount", lineTotalHT: "Amount excl. VAT",
+      emptyLines: "Add a line (vehicle from stock, fees, or free text)…",
+      discount: "Discount",
+      totalHT: "Total excl. VAT", vat: "VAT", vatFrance: "French VAT",
+      totalTTC: "Total incl. VAT", total: "Total",
+      netToPay: "Amount payable", balanceToPay: "Balance payable", creditAmount: "Credit note amount",
+      depositPercent: "Deposit", depositToPay: "Deposit payable",
+      remaining: "Remaining due", balanceOnDelivery: "Balance on delivery",
+      depositInvoiced: "Deposit already invoiced",
+      conditions: "Terms", reason: "Reason", payment: "Payment", notes: "Notes",
+      lateMention:
+        "After the due date, any late payment incurs interest at the statutory rate increased as provided by law, together with a fixed recovery indemnity of €40 (Articles L441-10 and D441-5 of the French Commercial Code). No discount for early payment.",
+      creditNote: "Amount to be deducted from your payment, or refunded if the invoice has already been settled.",
+      signatureFor: "For", agreement: "Approved — Customer", signatureHint: "Date, signature and stamp",
+      emitter: "Issuer", legal: "Legal notices",
+      siret: "Company no.", vatNo: "VAT no.", iban: "IBAN", bic: "BIC",
+    };
+  }
+  return {
+    devis: "DEVIS", facture: "FACTURE", avoir: "AVOIR",
+    acompteSuffix: "D'ACOMPTE", soldeSuffix: "DE SOLDE",
+    number: "N°", date: "Date", validity: "Validité", dueDate: "Échéance",
+    onInvoice: "Sur facture",
+    client: "Client", clientPlaceholder: "Coordonnées du client…",
+    paid: "PAYÉE",
+    vehicle: "Véhicule concerné",
+    vin: "N° de série", plate: "Immatriculation", firstReg: "1re mise en circulation",
+    mileage: "Kilométrage", energy: "Énergie", colour: "Couleur", origin: "Provenance",
+    designation: "Désignation", qty: "Qté", unitPrice: "P.U.", unitPriceHT: "P.U. HT",
+    lineTotal: "Total", lineTotalHT: "Total HT",
+    emptyLines: "Ajoutez une ligne (véhicule du stock, frais, ou ligne libre)…",
+    discount: "Remise",
+    totalHT: "Total HT", vat: "TVA", vatFrance: "TVA française",
+    totalTTC: "Total TTC", total: "Total",
+    netToPay: "Net à payer", balanceToPay: "Solde à payer", creditAmount: "Montant de l'avoir",
+    depositPercent: "Acompte", depositToPay: "Acompte à verser",
+    remaining: "Reste dû", balanceOnDelivery: "Solde à la livraison",
+    depositInvoiced: "Acompte déjà facturé",
+    conditions: "Conditions", reason: "Motif", payment: "Règlement", notes: "Notes",
+    lateMention:
+      "Passé la date d'échéance, tout règlement en retard donne lieu à des pénalités calculées au taux d'intérêt légal majoré, ainsi qu'à une indemnité forfaitaire pour frais de recouvrement de 40 € (art. L441-10 et D441-5 du Code de commerce). Escompte pour paiement anticipé : néant.",
+    creditNote: "Montant à déduire de votre règlement, ou remboursé si la facture est déjà réglée.",
+    signatureFor: "Pour", agreement: "Bon pour accord — Le client", signatureHint: "Date, signature et cachet",
+    emitter: "Émetteur", legal: "Mentions",
+    siret: "SIRET", vatNo: "TVA", iban: "IBAN", bic: "BIC",
+  };
+}
+
+/** Titre du document dans la langue choisie. */
+export function docTitleIn(lang: DocLang, docType: DocType, factureKind: FactureKind): string {
+  const t = docTexts(lang);
+  if (docType === "devis") return t.devis;
+  if (docType === "avoir") return t.avoir;
+  if (factureKind === "acompte") return `${t.facture} ${t.acompteSuffix}`;
+  if (factureKind === "solde") return `${t.facture} ${t.soldeSuffix}`;
+  return t.facture;
+}
 
 // Numéro suivant d'une série annuelle, calculé sur le plus GRAND numéro déjà
 // attribué et jamais sur un comptage : supprimer un document faisait redescendre
@@ -572,17 +917,70 @@ export function nextNumber(prefix: string, existing: readonly string[]): string 
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
 }
 
-// Préfixes des deux séries annuelles.
+// Préfixes des trois séries annuelles.
 export const quotePrefix = (year: number) => `${year}-`;
 export const facturePrefix = (year: number) => `FAC-${year}-`;
+// Les avoirs tiennent leur propre série continue : mélangés aux factures, ils
+// créaient des trous dans la numérotation, ce que la comptabilité refuse.
+export const avoirPrefix = (year: number) => `AV-${year}-`;
 
 // Numéro de facture continu par année : FAC-2026-001.
 export function factureNumber(year: number, existing: readonly string[]): string {
   return nextNumber(facturePrefix(year), existing);
 }
 
+// Numéro d'avoir continu par année : AV-2026-001.
+export function avoirNumber(year: number, existing: readonly string[]): string {
+  return nextNumber(avoirPrefix(year), existing);
+}
+
+// ── Avoirs rattachés aux factures ──
+
+export type AvoirLike = {
+  sourceQuoteId: string | null;
+  items: string; // JSON des lignes, tel qu'il est stocké
+  tvaMode: string;
+  tvaRate: number;
+  depositMode: string;
+  depositValue: number;
+};
+
+/**
+ * Montant crédité par facture. Une facture créditée en totalité cesse d'être une
+ * créance : elle sort de l'encours impayé et du centre de relances, sinon on
+ * réclame de l'argent sur une facture qu'on a soi-même annulée.
+ */
+export function creditsByInvoice(avoirs: readonly AvoirLike[]): Map<string, number> {
+  const par = new Map<string, number>();
+  for (const a of avoirs) {
+    if (!a.sourceQuoteId) continue;
+    let items: QuoteItem[] = [];
+    try {
+      const p = JSON.parse(a.items);
+      if (Array.isArray(p)) items = p;
+    } catch {
+      /* un avoir abîmé compte pour zéro plutôt que de casser la page */
+    }
+    const montant = computeTotals({
+      items,
+      tvaMode: a.tvaMode as TvaMode,
+      tvaRate: a.tvaRate,
+      depositMode: a.depositMode as DepositMode,
+      depositValue: a.depositValue,
+    }).totalTTC;
+    par.set(a.sourceQuoteId, round2((par.get(a.sourceQuoteId) ?? 0) + montant));
+  }
+  return par;
+}
+
+/** Reste dû sur une facture, une fois les avoirs déduits. Jamais négatif. */
+export function remainingDue(facture: number, credite: number): number {
+  return Math.max(0, round2(facture - credite));
+}
+
 // Date YYYY-MM-DD -> "11 juin 2026"
 const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 export function formatDateFr(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim());
   if (!m) return iso || "";
@@ -590,14 +988,27 @@ export function formatDateFr(iso: string): string {
   return `${parseInt(d, 10)} ${MONTHS[parseInt(mo, 10) - 1]} ${y}`;
 }
 
+/** Date dans la langue du document : « 11 juin 2026 » ou « 11 June 2026 ». */
+export function formatDateIn(lang: DocLang, iso: string): string {
+  if (lang === "fr") return formatDateFr(iso);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim());
+  if (!m) return iso || "";
+  const [, y, mo, d] = m;
+  return `${parseInt(d, 10)} ${MONTHS_EN[parseInt(mo, 10) - 1]} ${y}`;
+}
+
 // Ajoute N jours à une date ISO et renvoie "11 juin 2026".
 export function validUntilFr(issueDate: string, days: number): string {
+  return validUntilIn("fr", issueDate, days);
+}
+
+/** Échéance dans la langue du document. */
+export function validUntilIn(lang: DocLang, issueDate: string, days: number): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((issueDate || "").trim());
   if (!m) return "";
   const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
   dt.setUTCDate(dt.getUTCDate() + (Number(days) || 0));
-  const iso = dt.toISOString().slice(0, 10);
-  return formatDateFr(iso);
+  return formatDateIn(lang, dt.toISOString().slice(0, 10));
 }
 
 // Valeurs par défaut dépendant du type de devis.
@@ -631,6 +1042,9 @@ export function emptyQuote(number: string, issueDate: string, branding?: Brandin
     clientAddress: "",
     clientEmail: "",
     clientPhone: "",
+    clientCountry: "FR",
+    clientVatNumber: "",
+    docLang: "fr",
     issueDate,
     validityDays: 30,
     items: [],

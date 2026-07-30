@@ -13,6 +13,7 @@ import {
   type TvaMode,
   type DepositMode,
   type QuoteStatus,
+  DOCS_HORS_DEVIS,
 } from "@/lib/devis";
 import { relanceDue, daysSince } from "@/lib/relances";
 import { parisDay } from "@/lib/vehicules";
@@ -41,7 +42,9 @@ export default async function DevisListPage({
 
   const [rows, factures] = await Promise.all([
     prisma.quote.findMany({
-      where: { docType: { not: "facture" } },
+      // Les avoirs sont des pièces comptables, pas des devis : sans exclusion
+      // explicite, ils remontaient dans cette liste.
+      where: { docType: { notIn: [...DOCS_HORS_DEVIS] } },
       orderBy: { updatedAt: "desc" },
       // Sélection restreinte : la personnalisation de l'en-tête pèse plusieurs
       // kilo-octets par devis et ne sert à rien dans une liste.

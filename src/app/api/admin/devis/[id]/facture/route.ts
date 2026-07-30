@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { reserveVehicleForQuote } from "@/lib/devis-effets";
-import { computeTotals, factureNumber, facturePrefix, FACTURE_KIND_LABEL, quoteIssues, issuesLabel, type FactureKind, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { computeTotals, factureNumber, facturePrefix, FACTURE_KIND_LABEL, quoteIssues, issuesLabel, mergeVehicleBlock, type FactureKind, type QuoteItem, type TvaMode, type DepositMode, type QuoteKind } from "@/lib/devis";
 import { parisDay } from "@/lib/vehicules";
 
 // Convertit un devis en facture (acompte / solde / complète).
@@ -15,7 +15,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const src = await prisma.quote.findUnique({ where: { id } });
     if (!src) return NextResponse.json({ error: "Devis introuvable." }, { status: 404 });
+    // Un avoir passait ce contrôle : on pouvait en tirer une facture.
     if (src.docType === "facture") return NextResponse.json({ error: "Ce document est déjà une facture." }, { status: 400 });
+    if (src.docType === "avoir") return NextResponse.json({ error: "Un avoir ne se convertit pas en facture." }, { status: 400 });
 
     const body = await req.json().catch(() => ({}));
     const kind: FactureKind = body.kind === "acompte" || body.kind === "solde" ? body.kind : "complete";
@@ -37,10 +39,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     // Facturer un devis vide produisait une facture à 0 € en toute discrétion.
+    // Le pays et le numéro de TVA font partie du contrôle : une facture
+    // intracommunautaire sans eux n'a aucune base légale.
+    let vehicleRaw: unknown = {};
+    try {
+      vehicleRaw = JSON.parse(src.vehicleInfo ?? "{}");
+    } catch {
+      /* repli sur un encart vide */
+    }
     const manques = quoteIssues({
       items, tvaMode: src.tvaMode as TvaMode, tvaRate: src.tvaRate,
       depositMode: src.depositMode as DepositMode, depositValue: src.depositValue,
       clientName: src.clientName, clientCompany: src.clientCompany,
+      clientCountry: src.clientCountry, clientVatNumber: src.clientVatNumber,
+      issueDate: src.issueDate, kind: src.kind as QuoteKind,
+      vehicle: mergeVehicleBlock(vehicleRaw),
     });
     if (manques.length > 0) {
       return NextResponse.json({ error: `Ce devis attend encore ${issuesLabel(manques)}.` }, { status: 400 });
@@ -115,6 +128,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         clientAddress: src.clientAddress,
         clientEmail: src.clientEmail,
         clientPhone: src.clientPhone,
+        // Le régime de TVA suit le devis : la facture doit porter le même pays,
+        // le même numéro de TVA et donc la même mention légale.
+        clientCountry: src.clientCountry,
+        clientVatNumber: src.clientVatNumber,
         issueDate,
         // Sur une facture, ce champ porte le délai de règlement : sans lui, le
         // document ne dit ni quand payer ni à partir de quand la créance est due.

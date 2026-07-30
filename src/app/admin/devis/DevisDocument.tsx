@@ -4,19 +4,24 @@ import type { CSSProperties } from "react";
 import {
   computeTotals,
   formatEuro,
-  formatDateFr,
-  validUntilFr,
-  docTitle,
+  formatDateIn,
+  validUntilIn,
+  docTexts,
+  docTitleIn,
   lineTotal,
   lineGross,
   lineDiscount,
   blockBox,
   headerHeightFor,
   formatVin,
+  formatVat,
+  countryNameIn,
+  fiscalRegime,
   vehicleBlockFilled,
   mergeVehicleBlock,
   type QuoteData,
   type HeaderBlockId,
+  type DocLang,
 } from "@/lib/devis";
 import { formatNumber } from "@/lib/format";
 
@@ -76,20 +81,31 @@ export default function DevisDocument({
   const t = computeTotals(quote);
   const b = quote.branding;
   const addrLines = b.emitterAddress.split("\n").map((l) => l.trim()).filter(Boolean);
-  const showHT = t.showTva;
+  // Les colonnes s'annoncent hors taxe dès que les montants le sont : en
+  // livraison intracommunautaire, la TVA n'apparaît pas mais le prix est bien HT.
+  const showHT = t.htLabels;
+  // Régime de TVA : mention obligatoire à imprimer sous le total.
+  const fiscal = fiscalRegime(quote);
+
+  // Langue du document : seule la feuille remise au client bascule, le
+  // back-office reste en français.
+  const lang: DocLang = quote.docLang === "en" ? "en" : "fr";
+  const L = docTexts(lang);
+  const jour = (iso: string) => formatDateIn(lang, iso);
 
   // Type de document (facture vs devis) et libellés associés.
   const docType = quote.docType ?? "devis";
   const factureKind = quote.factureKind ?? "complete";
+  const isAvoir = docType === "avoir";
   const isFacture = docType === "facture";
   const isSolde = isFacture && factureKind === "solde";
   const paid = isFacture && quote.paymentStatus === "payee";
 
   // Titre à taille CONSTANTE : la qualification passe sur une seconde ligne.
   // La taille variable donnait « FACTURE D'ACOMPTE » deux fois plus petit que « DEVIS ».
-  const full = docTitle(docType, factureKind);
-  const title = isFacture ? "FACTURE" : "DEVIS";
-  const subtitle = full !== title ? full.replace(/^FACTURE\s+/i, "") : "";
+  const full = docTitleIn(lang, docType, factureKind);
+  const title = isAvoir ? L.avoir : isFacture ? L.facture : L.devis;
+  const subtitle = full !== title ? full.slice(title.length).trim() : "";
 
   const logoJustify = b.logoAlign === "center" ? "center" : b.logoAlign === "right" ? "flex-end" : "flex-start";
   const logoFree = b.logoX != null && b.logoY != null;
@@ -114,7 +130,7 @@ export default function DevisDocument({
   const thRule = theme === "minimal" ? `1.5pt solid ${accent}` : undefined;
 
   const headerH = headerHeightFor(quote);
-  const dueDate = validUntilFr(quote.issueDate, quote.validityDays);
+  const dueDate = validUntilIn(lang, quote.issueDate, quote.validityDays);
   // Devis d'avant l'encart : la valeur manque, le repli la remplace par un bloc
   // vide, donc masqué.
   const vehicule = mergeVehicleBlock(quote.vehicle);
@@ -243,18 +259,26 @@ export default function DevisDocument({
             <tbody>
               {quote.number && (
                 <tr>
-                  <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>N°</td>
+                  <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>{L.number}</td>
                   <td style={{ fontWeight: 600, color: headInk, ...tabular }}>{quote.number}</td>
                 </tr>
               )}
               <tr>
-                <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>Date</td>
-                <td style={{ color: headInk }}>{formatDateFr(quote.issueDate)}</td>
+                <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>{L.date}</td>
+                <td style={{ color: headInk }}>{jour(quote.issueDate)}</td>
               </tr>
+              {/* Un avoir n'existe que par la facture qu'il corrige : sa
+                  référence est une mention attendue par le comptable. */}
+              {isAvoir && quote.sourceNumber && (
+                <tr>
+                  <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>{L.onInvoice}</td>
+                  <td style={{ fontWeight: 600, color: headInk, ...tabular }}>{quote.sourceNumber}</td>
+                </tr>
+              )}
               {quote.validityDays > 0 && (
                 <tr>
                   <td style={{ ...labelMini, color: headMuted, paddingRight: "4mm", textAlign: "right" }}>
-                    {isFacture ? "Échéance" : "Validité"}
+                    {isFacture ? L.dueDate : L.validity}
                   </td>
                   <td style={{ color: headInk }}>{dueDate}</td>
                 </tr>
@@ -263,7 +287,7 @@ export default function DevisDocument({
           </table>
           {paid && (
             <div style={{ display: "inline-block", marginTop: "3mm", padding: "1mm 3mm", border: "1.5px solid #0F8A6A", color: "#0F8A6A", backgroundColor: "#FFFFFF", fontSize: "9pt", fontWeight: 700, letterSpacing: "0.12em", transform: "rotate(-4deg)" }}>
-              PAYÉE{quote.paidDate ? ` — ${formatDateFr(quote.paidDate)}` : ""}
+              {L.paid}{quote.paidDate ? ` — ${jour(quote.paidDate)}` : ""}
             </div>
           )}
           {resizeHandle("meta")}
@@ -271,19 +295,25 @@ export default function DevisDocument({
 
         {/* Destinataire */}
         <div style={blockWrap("client")} onPointerDown={onBlockPointerDown ? (e) => onBlockPointerDown("client", e) : undefined}>
-          <PartyBox label="Client" accent={accent} onBand={onBand}>
+          <PartyBox label={L.client} accent={accent} onBand={onBand}>
             {quote.clientName || quote.clientCompany ? (
               <>
                 {quote.clientCompany && <div style={{ fontWeight: 600, color: headInk }}>{quote.clientCompany}</div>}
                 {quote.clientName && <div style={{ fontWeight: quote.clientCompany ? 400 : 600, color: headInk }}>{quote.clientName}</div>}
                 <div style={{ color: headMuted, fontSize: "8.5pt", marginTop: "1mm" }}>
                   {quote.clientAddress && <div style={{ whiteSpace: "pre-line" }}>{quote.clientAddress}</div>}
+                  {/* Le pays s'imprime dès qu'il sort de France : une adresse
+                      belge sans mention de pays ne justifie aucune exonération. */}
+                  {quote.clientCountry && quote.clientCountry !== "FR" && <div>{countryNameIn(lang, quote.clientCountry)}</div>}
+                  {/* Le numéro de TVA du preneur est une mention obligatoire de
+                      la livraison intracommunautaire. */}
+                  {quote.clientVatNumber && <div style={{ ...tabular }}>{L.vatNo} {formatVat(quote.clientVatNumber)}</div>}
                   {quote.clientEmail && <div>{quote.clientEmail}</div>}
                   {quote.clientPhone && <div>{quote.clientPhone}</div>}
                 </div>
               </>
             ) : (
-              <div style={{ color: onBand ? "rgba(255,255,255,0.6)" : "#B9C0CC", fontStyle: "italic", fontSize: "8.5pt" }}>Coordonnées du client…</div>
+              <div style={{ color: onBand ? "rgba(255,255,255,0.6)" : "#B9C0CC", fontStyle: "italic", fontSize: "8.5pt" }}>{L.clientPlaceholder}</div>
             )}
           </PartyBox>
           {resizeHandle("client")}
@@ -316,19 +346,19 @@ export default function DevisDocument({
             />
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...labelMini, color: accent, marginBottom: "1.5mm" }}>Véhicule concerné</div>
+            <div style={{ ...labelMini, color: accent, marginBottom: "1.5mm" }}>{L.vehicle}</div>
             {vehicule.label && (
               <div style={{ fontWeight: 700, fontSize: "11pt", color: C.ink, marginBottom: "2mm" }}>{vehicule.label}</div>
             )}
             <table style={{ borderCollapse: "collapse", fontSize: "8.5pt", width: "100%" }}>
               <tbody>
-                <VehiculeRow label="N° de série" value={vehicule.vin ? formatVin(vehicule.vin) : ""} mono />
-                <VehiculeRow label="Immatriculation" value={vehicule.plate} mono />
-                <VehiculeRow label="1re mise en circulation" value={vehicule.firstRegDate ? formatDateFr(vehicule.firstRegDate) : ""} />
-                <VehiculeRow label="Kilométrage" value={vehicule.mileageKm > 0 ? `${formatNumber(vehicule.mileageKm)} km` : ""} />
-                <VehiculeRow label="Énergie" value={vehicule.energy} />
-                <VehiculeRow label="Couleur" value={vehicule.color} />
-                <VehiculeRow label="Provenance" value={vehicule.origin} />
+                <VehiculeRow label={L.vin} value={vehicule.vin ? formatVin(vehicule.vin) : ""} mono />
+                <VehiculeRow label={L.plate} value={vehicule.plate} mono />
+                <VehiculeRow label={L.firstReg} value={vehicule.firstRegDate ? jour(vehicule.firstRegDate) : ""} />
+                <VehiculeRow label={L.mileage} value={vehicule.mileageKm > 0 ? `${formatNumber(vehicule.mileageKm)} km` : ""} />
+                <VehiculeRow label={L.energy} value={vehicule.energy} />
+                <VehiculeRow label={L.colour} value={vehicule.color} />
+                <VehiculeRow label={L.origin} value={vehicule.origin} />
               </tbody>
             </table>
           </div>
@@ -339,17 +369,17 @@ export default function DevisDocument({
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "8mm", fontSize: "9pt" }}>
         <thead>
           <tr style={{ backgroundColor: thBg, color: thFg, borderBottom: thRule }}>
-            <th style={thCell("left")}>Désignation</th>
-            <th style={{ ...thCell("right"), width: "16mm" }}>Qté</th>
-            <th style={{ ...thCell("right"), width: "30mm" }}>{showHT ? "P.U. HT" : "P.U."}</th>
-            <th style={{ ...thCell("right"), width: "32mm" }}>{showHT ? "Total HT" : "Total"}</th>
+            <th style={thCell("left")}>{L.designation}</th>
+            <th style={{ ...thCell("right"), width: "16mm" }}>{L.qty}</th>
+            <th style={{ ...thCell("right"), width: "30mm" }}>{showHT ? L.unitPriceHT : L.unitPrice}</th>
+            <th style={{ ...thCell("right"), width: "32mm" }}>{showHT ? L.lineTotalHT : L.lineTotal}</th>
           </tr>
         </thead>
         <tbody>
           {quote.items.length === 0 ? (
             <tr>
               <td colSpan={4} style={{ ...tdCell("left", rowRule), color: "#B9C0CC", fontStyle: "italic", textAlign: "center", padding: "8mm" }}>
-                Ajoutez une ligne (véhicule du stock, frais, ou ligne libre)…
+                {L.emptyLines}
               </td>
             </tr>
           ) : (
@@ -364,7 +394,7 @@ export default function DevisDocument({
                     {it.detail && <div style={{ color: C.muted, fontSize: "8pt", marginTop: "0.5mm", whiteSpace: "pre-line" }}>{it.detail}</div>}
                     {disc > 0 && (
                       <div style={{ color: accent, fontSize: "8pt", marginTop: "0.5mm" }}>
-                        Remise {it.discountKind === "amount" ? formatEuro(it.discount || 0) : `${it.discount} %`} (−{formatEuro(disc)})
+                        {L.discount} {it.discountKind === "amount" ? formatEuro(it.discount || 0) : `${it.discount} %`} (−{formatEuro(disc)})
                       </div>
                     )}
                   </td>
@@ -388,41 +418,75 @@ export default function DevisDocument({
       <div className="devis-avoid-break" style={{ display: "flex", justifyContent: "flex-end", marginTop: "6mm" }}>
         <table style={{ width: "84mm", borderCollapse: "collapse", fontSize: "9.5pt" }}>
           <tbody>
-            {showHT && (
+            {t.showTva && (
               <>
-                <SubRow label="Total HT" value={formatEuro(t.totalHT)} />
-                <SubRow label={`TVA ${quote.tvaRate} %`} value={formatEuro(t.tvaAmount)} />
+                <SubRow label={L.totalHT} value={formatEuro(t.totalHT)} />
+                <SubRow label={`${L.vat} ${quote.tvaRate} %`} value={formatEuro(t.tvaAmount)} />
               </>
+            )}
+            {/* Livraison intracommunautaire : la ligne de TVA dit explicitement
+                pourquoi elle est à zéro, sinon le client la croit oubliée. */}
+            {quote.tvaMode === "intracom" && (
+              <SubRow label={L.vatFrance} value="0,00 €" />
             )}
             {/* Le prix domine la page : bloc plein, pas une ligne de plus. */}
             <GrandRow
-              label={isSolde ? "Solde à payer" : isFacture ? "Net à payer" : showHT ? "Total TTC" : "Total"}
+              label={
+                isAvoir
+                  ? L.creditAmount
+                  : isSolde
+                    ? L.balanceToPay
+                    : isFacture
+                      ? L.netToPay
+                      : t.showTva
+                        ? L.totalTTC
+                        : quote.tvaMode === "intracom"
+                          ? L.totalHT
+                          : L.total
+              }
               value={formatEuro(t.deposit > 0 && isSolde ? t.balance : t.totalTTC)}
               accent={accent}
               minimal={theme === "minimal"}
             />
-            {!showHT && (
+            {/* Mention obligatoire du régime : sans base légale imprimée, une
+                vente sans TVA se requalifie et la TVA retombe sur le vendeur. */}
+            {fiscal.mention && (
               <tr>
-                <td colSpan={2} style={{ fontSize: "7.5pt", color: C.muted, paddingTop: "1.5mm" }}>
-                  {quote.tvaMode === "marge"
-                    ? "TVA sur marge — non récupérable (art. 297 A du CGI)."
-                    : "Opération exonérée de TVA."}
+                <td colSpan={2} style={{ fontSize: "7.5pt", color: C.muted, paddingTop: "1.5mm", lineHeight: 1.4 }}>
+                  {/* Document en anglais : la traduction passe devant, la version
+                      française reste imprimée car c'est elle qui fait foi. */}
+                  {lang === "en" && fiscal.mentionEn ? (
+                    <>
+                      {fiscal.mentionEn}
+                      <span style={{ display: "block", fontStyle: "italic" }}>{fiscal.mention}</span>
+                    </>
+                  ) : (
+                    fiscal.mention
+                  )}
+                </td>
+              </tr>
+            )}
+            {/* Sur un avoir, le client doit savoir ce que devient ce montant. */}
+            {isAvoir && (
+              <tr>
+                <td colSpan={2} style={{ fontSize: "7.5pt", color: C.muted, paddingTop: "1.5mm", lineHeight: 1.4 }}>
+                  {L.creditNote}
                 </td>
               </tr>
             )}
             {t.deposit > 0 && !isSolde && (
               <>
                 <SubRow
-                  label={quote.depositMode === "percent" ? `Acompte ${quote.depositValue} %` : "Acompte à verser"}
+                  label={quote.depositMode === "percent" ? `${L.depositPercent} ${quote.depositValue} %` : L.depositToPay}
                   value={formatEuro(t.deposit)}
                   spaced
                   strong
                 />
-                <SubRow label={isFacture ? "Reste dû" : "Solde à la livraison"} value={formatEuro(t.balance)} />
+                <SubRow label={isFacture ? L.remaining : L.balanceOnDelivery} value={formatEuro(t.balance)} />
               </>
             )}
             {t.deposit > 0 && isSolde && (
-              <SubRow label="Acompte déjà facturé" value={`− ${formatEuro(t.deposit)}`} spaced />
+              <SubRow label={L.depositInvoiced} value={`− ${formatEuro(t.deposit)}`} spaced />
             )}
           </tbody>
         </table>
@@ -431,16 +495,19 @@ export default function DevisDocument({
       {/* ── Conditions / notes ── */}
       {(quote.paymentTerms || quote.notes) && (
         <div style={{ marginTop: "9mm" }}>
-          <SectionTitle color={accent}>Conditions</SectionTitle>
+          <SectionTitle color={accent}>{isAvoir ? L.reason : L.conditions}</SectionTitle>
           {quote.paymentTerms && (
             <div style={{ display: "flex", gap: "5mm", marginTop: "2mm", fontSize: "9pt" }}>
-              <div style={{ ...labelMini, width: "32mm", flexShrink: 0 }}>Règlement</div>
+              {/* Sur un avoir, ce champ porte le motif : il n'y a pas de
+                  conditions de règlement à énoncer sur un crédit. Le titre de la
+                  section le dit déjà, la colonne d'étiquette reste vide. */}
+              <div style={{ ...labelMini, width: "32mm", flexShrink: 0 }}>{isAvoir ? "" : L.payment}</div>
               <div style={{ whiteSpace: "pre-line" }}>{quote.paymentTerms}</div>
             </div>
           )}
           {quote.notes && (
             <div style={{ display: "flex", gap: "5mm", marginTop: "2mm", fontSize: "9pt" }}>
-              <div style={{ ...labelMini, width: "32mm", flexShrink: 0 }}>Notes</div>
+              <div style={{ ...labelMini, width: "32mm", flexShrink: 0 }}>{L.notes}</div>
               <div style={{ whiteSpace: "pre-line" }}>{quote.notes}</div>
             </div>
           )}
@@ -450,17 +517,15 @@ export default function DevisDocument({
       {/* ── Mentions obligatoires d'une facture ── */}
       {isFacture && (
         <div className="devis-avoid-break" style={{ marginTop: "6mm", fontSize: "7.5pt", color: C.muted, lineHeight: 1.45 }}>
-          Passé la date d&apos;échéance, tout règlement en retard donne lieu à des pénalités calculées au taux
-          d&apos;intérêt légal majoré, ainsi qu&apos;à une indemnité forfaitaire pour frais de recouvrement de 40 €
-          (art. L441-10 et D441-5 du Code de commerce). Escompte pour paiement anticipé : néant.
+          {L.lateMention}
         </div>
       )}
 
-      {/* ── Signatures (devis uniquement : une facture ne se signe pas) ── */}
-      {!isFacture && (
+      {/* ── Signatures (devis uniquement : ni une facture ni un avoir ne se signent) ── */}
+      {!isFacture && !isAvoir && (
         <div className="devis-avoid-break" style={{ display: "flex", justifyContent: "space-between", gap: "12mm", marginTop: "10mm" }}>
-          <SignatureBox title={`Pour ${b.emitterName}`} name={b.emitterRepresentative} />
-          <SignatureBox title="Bon pour accord — Le client" hint="Date, signature et cachet" />
+          <SignatureBox title={`${L.signatureFor} ${b.emitterName}`} name={b.emitterRepresentative} hint={L.signatureHint} />
+          <SignatureBox title={L.agreement} hint={L.signatureHint} />
         </div>
       )}
 
@@ -479,21 +544,21 @@ export default function DevisDocument({
         }}
       >
         <div style={{ flex: 1 }}>
-          <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>Émetteur</div>
+          <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>{L.emitter}</div>
           <div style={{ color: C.ink, fontWeight: 600 }}>{b.emitterName}</div>
-          {b.emitterSiret && <div>SIRET {b.emitterSiret}</div>}
-          {b.emitterTva && <div>TVA {b.emitterTva}</div>}
+          {b.emitterSiret && <div>{L.siret} {b.emitterSiret}</div>}
+          {b.emitterTva && <div>{L.vatNo} {b.emitterTva}</div>}
         </div>
         {(b.emitterIban || b.emitterBic || b.emitterBank) && (
           <div style={{ flex: 1 }}>
-            <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>Règlement</div>
+            <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>{L.payment}</div>
             {b.emitterBank && <div>{b.emitterBank}</div>}
-            {b.emitterIban && <div style={{ ...tabular, wordSpacing: "0.05em" }}>IBAN {b.emitterIban}</div>}
-            {b.emitterBic && <div style={tabular}>BIC {b.emitterBic}</div>}
+            {b.emitterIban && <div style={{ ...tabular, wordSpacing: "0.05em" }}>{L.iban} {b.emitterIban}</div>}
+            {b.emitterBic && <div style={tabular}>{L.bic} {b.emitterBic}</div>}
           </div>
         )}
         <div style={{ flex: 1.4 }}>
-          <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>Mentions</div>
+          <div style={{ ...labelMini, fontSize: "6.5pt", marginBottom: "1mm" }}>{L.legal}</div>
           <div>{b.legalFootnote}</div>
         </div>
       </div>

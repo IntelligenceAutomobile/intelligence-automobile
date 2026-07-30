@@ -15,6 +15,7 @@ import {
   type DepositMode,
   type FactureKind,
   type PaymentStatus,
+  type DocLang,
 } from "@/lib/devis";
 import { T, AdminPage, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
 import { DemoPageHeader } from "@/app/demopro/DemoPageHeader";
@@ -53,6 +54,9 @@ export default async function DemoDevisPage({ params }: { params: Promise<{ id: 
     clientAddress: "",
     clientEmail: q.clientEmail,
     clientPhone: q.clientPhone,
+    clientCountry: q.clientCountry ?? "FR",
+    clientVatNumber: q.clientVatNumber ?? "",
+    docLang: (q.docLang as DocLang) ?? "fr",
     issueDate: q.issueDate,
     validityDays: 30,
     items,

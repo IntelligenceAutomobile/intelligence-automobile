@@ -108,11 +108,12 @@ model Quote {
   status String @default("brouillon") // brouillon | envoye | accepte | refuse
 
   // Type de document et facturation
-  docType       String  @default("devis")    // devis | facture
+  docType       String  @default("devis")    // devis | facture | avoir
   factureKind   String  @default("complete") // complete | acompte | solde (si docType = facture)
   paymentStatus String  @default("impayee")  // impayee | payee (si docType = facture)
   paidDate      String  @default("")         // YYYY-MM-DD de paiement
-  sourceQuoteId String?                        // devis d'origine (conversion)
+  // Document d'origine : le devis d'une facture, la facture créditée d'un avoir.
+  sourceQuoteId String?
 
   // Envoi, lecture et signature en ligne
   sentAt         String  @default("")  // horodatage ISO de l'envoi au client
@@ -134,6 +135,12 @@ model Quote {
   clientAddress String @default("")
   clientEmail   String @default("")
   clientPhone   String @default("")
+  // Pays du client (code ISO à deux lettres) et numéro de TVA
+  // intracommunautaire : ce qui décide si la vente sort sans TVA française.
+  clientCountry   String @default("FR")
+  clientVatNumber String @default("")
+  // Langue du document remis au client : fr | en. Le back-office reste en français.
+  docLang         String @default("fr")
 
   // Dates (chaînes calendaires YYYY-MM-DD, éditées telles quelles)
   issueDate    String
@@ -144,7 +151,8 @@ model Quote {
   items String @default("[]")
 
   // Fiscalité
-  tvaMode String @default("marge") // marge | tva20 | exonere
+  // intracom : livraison intracommunautaire exonérée, TVA autoliquidée par le client
+  tvaMode String @default("marge") // marge | tva20 | exonere | intracom
   tvaRate Int    @default(20)
 
   // Acompte

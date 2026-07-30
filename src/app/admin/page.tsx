@@ -5,7 +5,7 @@ import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileB
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
-import { computeTotals, formatEuro, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { computeTotals, formatEuro, DOCS_HORS_DEVIS, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 import { relancesDues } from "@/lib/relances-server";
 import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scope } from "@/lib/comptes";
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
@@ -147,7 +147,7 @@ export default async function AdminDashboard() {
       prisma.vehicle.findMany({ where: { isPublished: false }, orderBy: { createdAt: "desc" }, take: 5 }),
       prisma.vehicle.findMany({ select: { createdAt: true } }),
       prisma.quote.findMany({
-        where: { docType: { not: "facture" } },
+        where: { docType: { notIn: [...DOCS_HORS_DEVIS] } },
         select: { id: true, number: true, clientName: true, clientCompany: true, status: true, createdAt: true, updatedAt: true },
       }),
       prisma.collabNote.findMany({

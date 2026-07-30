@@ -8,7 +8,7 @@ import {
   mergeVehicleBlock,
   formatEuro,
   computeTotals,
-  validUntilFr,
+  validUntilIn,
   type QuoteData,
   type QuoteItem,
   type TvaMode,
@@ -18,6 +18,7 @@ import {
   type DocType,
   type FactureKind,
   type PaymentStatus,
+  type DocLang,
 } from "@/lib/devis";
 import { daysSince } from "@/lib/relances";
 import { parisDay } from "@/lib/vehicules";
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
 export default async function DevisPublicPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const row = await prisma.quote.findUnique({ where: { publicToken: token } });
-  if (!row || row.docType === "facture") notFound();
+  // Seuls les devis s'ouvrent par lien public : une facture ou un avoir se remet en main propre.
+  if (!row || row.docType !== "devis") notFound();
 
   // Suivi de lecture : la première ouverture donne au vendeur l'information la
   // plus utile de son suivi commercial, sans rien coûter.
@@ -88,6 +90,9 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
     clientAddress: row.clientAddress,
     clientEmail: row.clientEmail,
     clientPhone: row.clientPhone,
+    clientCountry: row.clientCountry,
+    clientVatNumber: row.clientVatNumber,
+    docLang: row.docLang as DocLang,
     issueDate: row.issueDate,
     validityDays: row.validityDays,
     items,
@@ -130,7 +135,7 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
             number={row.number}
             amount={formatEuro(totals.totalTTC)}
             deposit={totals.deposit > 0 ? formatEuro(totals.deposit) : ""}
-            validUntil={validUntilFr(row.issueDate, row.validityDays)}
+            validUntil={validUntilIn(quote.docLang, row.issueDate, row.validityDays)}
             accent={accent}
             emitter={quote.branding.emitterName}
             emitterEmail={quote.branding.emitterEmail}
@@ -138,8 +143,8 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
             accepted={accepted}
             refused={refused}
             expired={expired}
+            lang={quote.docLang}
             signerName={row.signerName}
-            signedAt={row.signedAt}
           />
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Copy, FileText, GripVertical, Loader2, Lock, Maximize2, Move, RefreshCw, RotateCcw, Send, Trash2, Undo2, Users, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Copy, FileText, GripVertical, Loader2, Lock, Maximize2, Move, RefreshCw, RotateCcw, Send, ShieldCheck, Trash2, Undo2, Users, X } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { matchesSearch } from "@/lib/vehicules";
 import {
@@ -32,6 +32,13 @@ import {
   type HeaderBlockId,
   type VehicleBlock,
   emptyVehicleBlock,
+  normalizeVat,
+  fiscalRegime,
+  issuesLabel,
+  EU_COUNTRIES,
+  countryName,
+  DOC_LANGS,
+  DOC_LANG_LABEL,
 } from "@/lib/devis";
 import DevisDocument from "./DevisDocument";
 import {
@@ -197,6 +204,9 @@ export default function DevisEditor({
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
   const [depositInput, setDepositInput] = useState(() => (initial.depositValue ? String(initial.depositValue) : ""));
   const [kmInput, setKmInput] = useState(() => (initial.vehicle.mileageKm ? formatNumber(initial.vehicle.mileageKm) : ""));
+  // Réponse du registre européen de TVA, remise à zéro dès que le numéro change.
+  const [vies, setVies] = useState<{ etat: "valide" | "invalide" | "indisponible"; nom?: string; adresse?: string; message?: string } | null>(null);
+  const [viesLoading, setViesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -218,8 +228,10 @@ export default function DevisEditor({
   // Un document accepté ou facturé se fige : le retaper librement, facture
   // marquée payée comprise, referme une démonstration devant un gérant.
   const isFacture = initial.docType === "facture";
+  // Un avoir est émis : il ne se retouche pas davantage qu'une facture.
+  const isAvoir = initial.docType === "avoir";
   const [unlocked, setUnlocked] = useState(false);
-  const shouldLock = isFacture || initial.status === "accepte";
+  const shouldLock = isFacture || isAvoir || initial.status === "accepte";
   const locked = shouldLock && !unlocked;
   const [paying, setPaying] = useState(false);
   // Aperçu : niveau de zoom, plein écran, et mode « mise en page » explicite.
@@ -658,7 +670,7 @@ export default function DevisEditor({
       setLeaveOpen(true);
       return;
     }
-    router.push(isFacture ? "/admin/factures" : "/admin/devis");
+    router.push(isFacture || isAvoir ? "/admin/factures" : "/admin/devis");
   }
 
   // ── Aperçu live mis à l'échelle ──
@@ -782,6 +794,27 @@ export default function DevisEditor({
   // véhicule après une mise à jour du dossier d'immatriculation.
   const stockVehicle = useMemo(() => vehicles.find((v) => v.id === q.vehicleId) ?? null, [vehicles, q.vehicleId]);
 
+  // Régime de TVA du document : mention à imprimer, conditions manquantes et
+  // pièges (véhicule neuf fiscalement, marge incompatible avec l'exonération).
+  const fiscal = useMemo(() => fiscalRegime(q), [q]);
+
+  // Vérification du numéro de TVA auprès du service européen VIES.
+  async function verifierTva() {
+    setViesLoading(true);
+    try {
+      const res = await fetch("/api/admin/tva-intracom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ country: q.clientCountry, number: q.clientVatNumber }),
+      });
+      setVies(await res.json());
+    } catch {
+      setVies({ etat: "indisponible", message: "La vérification n'a pas abouti. Réessayez dans un instant." });
+    } finally {
+      setViesLoading(false);
+    }
+  }
+
   // Flèches pour parcourir, Entrée pour choisir : le panneau se pilote au clavier.
   function onPickerKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
@@ -821,9 +854,11 @@ export default function DevisEditor({
           >
             <Lock size={14} style={{ color: T.warning }} />
             <span className="text-sm" style={{ color: T.textDim }}>
-              {isFacture
-                ? "Facture émise : son contenu est figé. Une correction passe par un avoir."
-                : "Devis accepté : son contenu est figé pour rester fidèle à ce que le client a signé."}
+              {isAvoir
+                ? "Avoir émis : son contenu est figé, comme la facture qu'il corrige."
+                : isFacture
+                  ? "Facture émise : son contenu est figé. Une correction passe par un avoir."
+                  : "Devis accepté : son contenu est figé pour rester fidèle à ce que le client a signé."}
             </span>
             {canUnlock && (
               <button
@@ -888,8 +923,9 @@ export default function DevisEditor({
           </div>
         )}
 
-        {/* Type de devis — hors facture : bascule la TVA et les conditions */}
-        {!isFacture && (
+        {/* Type de devis — hors facture et hors avoir : bascule la TVA et les
+            conditions. Sur un avoir, ce choix appartient à la facture d'origine. */}
+        {!isFacture && !isAvoir && (
         <SectionCard title="Type de devis">
           <div className="flex gap-2">
             {([
@@ -994,6 +1030,15 @@ export default function DevisEditor({
           </div>
           <Field label="Adresse">
             <textarea className={fieldClass} style={{ ...fieldStyle, resize: "vertical" }} rows={2} value={q.clientAddress} onChange={(e) => update({ clientAddress: e.target.value })} placeholder="12 rue de la Paix&#10;75002 Paris" />
+          </Field>
+          {/* Le pays commande le régime de TVA : hors de France, la vente peut
+              sortir sans TVA française, à condition de le justifier. */}
+          <Field label="Pays">
+            <select className={fieldClass} style={fieldStyle} value={q.clientCountry} onChange={(e) => { update({ clientCountry: e.target.value }); setVies(null); }}>
+              {EU_COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </select>
           </Field>
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Email">
@@ -1406,7 +1451,14 @@ export default function DevisEditor({
                     />
                   </Field>
                   <Field label="1re mise en circulation">
-                    <input type="date" className={fieldClass} style={fieldStyle} value={q.vehicle.firstRegDate} onChange={(e) => updateVehicle({ firstRegDate: e.target.value })} />
+                    <input
+                      type="date"
+                      aria-label="Première mise en circulation du véhicule"
+                      className={fieldClass}
+                      style={fieldStyle}
+                      value={q.vehicle.firstRegDate}
+                      onChange={(e) => updateVehicle({ firstRegDate: e.target.value })}
+                    />
                   </Field>
                   <Field label="Kilométrage">
                     <input
@@ -1458,6 +1510,7 @@ export default function DevisEditor({
               <select className={fieldClass} style={fieldStyle} value={q.tvaMode} onChange={(e) => update({ tvaMode: e.target.value as TvaMode })}>
                 <option value="marge">TVA sur marge (occasion)</option>
                 <option value="tva20">TVA 20 % (HT + TVA)</option>
+                <option value="intracom">Livraison intracommunautaire (autoliquidation)</option>
                 <option value="exonere">Exonéré de TVA</option>
               </select>
             </Field>
@@ -1466,7 +1519,78 @@ export default function DevisEditor({
                 <input type="number" min={0} step={1} className={fieldClass} style={fieldStyle} value={q.tvaRate} onChange={(e) => update({ tvaRate: parseInt(e.target.value) || 0 })} />
               </Field>
             )}
+            {q.tvaMode === "intracom" && (
+              <Field label="N° de TVA intracommunautaire du client">
+                <div className="flex gap-2">
+                  <input
+                    className={fieldClass}
+                    style={{ ...fieldStyle, fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}
+                    value={q.clientVatNumber}
+                    onChange={(e) => { update({ clientVatNumber: normalizeVat(e.target.value) }); setVies(null); }}
+                    placeholder="BE0123456749"
+                  />
+                  <button
+                    type="button"
+                    onClick={verifierTva}
+                    disabled={viesLoading}
+                    className={btnGhostClass}
+                    style={{ ...btnGhostStyle, flexShrink: 0 }}
+                  >
+                    {viesLoading ? <Loader2 size={13} className="animate-spin" /> : <ShieldCheck size={13} />}
+                    Vérifier
+                  </button>
+                </div>
+              </Field>
+            )}
           </div>
+
+          {/* ── Ce que le régime choisi impose ──
+              Une exonération intracommunautaire mal justifiée se retourne contre
+              le vendeur : l'administration lui réclame la TVA française. Les
+              conditions se disent donc à l'écran, au moment de la saisie. */}
+          {fiscal.blocking.length > 0 && (
+            <div className="px-3 py-2.5 text-[12px]" style={{ backgroundColor: TONE.warning.bg, border: `1px solid ${TONE.warning.bd}`, color: T.textDim }}>
+              <span style={{ color: TONE.warning.fg }}>Il manque encore {issuesLabel(fiscal.blocking)}.</span>{" "}
+              Ce devis s&apos;enregistre, il ne peut pas partir chez le client.
+            </div>
+          )}
+          {vies && (
+            <div
+              className="px-3 py-2.5 text-[12px]"
+              style={{
+                backgroundColor: vies.etat === "valide" ? "rgba(78,209,161,0.10)" : "rgba(199,211,232,0.06)",
+                border: `1px solid ${vies.etat === "valide" ? "rgba(78,209,161,0.40)" : T.border}`,
+                color: T.textDim,
+              }}
+            >
+              {vies.etat === "valide" ? (
+                <>
+                  Numéro valide au registre européen{vies.nom ? ` : ${vies.nom}` : "."}
+                  {vies.adresse && <span style={{ color: T.muted }}> · {vies.adresse}</span>}
+                  {vies.nom && (
+                    <button
+                      type="button"
+                      onClick={() => update({ clientCompany: vies.nom ?? q.clientCompany })}
+                      className="ml-2 text-[11px] tracking-widest uppercase"
+                      style={{ color: T.accent }}
+                    >
+                      Reprendre ce nom
+                    </button>
+                  )}
+                </>
+              ) : (
+                <span>{vies.message}</span>
+              )}
+            </div>
+          )}
+          {fiscal.warnings.map((w) => (
+            <p key={w} className="text-[11px]" style={{ color: T.muted }}>{w}</p>
+          ))}
+          {fiscal.mention && (
+            <p className="text-[11px]" style={{ color: T.muted }}>
+              Mention imprimée sur le document : <span style={{ color: T.textDim }}>{fiscal.mention}</span>
+            </p>
+          )}
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Acompte">
               <select
@@ -1511,7 +1635,7 @@ export default function DevisEditor({
         </SectionCard>
 
         {/* Conditions */}
-        <SectionCard title={isFacture ? "Facture & conditions" : "Devis & conditions"}>
+        <SectionCard title={isAvoir ? "Avoir & motif" : isFacture ? "Facture & conditions" : "Devis & conditions"}>
           <div className="grid sm:grid-cols-3 gap-4">
             <Field label="Numéro">
               <input className={fieldClass} style={fieldStyle} value={q.number} onChange={(e) => update({ number: e.target.value })} />
@@ -1519,18 +1643,53 @@ export default function DevisEditor({
             <Field label="Date d'émission">
               <input type="date" className={fieldClass} style={{ ...fieldStyle, colorScheme: "dark" }} value={q.issueDate} onChange={(e) => update({ issueDate: e.target.value })} />
             </Field>
-            <Field label={isFacture ? "Délai de règlement (jours)" : "Validité (jours)"}>
+            <Field label={isAvoir ? "Sans échéance" : isFacture ? "Délai de règlement (jours)" : "Validité (jours)"}>
               <input type="number" min={0} className={fieldClass} style={fieldStyle} value={q.validityDays} onChange={(e) => update({ validityDays: parseInt(e.target.value) || 0 })} />
             </Field>
           </div>
-          <Field label="Conditions de règlement">
+
+          {/* ── Langue du document ──
+              Un acheteur néerlandophone ou anglophone doit pouvoir lire ce qu'il
+              signe. Le back-office, lui, reste en français. */}
+          <FieldGroup label="Langue du document">
+            <div className="flex gap-1">
+              {DOC_LANGS.map((code) => {
+                const active = q.docLang === code;
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => update({ docLang: code })}
+                    className={active ? btnPrimaryClass : btnGhostClass}
+                    style={active ? btnPrimaryStyle : btnGhostStyle}
+                  >
+                    {DOC_LANG_LABEL[code]}
+                  </button>
+                );
+              })}
+            </div>
+          </FieldGroup>
+          {q.docLang === "en" && (
+            <p className="text-[11px]" style={{ color: T.muted }}>
+              Le document, l&apos;email d&apos;envoi et la page d&apos;acceptation passent en anglais. Les montants
+              gardent le format français, et les mentions légales s&apos;impriment dans les deux langues :
+              la version française est celle qui fait foi.
+            </p>
+          )}
+          {q.docLang === "fr" && q.clientCountry !== "FR" && (
+            <p className="text-[11px]" style={{ color: T.muted }}>
+              Client {countryName(q.clientCountry)} : le document part en français. Basculez en anglais si
+              votre interlocuteur le préfère.
+            </p>
+          )}
+          <Field label={isAvoir ? "Motif de l'avoir" : "Conditions de règlement"}>
             <textarea className={fieldClass} style={{ ...fieldStyle, resize: "vertical" }} rows={2} value={q.paymentTerms} onChange={(e) => update({ paymentTerms: e.target.value })} />
           </Field>
           <Field label="Notes (optionnel)">
             <textarea className={fieldClass} style={{ ...fieldStyle, resize: "vertical" }} rows={2} value={q.notes} onChange={(e) => update({ notes: e.target.value })} placeholder="Mentions complémentaires, garantie, reprise…" />
           </Field>
           {/* Le cycle Brouillon / Envoyé / Accepté / Refusé ne concerne que le devis. */}
-          {!isFacture && (
+          {!isFacture && !isAvoir && (
             <Field label="Statut">
               <select className={fieldClass} style={fieldStyle} value={q.status} onChange={(e) => update({ status: e.target.value as QuoteStatus })}>
                 <option value="brouillon">Brouillon</option>
@@ -1818,7 +1977,7 @@ export default function DevisEditor({
           title="Des modifications restent à enregistrer."
           description="Quitter cet écran maintenant laisse ces modifications de côté. Elles restent retrouvables au prochain retour sur ce devis."
           confirmLabel="Quitter sans enregistrer"
-          onConfirm={() => { setLeaveOpen(false); router.push(isFacture ? "/admin/factures" : "/admin/devis"); }}
+          onConfirm={() => { setLeaveOpen(false); router.push(isFacture || isAvoir ? "/admin/factures" : "/admin/devis"); }}
           onCancel={() => setLeaveOpen(false)}
         />
 
@@ -2025,5 +2184,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className={labelClass} style={{ color: T.muted }}>{label}</span>
       {children}
     </label>
+  );
+}
+
+// Même présentation, sans <label> : un groupe de boutons enfermé dans un label
+// prend le texte du label dans son nom accessible, et les deux boutons finissent
+// par s'appeler pareil. Illisible au lecteur d'écran, et impossible à viser.
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="block">
+      <span className={labelClass} style={{ color: T.muted }}>{label}</span>
+      {children}
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { computeTotals, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
+import { computeTotals, creditsByInvoice, remainingDue, DOCS_HORS_DEVIS, type QuoteItem, type TvaMode, type DepositMode } from "@/lib/devis";
 import { relanceDue, daysSince, parisDayOf } from "@/lib/relances";
 import { blockedByRedList, ajoutsListeRouge } from "@/lib/mailer";
 import { parisDay } from "@/lib/vehicules";
@@ -15,10 +15,22 @@ export default async function RelancesPage() {
   // et les deux pages divergeaient d'un jour en soirée.
   const today = parisDay(new Date()).toISOString().slice(0, 10);
 
-  const [candidates, logs] = await Promise.all([
+  const [candidates, avoirs, logs] = await Promise.all([
     prisma.quote.findMany({
-      where: { OR: [{ docType: { not: "facture" }, status: "envoye" }, { docType: "facture", paymentStatus: "impayee" }] },
+      where: {
+        OR: [
+          // Un avoir porte le statut « accepté » : sans exclusion explicite, il
+          // remontait ici comme un devis en attente de réponse.
+          { docType: { notIn: [...DOCS_HORS_DEVIS] }, status: "envoye" },
+          { docType: "facture", paymentStatus: "impayee" },
+        ],
+      },
       orderBy: { issueDate: "asc" },
+    }),
+    // Avoirs émis : une facture créditée en totalité sort du centre de relances.
+    prisma.quote.findMany({
+      where: { docType: "avoir" },
+      select: { sourceQuoteId: true, items: true, tvaMode: true, tvaRate: true, depositMode: true, depositValue: true },
     }),
     // Journal des actions : la question « est-ce que la relance est partie ? »
     // se répond ici, y compris pour les documents sortis de la liste.
@@ -27,25 +39,11 @@ export default async function RelancesPage() {
 
   const devis: RelanceItem[] = [];
   const factures: RelanceItem[] = [];
+  const credits = creditsByInvoice(avoirs);
   // Liste rouge : la ligne annonce l'envoi impossible au lieu de le découvrir au clic.
   const ajoutsRouge = await ajoutsListeRouge();
 
   for (const r of candidates) {
-    const due = relanceDue(
-      {
-        docType: r.docType,
-        status: r.status,
-        paymentStatus: r.paymentStatus,
-        issueDate: r.issueDate,
-        sentAt: r.sentAt,
-        validityDays: r.validityDays,
-        lastRelanceDate: r.lastRelanceDate,
-        relanceSnoozeUntil: r.relanceSnoozeUntil,
-      },
-      today,
-    );
-    if (!due) continue;
-
     let items: QuoteItem[] = [];
     try {
       const p = JSON.parse(r.items);
@@ -60,7 +58,28 @@ export default async function RelancesPage() {
       depositMode: r.depositMode as DepositMode,
       depositValue: r.depositValue,
     });
-    const amount = due.kind === "facture" && r.factureKind === "solde" ? totals.balance : totals.totalTTC;
+    const facture = r.factureKind === "solde" ? totals.balance : totals.totalTTC;
+    const credite = credits.get(r.id) ?? 0;
+
+    const due = relanceDue(
+      {
+        docType: r.docType,
+        status: r.status,
+        paymentStatus: r.paymentStatus,
+        issueDate: r.issueDate,
+        sentAt: r.sentAt,
+        validityDays: r.validityDays,
+        lastRelanceDate: r.lastRelanceDate,
+        relanceSnoozeUntil: r.relanceSnoozeUntil,
+        fullyCredited: r.docType === "facture" && credite > 0 && remainingDue(facture, credite) <= 0,
+      },
+      today,
+    );
+    if (!due) continue;
+
+    // Sur une facture partiellement créditée, on réclame ce qui reste dû, pas
+    // le montant d'origine.
+    const amount = due.kind === "facture" ? remainingDue(facture, credite) : totals.totalTTC;
 
     const item: RelanceItem = {
       id: r.id,

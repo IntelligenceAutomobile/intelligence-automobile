@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { quoteToData, quoteFromRow } from "@/lib/quote-serialize";
+import { DOCS_HORS_DEVIS } from "@/lib/devis";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
@@ -9,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   // ?type=devis|facture pour restreindre (défaut : tout).
   const type = req.nextUrl.searchParams.get("type");
-  const where = type === "facture" ? { docType: "facture" } : type === "devis" ? { docType: { not: "facture" } } : undefined;
+  const where = type === "facture" ? { docType: "facture" } : type === "devis" ? { docType: { notIn: [...DOCS_HORS_DEVIS] } } : undefined;
 
   // ?light=1 : juste de quoi peupler la palette de commandes. Sans ce mode, elle
   // téléchargeait TOUS les devis avec leurs lignes et leur mise en page, pour

@@ -1,6 +1,6 @@
 // Mappers entre le corps de requête / ligne Prisma et l'objet devis applicatif.
 // Module neutre (pas de dépendance Prisma/React).
-import { mergeBranding, mergeVehicleBlock } from "./devis";
+import { mergeBranding, mergeVehicleBlock, isEuCountry, normalizeVat } from "./devis";
 import { parisDay } from "./vehicules";
 
 export function quoteToData(body: Record<string, unknown>) {
@@ -23,6 +23,12 @@ export function quoteToData(body: Record<string, unknown>) {
     clientAddress: s(body.clientAddress),
     clientEmail: s(body.clientEmail),
     clientPhone: s(body.clientPhone),
+    // Pays borné à la liste connue et numéro de TVA nettoyé à l'entrée : un
+    // « BE 0123.456.749 » collé d'un mail devient « BE0123456749 ».
+    clientCountry: isEuCountry(s(body.clientCountry)) ? s(body.clientCountry) : "FR",
+    clientVatNumber: normalizeVat(s(body.clientVatNumber)),
+    // Langue du document remis au client : toute autre valeur retombe en français.
+    docLang: body.docLang === "en" ? "en" : "fr",
     // Format contrôlé : une date illisible rendait le document invisible du
     // centre de relances, silencieusement et pour toujours. Repli en jour de
     // Paris : le runtime UTC datait de la veille un document créé le soir.

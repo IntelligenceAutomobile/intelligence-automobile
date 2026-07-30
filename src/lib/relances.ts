@@ -59,6 +59,10 @@ export type RelanceRow = {
   validityDays?: number;
   lastRelanceDate: string;
   relanceSnoozeUntil: string;
+  // Facture créditée en totalité par un avoir : ce n'est plus une créance.
+  // Sans ce drapeau, le centre de relances réclamait le paiement d'une facture
+  // que l'agence venait elle-même d'annuler.
+  fullyCredited?: boolean;
 };
 
 export type RelanceKind = "devis" | "facture";
@@ -68,6 +72,11 @@ export type RelanceKind = "devis" | "facture";
 export function relanceDue(row: RelanceRow, todayIso: string): { kind: RelanceKind; sinceDays: number } | null {
   // Reportée ?
   if (row.relanceSnoozeUntil && daysSince(row.relanceSnoozeUntil, todayIso) < 0) return null;
+
+  // Un avoir ne se relance pas : c'est un document émis, pas une attente.
+  if (row.docType === "avoir") return null;
+  // Facture annulée par un avoir : plus rien à réclamer.
+  if (row.fullyCredited) return null;
 
   const isFacture = row.docType === "facture";
 

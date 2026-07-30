@@ -339,6 +339,9 @@ export type DemoQuote = {
   clientCompany: string;
   clientEmail: string;
   clientPhone: string;
+  clientCountry?: string;
+  clientVatNumber?: string;
+  docLang?: string;
   issueDate: string;
   vehicleId: string | null;
   items: DemoQuoteItem[];
@@ -368,6 +371,11 @@ export function getDemoQuotes(): DemoQuote[] {
       factureKind: null, paymentStatus: null, paidDate: null,
       clientId: "cli-4", clientName: "Marc Dubois", clientCompany: "TransCar SPRL",
       clientEmail: "m.dubois@transcar.be", clientPhone: "+32 475 11 22 33",
+      // Vente à un professionnel belge : la démonstration montre l'exonération
+      // intracommunautaire, avec le numéro de TVA du preneur et la mention légale.
+      clientCountry: "BE", clientVatNumber: "BE0456789123", tvaMode: "intracom",
+      // Document en anglais : la démonstration montre le devis bilingue.
+      docLang: "en",
       issueDate: isoDay(-12), vehicleId: "veh-4",
       items: [
         { id: "it1", designation: `${veh4?.make ?? "Véhicule"} ${veh4?.model ?? ""}`.trim(), detail: veh4 ? `${veh4.year} · ${veh4.mileage} km` : "", qty: 1, unitPrice: veh4?.price ?? 20990 },
@@ -463,6 +471,40 @@ export function getDemoQuotes(): DemoQuote[] {
 
 export function getDemoQuote(id: string): DemoQuote | undefined {
   return getDemoQuotes().find((q) => q.id === id);
+}
+
+/* ────────────────────────── Journal des relances ──────────────────────────
+   Ce qui a déjà été fait dans le centre de relances : le prospect voit que
+   l'outil garde la trace de chaque envoi, appel et report. */
+export type DemoRelanceLog = {
+  id: string;
+  quoteId: string;
+  number: string;
+  client: string;
+  action: string;
+  detail: string;
+  author: string;
+  at: string;
+};
+
+export function getDemoRelanceLog(): DemoRelanceLog[] {
+  const year = new Date().getFullYear();
+  // Heures fixes dans la journée, pour un journal lisible et stable.
+  const at = (jours: number, heure: number, minute: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - jours);
+    d.setHours(heure, minute, 0, 0);
+    return d.toISOString();
+  };
+  return [
+    { id: "rl-1", quoteId: "q-035", number: `${year}-035`, client: "Sophie Marchand", action: "email", detail: "Email envoyé à s.marchand@outlook.fr", author: "Fab", at: at(2, 9, 12) },
+    { id: "rl-2", quoteId: "fac-002", number: `FAC-${year}-002`, client: "TransCar SPRL", action: "telephone", detail: "Relance notée : contact par téléphone", author: "Julie", at: at(3, 11, 40) },
+    { id: "rl-3", quoteId: "q-041", number: `${year}-041`, client: "TransCar SPRL", action: "report", detail: "Reporté au " + isoDay(4).split("-").reverse().join("/"), author: "Fab", at: at(4, 16, 5) },
+    { id: "rl-4", quoteId: "q-035", number: `${year}-035`, client: "Sophie Marchand", action: "email", detail: "Email envoyé à s.marchand@outlook.fr", author: "Fab", at: at(12, 10, 30) },
+    { id: "rl-5", quoteId: "fac-001", number: `FAC-${year}-001`, client: "Karim Benali", action: "email", detail: "Email envoyé à k.benali@gmail.com", author: "Thomas", at: at(14, 14, 22) },
+    { id: "rl-6", quoteId: "q-030", number: `${year}-030`, client: "Roy Automobiles", action: "arret", detail: "Relances arrêtées pour ce document", author: "Fab", at: at(20, 8, 55) },
+    { id: "rl-7", quoteId: "q-030", number: `${year}-030`, client: "Roy Automobiles", action: "echec", detail: "Envoi refusé par le service d'email : adresse inconnue", author: "Fab", at: at(22, 17, 48) },
+  ];
 }
 
 /* ────────────────────────── Garanties ────────────────────────── */

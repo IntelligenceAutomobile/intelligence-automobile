@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   ChevronLeft, ChevronRight, FileText, Mail, Phone, Building2, Pencil, Trash2,
   Plus, MessageSquare, PhoneCall, CalendarClock, ArrowRightLeft, Sparkles, Send,
+  Download, ShieldOff,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import {
@@ -220,6 +221,27 @@ export default function ClientDetail({
   const [form, setForm] = useState({ name: client.name, company: client.company, email: client.email, phone: client.phone, notes: client.notes });
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmErase, setConfirmErase] = useState(false);
+  const [bilan, setBilan] = useState<{ devisAnonymises: number; facturesConservees: number; pistesSupprimees: number } | null>(null);
+  // Fiche déjà effacée : les deux actions n'ont plus d'objet.
+  const efface = client.name === "Personne effacée";
+
+  async function effacerDonnees() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}/effacer`, { method: "POST" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error);
+      setBilan(j.bilan);
+      setConfirmErase(false);
+      toast.success("Données effacées.");
+      startTransition(() => router.refresh());
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : "L'effacement a échoué.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function saveClient() {
     if (!form.name.trim()) {
@@ -392,6 +414,56 @@ export default function ClientDetail({
             )}
           </SectionCard>
 
+          {/* ── Données personnelles ──
+              Une personne peut demander ce que vous détenez sur elle, et son
+              effacement. Le délai de réponse est d'un mois. Répondre à la main
+              suppose de fouiller six écrans, et supprimer la fiche laissait son
+              nom, son adresse et son email sur chaque devis. */}
+          <SectionCard title="Données personnelles">
+            {/* Le bilan reste affiché après l'effacement : placé dans la branche
+                « pas encore effacée », il disparaissait à la seconde même où la
+                fiche basculait, avant d'avoir pu être lu. */}
+            {bilan && (
+              <div className="px-3 py-2.5 text-[12px]" style={{ backgroundColor: T.float, border: `1px solid ${T.border}`, color: T.textDim }}>
+                Effacement fait. Devis anonymisés : {bilan.devisAnonymises}. Pièces comptables conservées :{" "}
+                {bilan.facturesConservees}. Pistes supprimées : {bilan.pistesSupprimees}. Rendez-vous,
+                garanties et dossiers d&apos;immatriculation détachés.
+              </div>
+            )}
+            {efface ? (
+              <p className="text-sm" style={{ color: T.muted }}>
+                Cette fiche a été effacée à la demande de la personne. Le détail de l&apos;opération figure
+                dans les notes ci-dessus.
+              </p>
+            ) : (
+              <>
+                <p className="text-[12px]" style={{ color: T.muted }}>
+                  Cette personne peut demander la copie de ses données, et leur effacement. Le délai légal
+                  de réponse est d&apos;un mois.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <a
+                    href={`/api/admin/clients/${client.id}/donnees`}
+                    className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:opacity-80"
+                    style={{ color: T.accent }}
+                  >
+                    <Download size={12} />
+                    Copie de ses données
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmErase(true)}
+                    className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#FF6B35]"
+                    style={{ color: T.muted }}
+                  >
+                    <ShieldOff size={12} />
+                    Effacer ses données
+                  </button>
+                </div>
+              </>
+            )}
+          </SectionCard>
+
           <SectionCard title={`Devis (${quotes.length})`}>
             {quotes.length === 0 ? (
               <p className="text-sm" style={{ color: T.muted }}>Aucun devis lié.</p>
@@ -438,10 +510,38 @@ export default function ClientDetail({
       <ConfirmDialog
         open={confirmDelete}
         title="Supprimer ce client ?"
-        description="Ses leads et son historique d'interactions seront définitivement supprimés. Les devis liés sont conservés."
+        description="Ses leads et son historique d'interactions seront définitivement supprimés. Les devis liés sont conservés, avec les coordonnées qu'ils portent. Pour retirer aussi ces coordonnées, utilisez « Effacer ses données »."
         busy={busy}
         onConfirm={deleteClient}
         onCancel={() => setConfirmDelete(false)}
+      />
+
+      {/* L'effacement est irréversible et touche des pièces comptables : ce que
+          la loi oblige à conserver est annoncé AVANT de valider. */}
+      <ConfirmDialog
+        open={confirmErase}
+        title="Effacer les données de cette personne ?"
+        confirmLabel="Effacer"
+        description={
+          <>
+            <span className="block">
+              <strong style={{ color: T.textDim }}>Effacés</strong> : la fiche, les pistes commerciales et
+              leur journal, les rendez-vous, les garanties, les dossiers d&apos;immatriculation, et les devis
+              jamais facturés.
+            </span>
+            <span className="block mt-2">
+              <strong style={{ color: T.textDim }}>Conservés</strong> : les factures et avoirs, avec le nom
+              et l&apos;adresse. Le Code de commerce impose de garder les pièces comptables dix ans, et ces
+              deux mentions sont obligatoires sur une facture. L&apos;email et le téléphone en sont retirés.
+            </span>
+            <span className="block mt-2">
+              Une trace de la demande reste attachée à la fiche. L&apos;opération est irréversible.
+            </span>
+          </>
+        }
+        busy={busy}
+        onConfirm={effacerDonnees}
+        onCancel={() => setConfirmErase(false)}
       />
     </AdminPage>
   );
