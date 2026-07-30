@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getCollabSession } from "@/lib/collab-auth";
-import { STAGE_LABEL, isStage } from "@/lib/crm";
+import { can, asRole } from "@/lib/roles";
+import { STAGE_LABEL, isStage, isSource } from "@/lib/crm";
 
 // Mise à jour d'un lead ; un changement d'étape est journalisé dans la timeline.
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +22,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (typeof body.budget === "number" || body.budget === null) {
       data.budget = typeof body.budget === "number" && body.budget > 0 ? Math.round(body.budget) : null;
     }
+    // L'origine se corrigeait nulle part : un lead entré au téléphone puis saisi
+    // à la main gardait « Saisie manuelle » pour toujours.
+    if (isSource(body.source)) data.source = body.source;
     if (isStage(body.stage) && body.stage !== existing.stage) {
       data.stage = body.stage;
     }
@@ -48,6 +52,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  // Supprimer un lead emporte tout son journal d'interactions, en cascade et sans
+  // retour : même droit que la suppression d'un client ou d'un effacement RGPD.
+  if (!can(asRole(session.admin.role), "delete")) {
+    return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+  }
 
   const { id } = await params;
   try {

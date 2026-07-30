@@ -1,6 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can, asRole } from "@/lib/roles";
+import { EFFACE } from "@/lib/rgpd";
 import ClientDetail, { type ClientFull } from "./ClientDetail";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -56,5 +58,17 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     })),
   };
 
-  return <ClientDetail client={full} vehicles={vehicles} quotes={quotes} />;
+  // Les deux verdicts sont rendus ici, côté serveur, plutôt que devinés à l'écran :
+  // « effacée » se lisait jusqu'ici en comparant le nom à une chaîne recopiée à la
+  // main, et les actions destructrices s'affichaient à des comptes que les routes
+  // refusent ensuite (le message parlait alors de panne, pas de permission).
+  return (
+    <ClientDetail
+      client={full}
+      vehicles={vehicles}
+      quotes={quotes}
+      efface={client.name === EFFACE}
+      canDelete={can(asRole(session.admin.role), "delete")}
+    />
+  );
 }

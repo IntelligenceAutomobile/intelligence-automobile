@@ -1,21 +1,21 @@
 "use client";
 
 // Fiche client CRM : coordonnées, leads avec timeline d'interactions, devis liés.
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChevronLeft, ChevronRight, FileText, Mail, Phone, Building2, Pencil, Trash2,
   Plus, MessageSquare, PhoneCall, CalendarClock, ArrowRightLeft, Sparkles, Send,
-  Download, ShieldOff,
+  Download, ShieldOff, Copy,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import {
-  STAGES, STAGE_LABEL, STAGE_TONE, SOURCE_LABEL, EVENT_LABEL,
+  STAGES, STAGE_LABEL, STAGE_TONE, SOURCE_LABEL, SOURCES, EVENT_LABEL,
   type Stage, type Source, type EventType,
 } from "@/lib/crm";
 import { STATUS_LABEL, formatDateFr, type QuoteStatus } from "@/lib/devis";
-import { T, Tag, AdminPage, PageHeader, SectionCard, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../../ui";
+import { T, TONE, Tag, AdminPage, PageHeader, SectionCard, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../../ui";
 import { useToast } from "../../toast";
 import { ConfirmDialog } from "../../confirm";
 
@@ -68,16 +68,76 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-/* ── Timeline + ajout d'interaction d'un lead ── */
-function LeadBlock({ lead, vehicles }: { lead: LeadFull; vehicles: VehicleLite[] }) {
+/* ── Copie d'une coordonnée dans le presse-papier ── */
+function CopyButton({ value, label }: { value: string; label: string }) {
+  const toast = useToast();
+  return (
+    <button
+      type="button"
+      aria-label={`Copier : ${value}`}
+      title="Copier"
+      className="p-1 flex-shrink-0 transition-colors hover:text-[#F0F5FF]"
+      style={{ color: T.muted }}
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          toast.success(label);
+        } catch {
+          toast.error("La copie a échoué.");
+        }
+      }}
+    >
+      <Copy size={12} />
+    </button>
+  );
+}
+
+// Un budget se tape « 15 000 », « 15000 » ou « 15 000 € ». Les séparateurs de
+// milliers et le symbole sont tolérés, rien d'autre.
+//
+// Retirer simplement les caractères non chiffrés serait pire que le mal : « 15k »
+// donnerait 15, « 12,5 » donnerait 125, et « 20 000-25 000 » donnerait 2000025000.
+// Toute saisie qui ne se réduit pas à une suite de chiffres est donc refusée à
+// l'écran, au lieu d'être enregistrée de travers en silence.
+function lireBudget(v: string): number | null | "invalide" {
+  const brut = v.trim();
+  if (!brut) return null;
+  // `\s` couvre déjà l’espace insécable et l’espace fine, celles que pose
+  // formatNumber. Le point reste écarté : « 12.5 » vaut douze et demi, pas 125.
+  const chiffres = brut.replace(/[\s€]/g, "");
+  if (!/^\d+$/.test(chiffres)) return "invalide";
+  const n = Number(chiffres);
+  return n > 0 && n <= 5_000_000 ? n : "invalide";
+}
+
+/* ── Timeline, modification et ajout d'interaction d'une opportunité ── */
+function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: VehicleLite[]; canDelete: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
   const [eventType, setEventType] = useState<EventType>("note");
   const [content, setContent] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [form, setForm] = useState({ title: "", source: "manuel" as Source, budget: "", vehicleId: "" });
+  // `busy` ne devient vrai qu'au rendu suivant : trois Entrée d'affilée passaient
+  // toutes les trois avant que le bouton se désactive, et créaient trois notes
+  // identiques. Ce verrou-ci se ferme dans le même tour d'exécution.
+  const envoiEnCours = useRef(false);
 
   const vehicle = lead.vehicleId ? vehicles.find((v) => v.id === lead.vehicleId) : null;
+  const tonalite = TONE[STAGE_TONE[lead.stage as Stage] ?? "muted"];
+
+  function ouvrirModification() {
+    setForm({
+      title: lead.title,
+      source: (lead.source as Source) ?? "manuel",
+      budget: lead.budget == null ? "" : String(lead.budget),
+      vehicleId: lead.vehicleId ?? "",
+    });
+    setEditing(true);
+  }
 
   async function changeStage(stage: Stage) {
     setBusy(true);
@@ -97,8 +157,53 @@ function LeadBlock({ lead, vehicles }: { lead: LeadFull; vehicles: VehicleLite[]
     }
   }
 
+  async function saveLead() {
+    const budget = lireBudget(form.budget);
+    if (budget === "invalide") {
+      toast.error("Le budget se saisit en chiffres, par exemple 15 000.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${lead.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: form.title,
+          source: form.source,
+          budget,
+          vehicleId: form.vehicleId || null,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Opportunité mise à jour.");
+      setEditing(false);
+      startTransition(() => router.refresh());
+    } catch {
+      toast.error("La mise à jour a échoué.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteLead() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${lead.id}`, { method: "DELETE" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error);
+      toast.success("Opportunité supprimée.");
+      setConfirmDelete(false);
+      startTransition(() => router.refresh());
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : "La suppression a échoué.");
+      setBusy(false);
+    }
+  }
+
   async function addEvent() {
-    if (!content.trim()) return;
+    if (envoiEnCours.current || !content.trim()) return;
+    envoiEnCours.current = true;
     setBusy(true);
     try {
       const res = await fetch(`/api/admin/leads/${lead.id}/events`, {
@@ -113,40 +218,181 @@ function LeadBlock({ lead, vehicles }: { lead: LeadFull; vehicles: VehicleLite[]
     } catch {
       toast.error("L'ajout a échoué.");
     } finally {
+      envoiEnCours.current = false;
       setBusy(false);
     }
   }
 
   return (
     <SectionCard>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium truncate" style={{ color: T.text }}>
-            {lead.title || SOURCE_LABEL[lead.source as Source] || "Opportunité"}
+          <div className="text-sm font-medium break-words" style={{ color: T.text }}>
+            {lead.title || <span style={{ color: T.muted }}>Objet à préciser</span>}
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[11px]" style={{ color: T.muted }}>
             <span>{SOURCE_LABEL[lead.source as Source] ?? lead.source}</span>
-            {vehicle && <span>· {vehicle.make} {vehicle.model} ({vehicle.year})</span>}
+            {/* Un véhicule retiré du stock effaçait sa mention sans un mot : on ne
+                savait plus sur quelle voiture portait l'opportunité. */}
+            {lead.vehicleId && (
+              <span>· {vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.year})` : "Véhicule retiré du stock"}</span>
+            )}
             {lead.budget != null && <span>· Budget {formatNumber(lead.budget)} €</span>}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Tag tone={STAGE_TONE[lead.stage as Stage] ?? "muted"}>{STAGE_LABEL[lead.stage as Stage] ?? lead.stage}</Tag>
+          {/* L'étape s'écrivait deux fois côte à côte, une pastille collée à un menu
+              qui disait le même mot. Le menu porte maintenant seul la couleur. */}
           <select
             value={lead.stage}
             disabled={busy}
+            aria-label="Étape de l'opportunité"
             onChange={(e) => changeStage(e.target.value as Stage)}
             className="text-xs px-3 py-2 outline-none focus:border-[#6B9FEE] cursor-pointer"
-            style={{ ...fieldStyle, width: undefined }}
+            style={{ ...fieldStyle, width: undefined, borderLeft: `2px solid ${tonalite.fg}`, color: tonalite.fg }}
           >
             {STAGES.map((s) => (
-              <option key={s} value={s}>{STAGE_LABEL[s]}</option>
+              <option key={s} value={s} style={{ color: T.text }}>{STAGE_LABEL[s]}</option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={editing ? () => setEditing(false) : ouvrirModification}
+            aria-label="Modifier l'opportunité"
+            title="Modifier l'opportunité"
+            className="p-2 transition-colors hover:opacity-80"
+            style={{ color: editing ? T.accent : T.muted }}
+          >
+            <Pencil size={13} />
+          </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Supprimer l'opportunité"
+              title="Supprimer l'opportunité"
+              className="p-2 transition-colors hover:text-[#FF6B35]"
+              style={{ color: T.muted }}
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Timeline */}
+      {/* Modification : les mêmes quatre champs que la fenêtre de création. */}
+      {editing && (
+        <div className="p-4 space-y-4" style={{ backgroundColor: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+          <div>
+            <label className={labelClass} style={{ color: T.textDim }} htmlFor={`objet-${lead.id}`}>Objet</label>
+            <input
+              id={`objet-${lead.id}`}
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              placeholder="Ex : Recherche SUV hybride"
+              className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full"
+              style={fieldStyle}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass} style={{ color: T.textDim }} htmlFor={`source-${lead.id}`}>Origine</label>
+              <select
+                id={`source-${lead.id}`}
+                value={form.source}
+                onChange={(e) => setForm((f) => ({ ...f, source: e.target.value as Source }))}
+                className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full cursor-pointer"
+                style={fieldStyle}
+              >
+                {SOURCES.map((s) => (
+                  <option key={s} value={s}>{SOURCE_LABEL[s]}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass} style={{ color: T.textDim }} htmlFor={`budget-${lead.id}`}>Budget (€)</label>
+              <input
+                id={`budget-${lead.id}`}
+                inputMode="numeric"
+                value={form.budget}
+                onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value }))}
+                className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full"
+                style={fieldStyle}
+              />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass} style={{ color: T.textDim }} htmlFor={`vehicule-${lead.id}`}>Véhicule concerné</label>
+            <select
+              id={`vehicule-${lead.id}`}
+              value={form.vehicleId}
+              onChange={(e) => setForm((f) => ({ ...f, vehicleId: e.target.value }))}
+              className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full cursor-pointer"
+              style={fieldStyle}
+            >
+              <option value="">— Aucun —</option>
+              {vehicles.map((v) => (
+                <option key={v.id} value={v.id}>{v.make} {v.model} · {v.year}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={saveLead} disabled={busy} className={btnPrimaryClass} style={btnPrimaryStyle}>
+              {busy ? "…" : "Enregistrer"}
+            </button>
+            <button type="button" onClick={() => setEditing(false)} disabled={busy} className={btnGhostClass} style={btnGhostStyle}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Ajout d'interaction, placé AVANT le journal : celui-ci se lit du plus
+          récent au plus ancien, donc une note écrite en bas apparaissait en haut,
+          souvent hors de l'écran. Elle se pose maintenant juste sous le champ. */}
+      <div className="flex flex-col sm:flex-row gap-2 items-start">
+        <select
+          value={eventType}
+          aria-label="Type d'interaction"
+          onChange={(e) => setEventType(e.target.value as EventType)}
+          className="text-xs px-3 py-2.5 outline-none focus:border-[#6B9FEE] cursor-pointer flex-shrink-0"
+          style={{ ...fieldStyle, width: undefined }}
+        >
+          <option value="note">Note</option>
+          <option value="appel">Appel</option>
+          <option value="email">Email</option>
+          <option value="rdv">RDV</option>
+        </select>
+        <textarea
+          value={content}
+          rows={2}
+          aria-label="Nouvelle interaction"
+          onChange={(e) => setContent(e.target.value)}
+          // Entrée sert au retour à la ligne : un compte rendu d'appel tient
+          // rarement sur une ligne. L'envoi passe par Ctrl (ou ⌘) + Entrée.
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              addEvent();
+            }
+          }}
+          placeholder="Ajouter une interaction… (Ctrl + Entrée pour valider)"
+          className="px-4 py-2.5 text-sm outline-none focus:border-[#6B9FEE] flex-1 resize-y"
+          style={fieldStyle}
+        />
+        <button
+          type="button"
+          onClick={addEvent}
+          disabled={busy || !content.trim()}
+          className={btnGhostClass + " flex-shrink-0"}
+          style={btnGhostStyle}
+        >
+          <Send size={13} />
+          Ajouter
+        </button>
+      </div>
+
+      {/* Journal */}
       <ul className="space-y-0.5">
         {lead.events.map((e, i) => {
           const Icon = EVENT_ICON[e.type] ?? MessageSquare;
@@ -170,49 +416,29 @@ function LeadBlock({ lead, vehicles }: { lead: LeadFull; vehicles: VehicleLite[]
         })}
       </ul>
 
-      {/* Ajout d'interaction */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <select
-          value={eventType}
-          onChange={(e) => setEventType(e.target.value as EventType)}
-          className="text-xs px-3 py-2.5 outline-none focus:border-[#6B9FEE] cursor-pointer flex-shrink-0"
-          style={{ ...fieldStyle, width: undefined }}
-        >
-          <option value="note">Note</option>
-          <option value="appel">Appel</option>
-          <option value="email">Email</option>
-          <option value="rdv">RDV</option>
-        </select>
-        <input
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") addEvent(); }}
-          placeholder="Ajouter une interaction… (Entrée pour valider)"
-          className="px-4 py-2.5 text-sm outline-none focus:border-[#6B9FEE] flex-1"
-          style={fieldStyle}
-        />
-        <button
-          type="button"
-          onClick={addEvent}
-          disabled={busy || !content.trim()}
-          className={btnGhostClass + " flex-shrink-0"}
-          style={btnGhostStyle}
-        >
-          <Send size={13} />
-          Ajouter
-        </button>
-      </div>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Supprimer cette opportunité ?"
+        description="Son journal d'interactions sera supprimé avec elle. Les devis liés au client sont conservés."
+        busy={busy}
+        onConfirm={deleteLead}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </SectionCard>
   );
 }
 
 /* ── Page ── */
 export default function ClientDetail({
-  client, vehicles, quotes,
+  client, vehicles, quotes, efface, canDelete,
 }: {
   client: ClientFull;
   vehicles: VehicleLite[];
   quotes: QuoteLite[];
+  /** Fiche déjà effacée à la demande de la personne (verdict rendu côté serveur). */
+  efface: boolean;
+  /** Le compte a le droit de supprimer : sans lui, les routes répondent 403. */
+  canDelete: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -223,8 +449,29 @@ export default function ClientDetail({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmErase, setConfirmErase] = useState(false);
   const [bilan, setBilan] = useState<{ devisAnonymises: number; facturesConservees: number; pistesSupprimees: number } | null>(null);
-  // Fiche déjà effacée : les deux actions n'ont plus d'objet.
-  const efface = client.name === "Personne effacée";
+
+  // `form` était semé une seule fois, au premier affichage de la page, et gardait
+  // ensuite ce qu'on y avait tapé. Deux conséquences, toutes deux constatées :
+  // « Annuler » puis rouvrir « Modifier » ramenait la saisie abandonnée, qui
+  // repartait en base à l'enregistrement suivant ; et après un effacement RGPD,
+  // le formulaire contenait encore le nom, l'email et le téléphone effacés, qu'un
+  // simple « Enregistrer » réinscrivait. Le formulaire se sème donc à l'ouverture
+  // de la modification, jamais avant, et se repose à la fermeture.
+  const valeursEnregistrees = () => ({
+    name: client.name,
+    company: client.company,
+    email: client.email,
+    phone: client.phone,
+    notes: client.notes,
+  });
+  function ouvrirModification() {
+    setForm(valeursEnregistrees());
+    setEditing(true);
+  }
+  function fermerModification() {
+    setForm(valeursEnregistrees());
+    setEditing(false);
+  }
 
   async function effacerDonnees() {
     setBusy(true);
@@ -362,13 +609,17 @@ export default function ClientDetail({
                   <button type="button" onClick={saveClient} disabled={busy} className={btnPrimaryClass} style={btnPrimaryStyle}>
                     {busy ? "…" : "Enregistrer"}
                   </button>
-                  <button type="button" onClick={() => setEditing(false)} disabled={busy} className={btnGhostClass} style={btnGhostStyle}>
+                  <button type="button" onClick={fermerModification} disabled={busy} className={btnGhostClass} style={btnGhostStyle}>
                     Annuler
                   </button>
                 </div>
               </>
             ) : (
               <>
+                {/* Écrire ou appeler était le geste le plus fréquent de la fiche,
+                    et le plus lent : il fallait sélectionner à la souris, copier,
+                    puis changer de logiciel. Un clic suffit désormais, et le bouton
+                    de copie sert aux postes où la messagerie reste débranchée. */}
                 <ul className="space-y-2.5 text-sm" style={{ color: T.textDim }}>
                   {client.company && (
                     <li className="flex items-center gap-2.5">
@@ -376,13 +627,31 @@ export default function ClientDetail({
                       {client.company}
                     </li>
                   )}
-                  <li className="flex items-center gap-2.5">
+                  <li className="flex items-center gap-2.5 min-w-0">
                     <Mail size={14} style={{ color: T.muted, flexShrink: 0 }} />
-                    {client.email || <span style={{ color: T.muted }}>Pas d&apos;email</span>}
+                    {client.email ? (
+                      <>
+                        <a href={`mailto:${client.email}`} className="truncate transition-colors hover:text-[#F0F5FF]">
+                          {client.email}
+                        </a>
+                        <CopyButton value={client.email} label="Email copié." />
+                      </>
+                    ) : (
+                      <span style={{ color: T.muted }}>Pas d&apos;email</span>
+                    )}
                   </li>
-                  <li className="flex items-center gap-2.5">
+                  <li className="flex items-center gap-2.5 min-w-0">
                     <Phone size={14} style={{ color: T.muted, flexShrink: 0 }} />
-                    {client.phone || <span style={{ color: T.muted }}>Pas de téléphone</span>}
+                    {client.phone ? (
+                      <>
+                        <a href={`tel:${client.phone.replace(/[^+0-9]/g, "")}`} className="truncate transition-colors hover:text-[#F0F5FF]">
+                          {client.phone}
+                        </a>
+                        <CopyButton value={client.phone} label="Numéro copié." />
+                      </>
+                    ) : (
+                      <span style={{ color: T.muted }}>Pas de téléphone</span>
+                    )}
                   </li>
                 </ul>
                 {client.notes && (
@@ -390,26 +659,33 @@ export default function ClientDetail({
                     {client.notes}
                   </p>
                 )}
-                <div className="flex items-center gap-4 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(true)}
-                    className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:opacity-80"
-                    style={{ color: T.accent }}
-                  >
-                    <Pencil size={12} />
-                    Modifier
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDelete(true)}
-                    className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#FF6B35]"
-                    style={{ color: T.muted }}
-                  >
-                    <Trash2 size={12} />
-                    Supprimer
-                  </button>
-                </div>
+                {/* Sur une fiche effacée, modifier revient à réinscrire ce que la
+                    personne a demandé de retirer : les deux actions disparaissent.
+                    « Supprimer » suit le droit du compte, comme partout ailleurs. */}
+                {efface ? null : (
+                  <div className="flex items-center gap-4 pt-1">
+                    <button
+                      type="button"
+                      onClick={ouvrirModification}
+                      className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:opacity-80"
+                      style={{ color: T.accent }}
+                    >
+                      <Pencil size={12} />
+                      Modifier
+                    </button>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(true)}
+                        className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#FF6B35]"
+                        style={{ color: T.muted }}
+                      >
+                        <Trash2 size={12} />
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </SectionCard>
@@ -450,15 +726,19 @@ export default function ClientDetail({
                     <Download size={12} />
                     Copie de ses données
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmErase(true)}
-                    className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#FF6B35]"
-                    style={{ color: T.muted }}
-                  >
-                    <ShieldOff size={12} />
-                    Effacer ses données
-                  </button>
+                  {/* La remise de la copie reste ouverte à tous : sa route ne
+                      filtre pas. L'effacement exige le droit de suppression. */}
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmErase(true)}
+                      className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#FF6B35]"
+                      style={{ color: T.muted }}
+                    >
+                      <ShieldOff size={12} />
+                      Effacer ses données
+                    </button>
+                  )}
                 </div>
               </>
             )}
@@ -502,7 +782,9 @@ export default function ClientDetail({
               </button>
             </div>
           ) : (
-            client.leads.map((lead) => <LeadBlock key={lead.id} lead={lead} vehicles={vehicles} />)
+            client.leads.map((lead) => (
+              <LeadBlock key={lead.id} lead={lead} vehicles={vehicles} canDelete={canDelete} />
+            ))
           )}
         </div>
       </div>

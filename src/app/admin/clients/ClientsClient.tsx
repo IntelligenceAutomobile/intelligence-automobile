@@ -1,7 +1,7 @@
 "use client";
 
 // CRM : pipeline kanban des leads + carnet clients + création client/lead.
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -141,6 +141,27 @@ function NewClientModal({ vehicles, onClose }: { vehicles: VehicleLite[]; onClos
   const [withLead, setWithLead] = useState(true);
   const [lead, setLead] = useState({ title: "", source: "manuel" as Source, budget: "", vehicleId: "" });
 
+  // La fenêtre se comportait autrement que celle de confirmation : Échap restait
+  // sans effet, le curseur ne descendait pas dans le premier champ, et un clic
+  // deux pixels à côté jetait la saisie sans rien demander.
+  const saisieCommencee =
+    Object.values(form).some((v) => v.trim() !== "") || lead.title.trim() !== "" || lead.budget.trim() !== "";
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  function fermerDepuisLeFond() {
+    if (busy) return;
+    // Rien de saisi : le clic à côté ferme, comme partout. Dès qu'un champ est
+    // rempli, la fermeture passe par « Annuler » ou par Échap.
+    if (!saisieCommencee) onClose();
+  }
+
   async function submit() {
     if (!form.name.trim()) {
       toast.error("Le nom du client est requis.");
@@ -173,11 +194,13 @@ function NewClientModal({ vehicles, onClose }: { vehicles: VehicleLite[]; onClos
     }
   }
 
-  const input = (key: keyof typeof form, label: string, type = "text") => (
+  const input = (key: keyof typeof form, label: string, type = "text", autoFocus = false) => (
     <div>
-      <label className={labelClass} style={{ color: T.textDim }}>{label}</label>
+      <label className={labelClass} style={{ color: T.textDim }} htmlFor={`nc-${key}`}>{label}</label>
       <input
+        id={`nc-${key}`}
         type={type}
+        autoFocus={autoFocus}
         value={form[key]}
         onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
         className="px-4 py-3 text-sm outline-none focus:border-[#6B9FEE] w-full"
@@ -189,17 +212,20 @@ function NewClientModal({ vehicles, onClose }: { vehicles: VehicleLite[]; onClos
   return (
     <div
       className="fixed inset-0 z-[60] flex items-start justify-center px-6 py-10 overflow-y-auto"
-      style={{ backgroundColor: "rgba(4,11,22,0.72)", backdropFilter: "blur(6px)" }}
-      onClick={busy ? undefined : onClose}
+      style={{ backgroundColor: "rgba(4,11,22,0.72)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+      onClick={fermerDepuisLeFond}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titre-nouveau-client"
     >
       <div
         className="w-full max-w-lg p-6"
         style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-medium mb-5" style={{ color: T.text }}>Nouveau client</h2>
+        <h2 id="titre-nouveau-client" className="text-base font-medium mb-5" style={{ color: T.text }}>Nouveau client</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {input("name", "Nom *")}
+          {input("name", "Nom *", "text", true)}
           {input("company", "Société")}
           {input("email", "Email", "email")}
           {input("phone", "Téléphone")}
