@@ -14,6 +14,7 @@
 //
 // La règle appliquée ici, et annoncée à l'écran :
 //   • fiche client, pistes commerciales, rendez-vous, garanties → effacés
+//   • estimations de reprise → anonymisées, l'opération d'achat conservée
 //   • devis jamais facturés → anonymisés en totalité
 //   • factures et avoirs → nom et adresse CONSERVÉS (mention obligatoire),
 //     email et téléphone effacés, car eux ne sont exigés par aucun texte
@@ -30,6 +31,7 @@ export type EffacementBilan = {
   rendezVousLiberes: number;
   garantiesAnonymisees: number;
   dossiersAnonymises: number;
+  reprisesAnonymisees: number;
 };
 
 /** Ce que le back-office détient sur une personne, pour lui remettre ou l'effacer. */
@@ -45,16 +47,19 @@ export async function dossierPersonnel(clientId: string) {
   const email = client.email.trim();
   const ouEmail = email ? [{ clientId }, { clientEmail: email }] : [{ clientId }];
 
-  const [quotes, appointments, warranties, registrations] = await Promise.all([
+  const [quotes, appointments, warranties, registrations, reprises] = await Promise.all([
     prisma.quote.findMany({ where: { OR: ouEmail }, orderBy: { issueDate: "asc" } }),
     prisma.appointment.findMany({ where: { clientId }, orderBy: { date: "asc" } }),
     email
       ? prisma.warranty.findMany({ where: { clientEmail: email }, orderBy: { startDate: "asc" } })
       : Promise.resolve([]),
     prisma.registration.findMany({ where: { clientId }, orderBy: { createdAt: "asc" } }),
+    // Les reprises survivent au deleteMany des pistes : leur table est
+    // autonome, et une opération d'achat se conserve.
+    prisma.reprise.findMany({ where: { OR: ouEmail.map((o) => ("clientEmail" in o ? { ownerEmail: o.clientEmail } : o)) }, orderBy: { createdAt: "asc" } }),
   ]);
 
-  return { client, quotes, appointments, warranties, registrations };
+  return { client, quotes, appointments, warranties, registrations, reprises };
 }
 
 /**
@@ -65,7 +70,7 @@ export async function dossierPersonnel(clientId: string) {
 export async function effacerPersonne(clientId: string, auteur: string, jour: string): Promise<EffacementBilan | null> {
   const dossier = await dossierPersonnel(clientId);
   if (!dossier) return null;
-  const { client, quotes, appointments, warranties, registrations } = dossier;
+  const { client, quotes, appointments, warranties, registrations, reprises } = dossier;
 
   // Un devis converti en facture reste rattaché à une pièce comptable : son
   // anonymisation complète ferait perdre le lien entre la facture et son devis.
@@ -115,6 +120,19 @@ export async function effacerPersonne(clientId: string, auteur: string, jour: st
       data: { holderName: EFFACE, holderAddress: "", clientId: null, notes: "" },
     });
   }
+  // Une estimation garde son véhicule, ses montants et sa date : c'est une
+  // opération d'achat. Le vendeur, lui, cesse d'être identifiable, plaque et
+  // numéro de série compris, qui remontent au titulaire.
+  for (const r of reprises) {
+    await prisma.reprise.update({
+      where: { id: r.id },
+      data: {
+        ownerName: EFFACE, ownerCompany: "", ownerEmail: "", ownerPhone: "",
+        plate: "", vin: "", notes: "", condition: "", clientId: null, leadId: null,
+      },
+    });
+  }
+
   for (const a of appointments) {
     await prisma.appointment.update({ where: { id: a.id }, data: { clientId: null, person: EFFACE, notes: "" } });
   }
@@ -131,6 +149,7 @@ export async function effacerPersonne(clientId: string, auteur: string, jour: st
     `Devis anonymisés : ${devisAnonymises}.`,
     `Factures et avoirs conservés au titre de l'obligation comptable de dix ans : ${facturesConservees}.`,
     "Nom et adresse maintenus sur ces pièces (mentions obligatoires), email et téléphone effacés.",
+    `Reprises anonymisées, opération d'achat conservée : ${reprises.length}.`,
   ].join(" ");
 
   await prisma.client.update({
@@ -146,5 +165,6 @@ export async function effacerPersonne(clientId: string, auteur: string, jour: st
     rendezVousLiberes: appointments.length,
     garantiesAnonymisees: warranties.length,
     dossiersAnonymises: registrations.length,
+    reprisesAnonymisees: reprises.length,
   };
 }

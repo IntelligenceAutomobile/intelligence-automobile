@@ -9,7 +9,7 @@ import {
   Plus, MessageSquare, PhoneCall, CalendarClock, ArrowRightLeft, Sparkles, Send,
   Download, ShieldOff, Copy,
 } from "lucide-react";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, lireMontantEuros } from "@/lib/format";
 import {
   STAGES, STAGE_LABEL, STAGE_TONE, SOURCE_LABEL, SOURCES, EVENT_LABEL,
   LOST_REASON_LABEL,
@@ -97,24 +97,6 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
-// Un budget se tape « 15 000 », « 15000 » ou « 15 000 € ». Les séparateurs de
-// milliers et le symbole sont tolérés, rien d'autre.
-//
-// Retirer simplement les caractères non chiffrés serait pire que le mal : « 15k »
-// donnerait 15, « 12,5 » donnerait 125, et « 20 000-25 000 » donnerait 2000025000.
-// Toute saisie qui ne se réduit pas à une suite de chiffres est donc refusée à
-// l'écran, au lieu d'être enregistrée de travers en silence.
-function lireBudget(v: string): number | null | "invalide" {
-  const brut = v.trim();
-  if (!brut) return null;
-  // `\s` couvre déjà l’espace insécable et l’espace fine, celles que pose
-  // formatNumber. Le point reste écarté : « 12.5 » vaut douze et demi, pas 125.
-  const chiffres = brut.replace(/[\s€]/g, "");
-  if (!/^\d+$/.test(chiffres)) return "invalide";
-  const n = Number(chiffres);
-  return n > 0 && n <= 5_000_000 ? n : "invalide";
-}
-
 /* ── Timeline, modification et ajout d'interaction d'une opportunité ── */
 function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: VehicleLite[]; canDelete: boolean }) {
   const router = useRouter();
@@ -168,7 +150,7 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
   }
 
   async function saveLead() {
-    const budget = lireBudget(form.budget);
+    const budget = lireMontantEuros(form.budget);
     if (budget === "invalide") {
       toast.error("Le budget se saisit en chiffres, par exemple 15 000.");
       return;

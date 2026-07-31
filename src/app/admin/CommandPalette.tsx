@@ -19,6 +19,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: Plus, label: "Ajouter un véhicule", hint: "Action", href: "/admin/vehicules/nouveau" },
   { icon: Plus, label: "Nouveau devis", hint: "Action", href: "/admin/devis/nouveau" },
   { icon: Plus, label: "Nouvelle réunion", hint: "Action", href: "/admin/reunions?nouvelle=1" },
+  { icon: Plus, label: "Nouvelle estimation", hint: "Action", href: "/admin/reprises/nouvelle" },
   { icon: LayoutDashboard, label: "Tableau de bord", hint: "Page", href: "/admin" },
   { icon: Car, label: "Stock", hint: "Page", href: "/admin/vehicules" },
   { icon: FileText, label: "Devis", hint: "Page", href: "/admin/devis" },

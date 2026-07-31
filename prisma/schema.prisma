@@ -528,3 +528,113 @@ model Registration {
   @@index([vehicleId])
   @@index([clientId])
 }
+
+// Reprises : estimation d'un véhicule que le client veut céder.
+//
+// Les données véhicule sont recopiées plutôt que référencées, comme pour les
+// dossiers d'immatriculation : la fiche client et la fiche de stock continuent
+// de vivre alors que l'estimation doit rester le reflet fidèle de ce qui a été
+// constaté le jour de l'évaluation.
+//
+// clientId / leadId / vehicleId sont des colonnes NUES, volontairement privées
+// de relation Prisma. Elles servent de trace d'origine, et la lecture vérifie
+// l'existence avant d'afficher un lien. Conséquence voulue : l'effacement RGPD,
+// qui supprime les pistes commerciales en cascade, laisse l'opération d'achat
+// en place, anonymisée.
+//
+// Tous les montants sont en centimes, comme VehicleCost.amountCents et
+// Registration.purchaseCents. Toutes les dates métier sont des chaînes
+// YYYY-MM-DD, jamais des DateTime.
+model Reprise {
+  id        String @id @default(cuid())
+  reference String @unique                  // « REP-2026-014 », remise à 1 chaque année
+  status    String @default("brouillon")    // brouillon | proposee | acceptee | refusee | au_stock
+
+  // Rattachements
+  clientId  String?
+  leadId    String?                          // affaire commerciale ouverte à la création
+  vehicleId String?                          // fiche de stock créée au passage au stock
+
+  // Vendeur, figé à l'estimation
+  ownerName    String @default("")
+  ownerCompany String @default("")
+  ownerEmail   String @default("")
+  ownerPhone   String @default("")
+
+  // Identité du véhicule évalué
+  make         String @default("")
+  model        String @default("")
+  version      String @default("")           // finition, motorisation
+  year         Int    @default(0)
+  mileageKm    Int    @default(0)
+  fuel         String @default("Essence")
+  transmission String @default("Manuelle")
+  color        String @default("")
+  plate        String @default("")           // immatriculation, en majuscules
+  vin          String @default("")           // numéro de série, en majuscules
+  firstRegDate String @default("")           // 1re mise en circulation YYYY-MM-DD
+
+  // Points de contrôle relevés à l'évaluation. Les deux booléens sont ceux qui
+  // bloquent une revente : un crédit en cours se solde avant la cession, et une
+  // carte grise au nom d'un tiers demande la signature du titulaire.
+  ctDate        String  @default("")         // dernier contrôle technique YYYY-MM-DD
+  ctStatus      String  @default("")         // favorable | contre_visite | absent
+  owners        Int     @default(0)          // nombre de propriétaires
+  serviceBook   String  @default("")         // complet | partiel | absent
+  keys          Int     @default(0)          // nombre de clés remises
+  creditPending Boolean @default(false)
+  creditCents   Int     @default(0)          // solde restant dû au prêteur
+  titleInName   Boolean @default(true)
+  condition     String  @default("")         // état constaté, texte libre
+
+  // Chiffrage, en centimes. Exploité à partir du lot 3.
+  resaleCents      Int @default(0)           // revente visée, TTC
+  reconditionCents Int @default(0)           // remise en état estimée
+  offerCents       Int @default(0)           // offre de reprise faite au vendeur
+
+  // Validité de l'offre. Une cote d'occasion bouge : une offre a une fin.
+  offerDate    String @default("")           // jour de l'offre YYYY-MM-DD
+  validityDays Int    @default(15)
+
+  // Prochaine action, sur le modèle de Lead.nextActionAt. Colonnes posées dès
+  // la première migration : Prisma sélectionne toutes les colonnes du modèle au
+  // retour d'un create, donc une colonne déclarée et absente de la base fait
+  // échouer la première écriture, sans que la compilation dise quoi que ce soit.
+  nextActionAt    String @default("")        // jour YYYY-MM-DD, vide = rien de prévu
+  nextActionLabel String @default("")        // « Relancer le vendeur »
+
+  // Issue
+  decidedOn     String @default("")          // jour d'acceptation ou de refus YYYY-MM-DD
+  refusalReason String @default("")          // offre_basse | vendu_particulier | repris_ailleurs | garde_vehicule | etat | autre
+  stockedOn     String @default("")          // jour du passage au stock YYYY-MM-DD
+
+  photos    String   @default("[]")          // JSON [ "url", … ]
+  notes     String   @default("")
+  author    String   @default("")            // signature du créateur, posée côté serveur
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events RepriseEvent[]
+
+  @@index([status])
+  @@index([clientId])
+  @@index([offerDate])
+  @@index([vehicleId])
+  @@index([nextActionAt])
+}
+
+// Journal d'une estimation : révisions de prix, changements de statut, notes.
+// Une offre qui passe de 15 490 € à 14 800 € laisse une trace datée et signée,
+// seul moyen de répondre six mois plus tard à « quel prix lui a-t-on annoncé ».
+model RepriseEvent {
+  id        String   @id @default(cuid())
+  repriseId String
+  type      String   @default("note")        // creation | revision | statut | note
+  content   String   @default("")
+  author    String   @default("")
+  createdAt DateTime @default(now())
+
+  reprise Reprise @relation(fields: [repriseId], references: [id], onDelete: Cascade)
+
+  @@index([repriseId])
+}
