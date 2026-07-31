@@ -26,7 +26,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json();
     const data = quoteToData(body);
     if (!data.number) return NextResponse.json({ error: "Numéro de devis manquant." }, { status: 400 });
+
+    // Le statut se change à deux endroits : d'un clic depuis la liste, qui passe
+    // par PATCH, et depuis le menu de l'éditeur, qui passe par ici. Seul le
+    // premier chemin réservait la voiture et faisait avancer le pipeline : le
+    // même geste donnait donc deux résultats différents selon l'écran.
+    const avant = await prisma.quote.findUnique({ where: { id }, select: { status: true } });
     const updated = await prisma.quote.update({ where: { id }, data });
+
+    // Les effets ne se déclenchent qu'à un vrai changement de statut : un simple
+    // enregistrement de mise en page ne doit rien réserver ni rien déplacer.
+    if (avant && avant.status !== updated.status && updated.docType !== "facture") {
+      const collab = await getCollabSession();
+      const author = collab?.name ?? session.admin.email ?? "";
+      if (updated.status === "accepte") await reserveVehicleForQuote(updated);
+      await syncLeadForQuote(updated, author);
+    }
+
     return NextResponse.json(quoteFromRow(updated));
   } catch (e) {
     const msg = e instanceof Error && e.message.includes("Unique") ? "Ce numéro de devis existe déjà." : "Erreur lors de la mise à jour.";

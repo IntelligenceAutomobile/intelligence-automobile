@@ -99,9 +99,13 @@ export function PageHeader({
   subtitle?: string;
   action?: ReactNode;
 }) {
+  // Sur téléphone, le titre refusait de se réduire et poussait les boutons hors
+  // de l'écran, qui se mettait alors à défiler latéralement. Le bloc de titre
+  // peut désormais rétrécir, et les actions passent à la ligne quand la place
+  // manque plutôt que de sortir du cadre.
   return (
-    <div className="flex items-end justify-between gap-4 mb-8">
-      <div>
+    <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+      <div className="min-w-0">
         <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
         <h1 className="text-2xl font-light" style={{ color: T.text, letterSpacing: "-0.01em" }}>
           {title}
@@ -112,7 +116,7 @@ export function PageHeader({
           </p>
         )}
       </div>
-      {action && <div className="flex-shrink-0">{action}</div>}
+      {action && <div className="flex-shrink-0 max-w-full">{action}</div>}
     </div>
   );
 }

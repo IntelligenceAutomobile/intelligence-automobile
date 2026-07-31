@@ -625,7 +625,7 @@ export default function ClientDetail({
         title={client.company || client.name}
         subtitle={client.company ? client.name : `Client depuis le ${new Date(client.createdAt).toLocaleDateString("fr-FR")}`}
         action={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button type="button" onClick={newLead} disabled={busy} className={btnGhostClass} style={btnGhostStyle}>
               <Plus size={13} />
               Lead
