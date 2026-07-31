@@ -112,25 +112,62 @@ export const NOUVEAUTES: Nouveaute[] = [
   {
     href: "/admin/clients",
     titre: "Clients & leads",
-    date: "30 juillet 2026",
+    date: "31 juillet 2026",
     resume:
-      "Une personne peut demander ce que vous détenez sur elle, et son effacement. Vous répondez en un clic, sans rien perdre de ce que la loi impose de garder.",
+      "Avant, la page montrait vos dossiers. Maintenant elle vous dit quoi faire en arrivant le matin, et elle vous rappelle ceux que vous alliez oublier.",
     groupes: [
       {
-        titre: "Répondre à une demande",
+        titre: "La journée commence ici",
         points: [
-          "« Copie de ses données » produit un fichier avec tout : fiche, pistes, échanges, devis, factures, rendez-vous, garanties, immatriculations.",
-          "Le délai légal de réponse est d'un mois, rappelé à l'écran.",
+          "Un bandeau « À faire aujourd'hui » ouvre la page, le plus en retard en tête.",
+          "Il réunit quatre files : vos rappels échus, les demandes du site sans réponse, les affaires qui gèlent, et les devis sans nouvelles.",
+          "« Fait » efface le rappel et l'inscrit au journal de l'affaire. « Reporter » le repousse à demain, dans trois jours ou dans une semaine.",
+          "Quand tout est traité, le bandeau se replie en une ligne.",
         ],
       },
       {
-        titre: "Effacer, sans casser la comptabilité",
+        titre: "Rien ne s'oublie",
         points: [
-          "La fenêtre annonce à l'avance ce qui part et ce qui reste.",
-          "Effacés : la fiche, les pistes, les rendez-vous, les garanties, et les devis jamais facturés.",
-          "Conservés : les factures et avoirs, avec le nom et l'adresse, que la loi impose de garder dix ans. L'email et le téléphone en sont retirés.",
-          "Le lien public d'un devis anonymisé cesse de s'ouvrir.",
-          "Une trace de la demande reste sur la fiche : c'est votre registre.",
+          "Chaque affaire porte une prochaine action datée, en orange le jour venu, en rouge quand c'est passé.",
+          "Une affaire qui gèle porte un liseré, avec un délai propre à son étape : deux jours sur une demande fraîche, dix après une proposition envoyée.",
+          "Perdre une affaire demande pourquoi, en un clic parmi six motifs. Dans un an, ça dira sur quoi vous perdez.",
+          "Le carnet se classe sur l'activité réelle : noter un appel fait remonter le client en tête.",
+        ],
+      },
+      {
+        titre: "Le pipeline se lit d'un coup d'œil",
+        points: [
+          "Trois chiffres en tête : l'argent en cours, les affaires à relancer, le gagné sur trente jours.",
+          "Les affaires gagnées ou perdues rejoignent « Conclues », avec un bouton pour les remettre au pipeline.",
+          "Les cartes bougent dès le clic, et reviennent en place si l'enregistrement échoue.",
+          "Une seule recherche filtre tout l'écran, sans se soucier des accents ni de l'ordre des mots.",
+        ],
+      },
+      {
+        titre: "La fiche client",
+        points: [
+          "L'objet, le budget, l'origine et le véhicule d'une affaire se corrigent, et l'affaire se supprime.",
+          "L'email et le téléphone se cliquent pour écrire ou appeler, avec un bouton de copie à côté.",
+          "Un compte rendu d'appel tient sur plusieurs lignes, et se pose juste sous le champ de saisie.",
+          "Un devis créé depuis la fiche se rattache à l'affaire qu'il fait avancer.",
+        ],
+      },
+      {
+        titre: "Moins de doublons, moins de faux pas",
+        points: [
+          "Le même prospect cesse de se dédoubler : l'email et le téléphone se rapprochent quelle que soit leur écriture.",
+          "La création manuelle prévient quand une fiche proche existe déjà, et propose de l'ouvrir.",
+          "Un budget illisible est refusé avec un message, au lieu d'être enregistré de travers.",
+          "La fenêtre de création se ferme avec Échap et garde votre saisie sur un clic à côté.",
+        ],
+      },
+      {
+        titre: "Données personnelles",
+        points: [
+          "« Copie de ses données » produit un fichier avec tout : fiche, affaires, échanges, devis, factures, rendez-vous, garanties, immatriculations. Le délai légal de réponse est d'un mois.",
+          "L'effacement annonce à l'avance ce qui part et ce qui reste : les factures et avoirs sont gardés dix ans avec le nom et l'adresse, comme la loi l'impose, sans email ni téléphone.",
+          "Une trace de la demande reste sur la fiche : c'est votre registre. Sur une fiche effacée, plus aucune action ne peut réinscrire les données.",
+          "Les actions destructrices s'affichent uniquement aux comptes qui en ont le droit.",
         ],
       },
     ],
