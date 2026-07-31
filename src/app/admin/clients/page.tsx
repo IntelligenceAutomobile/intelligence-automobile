@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { timeAgo } from "@/lib/format";
 import { parisDay } from "@/lib/vehicules";
+import { tachesDuJour } from "@/lib/crm-taches";
 import ClientsClient, { type ClientRow } from "./ClientsClient";
 
 // La page lisait TOUS les clients avec TOUTES leurs opportunités, sans limite,
@@ -16,7 +17,7 @@ export default async function ClientsPage() {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
 
-  const [clients, total, vehicles] = await Promise.all([
+  const [clients, total, vehicles, taches] = await Promise.all([
     prisma.client.findMany({
       // Tri sur l'activité commerciale réelle, avec repli sur la date de fiche
       // pour les enregistrements d'avant la migration.
@@ -38,6 +39,7 @@ export default async function ClientsPage() {
       orderBy: { createdAt: "desc" },
       select: { id: true, make: true, model: true, year: true },
     }),
+    tachesDuJour(),
   ]);
 
   // Une seule heure de référence pour toute la page, et les ancienneté écrites
@@ -76,5 +78,7 @@ export default async function ClientsPage() {
     }),
   }));
 
-  return <ClientsClient clients={rows} vehicles={vehicles} total={total} aujourdhui={aujourdhui} />;
+  return (
+    <ClientsClient clients={rows} vehicles={vehicles} total={total} aujourdhui={aujourdhui} taches={taches} />
+  );
 }

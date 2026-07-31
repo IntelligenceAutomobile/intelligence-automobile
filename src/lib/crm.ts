@@ -7,6 +7,22 @@ export type Stage = (typeof STAGES)[number];
 // Colonnes du kanban (les issues gagné/perdu sont regroupées à droite).
 export const PIPELINE_STAGES: Stage[] = ["nouveau", "contacte", "rdv", "devis_envoye"];
 
+// Au-delà de ce silence, une affaire sans rappel prévu remonte dans « À faire ».
+// Le délai diffère par étape : deux jours sans rappeler une demande fraîche est
+// déjà long, dix jours après une proposition envoyée reste normal.
+export const JOURS_SANS_ECHANGE: Record<Stage, number> = {
+  nouveau: 2,
+  contacte: 5,
+  rdv: 7,
+  devis_envoye: 10,
+  gagne: 0,
+  perdu: 0,
+};
+
+// Origines qui viennent d'un formulaire du site : une demande entrante attend
+// une première réponse, et la vitesse y pèse plus que partout ailleurs.
+export const SOURCES_ENTRANTES = ["site-contact", "recherche-perso", "aide-vente", "reprise"] as const;
+
 export const STAGE_LABEL: Record<Stage, string> = {
   nouveau: "Nouveau",
   contacte: "Contacté",

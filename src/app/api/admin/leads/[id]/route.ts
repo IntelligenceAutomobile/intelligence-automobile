@@ -35,6 +35,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (isDay(body.nextActionAt) || body.nextActionAt === "") data.nextActionAt = body.nextActionAt;
     if (typeof body.nextActionLabel === "string") data.nextActionLabel = body.nextActionLabel.trim().slice(0, 80);
 
+    // « Fait » depuis la file du jour : le rappel s'efface et laisse une trace,
+    // pour que le journal garde ce qui a réellement été mené.
+    const actionFaite = body.actionDone === true && existing.nextActionAt !== "";
+    if (actionFaite) {
+      data.nextActionAt = "";
+      data.nextActionLabel = "";
+    }
+
     const nouvelleEtape = isStage(body.stage) && body.stage !== existing.stage ? body.stage : null;
     if (nouvelleEtape) {
       data.stage = nouvelleEtape;
@@ -57,6 +65,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const lead = await prisma.lead.update({ where: { id }, data });
+
+    if (actionFaite) {
+      const collab = await getCollabSession();
+      await prisma.leadEvent.create({
+        data: {
+          leadId: id,
+          type: "note",
+          content: `Fait : ${existing.nextActionLabel || "action prévue"}`,
+          author: collab?.name ?? "",
+        },
+      });
+    }
 
     if (nouvelleEtape) {
       const collab = await getCollabSession();

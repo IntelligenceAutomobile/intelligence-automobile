@@ -7,12 +7,14 @@ import { useRouter } from "next/navigation";
 import {
   Plus, Search, ChevronLeft, ChevronRight, Check, X, Users,
   Car, Banknote, Building2, Mail, Phone, Undo2, CalendarClock,
+  Inbox, Snowflake, FileText, ListChecks,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { matchesSearch } from "@/lib/vehicules";
+import type { Tache, GenreTache } from "@/lib/crm-taches";
 import {
   PIPELINE_STAGES, STAGE_LABEL, STAGE_TONE, SOURCE_LABEL, SOURCES,
-  LOST_REASONS, LOST_REASON_LABEL,
+  LOST_REASONS, LOST_REASON_LABEL, JOURS_SANS_ECHANGE,
   type Stage, type Source, type LostReason,
 } from "@/lib/crm";
 import { T, TONE, Tag, AdminPage, PageHeader, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../ui";
@@ -51,10 +53,9 @@ export type ClientRow = {
 
 type VehicleLite = { id: string; make: string; model: string; year: number };
 
-// Au-delà de ce délai sans le moindre échange, une affaire du pipeline est
-// signalée comme à relancer. Sept jours : une semaine de silence sur un dossier
-// ouvert est le seuil au-delà duquel on oublie de rappeler.
-const JOURS_AVANT_RELANCE = 7;
+// Le silence toléré dépend de l’étape : voir JOURS_SANS_ECHANGE dans crm.ts.
+// L’écran et la file de travail du jour lisent le même seuil, sans quoi une
+// carte pouvait paraître froide sans figurer dans « À faire », et l’inverse.
 
 // Identité stable : sert de valeur de repli aux étapes posées à l'écran, pour
 // que les mémos qui en dépendent ne se recalculent pas à chaque rendu.
@@ -94,8 +95,9 @@ function LeadCard({
   const pourAujourdhui = echeance === 0;
   // Ce qui appelle l'œil, dans l'ordre : une action en retard, puis une action
   // du jour, puis une affaire qui refroidit sans que rien soit prévu.
-  const froide = !lead.nextActionAt && lead.joursSansEchange >= JOURS_AVANT_RELANCE;
-  const glacee = !lead.nextActionAt && lead.joursSansEchange >= JOURS_AVANT_RELANCE * 2;
+  const seuil = JOURS_SANS_ECHANGE[lead.stage as Stage] ?? 7;
+  const froide = !lead.nextActionAt && seuil > 0 && lead.joursSansEchange >= seuil;
+  const glacee = !lead.nextActionAt && seuil > 0 && lead.joursSansEchange >= seuil * 2;
   const liseré = enRetard ? T.danger : pourAujourdhui || froide ? T.warning : glacee ? T.danger : null;
   return (
     <div
@@ -427,6 +429,120 @@ function NewClientModal({ vehicles, onClose }: { vehicles: VehicleLite[]; onClos
   );
 }
 
+/* ── La file de travail du jour ──
+   La page ouvrait sur quatre colonnes de cartes toutes équivalentes : il fallait
+   les lire en entier pour savoir par quoi commencer. Les rappels échus, les
+   demandes du site sans réponse, les affaires figées et les devis sans nouvelles
+   se rejoignent ici, dans une seule liste ordonnée par le retard. */
+const ICONE_TACHE: Record<GenreTache, typeof CalendarClock> = {
+  action: CalendarClock,
+  entrant: Inbox,
+  fige: Snowflake,
+  devis: FileText,
+};
+
+const REPORTS: { label: string; jours: number }[] = [
+  { label: "Demain", jours: 1 },
+  { label: "Dans 3 jours", jours: 3 },
+  { label: "Dans une semaine", jours: 7 },
+];
+
+function LigneTache({
+  tache, aujourdhui, busy, onFait, onReporter,
+}: {
+  tache: Tache;
+  aujourdhui: string;
+  busy: boolean;
+  onFait: () => void;
+  onReporter: (jour: string) => void;
+}) {
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  const Icone = ICONE_TACHE[tache.genre];
+  const teinte = tache.retard > 0 ? T.danger : tache.genre === "entrant" ? T.warning : T.textDim;
+
+  function jourDans(n: number): string {
+    const d = new Date(`${aujourdhui}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  return (
+    <div
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5"
+      style={{ borderTop: `1px solid ${T.surfaceAlt}`, opacity: busy ? 0.5 : 1, transition: "opacity 0.15s" }}
+    >
+      <Icone size={13} style={{ color: teinte, flexShrink: 0 }} />
+      <Link href={`/admin/clients/${tache.clientId}`} className="min-w-0 flex-1 transition-colors hover:text-[#F0F5FF]">
+        <span className="text-[13px] block truncate" style={{ color: T.text }}>
+          {tache.intitule}
+        </span>
+        <span className="text-[11px] block truncate" style={{ color: T.muted }}>
+          {tache.clientNom} · {tache.detail}
+        </span>
+      </Link>
+
+      {/* Un devis sans réponse se traite au centre de relances, qui sait écrire
+          le message et journaliser l'envoi : on y renvoie plutôt que de refaire. */}
+      {tache.genre === "devis" ? (
+        <Link
+          href="/admin/relances"
+          className="text-[10px] tracking-widest uppercase transition-colors hover:opacity-80 flex-shrink-0"
+          style={{ color: T.accent }}
+        >
+          Ouvrir les relances
+        </Link>
+      ) : (
+        <div className="flex items-center gap-3 flex-shrink-0 relative">
+          {tache.genre === "action" && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={onFait}
+              className="inline-flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors hover:text-[#4ED1A1] disabled:opacity-40"
+              style={{ color: T.muted }}
+            >
+              <Check size={12} />
+              Fait
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setMenuOuvert((v) => !v)}
+            aria-expanded={menuOuvert}
+            className="inline-flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF] disabled:opacity-40"
+            style={{ color: T.muted }}
+          >
+            <CalendarClock size={12} />
+            {tache.genre === "action" ? "Reporter" : "Programmer"}
+          </button>
+          {menuOuvert && (
+            <div
+              className="absolute right-0 top-full mt-1 z-20 py-1"
+              style={{ backgroundColor: T.float, border: `1px solid ${T.border}`, minWidth: 170 }}
+            >
+              {REPORTS.map((r) => (
+                <button
+                  key={r.jours}
+                  type="button"
+                  onClick={() => {
+                    setMenuOuvert(false);
+                    onReporter(jourDans(r.jours));
+                  }}
+                  className="block w-full text-left px-3 py-2 text-[12px] transition-colors hover:bg-[#112240]"
+                  style={{ color: T.textDim }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Motif de perte ──
    « Perdu » était un bouton sec : on savait qu'une affaire échouait, jamais
    pourquoi. Un seul geste, six motifs, et la possibilité de passer outre. */
@@ -500,7 +616,7 @@ function MotifPerteDialog({
 
 /* ── Page ── */
 export default function ClientsClient({
-  clients, vehicles, total, aujourdhui,
+  clients, vehicles, total, aujourdhui, taches,
 }: {
   clients: ClientRow[];
   vehicles: VehicleLite[];
@@ -508,6 +624,8 @@ export default function ClientsClient({
   total: number;
   /** Jour de Paris, calculé côté serveur (l'heure lue au rendu est instable). */
   aujourdhui: string;
+  /** La file de travail du jour, construite côté serveur. */
+  taches: Tache[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -518,6 +636,8 @@ export default function ClientsClient({
   // Opportunité dont on vient de cliquer « Perdu » : on demande le motif avant
   // d'écrire quoi que ce soit.
   const [perteEnCours, setPerteEnCours] = useState<string | null>(null);
+  const [busyTache, setBusyTache] = useState<string | null>(null);
+  const [toutVoir, setToutVoir] = useState(false);
   const [, startTransition] = useTransition();
 
   const vehicleLabel = useMemo(() => {
@@ -596,7 +716,7 @@ export default function ClientsClient({
               aRelancer++;
               if (d < 0) enRetard++;
             }
-          } else if (l.joursSansEchange >= JOURS_AVANT_RELANCE) {
+          } else if (l.joursSansEchange >= (JOURS_SANS_ECHANGE[s] ?? 7)) {
             aRelancer++;
             sansRappel++;
           }
@@ -640,6 +760,37 @@ export default function ClientsClient({
   // Une fiche reste au carnet si elle correspond elle-même, ou si l'une de ses
   // opportunités correspond : chercher « SUV hybride » montrait deux cartes au
   // pipeline et annonçait « 0 fiche » juste en dessous.
+  // La file du jour reste courte à l'écran : huit lignes, le reste au clic.
+  const TACHES_VISIBLES = 8;
+  const tachesVisibles = toutVoir ? taches : taches.slice(0, TACHES_VISIBLES);
+  const enRetard = taches.filter((t) => t.retard > 0).length;
+
+  async function ecrireTache(t: Tache, corps: Record<string, unknown>, message: string) {
+    setBusyTache(t.id);
+    try {
+      const res = await fetch(`/api/admin/leads/${t.leadId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corps),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(message);
+      startTransition(() => router.refresh());
+    } catch {
+      toast.error("L'enregistrement a échoué.");
+    } finally {
+      setBusyTache(null);
+    }
+  }
+
+  const marquerFait = (t: Tache) => ecrireTache(t, { actionDone: true }, "Action notée comme faite.");
+  const reporter = (t: Tache, jour: string) =>
+    ecrireTache(
+      t,
+      { nextActionAt: jour, nextActionLabel: t.genre === "action" ? t.intitule : "Reprendre contact" },
+      "Rappel programmé.",
+    );
+
   const filteredClients = useMemo(
     () => clients.filter((c) => correspond(c) || c.leads.some((l) => correspond(c, l))),
     [clients, correspond],
@@ -657,6 +808,50 @@ export default function ClientsClient({
           </button>
         }
       />
+
+      {/* ── À faire aujourd'hui ── */}
+      {taches.length === 0 ? (
+        <div
+          className="flex items-center gap-2.5 px-4 py-3 mb-6 text-[13px]"
+          style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, color: T.muted }}
+        >
+          <Check size={14} style={{ color: T.success, flexShrink: 0 }} />
+          Tout est traité. {chiffres.enCours} opportunité{chiffres.enCours > 1 ? "s" : ""} en cours.
+        </div>
+      ) : (
+        <div className="mb-6" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ backgroundColor: T.surfaceAlt }}>
+            <ListChecks size={13} style={{ color: T.accent, flexShrink: 0 }} />
+            <h2 className="text-[11px] tracking-[0.2em] uppercase" style={{ color: T.textDim }}>
+              À faire aujourd&apos;hui
+            </h2>
+            <span className="text-[11px] ml-auto" style={{ color: enRetard > 0 ? T.danger : T.muted }}>
+              {taches.length}
+              {enRetard > 0 ? ` · ${enRetard} en retard` : ""}
+            </span>
+          </div>
+          {tachesVisibles.map((t) => (
+            <LigneTache
+              key={t.id}
+              tache={t}
+              aujourdhui={aujourdhui}
+              busy={busyTache === t.id}
+              onFait={() => marquerFait(t)}
+              onReporter={(jour) => reporter(t, jour)}
+            />
+          ))}
+          {taches.length > tachesVisibles.length && (
+            <button
+              type="button"
+              onClick={() => setToutVoir(true)}
+              className="w-full px-4 py-2.5 text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
+              style={{ color: T.muted, borderTop: `1px solid ${T.surfaceAlt}` }}
+            >
+              Voir les {taches.length - tachesVisibles.length} autres
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── Chiffres de pilotage, au format des autres modules ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
