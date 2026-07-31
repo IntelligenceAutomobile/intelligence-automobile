@@ -665,3 +665,50 @@ export function lastMonths(n: number): { key: string; label: string }[] {
   }
   return out;
 }
+
+/* ────────────────────────── Reprises ──────────────────────────
+   Estimations de véhicules clients, telles que le back-office les affiche.
+   Un jeu volontairement varié : une offre en attente, une acceptée, une
+   refusée, et une entrée au stock, pour que la démonstration montre les
+   pastilles de filtre remplies. */
+export type DemoReprise = {
+  id: string;
+  reference: string;
+  status: string;
+  vehicule: string;
+  vendeur: string;
+  plate: string;
+  mileageKm: number;
+  fuel: string;
+  offerCents: number;
+  offerDate: string;
+};
+
+export function getDemoReprises(): DemoReprise[] {
+  return [
+    {
+      id: "rep-1", reference: "REP-2026-014", status: "proposee",
+      vehicule: "Audi A4 Avant 2.0 TDI 190 S line (2019)", vendeur: "Martin Dupont",
+      plate: "AB-123-CD", mileageKm: 118000, fuel: "Diesel",
+      offerCents: 1549000, offerDate: isoDay(-3),
+    },
+    {
+      id: "rep-2", reference: "REP-2026-013", status: "acceptee",
+      vehicule: "Renault Clio V TCe 90 Intens (2020)", vendeur: "Garage Leblanc",
+      plate: "CD-456-EF", mileageKm: 54300, fuel: "Essence",
+      offerCents: 680000, offerDate: isoDay(-9),
+    },
+    {
+      id: "rep-3", reference: "REP-2026-012", status: "au_stock",
+      vehicule: "BMW X3 xDrive20d M Sport (2018)", vendeur: "Sophie Marchand",
+      plate: "EF-789-GH", mileageKm: 96200, fuel: "Diesel",
+      offerCents: 2700000, offerDate: isoDay(-21),
+    },
+    {
+      id: "rep-4", reference: "REP-2026-011", status: "refusee",
+      vehicule: "Peugeot 3008 BlueHDi 130 Allure (2017)", vendeur: "Karim Belaïd",
+      plate: "GH-012-IJ", mileageKm: 143800, fuel: "Diesel",
+      offerCents: 0, offerDate: isoDay(-34),
+    },
+  ];
+}

@@ -92,6 +92,23 @@ export function repriseFromBody(body: Record<string, unknown>) {
 
 export type RepriseInput = ReturnType<typeof repriseFromBody>;
 
+/**
+ * Les seuls champs réellement envoyés, normalisés de la même façon.
+ *
+ * La fiche enregistre d'un bloc et passe tout, une action rapide de la liste
+ * envoie le seul statut. Sans ce tri, ce second envoi remettrait chaque colonne
+ * absente à sa valeur par défaut, et une estimation perdrait sa voiture pour
+ * avoir été marquée « acceptée » depuis la liste.
+ */
+export function repriseChangesFromBody(body: Record<string, unknown>): Partial<RepriseInput> {
+  const complet = repriseFromBody(body);
+  const partiel: Record<string, unknown> = {};
+  for (const cle of Object.keys(complet)) {
+    if (cle in body) partiel[cle] = complet[cle as keyof RepriseInput];
+  }
+  return partiel as Partial<RepriseInput>;
+}
+
 /** Ce qui manque pour qu'une estimation tienne debout. Vide = elle passe. */
 export function manquesAlaCreation(input: RepriseInput): string[] {
   const manques: string[] = [];

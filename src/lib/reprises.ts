@@ -85,6 +85,25 @@ export const SERVICE_BOOK_LABEL: Record<ServiceBook, string> = {
    l'offre défendable. La durée reste modifiable estimation par estimation. */
 export const VALIDITE_JOURS_DEFAUT = 15;
 
+/* ── Pastilles de filtre de la liste ──
+   Le texte de vide se déclare ici, à côté du filtre : un filtre sans ligne
+   explique alors ce qu'il attend, au lieu d'afficher un cadre muet. */
+
+export const REPRISE_FILTERS = [
+  { value: "all", label: "Toutes", vide: "" },
+  { value: "brouillon", label: "Brouillons", vide: "Une estimation reste ici tant que son prix est en préparation." },
+  { value: "proposee", label: "Proposées", vide: "Ce filtre se remplit dès qu'une offre est remise à un vendeur." },
+  { value: "acceptee", label: "Acceptées", vide: "Les offres qu'un vendeur a acceptées s'affichent ici." },
+  { value: "refusee", label: "Refusées", vide: "Les offres écartées s'affichent ici, avec leur motif." },
+  { value: "au_stock", label: "Au stock", vide: "Les véhicules repris et entrés au parc s'affichent ici." },
+] as const;
+
+export type RepriseFilter = (typeof REPRISE_FILTERS)[number]["value"];
+
+export function isRepriseFilter(v: unknown): v is RepriseFilter {
+  return typeof v === "string" && REPRISE_FILTERS.some((f) => f.value === v);
+}
+
 /* ── Gardes de type ── */
 
 export function isRepriseStatus(v: unknown): v is RepriseStatus {

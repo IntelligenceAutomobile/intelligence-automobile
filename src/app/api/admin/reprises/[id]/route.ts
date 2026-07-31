@@ -8,11 +8,11 @@ import { formatEuroCents } from "@/lib/comptes";
 import {
   isRepriseStatus, isRefusalReason, REPRISE_STATUS_LABEL, REPRISE_CLOSED_STATUSES,
 } from "@/lib/reprises";
-import { repriseFromBody } from "@/lib/reprise-serialize";
+import { repriseChangesFromBody } from "@/lib/reprise-serialize";
 
 /**
- * Modifie une estimation. Le corps porte tous les champs métier : la fiche
- * enregistre d'un bloc, comme celle des dossiers d'immatriculation.
+ * Modifie une estimation, champ par champ envoyé. La fiche enregistre d'un
+ * bloc et passe tout ; une action rapide de la liste envoie le seul statut.
  *
  * Deux gestes écrivent une trace au journal, parce qu'ils se relisent des mois
  * plus tard : la révision du prix proposé et le changement de statut.
@@ -24,7 +24,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   try {
     const body = (await req.json()) as Record<string, unknown>;
-    const input = repriseFromBody(body);
+    // Seuls les champs réellement envoyés sont écrits : la fiche passe tout, une
+    // action rapide de la liste envoie le seul statut.
+    const input = repriseChangesFromBody(body);
 
     const avant = await prisma.reprise.findUnique({
       where: { id },
@@ -39,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const data: Record<string, unknown> = { ...input };
     const traces: { type: string; content: string; author: string }[] = [];
 
-    if (avant.offerCents !== input.offerCents) {
+    if (input.offerCents !== undefined && avant.offerCents !== input.offerCents) {
       // Une première mise à prix se raconte comme telle : « 0 € → 6 800 € »
       // laissait croire à une révision là où rien n'avait encore été proposé.
       traces.push({
@@ -68,8 +70,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     // Le motif s'applique sur un refus seulement, et se vide partout ailleurs.
-    const statutFinal = isRepriseStatus(data.status) ? data.status : avant.status;
-    data.refusalReason = statutFinal === "refusee" && isRefusalReason(body.refusalReason) ? body.refusalReason : "";
+    // La règle se joue au moment où le statut ou le motif est envoyé : un envoi
+    // qui porte sur autre chose laisse le motif tel quel.
+    if ("status" in body || "refusalReason" in body) {
+      const statutFinal = isRepriseStatus(data.status) ? data.status : avant.status;
+      data.refusalReason = statutFinal === "refusee" && isRefusalReason(body.refusalReason) ? body.refusalReason : "";
+    }
 
     const reprise = await prisma.reprise.update({
       where: { id },
