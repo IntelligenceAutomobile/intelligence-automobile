@@ -10,20 +10,30 @@
 //   • les demandes du site restées sans première réponse ;
 //   • les affaires figées au-delà du silence toléré à leur étape ;
 //   • les devis envoyés sans réponse, que le centre de relances sait déjà
-//     détecter et dont la règle est reprise telle quelle.
+//     détecter et dont la règle est reprise telle quelle ;
+//   • les estimations de reprise dont le rappel est venu ou dont l'offre
+//     approche de sa fin, une offre qui dort étant une offre perdue.
 import { prisma } from "./prisma";
 import { JOURS_SANS_ECHANGE, PIPELINE_STAGES, SOURCES_ENTRANTES, type Stage } from "./crm";
+import { repriseLabel, validite } from "./reprises";
 import { relanceDue } from "./relances";
 import { parisDay } from "./vehicules";
 
-export type GenreTache = "action" | "entrant" | "fige" | "devis";
+export type GenreTache = "action" | "entrant" | "fige" | "devis" | "reprise";
 
 export type Tache = {
   id: string;
   genre: GenreTache;
+  /** Vide quand la pièce vit sans fiche client, ce qu'une reprise autorise. */
   clientId: string;
   clientNom: string;
+  /** Vide quand la pièce porte aucune affaire commerciale. */
   leadId: string;
+  /**
+   * Où mène le clic. Vide, la ligne ouvre la fiche client, ce qui convient aux
+   * quatre premières files. Une estimation, elle, se traite sur sa propre page.
+   */
+  href?: string;
   /** Ce qu'il y a à faire, en tête de ligne. */
   intitule: string;
   /** Pourquoi cette ligne est là, en une phrase courte. */
@@ -171,7 +181,44 @@ export async function tachesDuJour(): Promise<Tache[]> {
     });
   }
 
+  // ── 5. Les estimations de reprise à relancer ──────────────────────────────
+  // Deux façons de mériter un appel : un rappel dont le jour est venu, ou une
+  // offre qui approche de sa fin sans réponse. Le module Reprises garde son
+  // écran, et ce qui appelle un geste remonte ici, sur la seule liste que
+  // l'équipe consulte le matin.
+  const estimations = await prisma.reprise.findMany({
+    where: { status: { in: ["brouillon", "proposee"] } },
+    select: {
+      id: true, reference: true, clientId: true, make: true, model: true, version: true, year: true,
+      ownerName: true, ownerCompany: true,
+      offerDate: true, validityDays: true, nextActionAt: true, nextActionLabel: true,
+    },
+    take: 50,
+  });
+  for (const r of estimations) {
+    const v = validite(r.offerDate, r.validityDays, aujourdhui);
+    const rappelDu = r.nextActionAt !== "" && r.nextActionAt <= aujourdhui;
+    const offreAlerte = v !== null && (v.expiree || v.proche);
+    if (!rappelDu && !offreAlerte) continue;
+
+    const retardRappel = rappelDu ? ecart(r.nextActionAt, aujourdhui) : 0;
+    const retardOffre = v && v.expiree ? -v.joursRestants : 0;
+    taches.push({
+      id: `reprise-${r.id}`,
+      genre: "reprise",
+      clientId: r.clientId ?? "",
+      clientNom: r.ownerCompany || r.ownerName || "Vendeur",
+      leadId: "",
+      href: `/admin/reprises/${r.id}`,
+      intitule: rappelDu ? r.nextActionLabel || "Relancer l'estimation" : "Relancer l'offre de reprise",
+      detail: [repriseLabel(r), v ? v.phrase : `offre du ${r.offerDate || "jour à préciser"}`]
+        .filter(Boolean)
+        .join(" · "),
+      retard: Math.max(retardRappel, retardOffre),
+    });
+  }
+
   // Le plus en retard d'abord, puis par ordre de genre pour un affichage stable.
-  const rang: Record<GenreTache, number> = { action: 0, entrant: 1, devis: 2, fige: 3 };
+  const rang: Record<GenreTache, number> = { action: 0, entrant: 1, devis: 2, reprise: 3, fige: 4 };
   return taches.sort((a, b) => b.retard - a.retard || rang[a.genre] - rang[b.genre] || a.clientNom.localeCompare(b.clientNom));
 }

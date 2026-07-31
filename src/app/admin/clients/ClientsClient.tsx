@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Plus, Search, ChevronLeft, ChevronRight, Check, X, Users,
   Car, Banknote, Building2, Mail, Phone, Undo2, CalendarClock,
-  Inbox, Snowflake, FileText, ListChecks,
+  Inbox, Snowflake, FileText, ListChecks, HandCoins,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { matchesSearch } from "@/lib/vehicules";
@@ -432,13 +432,15 @@ function NewClientModal({ vehicles, onClose }: { vehicles: VehicleLite[]; onClos
 /* ── La file de travail du jour ──
    La page ouvrait sur quatre colonnes de cartes toutes équivalentes : il fallait
    les lire en entier pour savoir par quoi commencer. Les rappels échus, les
-   demandes du site sans réponse, les affaires figées et les devis sans nouvelles
-   se rejoignent ici, dans une seule liste ordonnée par le retard. */
+   demandes du site sans réponse, les affaires figées, les devis sans nouvelles
+   et les offres de reprise qui approchent de leur fin se rejoignent ici, dans
+   une seule liste ordonnée par le retard. */
 const ICONE_TACHE: Record<GenreTache, typeof CalendarClock> = {
   action: CalendarClock,
   entrant: Inbox,
   fige: Snowflake,
   devis: FileText,
+  reprise: HandCoins,
 };
 
 const REPORTS: { label: string; jours: number }[] = [
@@ -472,7 +474,10 @@ function LigneTache({
       style={{ borderTop: `1px solid ${T.surfaceAlt}`, opacity: busy ? 0.5 : 1, transition: "opacity 0.15s" }}
     >
       <Icone size={13} style={{ color: teinte, flexShrink: 0 }} />
-      <Link href={`/admin/clients/${tache.clientId}`} className="min-w-0 flex-1 transition-colors hover:text-[#F0F5FF]">
+      <Link
+        href={tache.href || `/admin/clients/${tache.clientId}`}
+        className="min-w-0 flex-1 transition-colors hover:text-[#F0F5FF]"
+      >
         <span className="text-[13px] block truncate" style={{ color: T.text }}>
           {tache.intitule}
         </span>
@@ -482,14 +487,17 @@ function LigneTache({
       </Link>
 
       {/* Un devis sans réponse se traite au centre de relances, qui sait écrire
-          le message et journaliser l'envoi : on y renvoie plutôt que de refaire. */}
-      {tache.genre === "devis" ? (
+          le message et journaliser l'envoi : on y renvoie plutôt que de refaire.
+          Une estimation se traite sur sa fiche, où vivent son prix, sa validité
+          et son rappel : les boutons ci-dessous écrivent dans l'affaire
+          commerciale, qu'une reprise porte seulement parfois. */}
+      {tache.genre === "devis" || tache.genre === "reprise" ? (
         <Link
-          href="/admin/relances"
+          href={tache.genre === "devis" ? "/admin/relances" : tache.href || "/admin/reprises"}
           className="text-[10px] tracking-widest uppercase transition-colors hover:opacity-80 flex-shrink-0"
           style={{ color: T.accent }}
         >
-          Ouvrir les relances
+          {tache.genre === "devis" ? "Ouvrir les relances" : "Ouvrir l'estimation"}
         </Link>
       ) : (
         <div className="flex items-center gap-3 flex-shrink-0 relative">

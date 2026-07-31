@@ -85,6 +85,110 @@ export const SERVICE_BOOK_LABEL: Record<ServiceBook, string> = {
    l'offre défendable. La durée reste modifiable estimation par estimation. */
 export const VALIDITE_JOURS_DEFAUT = 15;
 
+/* ── Chiffrage ──
+   Le calcul répond à une seule question, posée devant le client : « à ce
+   prix-là, qu'est-ce qu'il me reste ». Un négociant revend sous le régime de
+   la TVA sur marge (art. 297 A du CGI) : la taxe pèse sur la différence entre
+   le prix de revente et le prix d'achat, jamais sur le prix entier. Elle se
+   calculait jusqu'ici de tête, et c'est elle qui fait passer une marge
+   annoncée de 5 010 € à 3 942 € réels. */
+
+export const TAUX_TVA = 0.2;
+
+export type Chiffrage = {
+  /** Revente visée moins l'offre remise, avant taxe et frais. */
+  brutCents: number;
+  /** TVA due sur cette marge, à 20 %. */
+  tvaCents: number;
+  /** Ce qui reste une fois la taxe et la remise en état réglées. */
+  netCents: number;
+  /** Part du net dans la revente visée, en pourcentage entier. */
+  tauxPourcent: number | null;
+  /** Vert au-dessus du seuil, ambre en dessous, orange si négatif. */
+  tone: "success" | "warning" | "danger" | "muted";
+};
+
+// En dessous de ce net, l'affaire mérite d'être regardée de près : les aléas
+// d'une occasion mangent vite quelques centaines d'euros.
+export const MARGE_FAIBLE_CENTS = 50_000;
+
+export function assessMarge(input: {
+  resaleCents: number;
+  reconditionCents: number;
+  offerCents: number;
+}): Chiffrage | null {
+  const { resaleCents, reconditionCents, offerCents } = input;
+  // Sans revente visée ni offre, il reste à chiffrer : mieux vaut ne rien
+  // afficher qu'une marge calculée sur des zéros.
+  if (resaleCents <= 0 || offerCents <= 0) return null;
+
+  const brutCents = resaleCents - offerCents;
+  // La taxe porte sur la marge toutes taxes comprises : elle s'en extrait, elle
+  // ne s'y ajoute pas. Une marge négative appelle aucune taxe.
+  //
+  // Arrondie à l'euro : tous les montants se saisissent en euros entiers, et la
+  // taxe est le seul calcul qui produirait des centimes. Les afficher donnerait
+  // une précision que la revente visée, elle-même estimée, porte pas. L'arrondi
+  // se pose ici pour que la soustraction reste juste : brut − TVA − remise en
+  // état tombe alors sur un euro entier, sans écart de restitution.
+  const tvaBrute = brutCents > 0 ? (brutCents / (1 + TAUX_TVA)) * TAUX_TVA : 0;
+  const tvaCents = Math.round(tvaBrute / 100) * 100;
+  const netCents = brutCents - tvaCents - reconditionCents;
+  const tauxPourcent = resaleCents > 0 ? Math.round((netCents / resaleCents) * 100) : null;
+
+  const tone: Chiffrage["tone"] =
+    netCents < 0 ? "danger" : netCents < MARGE_FAIBLE_CENTS ? "warning" : "success";
+
+  return { brutCents, tvaCents, netCents, tauxPourcent, tone };
+}
+
+/* ── Validité d'une offre ──
+   Une cote d'occasion bouge et le véhicule roule pendant la réflexion : une
+   offre a une fin. C'est aussi le premier vrai signal de relance. */
+
+// À partir de ce reste, la ligne s'allume : l'offre appelle un coup de fil.
+export const EXPIRATION_ALERTE_JOURS = 5;
+
+export type Validite = {
+  /** Jour d'échéance YYYY-MM-DD. */
+  echeance: string;
+  /** Positif = jours restants, négatif = jours de dépassement. */
+  joursRestants: number;
+  expiree: boolean;
+  proche: boolean;
+  /** Phrase prête à afficher : « valable 5 j », « échue depuis 4 j ». */
+  phrase: string;
+  tone: "danger" | "warning" | "muted";
+};
+
+export function validite(offerDate: string, validityDays: number, today: string): Validite | null {
+  if (!offerDate || validityDays <= 0) return null;
+  const base = Date.parse(`${offerDate}T00:00:00Z`);
+  const jour = Date.parse(`${today}T00:00:00Z`);
+  if (Number.isNaN(base) || Number.isNaN(jour)) return null;
+
+  const fin = base + validityDays * 86_400_000;
+  const echeance = new Date(fin).toISOString().slice(0, 10);
+  const joursRestants = Math.round((fin - jour) / 86_400_000);
+  const expiree = joursRestants < 0;
+  const proche = !expiree && joursRestants <= EXPIRATION_ALERTE_JOURS;
+
+  const phrase = expiree
+    ? `échue depuis ${-joursRestants} j`
+    : joursRestants === 0
+      ? "dernier jour"
+      : joursRestants === 1
+        ? "valable demain"
+        : `valable ${joursRestants} j`;
+
+  return { echeance, joursRestants, expiree, proche, phrase, tone: expiree ? "danger" : proche ? "warning" : "muted" };
+}
+
+/** Une estimation encore ouverte, donc susceptible d'expirer ou d'appeler un rappel. */
+export function estOuverte(status: RepriseStatus): boolean {
+  return status === "brouillon" || status === "proposee";
+}
+
 /* ── Pastilles de filtre de la liste ──
    Le texte de vide se déclare ici, à côté du filtre : un filtre sans ligne
    explique alors ce qu'il attend, au lieu d'afficher un cadre muet. */
@@ -96,6 +200,10 @@ export const REPRISE_FILTERS = [
   { value: "acceptee", label: "Acceptées", vide: "Les offres qu'un vendeur a acceptées s'affichent ici." },
   { value: "refusee", label: "Refusées", vide: "Les offres écartées s'affichent ici, avec leur motif." },
   { value: "au_stock", label: "Au stock", vide: "Les véhicules repris et entrés au parc s'affichent ici." },
+  // « Expirées » se déduit de la date d'offre et de la durée de validité,
+  // jamais d'un statut rangé en base : rien à ranger, donc rien à
+  // désynchroniser le jour où la durée change.
+  { value: "expiree", label: "Expirées", vide: "Une offre dépassée s'affiche ici tant qu'elle reste sans réponse." },
 ] as const;
 
 export type RepriseFilter = (typeof REPRISE_FILTERS)[number]["value"];

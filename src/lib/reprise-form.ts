@@ -46,6 +46,8 @@ export type RepriseForm = {
   titleInName: boolean;
   condition: string;
 
+  resaleEuros: string;
+  reconditionEuros: string;
   offerEuros: string;
   offerDate: string;
   validityDays: string;
@@ -64,7 +66,7 @@ export function repriseVierge(today: string): RepriseForm {
     fuel: "Essence", transmission: "Manuelle", color: "", plate: "", vin: "", firstRegDate: "",
     ctDate: "", ctStatus: "", owners: "", serviceBook: "", keys: "",
     creditPending: false, creditEuros: "", titleInName: true, condition: "",
-    offerEuros: "", offerDate: today, validityDays: String(VALIDITE_JOURS_DEFAUT), refusalReason: "",
+    resaleEuros: "", reconditionEuros: "", offerEuros: "", offerDate: today, validityDays: String(VALIDITE_JOURS_DEFAUT), refusalReason: "",
     nextActionAt: "", nextActionLabel: "", notes: "",
   };
 }

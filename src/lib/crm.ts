@@ -21,7 +21,14 @@ export const JOURS_SANS_ECHANGE: Record<Stage, number> = {
 
 // Origines qui viennent d'un formulaire du site : une demande entrante attend
 // une première réponse, et la vitesse y pèse plus que partout ailleurs.
-export const SOURCES_ENTRANTES = ["site-contact", "recherche-perso", "aide-vente", "reprise"] as const;
+//
+// « reprise » a quitté cette liste : une estimation se saisit au comptoir, elle
+// n'attend aucune première réponse le jour de sa création. Elle a désormais sa
+// propre file, alimentée par sa date de rappel et par l'expiration de son
+// offre, avec les mots justes. La laisser ici l'aurait fait remonter en tête de
+// la page Clients sous le libellé « Répondre à la demande », le jour même de sa
+// saisie, dès que le module cesserait d'écrire une note à la création.
+export const SOURCES_ENTRANTES = ["site-contact", "recherche-perso", "aide-vente"] as const;
 
 export const STAGE_LABEL: Record<Stage, string> = {
   nouveau: "Nouveau",

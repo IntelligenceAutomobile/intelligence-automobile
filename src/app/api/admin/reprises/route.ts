@@ -116,9 +116,11 @@ export async function POST(req: NextRequest) {
 
       // L'affaire commerciale reste écrite : le pipeline, le compteur du
       // tableau de bord et le flux d'activité continuent d'être alimentés.
-      // Son événement « note » est aussi ce qui tient les reprises hors de la
-      // file des demandes entrantes du site, tant que le lot 3 ne les en a pas
-      // sorties officiellement.
+      // Son budget reste vide, lui : une reprise est de l'argent qui sort, et
+      // l'additionner au pipeline de vente faussait les compteurs de la page
+      // Clients. Le montant vit sur l'estimation, où il a un sens.
+      // Le résumé déposé en note donne à la fiche client de quoi se relire
+      // sans ouvrir l'estimation.
       const lead = await tx.lead.create({
         data: {
           clientId,

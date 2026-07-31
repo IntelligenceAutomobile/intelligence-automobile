@@ -54,6 +54,8 @@ export default async function ReprisePage({ params }: { params: Promise<{ id: st
     creditEuros: r.creditCents > 0 ? String(Math.round(r.creditCents / 100)) : "",
     titleInName: r.titleInName,
     condition: r.condition,
+    resaleEuros: r.resaleCents > 0 ? String(Math.round(r.resaleCents / 100)) : "",
+    reconditionEuros: r.reconditionCents > 0 ? String(Math.round(r.reconditionCents / 100)) : "",
     offerEuros: r.offerCents > 0 ? String(Math.round(r.offerCents / 100)) : "",
     offerDate: r.offerDate,
     validityDays: String(r.validityDays),

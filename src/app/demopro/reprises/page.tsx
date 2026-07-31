@@ -10,7 +10,10 @@ import Link from "next/link";
 import { Plus, HandCoins, Search, Check, X } from "lucide-react";
 import { formatEuroCents } from "@/lib/comptes";
 import { formatNumber } from "@/lib/format";
-import { REPRISE_FILTERS, REPRISE_STATUS_LABEL, REPRISE_STATUS_TONE, type RepriseStatus } from "@/lib/reprises";
+import {
+  REPRISE_FILTERS, REPRISE_STATUS_LABEL, REPRISE_STATUS_TONE, EXPIRATION_ALERTE_JOURS,
+  assessMarge, validite, type RepriseStatus,
+} from "@/lib/reprises";
 import { T, TONE, Tag, AdminPage, PageHeader, fieldStyle, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui";
 import { getDemoReprises } from "@/lib/demo-data";
 import DemoActionButton from "@/app/demopro/DemoActionButton";
@@ -32,9 +35,27 @@ function ancienneteDe(jour: string): string {
 
 export default function DemoReprisesPage() {
   const reprises = getDemoReprises();
-  const comptes: Record<string, number> = { all: reprises.length };
-  for (const r of reprises) comptes[r.status] = (comptes[r.status] ?? 0) + 1;
-  const enAttente = reprises.filter((r) => r.status === "proposee").length;
+  const today = new Date().toISOString().slice(0, 10);
+  const estOuverte = (s: string) => s === "brouillon" || s === "proposee";
+
+  const comptes: Record<string, number> = { all: reprises.length, expiree: 0 };
+  for (const r of reprises) {
+    comptes[r.status] = (comptes[r.status] ?? 0) + 1;
+    const v = validite(r.offerDate, r.validityDays, today);
+    if (v?.expiree && estOuverte(r.status)) comptes.expiree += 1;
+  }
+
+  const enCours = reprises.filter((r) => estOuverte(r.status));
+  const enAttenteCents = enCours.reduce((n, r) => n + r.offerCents, 0);
+  const aRelancer = enCours.filter((r) => {
+    const v = validite(r.offerDate, r.validityDays, today);
+    return v !== null && (v.expiree || v.proche);
+  }).length;
+  const echues = comptes.expiree;
+  const acquises = reprises.filter((r) => r.status === "acceptee" || r.status === "au_stock");
+  const acheteCents = acquises.reduce((n, r) => n + r.offerCents, 0);
+  const margePrevueCents = acquises.reduce((n, r) => n + (assessMarge(r)?.netCents ?? 0), 0);
+  const enAttente = enCours.length;
 
   return (
     <AdminPage>
@@ -48,6 +69,40 @@ export default function DemoReprisesPage() {
           </DemoActionButton>
         }
       />
+
+      {/* Trois chiffres de pilotage, comme le vrai module. */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+        <div className="px-4 py-3" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>Offres en cours</div>
+          <div className="text-[19px] sm:text-[24px] mt-1 whitespace-nowrap" style={{ color: T.text, fontVariantNumeric: "tabular-nums" }}>
+            {enAttenteCents > 0 ? formatEuroCents(enAttenteCents) : "—"}
+          </div>
+          <div className="text-[11px]" style={{ color: T.muted }}>
+            {enAttente} estimation{enAttente > 1 ? "s" : ""} ouverte{enAttente > 1 ? "s" : ""}
+          </div>
+        </div>
+        <div className="px-4 py-3" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>À relancer</div>
+          <div
+            className="text-[19px] sm:text-[24px] mt-1 whitespace-nowrap"
+            style={{ color: aRelancer > 0 ? TONE.warning.fg : T.text, fontVariantNumeric: "tabular-nums" }}
+          >
+            {aRelancer}
+          </div>
+          <div className="text-[11px]" style={{ color: T.muted }}>
+            {aRelancer > 0 ? `${echues} échue${echues > 1 ? "s" : ""} · ${aRelancer - echues} sous ${EXPIRATION_ALERTE_JOURS} j` : "toutes les offres tiennent encore"}
+          </div>
+        </div>
+        <div className="px-4 py-3 col-span-2 lg:col-span-1" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>Acheté sur 90 jours</div>
+          <div className="text-[19px] sm:text-[24px] mt-1 whitespace-nowrap" style={{ color: T.text, fontVariantNumeric: "tabular-nums" }}>
+            {acheteCents > 0 ? formatEuroCents(acheteCents) : "—"}
+          </div>
+          <div className="text-[11px]" style={{ color: T.muted }}>
+            {acquises.length} conclue{acquises.length > 1 ? "s" : ""} · marge {formatEuroCents(margePrevueCents)}
+          </div>
+        </div>
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-4">
         <div className="relative sm:max-w-xs w-full">
@@ -99,12 +154,18 @@ export default function DemoReprisesPage() {
 
         {reprises.map((r, i) => {
           const statut = r.status as RepriseStatus;
-          const ouverte = statut === "brouillon" || statut === "proposee";
+          const encoreOuverte = estOuverte(statut);
+          const v = validite(r.offerDate, r.validityDays, today);
+          const marge = assessMarge(r);
+          const lisere = encoreOuverte && v ? (v.expiree ? T.danger : v.proche ? T.warning : null) : null;
           return (
             <div
               key={r.id}
               className={`group relative grid items-center px-4 py-3 gap-x-3 gap-y-2 grid-cols-[1fr_auto] ${GRILLE}`}
-              style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
+              style={{
+                borderTop: i === 0 ? "none" : `1px solid ${T.border}`,
+                borderLeft: lisere ? `2px solid ${lisere}` : "2px solid transparent",
+              }}
             >
               <Link
                 href={`${DEMO_BASE}/reprises`}
@@ -125,16 +186,34 @@ export default function DemoReprisesPage() {
                 <span className="text-[11px] truncate block mt-0.5" style={{ color: T.muted }}>
                   {[r.vendeur, `${formatNumber(r.mileageKm)} km`, r.fuel].join(" · ")}
                   <span className="@[640px]:hidden"> · {r.plate} · {r.reference}</span>
+                  {encoreOuverte && v && (
+                    <>
+                      {" · "}
+                      <span style={{ color: v.expiree ? TONE.danger.fg : v.proche ? TONE.warning.fg : T.muted }}>
+                        {v.phrase}
+                      </span>
+                    </>
+                  )}
                 </span>
               </span>
 
               <span className="text-[12px] hidden @[980px]:block truncate" style={{ color: T.textDim }}>{r.plate}</span>
 
-              <span
-                className="text-sm font-semibold text-right whitespace-nowrap"
-                style={{ color: r.offerCents > 0 ? T.text : T.border, fontVariantNumeric: "tabular-nums" }}
-              >
-                {r.offerCents > 0 ? formatEuroCents(r.offerCents) : "—"}
+              <span className="text-right whitespace-nowrap">
+                <span
+                  className="text-sm font-semibold block"
+                  style={{ color: r.offerCents > 0 ? T.text : T.border, fontVariantNumeric: "tabular-nums" }}
+                >
+                  {r.offerCents > 0 ? formatEuroCents(r.offerCents) : "—"}
+                </span>
+                {marge && (
+                  <span
+                    className="text-[10.5px] block"
+                    style={{ color: TONE[marge.tone].fg, fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatEuroCents(marge.netCents)}
+                  </span>
+                )}
               </span>
 
               <span className="flex">
@@ -145,7 +224,7 @@ export default function DemoReprisesPage() {
                 {ancienneteDe(r.offerDate)}
               </span>
 
-              {ouverte ? (
+              {encoreOuverte ? (
                 <div
                   className="adm-row-actions flex items-center gap-1 col-span-2 @[640px]:col-span-1 justify-start @[640px]:justify-end
                              border-t @[640px]:border-t-0 pt-1.5 @[640px]:pt-0"

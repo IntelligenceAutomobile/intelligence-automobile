@@ -680,8 +680,11 @@ export type DemoReprise = {
   plate: string;
   mileageKm: number;
   fuel: string;
+  resaleCents: number;
+  reconditionCents: number;
   offerCents: number;
   offerDate: string;
+  validityDays: number;
 };
 
 export function getDemoReprises(): DemoReprise[] {
@@ -690,25 +693,29 @@ export function getDemoReprises(): DemoReprise[] {
       id: "rep-1", reference: "REP-2026-014", status: "proposee",
       vehicule: "Audi A4 Avant 2.0 TDI 190 S line (2019)", vendeur: "Martin Dupont",
       plate: "AB-123-CD", mileageKm: 118000, fuel: "Diesel",
-      offerCents: 1549000, offerDate: isoDay(-3),
+      resaleCents: 2190000, reconditionCents: 140000, offerCents: 1549000,
+      offerDate: isoDay(-12), validityDays: 15,
     },
     {
       id: "rep-2", reference: "REP-2026-013", status: "acceptee",
       vehicule: "Renault Clio V TCe 90 Intens (2020)", vendeur: "Garage Leblanc",
       plate: "CD-456-EF", mileageKm: 54300, fuel: "Essence",
-      offerCents: 680000, offerDate: isoDay(-9),
+      resaleCents: 920000, reconditionCents: 45000, offerCents: 680000,
+      offerDate: isoDay(-9), validityDays: 15,
     },
     {
       id: "rep-3", reference: "REP-2026-012", status: "au_stock",
       vehicule: "BMW X3 xDrive20d M Sport (2018)", vendeur: "Sophie Marchand",
       plate: "EF-789-GH", mileageKm: 96200, fuel: "Diesel",
-      offerCents: 2700000, offerDate: isoDay(-21),
+      resaleCents: 3290000, reconditionCents: 180000, offerCents: 2700000,
+      offerDate: isoDay(-21), validityDays: 15,
     },
     {
       id: "rep-4", reference: "REP-2026-011", status: "refusee",
       vehicule: "Peugeot 3008 BlueHDi 130 Allure (2017)", vendeur: "Karim Belaïd",
       plate: "GH-012-IJ", mileageKm: 143800, fuel: "Diesel",
-      offerCents: 0, offerDate: isoDay(-34),
+      resaleCents: 0, reconditionCents: 0, offerCents: 0,
+      offerDate: isoDay(-34), validityDays: 15,
     },
   ];
 }

@@ -1,8 +1,8 @@
-import { AdminPage, Skeleton, SkeletonRows, T } from "../ui";
+import { AdminPage, Skeleton, SkeletonRows, SkeletonTiles, T } from "../ui";
 
-// La silhouette montre exactement ce que la page montrera : la recherche, les
-// pastilles, la liste. Le bandeau de chiffres arrive avec le lot suivant, et
-// l'annoncer ici produirait un saut visible à l'arrivée des vraies données.
+// La silhouette montre exactement ce que la page montrera : trois chiffres de
+// pilotage, la recherche, les pastilles, la liste. Promettre un bloc absent de
+// la page réelle produirait un saut visible à l'arrivée des données.
 export default function Loading() {
   return (
     <AdminPage>
@@ -11,6 +11,7 @@ export default function Loading() {
         <Skeleton w={140} h={26} className="mb-2" />
         <Skeleton w={220} h={12} />
       </div>
+      <SkeletonTiles count={3} />
       <div className="flex flex-wrap gap-2 mb-4">
         <Skeleton w={240} h={42} />
         <Skeleton w={96} h={38} />

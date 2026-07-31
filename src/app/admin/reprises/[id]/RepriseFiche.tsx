@@ -11,15 +11,15 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, User, Banknote, AlertTriangle, History } from "lucide-react";
-import { formatNumber, lireMontantEuros, lireEntier } from "@/lib/format";
+import { ArrowLeft, Trash2, User, AlertTriangle, History, CalendarClock } from "lucide-react";
+import { lireMontantEuros, lireEntier } from "@/lib/format";
 import { formatEuroCents } from "@/lib/comptes";
 import { formatDateFr } from "@/lib/devis";
 import {
   REPRISE_STATUSES, REPRISE_STATUS_LABEL, REPRISE_STATUS_TONE,
   REFUSAL_REASONS, REFUSAL_REASON_LABEL,
   REPRISE_FUELS, REPRISE_TRANSMISSIONS, CT_STATUSES, CT_STATUS_LABEL,
-  SERVICE_BOOKS, SERVICE_BOOK_LABEL, repriseLabel,
+  SERVICE_BOOKS, SERVICE_BOOK_LABEL, repriseLabel, assessMarge, validite,
   type RepriseStatus, type RefusalReason,
 } from "@/lib/reprises";
 import { KM_MAX } from "@/lib/reprise-serialize";
@@ -111,15 +111,25 @@ export default function RepriseFiche({
     [f.make, f.model, f.version, f.year],
   );
 
-  const offreLue = lireMontantEuros(f.offerEuros);
-  const offreCents = typeof offreLue === "number" ? offreLue * 100 : 0;
-  const echeance = useMemo(() => {
-    const jours = Number(f.validityDays) || 0;
-    if (!f.offerDate || jours <= 0) return "";
-    const d = new Date(`${f.offerDate}T00:00:00Z`);
-    d.setUTCDate(d.getUTCDate() + jours);
-    return d.toISOString().slice(0, 10);
-  }, [f.offerDate, f.validityDays]);
+  const enCentimes = (v: string) => {
+    const lu = lireMontantEuros(v);
+    return typeof lu === "number" ? lu * 100 : 0;
+  };
+  const offreCents = enCentimes(f.offerEuros);
+  const reventeCents = enCentimes(f.resaleEuros);
+  const remiseEnEtatCents = enCentimes(f.reconditionEuros);
+
+  // Le chiffrage se refait à chaque frappe : la question « à ce prix-là,
+  // qu'est-ce qu'il me reste » se pose devant le client, avant d'enregistrer.
+  const marge = useMemo(
+    () => assessMarge({ resaleCents: reventeCents, reconditionCents: remiseEnEtatCents, offerCents: offreCents }),
+    [reventeCents, remiseEnEtatCents, offreCents],
+  );
+
+  const echeanceLue = useMemo(
+    () => validite(f.offerDate, Number(f.validityDays) || 0, today),
+    [f.offerDate, f.validityDays, today],
+  );
 
   /** Corps de requête, après contrôle de chaque saisie chiffrée. */
   function corps(forcerRattachement = false): Record<string, unknown> | null {
@@ -136,6 +146,16 @@ export default function RepriseFiche({
     const credit = lireMontantEuros(f.creditEuros);
     if (credit === "invalide") {
       toast.error("Le solde du crédit se saisit en chiffres, par exemple 4 200.");
+      return null;
+    }
+    const revente = lireMontantEuros(f.resaleEuros);
+    if (revente === "invalide") {
+      toast.error("La revente visée se saisit en chiffres, par exemple 21 900.");
+      return null;
+    }
+    const remise = lireMontantEuros(f.reconditionEuros);
+    if (remise === "invalide") {
+      toast.error("La remise en état se saisit en chiffres, par exemple 1 400.");
       return null;
     }
     const annee = lireEntier(f.year, 9999);
@@ -171,6 +191,8 @@ export default function RepriseFiche({
       creditCents: (credit ?? 0) * 100,
       titleInName: f.titleInName,
       condition: f.condition,
+      resaleCents: (revente ?? 0) * 100,
+      reconditionCents: (remise ?? 0) * 100,
       offerCents: (offre ?? 0) * 100,
       offerDate: f.offerDate,
       validityDays: Number(f.validityDays) || 15,
@@ -414,16 +436,62 @@ export default function RepriseFiche({
             )}
           </SectionCard>
 
-          <SectionCard title="L'offre">
+          <SectionCard title="Le chiffrage">
+            <Field label="Revente visée (€)" hint="Le prix auquel le véhicule partira, une fois remis en état.">
+              <input inputMode="numeric" value={f.resaleEuros} onChange={(e) => set("resaleEuros", e.target.value)} placeholder="21 900" className={inputClass} style={fieldStyle} />
+            </Field>
+            <Field label="Remise en état à prévoir (€)">
+              <input inputMode="numeric" value={f.reconditionEuros} onChange={(e) => set("reconditionEuros", e.target.value)} placeholder="1 400" className={inputClass} style={fieldStyle} />
+            </Field>
             <Field label="Offre remise au client (€)">
               <input inputMode="numeric" value={f.offerEuros} onChange={(e) => set("offerEuros", e.target.value)} placeholder="15 490" className={`${inputClass} text-lg`} style={fieldStyle} />
             </Field>
-            {offreCents > 0 && (
-              <p className="text-sm" style={{ color: T.text }}>
-                <Banknote size={13} style={{ color: T.muted, display: "inline", marginRight: 6, verticalAlign: -2 }} />
-                {formatEuroCents(offreCents)}
+
+            {/* Le calcul se refait à la frappe. La TVA sur marge est ce qui fait
+                passer une marge annoncée de 5 010 € à 3 942 € réels : c'est la
+                ligne qui manquait pour annoncer un prix en connaissance. */}
+            {marge ? (
+              <div className="px-4 py-3.5 space-y-2" style={{ backgroundColor: T.float, border: `1px solid ${TONE[marge.tone].bd}` }}>
+                <div className="flex items-center justify-between text-[12px]" style={{ color: T.muted }}>
+                  <span>Marge brute</span>
+                  <span style={{ color: T.textDim, fontVariantNumeric: "tabular-nums" }}>{formatEuroCents(marge.brutCents)}</span>
+                </div>
+                <div className="flex items-center justify-between text-[12px]" style={{ color: T.muted }}>
+                  <span>TVA sur marge</span>
+                  <span style={{ color: T.textDim, fontVariantNumeric: "tabular-nums" }}>− {formatEuroCents(marge.tvaCents)}</span>
+                </div>
+                {remiseEnEtatCents > 0 && (
+                  <div className="flex items-center justify-between text-[12px]" style={{ color: T.muted }}>
+                    <span>Remise en état</span>
+                    <span style={{ color: T.textDim, fontVariantNumeric: "tabular-nums" }}>− {formatEuroCents(remiseEnEtatCents)}</span>
+                  </div>
+                )}
+                <div
+                  className="flex items-center justify-between pt-2.5"
+                  style={{ borderTop: `1px solid ${T.border}` }}
+                >
+                  <span className="text-[10px] tracking-[0.16em] uppercase" style={{ color: T.muted }}>Marge nette</span>
+                  <span className="text-lg font-semibold" style={{ color: TONE[marge.tone].fg, fontVariantNumeric: "tabular-nums" }}>
+                    {formatEuroCents(marge.netCents)}
+                    {marge.tauxPourcent !== null && (
+                      <span className="text-[12px] font-normal ml-2" style={{ color: T.muted }}>{marge.tauxPourcent} %</span>
+                    )}
+                  </span>
+                </div>
+                <p className="text-[11.5px] leading-relaxed" style={{ color: marge.tone === "danger" ? TONE.danger.fg : T.muted }}>
+                  {marge.netCents < 0
+                    ? `Ce prix laisse une perte de ${formatEuroCents(-marge.netCents)} une fois la TVA et les frais réglés.`
+                    : `Sur une revente à ${formatEuroCents(reventeCents)}, l'offre de ${formatEuroCents(offreCents)} laisse ${formatEuroCents(marge.netCents)} une fois la TVA sur marge${remiseEnEtatCents > 0 ? " et la remise en état" : ""} déduites.`}
+                </p>
+              </div>
+            ) : (
+              <p className="text-[12px]" style={{ color: T.muted }}>
+                Renseignez la revente visée et l&apos;offre pour obtenir la marge nette.
               </p>
             )}
+          </SectionCard>
+
+          <SectionCard title="La validité de l'offre">
             <div className="grid grid-cols-2 gap-4">
               <Field label="Offre remise le">
                 <input type="date" value={f.offerDate} onChange={(e) => set("offerDate", e.target.value)} className={inputClass} style={fieldStyle} />
@@ -432,9 +500,13 @@ export default function RepriseFiche({
                 <input inputMode="numeric" value={f.validityDays} onChange={(e) => set("validityDays", e.target.value)} className={inputClass} style={fieldStyle} />
               </Field>
             </div>
-            {echeance && (
-              <p className="text-[12px]" style={{ color: T.muted }}>
-                L&apos;offre tient jusqu&apos;au {formatDateFr(echeance)}.
+            {echeanceLue && (
+              <p
+                className="inline-flex items-center gap-2 text-[12px]"
+                style={{ color: echeanceLue.tone === "muted" ? T.muted : TONE[echeanceLue.tone].fg }}
+              >
+                <CalendarClock size={13} style={{ flexShrink: 0 }} />
+                Jusqu&apos;au {formatDateFr(echeanceLue.echeance)} · {echeanceLue.phrase}
               </p>
             )}
           </SectionCard>
@@ -486,13 +558,20 @@ export default function RepriseFiche({
         style={{ backgroundColor: T.float, borderTop: `1px solid ${T.border}` }}
       >
         <div className="mx-auto max-w-6xl px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          {/* La barre porte les deux chiffres qui décident : ce qu'on annonce
+              au client, et ce qu'il en reste une fois la TVA et les frais
+              réglés. Ils restent sous les yeux à toutes les hauteurs de page. */}
           <span className="text-sm min-w-0 truncate" style={{ color: T.muted }}>
             {offreCents > 0 ? (
               <>
                 Offre <strong style={{ color: T.text }}>{formatEuroCents(offreCents)}</strong>
-                {f.mileageKm && lireEntier(f.mileageKm, KM_MAX) !== "invalide" && Number(f.mileageKm.replace(/\s/g, "")) > 0 && (
-                  <> · {formatNumber(Number(f.mileageKm.replace(/[\s]|km/gi, "")))} km</>
+                {marge && (
+                  <>
+                    {" · marge nette "}
+                    <strong style={{ color: TONE[marge.tone].fg }}>{formatEuroCents(marge.netCents)}</strong>
+                  </>
                 )}
+                {echeanceLue && <span className="hidden sm:inline"> · {echeanceLue.phrase}</span>}
               </>
             ) : (
               titre

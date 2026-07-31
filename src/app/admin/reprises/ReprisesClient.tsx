@@ -18,6 +18,7 @@ import { formatNumber } from "@/lib/format";
 import { matchesSearch } from "@/lib/vehicules";
 import {
   REPRISE_FILTERS, REPRISE_STATUS_LABEL, REPRISE_STATUS_TONE, REFUSAL_REASONS, REFUSAL_REASON_LABEL,
+  EXPIRATION_ALERTE_JOURS,
   type RepriseStatus, type RepriseFilter, type RefusalReason,
 } from "@/lib/reprises";
 import { T, TONE, Tag, AdminPage, PageHeader, fieldStyle, btnPrimaryClass, btnPrimaryStyle } from "../ui";
@@ -31,19 +32,39 @@ export type RepriseRow = {
   vehicule: string;
   vendeur: string;
   plate: string;
-  vin: string;
-  make: string;
-  model: string;
-  version: string;
   mileageKm: number;
   fuel: string;
   offerCents: number;
-  offerDate: string;
+  /** Marge nette calculée côté serveur, vide tant que le chiffrage manque. */
+  margeNetteCents: number | null;
+  margeTone: "success" | "warning" | "danger" | "muted" | null;
+  expiree: boolean;
+  expirationProche: boolean;
+  /** « valable 5 j », « échue depuis 4 j ». Écrite côté serveur. */
+  phraseValidite: string;
+  rappelDu: boolean;
   /** Ancienneté écrite côté serveur, avec une seule heure de référence. */
   anciennete: string;
   /** Texte sur lequel porte la recherche, assemblé côté serveur. */
   texteRecherche: string;
 };
+
+export type Pilotage = {
+  enAttenteCents: number;
+  enAttente: number;
+  aRelancer: number;
+  echues: number;
+  acheteCents: number;
+  acceptees: number;
+  margePrevueCents: number;
+  conclues: number;
+  jours: number;
+};
+
+/** Une estimation encore ouverte, donc susceptible d'expirer. */
+function estOuverteLigne(s: RepriseStatus): boolean {
+  return s === "brouillon" || s === "proposee";
+}
 
 // Identité stable : sert de valeur de repli aux statuts posés à l'écran, pour
 // que le mémo qui en dépend se recalcule à bon escient.
@@ -65,6 +86,11 @@ function Ligne({
   onIssue: (r: RepriseRow, statut: "acceptee" | "refusee") => void;
 }) {
   const ouverte = r.status === "brouillon" || r.status === "proposee";
+  // Ce qui appelle l'œil, dans l'ordre : une offre dépassée, puis un rappel
+  // dont le jour est venu, puis une offre qui approche de sa fin.
+  const liseré = ouverte
+    ? r.expiree ? T.danger : r.rappelDu || r.expirationProche ? T.warning : null
+    : null;
   const actionClass =
     "adm-act inline-flex items-center justify-center gap-1.5 text-[11px] tracking-widest uppercase " +
     "transition-colors flex-shrink-0 relative z-10 px-2.5 py-1.5";
@@ -72,7 +98,14 @@ function Ligne({
   return (
     <div
       className={`group relative grid items-center px-4 py-3 gap-x-3 gap-y-2 grid-cols-[1fr_auto] ${GRILLE}`}
-      style={{ borderTop: premiere ? "none" : `1px solid ${T.border}`, opacity: occupee ? 0.6 : 1, transition: "opacity 0.15s" }}
+      style={{
+        borderTop: premiere ? "none" : `1px solid ${T.border}`,
+        // Le liseré REMPLACE la bordure gauche au lieu de s'y ajouter, sinon la
+        // ligne se décale d'un pixel par rapport à ses voisines.
+        borderLeft: liseré ? `2px solid ${liseré}` : "2px solid transparent",
+        opacity: occupee ? 0.6 : 1,
+        transition: "opacity 0.15s",
+      }}
     >
       {/* Lien de couverture : toute la ligne ouvre l'estimation, sauf les
           actions. Un bouton posé à l'intérieur d'un lien serait invalide et
@@ -97,6 +130,19 @@ function Ligne({
           {[r.vendeur, r.mileageKm > 0 ? `${formatNumber(r.mileageKm)} km` : "", r.fuel]
             .filter(Boolean).join(" · ")}
           <span className="@[640px]:hidden">{r.plate ? ` · ${r.plate}` : ""} · {r.reference}</span>
+          {ouverte && (r.rappelDu || r.phraseValidite) && (
+            <>
+              {" · "}
+              {/* Le rappel passe devant la validité : c'est lui qui a été posé
+                  à la main, et il explique le liseré de la ligne. */}
+              <span style={{ color: r.expiree ? TONE.danger.fg : r.rappelDu || r.expirationProche ? TONE.warning.fg : T.muted }}>
+                {r.rappelDu ? "rappel à faire" : r.phraseValidite}
+              </span>
+              {r.rappelDu && r.phraseValidite && (
+                <span style={{ color: T.muted }}> · {r.phraseValidite}</span>
+              )}
+            </>
+          )}
         </span>
       </span>
 
@@ -104,11 +150,24 @@ function Ligne({
         {r.plate || "—"}
       </span>
 
-      <span
-        className="text-sm font-semibold text-right whitespace-nowrap"
-        style={{ color: r.offerCents > 0 ? T.text : T.border, fontVariantNumeric: "tabular-nums" }}
-      >
-        {r.offerCents > 0 ? formatEuroCents(r.offerCents) : "—"}
+      <span className="text-right whitespace-nowrap">
+        <span
+          className="text-sm font-semibold block"
+          style={{ color: r.offerCents > 0 ? T.text : T.border, fontVariantNumeric: "tabular-nums" }}
+        >
+          {r.offerCents > 0 ? formatEuroCents(r.offerCents) : "—"}
+        </span>
+        {/* La marge nette sous l'offre : c'est le chiffre qui dit si l'affaire
+            tient, et il se lisait nulle part sans ouvrir la fiche. */}
+        {r.margeNetteCents !== null && r.margeTone && (
+          <span
+            className="text-[10.5px] block"
+            style={{ color: TONE[r.margeTone].fg, fontVariantNumeric: "tabular-nums" }}
+            title="Marge nette, TVA sur marge et remise en état déduites"
+          >
+            {formatEuroCents(r.margeNetteCents)}
+          </span>
+        )}
       </span>
 
       <span className="flex">
@@ -263,10 +322,11 @@ function MotifRefus({
 const PAGE = 80;
 
 export default function ReprisesClient({
-  reprises, total, filtreInitial, rechercheInitiale,
+  reprises, total, pilotage, filtreInitial, rechercheInitiale,
 }: {
   reprises: RepriseRow[];
   total: number;
+  pilotage: Pilotage;
   filtreInitial: RepriseFilter;
   rechercheInitiale: string;
 }) {
@@ -326,10 +386,11 @@ export default function ReprisesClient({
   }
 
   const comptes = useMemo(() => {
-    const c: Record<string, number> = { all: reprises.length };
+    const c: Record<string, number> = { all: reprises.length, expiree: 0 };
     for (const r of reprises) {
       const s = statutDe(r);
       c[s] = (c[s] ?? 0) + 1;
+      if (r.expiree && estOuverteLigne(s)) c.expiree += 1;
     }
     return c;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -337,7 +398,13 @@ export default function ReprisesClient({
 
   const filtrees = useMemo(() => {
     return reprises.filter((r) => {
-      if (filtre !== "all" && statutDe(r) !== filtre) return false;
+      // « Expirées » se déduit de la date d'offre : c'est une situation, pas
+      // un statut rangé en base.
+      if (filtre === "expiree") {
+        if (!r.expiree || !estOuverteLigne(statutDe(r))) return false;
+      } else if (filtre !== "all" && statutDe(r) !== filtre) {
+        return false;
+      }
       // Le test de recherche vient en dernier : il répond vrai sur une requête
       // vide, et le placer en tête court-circuiterait le filtre.
       return matchesSearch(r.texteRecherche, recherche);
@@ -379,6 +446,11 @@ export default function ReprisesClient({
     }
   }
 
+  const tuileStyle = (actif: boolean) => ({
+    backgroundColor: T.surface,
+    border: `1px solid ${actif ? T.accent : T.border}`,
+  });
+
   const lignesAvecStatutPose = visibles.map((r) => ({ ...r, status: statutDe(r) }));
   const enAttente = reprises.filter((r) => statutDe(r) === "proposee").length;
 
@@ -398,6 +470,63 @@ export default function ReprisesClient({
           </Link>
         }
       />
+
+      {/* Trois chiffres de pilotage, calculés sur TOUTE la table et jamais sur
+          les lignes chargées : au-delà de 80 estimations, un total calculé à
+          l'écran deviendrait faux sans que rien le signale. Les deux premiers
+          se cliquent et posent leur filtre. */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+        <button
+          type="button"
+          aria-pressed={filtre === "proposee"}
+          onClick={() => setFiltre((v) => (v === "proposee" ? "all" : "proposee"))}
+          className="px-4 py-3 text-left transition-colors"
+          style={tuileStyle(filtre === "proposee")}
+        >
+          <div className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>Offres en cours</div>
+          <div className="text-[19px] sm:text-[24px] mt-1 whitespace-nowrap" style={{ color: T.text, fontVariantNumeric: "tabular-nums" }}>
+            {pilotage.enAttenteCents > 0 ? formatEuroCents(pilotage.enAttenteCents) : "—"}
+          </div>
+          <div className="text-[11px]" style={{ color: T.muted }}>
+            {pilotage.enAttente > 0
+              ? `${pilotage.enAttente} estimation${pilotage.enAttente > 1 ? "s" : ""} ouverte${pilotage.enAttente > 1 ? "s" : ""}`
+              : "en attente d'une première offre"}
+          </div>
+        </button>
+
+        <button
+          type="button"
+          aria-pressed={filtre === "expiree"}
+          onClick={() => setFiltre((v) => (v === "expiree" ? "all" : "expiree"))}
+          className="px-4 py-3 text-left transition-colors"
+          style={tuileStyle(filtre === "expiree")}
+        >
+          <div className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>À relancer</div>
+          <div
+            className="text-[19px] sm:text-[24px] mt-1 whitespace-nowrap"
+            style={{ color: pilotage.aRelancer > 0 ? TONE.warning.fg : T.text, fontVariantNumeric: "tabular-nums" }}
+          >
+            {pilotage.aRelancer}
+          </div>
+          <div className="text-[11px]" style={{ color: T.muted }}>
+            {pilotage.aRelancer > 0
+              ? `${pilotage.echues} échue${pilotage.echues > 1 ? "s" : ""} · ${pilotage.aRelancer - pilotage.echues} sous ${EXPIRATION_ALERTE_JOURS} j`
+              : "toutes les offres tiennent encore"}
+          </div>
+        </button>
+
+        <div className="px-4 py-3 col-span-2 lg:col-span-1" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>Acheté sur {pilotage.jours} jours</div>
+          <div className="text-[19px] sm:text-[24px] mt-1 whitespace-nowrap" style={{ color: T.text, fontVariantNumeric: "tabular-nums" }}>
+            {pilotage.acheteCents > 0 ? formatEuroCents(pilotage.acheteCents) : "—"}
+          </div>
+          <div className="text-[11px]" style={{ color: T.muted }}>
+            {pilotage.conclues > 0
+              ? `${pilotage.acceptees} sur ${pilotage.conclues} conclue${pilotage.conclues > 1 ? "s" : ""} · marge ${formatEuroCents(pilotage.margePrevueCents)}`
+              : "en attente d'une première reprise conclue"}
+          </div>
+        </div>
+      </div>
 
       {/* Recherche et filtres */}
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-4">
