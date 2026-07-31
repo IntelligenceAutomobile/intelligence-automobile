@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
   CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge,
-  NotebookPen, Check, MailWarning, type LucideIcon,
+  NotebookPen, Check, MailWarning, Info, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -15,6 +15,8 @@ import AdminLogout from "./AdminLogout";
 import { ConfirmDialog } from "./confirm";
 import { useToast } from "./toast";
 import { useAcceptationCount } from "./AcceptationsWatcher";
+import NouveautesModal from "./NouveautesModal";
+import { nouveautePour, type Nouveaute } from "./nouveautes";
 
 // `revu` marque les modules repris et audités ces derniers jours : une coche
 // verte dans la barre sert de repère pour savoir où le travail est passé.
@@ -37,7 +39,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: Car, label: "Stock", href: "/admin/vehicules", revu: "28 juillet 2026" },
       { icon: FileText, label: "Devis", href: "/admin/devis", revu: "29 juillet 2026" },
       { icon: ReceiptText, label: "Factures", href: "/admin/factures", revu: "28 juillet 2026" },
-      { icon: BellRing, label: "Relances", href: "/admin/relances", revu: "28 juillet 2026" },
+      { icon: BellRing, label: "Relances", href: "/admin/relances", revu: "30 juillet 2026" },
       { icon: Users, label: "Clients & leads", href: "/admin/clients" },
       { icon: HandCoins, label: "Reprises", href: "/admin/reprises" },
       { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning", revu: "28 juillet 2026" },
@@ -58,7 +60,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
   {
     section: "Réglages",
     items: [
-      { icon: MailWarning, label: "Emails", href: "/admin/emails", cap: "settings" },
+      { icon: MailWarning, label: "Emails", href: "/admin/emails", cap: "settings", revu: "30 juillet 2026" },
       { icon: UserCog, label: "Utilisateurs", href: "/admin/utilisateurs", cap: "users" },
       { icon: Palette, label: "Marque blanche", href: "/admin/marque", cap: "settings" },
     ],
@@ -90,6 +92,8 @@ export default function Sidebar({
   const toast = useToast();
   const [, startTransition] = useTransition();
   const [confirmReset, setConfirmReset] = useState(false);
+  // Fiche des nouveautés du module, ouverte par le « i » de la ligne.
+  const [nouveaute, setNouveaute] = useState<Nouveaute | null>(null);
   const [resetting, setResetting] = useState(false);
 
   async function resetDemo() {
@@ -140,6 +144,7 @@ export default function Sidebar({
                     ? pathname === item.href
                     : pathname.startsWith(item.href)
                   : false;
+                const fiche = nouveautePour(item.href);
                 const inner = (
                   <>
                     {active && (
@@ -158,6 +163,32 @@ export default function Sidebar({
                         style={{ color: T.success }}
                       >
                         <Check size={12} strokeWidth={3} />
+                      </span>
+                    )}
+                    {fiche && (
+                      // Ouvre la fiche des nouveautés sans suivre le lien de la
+                      // ligne : c'est un point d'information, pas une navigation.
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title={`Ce qui a changé dans ${item.label}`}
+                        aria-label={`Ce qui a changé dans ${item.label}`}
+                        className="adm-act flex-shrink-0 inline-flex cursor-pointer"
+                        style={{ color: T.accent }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setNouveaute(fiche);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setNouveaute(fiche);
+                          }
+                        }}
+                      >
+                        <Info size={12} />
                       </span>
                     )}
                     {item.soon && (
@@ -267,6 +298,8 @@ export default function Sidebar({
         onConfirm={resetDemo}
         onCancel={() => setConfirmReset(false)}
       />
+
+      {nouveaute && <NouveautesModal nouveaute={nouveaute} onClose={() => setNouveaute(null)} />}
     </aside>
   );
 }
