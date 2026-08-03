@@ -93,7 +93,7 @@ export default async function VehiculesV2Page({
         >
           {/* Image plein écran */}
           <Image
-            src="/Photo du Site/Photo IA/Image Nos véhicules.png"
+            src="/Photo du Site/Nos Véhicules.png"
             alt="Nos véhicules"
             fill
             priority
