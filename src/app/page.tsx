@@ -242,6 +242,14 @@ export default async function HomePage() {
         .ia-hero-photo {
           object-position: 38% 50%;
         }
+        /* Sur mobile la photo est rognée sur les côtés pour remplir la hauteur :
+           on décale le cadrage vers la gauche pour garder l'enseigne du bâtiment
+           entière, l'avant de l'Audi tient encore dans le cadre. */
+        @media (max-width: 767px) {
+          .ia-hero-photo {
+            object-position: 28% 50%;
+          }
+        }
       ` }} />
 
       <Header />
@@ -251,14 +259,14 @@ export default async function HomePage() {
         <section style={{ position: "relative", height: "100dvh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
           {/* fond flou plein écran : remplit l'écran sans rogner la photo principale */}
           <img
-            src="/Photo du Site/Accueil Final.png"
+            src="/Photo du Site/Accueil FInal 2.png"
             alt=""
             aria-hidden="true"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
           />
           {/* photo nette, remplit tout le hero (cover) — recadrée sur le centre pour garder les voitures principales */}
           <img
-            src="/Photo du Site/Accueil Final.png"
+            src="/Photo du Site/Accueil FInal 2.png"
             alt=""
             className="ia-hero-photo"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
@@ -341,7 +349,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="w-full lg:w-[58%]" style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
-              <img className="ia-service-img" src="/Photo du Site/Recherche personnalisé/Recherche 2.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              <img className="ia-service-img" src="/Photo du Site/Recherche personnalisé/Recherche 5.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to left, transparent 55%, #040B16 100%)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #040B16 0%, transparent 25%)" }} />
             </div>

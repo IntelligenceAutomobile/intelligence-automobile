@@ -22,12 +22,14 @@ export default async function RecherchePage2() {
       <Header />
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
-        {/* CSS : cadrage responsive — sur écrans portrait (téléphone/tablette), décale vers la droite
-            pour garder la voiture visible tout en montrant l'écran et la main ; desktop inchangé (déjà complet) */}
+        {/* CSS : cadrage responsive — la photo est au format 3/2, donc au-delà de ce ratio
+            (desktop) elle se rogne en haut/bas et `center` suffit. En dessous (téléphone/tablette)
+            elle se rogne sur les côtés : on décale vers la droite pour garder l'écran de recherche
+            entier, avec l'arrière de la Porsche encore visible à gauche. */}
         <style dangerouslySetInnerHTML={{ __html: `
           .ia-recherche-photo { object-position: center; }
           @media (max-aspect-ratio: 3/2) {
-            .ia-recherche-photo { object-position: 69% 50%; }
+            .ia-recherche-photo { object-position: 62% 50%; }
           }
         ` }} />
 
@@ -37,7 +39,7 @@ export default async function RecherchePage2() {
           style={{ height: "100dvh", minHeight: "520px" }}
         >
           <img
-            src="/Photo du Site/Recherche personnalisé/Recherche 2.png"
+            src="/Photo du Site/Recherche personnalisé/Recherche 5.png"
             alt=""
             className="absolute inset-0 w-full h-full object-cover ia-recherche-photo"
             style={{ opacity: 1 }}
