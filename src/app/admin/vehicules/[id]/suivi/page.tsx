@@ -9,10 +9,17 @@ export default async function SuiviPage({ params }: { params: Promise<{ id: stri
   if (!session) redirect("/admin/login");
 
   const { id } = await params;
-  const [vehicle, costs, notes] = await Promise.all([
+  const [vehicle, costs, notes, reprise] = await Promise.all([
     prisma.vehicle.findUnique({ where: { id } }),
     prisma.vehicleCost.findMany({ where: { vehicleId: id }, orderBy: { date: "desc" } }),
     prisma.vehicleNote.findMany({ where: { vehicleId: id }, orderBy: { createdAt: "desc" } }),
+    // D'où vient cette voiture : une reprise client garde le lien vers son
+    // estimation, où vivent l'état constaté le jour de l'évaluation et le
+    // vendeur, information dont le dossier d'immatriculation a besoin.
+    prisma.reprise.findFirst({
+      where: { vehicleId: id },
+      select: { id: true, reference: true, ownerName: true, ownerCompany: true, clientId: true },
+    }),
   ]);
   if (!vehicle) notFound();
 
@@ -45,6 +52,16 @@ export default async function SuiviPage({ params }: { params: Promise<{ id: stri
       }}
       costs={costRows}
       notes={noteRows}
+      origine={
+        reprise
+          ? {
+              repriseId: reprise.id,
+              reference: reprise.reference,
+              vendeur: reprise.ownerCompany || reprise.ownerName,
+              clientId: reprise.clientId,
+            }
+          : null
+      }
     />
   );
 }

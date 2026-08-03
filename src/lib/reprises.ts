@@ -212,6 +212,33 @@ export function isRepriseFilter(v: unknown): v is RepriseFilter {
   return typeof v === "string" && REPRISE_FILTERS.some((f) => f.value === v);
 }
 
+/* ── Passage au stock ──
+   Une reprise acceptée devient une fiche de parc. La fiche véhicule réclame six
+   colonnes obligatoires : sans elles, la création échouerait au dernier moment,
+   après l'accord donné au client. Autant le dire avant. */
+
+export function repriseIssues(r: {
+  status: string;
+  make: string;
+  model: string;
+  year: number;
+  mileageKm: number;
+  color: string;
+  offerCents: number;
+  vehicleId: string | null;
+}): string[] {
+  const manques: string[] = [];
+  if (r.vehicleId) manques.push("cette estimation a déjà sa fiche véhicule");
+  if (r.status !== "acceptee") manques.push("l'estimation passe au stock une fois l'offre acceptée");
+  if (!r.make.trim()) manques.push("la marque");
+  if (!r.model.trim()) manques.push("le modèle");
+  if (r.year <= 1950) manques.push("l'année");
+  if (r.mileageKm <= 0) manques.push("le kilométrage");
+  if (!r.color.trim()) manques.push("la couleur");
+  if (r.offerCents <= 0) manques.push("le prix de reprise");
+  return manques;
+}
+
 /* ── Gardes de type ── */
 
 export function isRepriseStatus(v: unknown): v is RepriseStatus {

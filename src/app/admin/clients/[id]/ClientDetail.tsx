@@ -218,7 +218,9 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
   }
 
   return (
-    <SectionCard>
+    // L'identifiant ouvre la page au bon bloc : le suivi d'un véhicule et le
+    // module Reprises pointent vers l'affaire, pas vers le haut de la fiche.
+    <SectionCard id={`lead-${lead.id}`}>
       <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium break-words" style={{ color: T.text }}>

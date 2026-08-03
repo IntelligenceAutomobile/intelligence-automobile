@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChevronLeft, Plus, Trash2, Send, Check, AlertTriangle, Wrench, Banknote,
-  TrendingUp, TrendingDown, Pencil,
+  TrendingUp, TrendingDown, Pencil, HandCoins,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { formatEuroCents } from "@/lib/comptes";
@@ -343,7 +343,22 @@ function NotesSection({ vehicleId, notes }: { vehicleId: string; notes: NoteRow[
 }
 
 /* ── Page ── */
-export default function SuiviClient({ vehicle, costs, notes }: { vehicle: Vehicle; costs: CostRow[]; notes: NoteRow[] }) {
+/** D'où vient la voiture, quand elle entre au parc par une reprise client. */
+export type OrigineReprise = {
+  repriseId: string;
+  reference: string;
+  vendeur: string;
+  clientId: string | null;
+};
+
+export default function SuiviClient({
+  vehicle, costs, notes, origine = null,
+}: {
+  vehicle: Vehicle;
+  costs: CostRow[];
+  notes: NoteRow[];
+  origine?: OrigineReprise | null;
+}) {
   return (
     <AdminPage>
       <Link
@@ -354,6 +369,41 @@ export default function SuiviClient({ vehicle, costs, notes }: { vehicle: Vehicl
         <ChevronLeft size={13} />
         Fiche du véhicule
       </Link>
+
+      {/* Cette voiture vient d'une reprise : l'estimation garde l'état constaté
+          le jour de l'évaluation et l'identité du cédant. */}
+      {origine && (
+        <div
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 mb-6"
+          style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+        >
+          <span className="inline-flex items-center gap-2 text-[12.5px] min-w-0" style={{ color: T.textDim }}>
+            <HandCoins size={14} style={{ color: T.accent, flexShrink: 0 }} />
+            <span className="truncate">
+              Issue de la reprise {origine.reference}
+              {origine.vendeur ? ` · cédée par ${origine.vendeur}` : ""}
+            </span>
+          </span>
+          <span className="flex items-center gap-4 flex-shrink-0">
+            <Link
+              href={`/admin/reprises/${origine.repriseId}`}
+              className="text-[11px] tracking-widest uppercase transition-colors hover:opacity-80"
+              style={{ color: T.accent }}
+            >
+              Ouvrir l&apos;estimation
+            </Link>
+            {origine.clientId && (
+              <Link
+                href={`/admin/clients/${origine.clientId}`}
+                className="text-[11px] tracking-widest uppercase transition-colors hover:text-[#F0F5FF]"
+                style={{ color: T.muted }}
+              >
+                Fiche du vendeur
+              </Link>
+            )}
+          </span>
+        </div>
+      )}
 
       <div className="flex items-center gap-4 mb-8">
         <Thumb src={vehicle.image} alt={`${vehicle.make} ${vehicle.model}`} w={88} h={66} />

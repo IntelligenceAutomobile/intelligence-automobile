@@ -87,6 +87,14 @@ export function repriseFromBody(body: Record<string, unknown>) {
     nextActionLabel: texte(body.nextActionLabel, 120),
 
     notes: texte(body.notes, 2000),
+
+    // Les URL de photos se rangent en JSON, assainies : seules des chaînes
+    // non vides entrent, et le tableau reste borné.
+    photos: JSON.stringify(
+      (Array.isArray(body.photos) ? body.photos : [])
+        .filter((u): u is string => typeof u === "string" && u.trim() !== "")
+        .slice(0, 40),
+    ),
   };
 }
 

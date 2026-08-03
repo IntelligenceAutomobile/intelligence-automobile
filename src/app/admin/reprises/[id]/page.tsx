@@ -5,6 +5,16 @@ import { can, asRole } from "@/lib/roles";
 import { parisDay } from "@/lib/vehicules";
 import { timeAgo } from "@/lib/format";
 import { isRepriseStatus } from "@/lib/reprises";
+
+/** Les photos vivent en JSON : une valeur illisible vaut mieux vide qu'en erreur. */
+function lirePhotos(brut: string): string[] {
+  try {
+    const v = JSON.parse(brut || "[]");
+    return Array.isArray(v) ? v.filter((u): u is string => typeof u === "string" && u.trim() !== "") : [];
+  } catch {
+    return [];
+  }
+}
 import RepriseFiche, { type Reprise, type RepriseEventRow } from "./RepriseFiche";
 
 // Fiche d'une estimation. Les valeurs chiffrées descendent en texte : le champ
@@ -19,6 +29,12 @@ export default async function ReprisePage({ params }: { params: Promise<{ id: st
     include: { events: { orderBy: { createdAt: "desc" }, take: 40 } },
   });
   if (!r) notFound();
+
+  // Le rattachement au véhicule est une colonne nue : rien ne garantit que la
+  // fiche de parc existe encore, et un lien vers le vide se voit tout de suite.
+  const vehiculeExiste = r.vehicleId
+    ? (await prisma.vehicle.count({ where: { id: r.vehicleId } })) > 0
+    : false;
 
   const today = parisDay(new Date()).toISOString().slice(0, 10);
   const maintenant = new Date();
@@ -63,6 +79,7 @@ export default async function ReprisePage({ params }: { params: Promise<{ id: st
     nextActionAt: r.nextActionAt,
     nextActionLabel: r.nextActionLabel,
     notes: r.notes,
+    photos: lirePhotos(r.photos),
   };
 
   // L'ancienneté est écrite ici, avec une seule heure de référence : calculée
@@ -83,6 +100,7 @@ export default async function ReprisePage({ params }: { params: Promise<{ id: st
       canDelete={can(asRole(session.admin.role), "delete")}
       today={today}
       evenements={evenements}
+      vehiculeExiste={vehiculeExiste}
     />
   );
 }

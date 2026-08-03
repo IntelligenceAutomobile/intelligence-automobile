@@ -14,6 +14,12 @@ export const PUBLIC_PREFIX = "aide-vente/";
 // Dossier des pièces jointes du back-office (documents et papiers scannés).
 export const DOC_PREFIX = "documents/";
 
+// Photos d'une estimation de reprise : les quatre angles, le compteur, la carte
+// grise, le défaut principal. La branche par défaut du back-office accepterait
+// déjà ce préfixe ; la règle s'écrit malgré tout, parce qu'une règle écrite se
+// relit, et parce que ces clichés partent d'un téléphone, souvent lourds.
+export const REPRISE_PREFIX = "reprises/";
+
 export const IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -63,6 +69,9 @@ export function uploadRule(pathname: string, isAdmin: boolean): UploadRule | nul
   // les photos du véhicule restent strictement des images.
   if (path.startsWith(DOC_PREFIX)) {
     return { allowedContentTypes: [...IMAGE_TYPES, ...DOC_TYPES], maximumSizeInBytes: 25 * MB };
+  }
+  if (path.startsWith(REPRISE_PREFIX)) {
+    return { allowedContentTypes: IMAGE_TYPES, maximumSizeInBytes: 15 * MB };
   }
   return { allowedContentTypes: IMAGE_TYPES, maximumSizeInBytes: 15 * MB };
 }

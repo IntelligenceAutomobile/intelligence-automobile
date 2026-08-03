@@ -41,7 +41,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: ReceiptText, label: "Factures", href: "/admin/factures", revu: "28 juillet 2026" },
       { icon: BellRing, label: "Relances", href: "/admin/relances", revu: "30 juillet 2026" },
       { icon: Users, label: "Clients & leads", href: "/admin/clients" },
-      { icon: HandCoins, label: "Reprises", href: "/admin/reprises" },
+      { icon: HandCoins, label: "Reprises", href: "/admin/reprises", revu: "31 juillet 2026" },
       { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning", revu: "28 juillet 2026" },
       { icon: Radio, label: "Diffusion", href: "/admin/diffusion" },
       { icon: ShieldCheck, label: "Garanties", href: "/admin/garanties" },

@@ -55,6 +55,8 @@ export type RepriseForm = {
   nextActionAt: string;
   nextActionLabel: string;
   notes: string;
+  /** URL des clichés du véhicule évalué. */
+  photos: string[];
 };
 
 /** Valeurs de départ d'une estimation vierge, au jour civil de Paris. */
@@ -67,6 +69,6 @@ export function repriseVierge(today: string): RepriseForm {
     ctDate: "", ctStatus: "", owners: "", serviceBook: "", keys: "",
     creditPending: false, creditEuros: "", titleInName: true, condition: "",
     resaleEuros: "", reconditionEuros: "", offerEuros: "", offerDate: today, validityDays: String(VALIDITE_JOURS_DEFAUT), refusalReason: "",
-    nextActionAt: "", nextActionLabel: "", notes: "",
+    nextActionAt: "", nextActionLabel: "", notes: "", photos: [],
   };
 }

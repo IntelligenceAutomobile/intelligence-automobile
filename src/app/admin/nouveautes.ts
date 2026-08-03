@@ -256,6 +256,69 @@ export const NOUVEAUTES: Nouveaute[] = [
       },
     ],
   },
+  {
+    href: "/admin/reprises",
+    titre: "Reprises",
+    date: "31 juillet 2026",
+    resume:
+      "Avant, une estimation partait en texte libre dans la fiche du client. Maintenant, c'est une pièce à part entière : chiffrée, datée, imprimable, et qui fait entrer la voiture au stock.",
+    groupes: [
+      {
+        titre: "La saisie a sa propre page",
+        points: [
+          "La fenêtre qui s'évanouissait au premier clic de travers a disparu : l'estimation se remplit sur une page à elle.",
+          "Les champs suivent l'ordre de la carte grise : immatriculation, mise en circulation, marque, modèle.",
+          "Vingt informations au lieu de neuf, dont le numéro de série, le contrôle technique, le carnet d'entretien et les clés.",
+          "Cocher « Crédit en cours » rappelle de demander le décompte au prêteur ; décocher « Carte grise au nom du vendeur » rappelle qu'il faut la signature du titulaire.",
+          "Le bouton d'enregistrement reste collé en bas, avec l'offre et la marge sous les yeux.",
+          "Un même vendeur reste sur une seule fiche, retrouvé par son email ou par les derniers chiffres de son téléphone.",
+        ],
+      },
+      {
+        titre: "On voit ce que l'affaire rapporte",
+        points: [
+          "Revente visée, remise en état et offre remise donnent la marge nette, recalculée pendant que vous tapez.",
+          "La TVA sur marge est déduite : une marge annoncée de 6 410 € en vaut 3 942 une fois la taxe et les frais réglés.",
+          "Un prix trop haut annonce la perte en clair, avant que l'offre parte.",
+          "Chaque changement de prix laisse une trace datée et signée dans le journal de l'estimation.",
+        ],
+      },
+      {
+        titre: "Une offre a une fin",
+        points: [
+          "L'offre porte sa date et sa durée, quinze jours par défaut.",
+          "La ligne annonce « valable 3 j », puis « échue depuis 5 j », avec un liseré de couleur.",
+          "Les offres qui approchent de leur fin remontent dans « À faire aujourd'hui » et sur le tableau de bord.",
+          "Une date de rappel se pose sur l'estimation, comme sur une affaire.",
+        ],
+      },
+      {
+        titre: "La liste devient une liste de travail",
+        points: [
+          "Une recherche retrouve une voiture par sa plaque, son numéro de série ou le nom du vendeur.",
+          "Des pastilles filtrent par état, et trois chiffres en tête donnent les offres en cours, celles à relancer et ce qui a été acheté.",
+          "Deux boutons en bout de ligne concluent une offre sans ouvrir la fiche, le refus demandant son motif.",
+          "Sur téléphone, le nom du véhicule se lit en entier, là où il se réduisait à deux lettres.",
+        ],
+      },
+      {
+        titre: "De l'accord à la voiture au parc",
+        points: [
+          "Un bouton fait de l'estimation acceptée une fiche véhicule, hors ligne, prête à compléter.",
+          "Son prix d'achat et sa remise en état sont déjà portés au suivi : la marge du stock est juste dès le premier jour.",
+          "La fiche du parc garde le lien vers l'estimation et vers le vendeur.",
+        ],
+      },
+      {
+        titre: "Le vendeur repart avec un papier",
+        points: [
+          "Une offre A4 s'imprime, à l'en-tête de la société, avec le véhicule identifié, le montant, la validité et les conditions.",
+          "Deux emplacements de signature y figurent.",
+          "Des photos se déposent sur l'estimation : les quatre angles, le compteur, la carte grise.",
+        ],
+      },
+    ],
+  },
 ];
 
 export function nouveautePour(href: string | undefined): Nouveaute | undefined {

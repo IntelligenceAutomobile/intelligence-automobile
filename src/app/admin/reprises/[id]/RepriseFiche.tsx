@@ -11,7 +11,8 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, User, AlertTriangle, History, CalendarClock } from "lucide-react";
+import { ArrowLeft, Trash2, User, AlertTriangle, History, CalendarClock, Car, ArrowRightLeft, Printer, ImagePlus, X } from "lucide-react";
+import { upload } from "@vercel/blob/client";
 import { lireMontantEuros, lireEntier } from "@/lib/format";
 import { formatEuroCents } from "@/lib/comptes";
 import { formatDateFr } from "@/lib/devis";
@@ -19,7 +20,7 @@ import {
   REPRISE_STATUSES, REPRISE_STATUS_LABEL, REPRISE_STATUS_TONE,
   REFUSAL_REASONS, REFUSAL_REASON_LABEL,
   REPRISE_FUELS, REPRISE_TRANSMISSIONS, CT_STATUSES, CT_STATUS_LABEL,
-  SERVICE_BOOKS, SERVICE_BOOK_LABEL, repriseLabel, assessMarge, validite,
+  SERVICE_BOOKS, SERVICE_BOOK_LABEL, repriseLabel, assessMarge, validite, repriseIssues,
   type RepriseStatus, type RefusalReason,
 } from "@/lib/reprises";
 import { KM_MAX } from "@/lib/reprise-serialize";
@@ -84,13 +85,16 @@ function Avertissement({ children }: { children: React.ReactNode }) {
 }
 
 export default function RepriseFiche({
-  reprise, mode, canDelete, today, evenements = [],
+  reprise, mode, canDelete, today, evenements = [], vehiculeExiste = false,
 }: {
   reprise: Reprise;
   mode: "creation" | "fiche";
   canDelete: boolean;
   today: string;
   evenements?: RepriseEventRow[];
+  /** La fiche de parc existe encore : le rattachement est une colonne nue,
+      qu'aucune contrainte protège d'une suppression du véhicule. */
+  vehiculeExiste?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -99,6 +103,9 @@ export default function RepriseFiche({
   const [f, setF] = useState(reprise);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [doublon, setDoublon] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
+  const [confirmStock, setConfirmStock] = useState(false);
+  const [photos, setPhotos] = useState<string[]>(reprise.photos);
+  const [envois, setEnvois] = useState(0);
   // `busy` ne devient vrai qu'au rendu suivant : deux clics rapprochés
   // passaient tous les deux et créaient deux estimations identiques. Ce
   // verrou-ci se ferme dans le même tour d'exécution.
@@ -125,6 +132,23 @@ export default function RepriseFiche({
     () => assessMarge({ resaleCents: reventeCents, reconditionCents: remiseEnEtatCents, offerCents: offreCents }),
     [reventeCents, remiseEnEtatCents, offreCents],
   );
+
+  // Ce qui empêche encore le passage au stock, calculé sur la saisie en cours :
+  // le message change à mesure que les champs se remplissent.
+  const manquesStock = useMemo(
+    () => repriseIssues({
+      status: f.status,
+      make: f.make,
+      model: f.model,
+      year: Number(f.year) || 0,
+      mileageKm: Number(f.mileageKm.replace(/[^0-9]/g, "")) || 0,
+      color: f.color,
+      offerCents: offreCents,
+      vehicleId: f.vehicleId,
+    }).filter((m) => m !== "cette estimation a déjà sa fiche véhicule"),
+    [f.status, f.make, f.model, f.year, f.mileageKm, f.color, f.vehicleId, offreCents],
+  );
+  const reconditionAffichee = remiseEnEtatCents > 0;
 
   const echeanceLue = useMemo(
     () => validite(f.offerDate, Number(f.validityDays) || 0, today),
@@ -244,6 +268,79 @@ export default function RepriseFiche({
     }
   }
 
+  /** Dépose des clichés du véhicule évalué. Chaque envoi part seul : une photo
+      qui échoue laisse les autres arriver. */
+  async function ajouterPhotos(fichiers: FileList | null) {
+    const liste = Array.from(fichiers ?? []);
+    if (liste.length === 0) return;
+    setEnvois((n) => n + liste.length);
+    const ajoutees: string[] = [];
+    await Promise.all(
+      liste.map(async (file) => {
+        try {
+          // Le suffixe horodaté est indispensable : le back-office garde le
+          // suffixe aléatoire fermé, et deux « photo.jpg » se recouvriraient.
+          const blob = await upload(`reprises/${reprise.id || "nouvelle"}-${Date.now()}-${file.name}`, file, {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+          });
+          ajoutees.push(blob.url);
+        } catch (e) {
+          toast.error(`Envoi impossible${e instanceof Error ? ` : ${e.message}` : ""}.`);
+        } finally {
+          setEnvois((n) => n - 1);
+        }
+      }),
+    );
+    if (ajoutees.length > 0) {
+      const suite = [...photos, ...ajoutees];
+      setPhotos(suite);
+      await enregistrerPhotos(suite);
+    }
+  }
+
+  async function retirerPhoto(url: string) {
+    const suite = photos.filter((u) => u !== url);
+    setPhotos(suite);
+    await enregistrerPhotos(suite);
+  }
+
+  /** Les photos s'enregistrent seules, sans attendre le bouton : une image
+      déposée puis perdue au rechargement serait pire que pas d'image du tout. */
+  async function enregistrerPhotos(suite: string[]) {
+    if (mode === "creation") return;
+    try {
+      const res = await fetch(`/api/admin/reprises/${reprise.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photos: suite }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      toast.error("L'enregistrement des photos a échoué.");
+    }
+  }
+
+  async function passerAuStock() {
+    if (envoiEnCours.current) return;
+    envoiEnCours.current = true;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/reprises/${reprise.id}/stock`, { method: "POST" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error);
+      toast.success("Fiche véhicule créée, hors ligne pour l'instant.");
+      setConfirmStock(false);
+      router.push(`/admin/vehicules/${j.vehicleId}/suivi`);
+      startTransition(() => router.refresh());
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : "Le passage au stock a échoué.");
+      setBusy(false);
+    } finally {
+      envoiEnCours.current = false;
+    }
+  }
+
   async function supprimer() {
     setBusy(true);
     try {
@@ -277,6 +374,12 @@ export default function RepriseFiche({
               <ArrowLeft size={14} />
               Retour
             </Link>
+            {mode === "fiche" && (
+              <Link href={`/admin/reprises/${reprise.id}/imprimer`} className={btnGhostClass} style={btnGhostStyle}>
+                <Printer size={14} />
+                Imprimer l&apos;offre
+              </Link>
+            )}
             {mode === "fiche" && canDelete && (
               <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className={btnGhostClass} style={btnGhostStyle}>
                 <Trash2 size={14} />
@@ -393,6 +496,51 @@ export default function RepriseFiche({
               />
             </Field>
           </SectionCard>
+
+          {mode === "fiche" && (
+            <SectionCard title="Les photos du véhicule">
+              {photos.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {photos.map((url) => (
+                    <div key={url} className="relative group" style={{ border: `1px solid ${T.border}`, backgroundColor: T.float }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt="" className="w-full object-cover" style={{ aspectRatio: "4 / 3" }} />
+                      <button
+                        type="button"
+                        onClick={() => retirerPhoto(url)}
+                        aria-label="Retirer cette photo"
+                        className="absolute top-1.5 right-1.5 p-1 transition-opacity"
+                        style={{ backgroundColor: "rgba(4,11,22,0.72)", color: T.textDim }}
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label
+                className="flex items-center justify-center gap-2 px-4 py-3 cursor-pointer transition-colors hover:bg-[rgba(107,159,238,0.05)]"
+                style={{ border: `1px dashed ${T.border}`, color: T.textDim }}
+              >
+                <ImagePlus size={15} style={{ color: T.accent }} />
+                <span className="text-sm">
+                  {envois > 0 ? `Envoi de ${envois} photo${envois > 1 ? "s" : ""}…` : "Déposer des photos"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => { ajouterPhotos(e.target.files); e.target.value = ""; }}
+                />
+              </label>
+              <p className="text-[11px]" style={{ color: T.muted }}>
+                Les quatre angles, le compteur, la carte grise et le défaut principal. Une photo du
+                compteur tranche un désaccord de 500 € trois semaines plus tard. Retirer une photo la
+                retire de la fiche, le fichier restant sur le stockage.
+              </p>
+            </SectionCard>
+          )}
 
           {mode === "fiche" && evenements.length > 0 && (
             <SectionCard title="Le journal de l'estimation">
@@ -535,6 +683,54 @@ export default function RepriseFiche({
             </SectionCard>
           )}
 
+          {mode === "fiche" && (
+            <SectionCard title="Le passage au stock">
+              {f.vehicleId ? (
+                <>
+                  <p className="text-[12.5px]" style={{ color: T.textDim }}>
+                    Cette estimation est entrée au parc. Son prix d&apos;achat et sa remise en état sont
+                    déjà portés au suivi du véhicule.
+                  </p>
+                  {vehiculeExiste ? (
+                    <Link
+                      href={`/admin/vehicules/${f.vehicleId}/suivi`}
+                      className="inline-flex items-center gap-2 text-[12px]"
+                      style={{ color: T.accent }}
+                    >
+                      <Car size={13} />
+                      Voir la fiche véhicule
+                    </Link>
+                  ) : (
+                    <p className="text-[12px]" style={{ color: T.muted }}>
+                      La fiche véhicule a depuis été retirée du parc. L&apos;estimation, elle, reste consultable.
+                    </p>
+                  )}
+                </>
+              ) : manquesStock.length > 0 ? (
+                <p className="text-[12.5px]" style={{ color: T.muted }}>
+                  Complétez {manquesStock.join(", ")} pour faire entrer ce véhicule au parc.
+                </p>
+              ) : (
+                <>
+                  <p className="text-[12.5px]" style={{ color: T.textDim }}>
+                    La fiche véhicule naît préremplie et hors ligne, avec le prix d&apos;achat
+                    {reconditionAffichee ? " et la remise en état" : ""} déjà portés à son suivi.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmStock(true)}
+                    disabled={busy}
+                    className={btnPrimaryClass}
+                    style={btnPrimaryStyle}
+                  >
+                    <ArrowRightLeft size={14} />
+                    Passer au stock
+                  </button>
+                </>
+              )}
+            </SectionCard>
+          )}
+
           <SectionCard title="La suite à donner">
             <div className="grid grid-cols-1 gap-4">
               <Field label="Recontacter le">
@@ -593,6 +789,24 @@ export default function RepriseFiche({
         busy={busy}
         onConfirm={supprimer}
         onCancel={() => setConfirmDelete(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmStock}
+        title="Créer la fiche véhicule à partir de cette estimation ?"
+        confirmLabel="Créer la fiche"
+        description={
+          <>
+            <span className="block">{titre} · {formatEuroCents(offreCents)}</span>
+            <span className="block mt-2">
+              La fiche naît hors ligne, retirée du site public. Son suivi porte déjà le prix d&apos;achat
+              {reconditionAffichee ? ` et la remise en état de ${formatEuroCents(remiseEnEtatCents)}` : ""}.
+            </span>
+          </>
+        }
+        busy={busy}
+        onConfirm={passerAuStock}
+        onCancel={() => setConfirmStock(false)}
       />
 
       <ConfirmDialog

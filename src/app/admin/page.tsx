@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, NotebookPen, XCircle, Send, Users } from "lucide-react";
+import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, NotebookPen, XCircle, Send, Users, HandCoins } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
@@ -11,6 +11,7 @@ import { computeBalance, formatEuroCents, PARTNER_COLOR, type Partner, type Scop
 import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/crm";
 import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, authorColor, signatureOf, type AppointmentType } from "@/lib/planning";
 import { missingEssentials, parisDay } from "@/lib/vehicules";
+import { validite } from "@/lib/reprises";
 import { deadlines as regDeadlines, isRegType } from "@/lib/immatriculation";
 import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
 import { KpiTile, AreaChart, Donut, Bars } from "./charts";
@@ -130,7 +131,7 @@ export default async function AdminDashboard() {
   warrantyToDate.setDate(warrantyToDate.getDate() + 60);
   const warrantyTo = warrantyToDate.toISOString().slice(0, 10);
 
-  const [disponibles, reserves, vendus, valueAgg, recent, tousVehicules, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, lateMeetingActions, openRegistrations] =
+  const [disponibles, reserves, vendus, valueAgg, recent, tousVehicules, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, lateMeetingActions, openRegistrations, offresOuvertes] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -181,7 +182,21 @@ export default async function AdminDashboard() {
         where: { registeredOn: "" },
         select: { type: true, acquiredOn: true, deliveredOn: true, registeredOn: true, quitusDate: true },
       }),
+      // Offres de reprise encore ouvertes : le bandeau se calcule sur leur
+      // date d'échéance, jamais sur un statut rangé en base.
+      prisma.reprise.findMany({
+        where: { status: { in: ["brouillon", "proposee"] } },
+        select: { offerDate: true, validityDays: true },
+      }),
     ]);
+
+  // Une offre qui dort est une offre perdue : celles qui approchent de leur fin
+  // remontent en tête du tableau de bord.
+  const jourParis = parisDay(new Date()).toISOString().slice(0, 10);
+  const offresQuiExpirent = offresOuvertes.filter((r) => {
+    const v = validite(r.offerDate, r.validityDays, jourParis);
+    return v !== null && (v.expiree || v.proche);
+  }).length;
 
   const stockValue = valueAgg._sum.price ?? 0;
 
@@ -414,6 +429,27 @@ export default async function AdminDashboard() {
             </span>
             <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
               Voir les actions
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        )}
+
+        {/* Alerte offres de reprise à relancer */}
+        {offresQuiExpirent > 0 && (
+          <Link
+            href="/admin/reprises?statut=expiree"
+            className="adm-enter flex items-center gap-3 px-5 py-3 mb-5"
+            style={{ backgroundColor: T.surface, border: "1px solid rgba(240,180,90,0.4)" }}
+          >
+            <HandCoins size={16} style={{ color: T.warning }} />
+            <span className="text-sm" style={{ color: T.textDim }}>
+              <span className="font-semibold" style={{ color: T.warning }}>
+                {offresQuiExpirent} offre{offresQuiExpirent > 1 ? "s" : ""} de reprise
+              </span>
+              {` ${offresQuiExpirent > 1 ? "arrivent" : "arrive"} à échéance · un appel suffit souvent à conclure`}
+            </span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Voir les reprises
               <ChevronRight size={12} />
             </span>
           </Link>
