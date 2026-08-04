@@ -17,6 +17,7 @@ import {
 } from "@/app/admin/ui";
 import { useLocale } from "@/i18n/context";
 import VehiculeDetailView, { buildPresentation, type VehiculeDetailModel } from "@/app/vehicules/[id]/VehiculeDetailView";
+import { SALE_REGIME_DEFAULT, SALE_REGIME_OPTIONS } from "@/lib/sale-regime";
 
 type DocItem = { url: string; label: string };
 type MaintEntry = { date: string; km: string; operation: string; amount: string; linkedDoc: string };
@@ -45,6 +46,7 @@ type VehiculeData = {
   maintenanceHighlights?: Highlight[];
   documents?: DocItem[];
   status?: string;
+  saleRegime?: string;
   isPublished?: boolean;
 };
 
@@ -261,7 +263,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
     return {
       make: g("make"), model: g("model"), year: g("year"), color: g("color"),
       fuel: g("fuel"), transmission: g("transmission"), power: g("power"),
-      origin: g("origin"), status: g("status"), description: g("description"),
+      origin: g("origin"), status: g("status"), saleRegime: g("saleRegime"), description: g("description"),
       priceStr, kmStr, isPublished, features, conditionFacts, images, documents,
       maintenance: maintenance.map(({ _key, ...m }) => m),
       highlights: highlights.map(({ _key, ...h }) => h),
@@ -288,6 +290,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       fuel: g("fuel") || "Diesel",
       origin: g("origin") || "Allemagne",
       status: g("status") || "disponible",
+      saleRegime: g("saleRegime") || SALE_REGIME_DEFAULT,
       descParagraphs,
       etatFacts,
       features,
@@ -421,7 +424,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       };
       set("make", d.make); set("model", d.model); set("color", d.color);
       set("fuel", d.fuel); set("transmission", d.transmission); set("power", d.power);
-      set("status", d.status); set("description", d.description);
+      set("status", d.status); set("saleRegime", d.saleRegime); set("description", d.description);
     }
     applyYear(d.year != null ? String(d.year) : "");
     applyOrigin((d.origin as string) ?? "");
@@ -457,6 +460,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
       origin: fd.get("origin"),
       description: fd.get("description"),
       status: fd.get("status"),
+      saleRegime: fd.get("saleRegime"),
       isPublished,
       features,
       images,
@@ -813,6 +817,16 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
                 </select>
               </div>
               <div className="sm:col-span-2">
+                {/* Régime de vente : à qui appartient le véhicule. Mention légale
+                    reprise telle quelle sur la fiche publique, sous le prix. */}
+                <label className={labelClass} style={{ color: T.textDim }}>Régime de vente</label>
+                <select name="saleRegime" defaultValue={data?.saleRegime ?? SALE_REGIME_DEFAULT} className={fieldClass} style={fieldStyle}>
+                  {SALE_REGIME_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="sm:col-span-2">
                 <label className={labelClass} style={{ color: T.textDim }}>Visibilité publique</label>
                 <button
                   type="button"
@@ -1132,7 +1146,7 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
               Fermer l&apos;aperçu
             </button>
           </div>
-          <VehiculeDetailView model={previewModel} t={t} isPreview isOnline={isPublished} />
+          <VehiculeDetailView model={previewModel} t={t} isPreview />
         </div>
       )}
     </div>

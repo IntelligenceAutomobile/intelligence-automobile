@@ -6,6 +6,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useLocale } from "@/i18n/context";
 import SearchableSelect, { type SelectGroup, type SelectOption } from "@/components/SearchableSelect";
 import { MAIN_MAKES, OTHER_MAKES, getModelsForMake, normalizeLabel } from "@/lib/vehicle-catalog";
+import { saleRegimeKey } from "@/lib/sale-regime";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Vehicle = {
@@ -22,6 +23,7 @@ type Vehicle = {
   features: string;
   featuresEn: string;
   status: string;
+  saleRegime: string;
   origin: string;
   power?: number | null;
   description?: string;
@@ -41,6 +43,17 @@ type Filters = {
 };
 
 
+type CardSpec = { label: string; value: string };
+
+// Nombre de colonnes qu'occupe la dernière case des caractéristiques (1 à 4).
+// Les classes sont écrites en entier : Tailwind les cherche telles quelles.
+const SPAN_CLASS: Record<number, string> = {
+  1: "",
+  2: " col-span-2",
+  3: " col-span-3",
+  4: " col-span-4",
+};
+
 // ── Composant carte ──────────────────────────────────────────────────────────
 function VehicleCard({
   images,
@@ -53,10 +66,10 @@ function VehicleCard({
   power,
   color,
   origin,
+  saleRegime,
   price,
   isSold,
   isHidden,
-  isOnline,
   onClick,
 }: {
   images: string[];
@@ -69,10 +82,10 @@ function VehicleCard({
   power?: number | null;
   color?: string | null;
   origin?: string | null;
+  saleRegime?: string;
   price: string;
   isSold?: boolean;
   isHidden?: boolean;
-  isOnline?: boolean;
   onClick: () => void;
 }) {
   const { t } = useLocale();
@@ -98,7 +111,13 @@ function VehicleCard({
     setExpanded((v) => !v);
   };
 
-  const specs = [
+  // Le régime de vente ferme la liste : c'est une information sur la vente, elle
+  // vient après les caractéristiques du véhicule. Le libellé seul ici, sans
+  // explication : la phrase entière demanderait une case sur toute la largeur,
+  // qui laisserait un trou en fin de ligne. La fiche du véhicule la porte.
+  const regime = t.vehicleDetail.regimes[saleRegimeKey(saleRegime)];
+
+  const rawSpecs: (CardSpec | null)[] = [
     { label: tv.specYear, value: String(year) },
     { label: tv.specMileage, value: mileage },
     { label: tv.specFuel, value: fuelLabel },
@@ -106,7 +125,13 @@ function VehicleCard({
     power ? { label: tv.specPower, value: `${power} ch` } : null,
     color ? { label: tv.specColor, value: color } : null,
     origin ? { label: tv.specOrigin, value: origin } : null,
-  ].filter((s): s is { label: string; value: string } => s !== null);
+    { label: t.vehicleDetail.regimeLabel, value: regime.label },
+  ];
+  const specs = rawSpecs.filter((s): s is CardSpec => s !== null);
+  // La grille a quatre colonnes et le nombre de caractéristiques varie (la
+  // puissance manque sur certaines fiches) : la dernière case s'étire sur les
+  // colonnes restantes, plutôt que de laisser un trou en fin de ligne.
+  const lastSpan = SPAN_CLASS[4 - ((specs.length - 1) % 4)];
 
   return (
     <div
@@ -198,9 +223,7 @@ function VehicleCard({
       >
         <div className="flex flex-col gap-1.5 min-w-0">
           {/* Suréligne : marque + badge statut */}
-          {/* Autorisé à passer sur deux lignes : sur les cartes les plus étroites,
-              marque longue + statut + repère « Test » dépassent la largeur dispo. */}
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span className="text-[11px] tracking-[0.3em] uppercase font-bold flex-shrink-0" style={{ color: "#6B9FEE" }}>{make}</span>
             <span
               className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
@@ -212,20 +235,6 @@ function VehicleCard({
             >
               {isSold ? tv.soldBadge : tv.availableBadge}
             </span>
-            {/* Repère « Test » : orange comme le badge « Masqué », pour qu'il se lise
-                comme un marqueur et pas comme un état du véhicule. */}
-            {isOnline && (
-              <span
-                className="text-[8px] tracking-[0.2em] uppercase px-2 py-0.5 font-semibold flex-shrink-0"
-                style={{
-                  color: "#FF6B35",
-                  border: "1px solid rgba(255,107,53,0.45)",
-                  backgroundColor: "rgba(255,107,53,0.1)",
-                }}
-              >
-                Test
-              </span>
-            )}
           </div>
           {/* Modèle précis — mis en avant, casse respectée, peut passer sur 2 lignes */}
           <h3 className="font-extrabold text-[15px] @[29rem]:text-[16px] leading-[1.2] break-words" style={{ color: "#F0F5FF", letterSpacing: "-0.01em" }}>
@@ -264,10 +273,10 @@ function VehicleCard({
         }}
       >
         <div className="grid grid-cols-4 gap-px" style={{ backgroundColor: "#1B3055" }}>
-          {specs.map((s) => (
+          {specs.map((s, i) => (
             <div
               key={s.label}
-              className="flex flex-col px-4 py-4"
+              className={`flex flex-col px-4 py-4${i === specs.length - 1 ? lastSpan : ""}`}
               style={{ backgroundColor: "#0A1628" }}
             >
               <span className="text-[8px] tracking-[0.2em] uppercase mb-2" style={{ color: "#6B9FEE" }}>{s.label}</span>
@@ -717,10 +726,10 @@ export default function VehiculesList({
               power={v.power}
               color={v.color}
               origin={v.origin}
+              saleRegime={v.saleRegime}
               price={v.price > 0 ? `${v.price.toLocaleString("fr-FR")} €` : tv.priceOnRequest}
               isSold={v.status === "vendu"}
               isHidden={isAdmin && !v.isPublished}
-              isOnline={v.isPublished}
               onClick={() => router.push(`/vehicules/${v.id}`)}
             />
           );

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { can, asRole } from "@/lib/roles";
 import { isVehicleStatus } from "@/lib/vehicules";
+import { normalizeSaleRegime } from "@/lib/sale-regime";
 
 // Écriture partielle : seules les clés présentes dans le corps sont écrites.
 // Le PUT voisin réécrit la fiche entière et ne sait donc pas changer un seul
@@ -23,6 +24,7 @@ export async function PATCH(
       if (!isVehicleStatus(body.status)) return NextResponse.json({ error: "Statut inconnu." }, { status: 400 });
       data.status = body.status;
     }
+    if (body.saleRegime !== undefined) data.saleRegime = normalizeSaleRegime(body.saleRegime);
     if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished);
     if (body.price !== undefined) {
       const price = Math.round(Number(body.price));
@@ -74,6 +76,8 @@ export async function PUT(
         fuel: body.fuel,
         power: body.power ? parseInt(body.power) : null,
         origin: body.origin,
+        // Absent du corps : la valeur en place est conservée.
+        saleRegime: body.saleRegime !== undefined ? normalizeSaleRegime(body.saleRegime) : undefined,
         description: body.description ?? "",
         features: JSON.stringify(body.features ?? []),
         images: JSON.stringify(body.images ?? []),

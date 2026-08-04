@@ -6,7 +6,9 @@ import EquipementsAccordion from "./EquipementsAccordion";
 import DescriptionBlock from "./DescriptionBlock";
 import EntretienDocumentsSection from "./EntretienDocumentsSection";
 import ReservationCta from "./ReservationCta";
+import RegimeVente from "@/components/RegimeVente";
 import { formatNumber } from "@/lib/format";
+import { saleRegimeKey } from "@/lib/sale-regime";
 import type { Translations } from "@/i18n/fr";
 
 // ── Types du modèle de vue (données déjà résolues côté serveur ou formulaire) ──
@@ -26,6 +28,7 @@ export type VehiculeDetailModel = {
   fuel: string;
   origin: string;
   status: string;
+  saleRegime: string;
   descParagraphs: string[];
   etatFacts: string[];
   features: string[];
@@ -107,15 +110,11 @@ export default function VehiculeDetailView({
   model,
   t,
   isPreview = false,
-  isOnline = false,
   vehicleId,
 }: {
   model: VehiculeDetailModel;
   t: Translations;
   isPreview?: boolean;
-  /** Fiche publiée : porte le repère « Test » à côté du statut. Une annonce
-   *  masquée que consulte un admin reste sans repère. */
-  isOnline?: boolean;
   /** Fiche du stock à l'origine d'une demande de réservation. Absent en aperçu. */
   vehicleId?: string;
 }) {
@@ -137,6 +136,18 @@ export default function VehiculeDetailView({
   const td = t.vehicleDetail;
 
   const fuelLabel = tv.fuelOptions.find((o) => o.value === model.fuel)?.label ?? model.fuel;
+  const regime = td.regimes[saleRegimeKey(model.saleRegime)];
+
+  // Caractéristiques du bandeau prix. La puissance manque sur certaines fiches,
+  // le nombre de cases varie donc d'une voiture à l'autre.
+  const specs = [
+    { label: tv.specMileage, value: `${formatNumber(model.mileage)} km` },
+    { label: td.circLabel, value: String(model.year) },
+    model.power ? { label: tv.specPower, value: `${model.power} ch` } : null,
+    { label: tv.specFuel, value: fuelLabel },
+    { label: tv.specGearbox, value: model.transmission },
+    { label: tv.specOrigin, value: model.origin },
+  ].filter((s): s is { label: string; value: string } => s !== null);
 
   // Section counter
   let sectionIdx = 0;
@@ -197,33 +208,18 @@ export default function VehiculeDetailView({
               {td.backLink}
             </Link>
 
-            {/* Statut et repère « Test » forment un seul bloc : la barre haute
-                répartit ses deux enfants aux extrémités, le retour et ce groupe.
-                Il se replie sur deux lignes quand la fenêtre devient étroite. */}
-            <span className="flex flex-wrap items-start justify-end gap-x-1.5 gap-y-2 lg:gap-x-2">
-              <span className={`gap-2 ${pillClass}`} style={{ ...heroPill, border: `1px solid ${statusTone.border}`, color: statusTone.fg }}>
-                <span
-                  aria-hidden
-                  style={{
-                    width: "5px",
-                    height: "5px",
-                    borderRadius: "50%",
-                    backgroundColor: statusTone.fg,
-                    boxShadow: `0 0 8px ${statusTone.fg}`,
-                  }}
-                />
-                {isAvailable ? tm.available : isSold ? tm.sold : td.reserved}
-              </span>
-              {isOnline && (
-                // Un peu plus resserrée que les autres pastilles : sur un écran de
-                // téléphone, la barre haute tient sur une seule ligne à ce prix-là.
-                <span
-                  className="inline-flex items-center px-2 py-2 lg:px-4 lg:py-2.5 text-[9px] lg:text-[10px] tracking-[0.2em] lg:tracking-[0.28em] uppercase whitespace-nowrap"
-                  style={{ ...heroPill, border: "1px solid rgba(255,107,53,0.45)", color: "#FF6B35" }}
-                >
-                  Test
-                </span>
-              )}
+            <span className={`gap-2 ${pillClass}`} style={{ ...heroPill, border: `1px solid ${statusTone.border}`, color: statusTone.fg }}>
+              <span
+                aria-hidden
+                style={{
+                  width: "5px",
+                  height: "5px",
+                  borderRadius: "50%",
+                  backgroundColor: statusTone.fg,
+                  boxShadow: `0 0 8px ${statusTone.fg}`,
+                }}
+              />
+              {isAvailable ? tm.available : isSold ? tm.sold : td.reserved}
             </span>
           </>
         }
@@ -512,40 +508,57 @@ export default function VehiculeDetailView({
                   </div>
                 </div>
 
-                {/* Specs 2×2 */}
+                {/* Specs 2×2 — en nombre impair (véhicule sans puissance renseignée),
+                    la dernière case prend les deux colonnes plutôt que de laisser
+                    un trou en bas à droite. */}
                 <div
-                  className="grid grid-cols-2 gap-px mx-6 mb-5"
+                  className="grid grid-cols-2 gap-px mx-6"
                   style={{ backgroundColor: "rgba(107,159,238,0.15)" }}
                 >
-                  {[
-                    { label: tv.specMileage, value: `${formatNumber(model.mileage)} km` },
-                    { label: td.circLabel, value: String(model.year) },
-                    model.power ? { label: tv.specPower, value: `${model.power} ch` } : null,
-                    { label: tv.specFuel, value: fuelLabel },
-                    { label: tv.specGearbox, value: model.transmission },
-                    { label: tv.specOrigin, value: model.origin },
-                  ]
-                    .filter(Boolean)
-                    .map((s) => (
-                      <div
-                        key={s!.label}
-                        className="flex flex-col px-4 py-4"
-                        style={{ backgroundColor: "#0B1929" }}
+                  {specs.map((s, i) => (
+                    <div
+                      key={s.label}
+                      className={`flex flex-col px-4 py-4${i === specs.length - 1 && specs.length % 2 === 1 ? " col-span-2" : ""}`}
+                      style={{ backgroundColor: "#0B1929" }}
+                    >
+                      <span
+                        className="text-[10px] font-semibold tracking-[0.25em] uppercase mb-1.5"
+                        style={{ color: "#A8C6F4" }}
                       >
-                        <span
-                          className="text-[10px] font-semibold tracking-[0.25em] uppercase mb-1.5"
-                          style={{ color: "#A8C6F4" }}
-                        >
-                          {s!.label}
-                        </span>
-                        <span
-                          className="font-black leading-tight"
-                          style={{ fontSize: "1.15rem", color: "#F0F5FF", letterSpacing: "-0.01em" }}
-                        >
-                          {s!.value}
-                        </span>
-                      </div>
-                    ))}
+                        {s.label}
+                      </span>
+                      <span
+                        className="font-black leading-tight"
+                        style={{ fontSize: "1.15rem", color: "#F0F5FF", letterSpacing: "-0.01em" }}
+                      >
+                        {s.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Régime de vente — posé sous la grille plutôt que dedans : la
+                    grille garde ses paires, et l'intitulé le plus long tient sur
+                    une ligne. Le filet du haut reprend celui des cases, pour que
+                    la ligne se lise comme la dernière du bandeau.
+                    Le libellé seul suffit à l'écran ; la phrase complète vient au
+                    survol sur ordinateur et à l'appui sur téléphone. */}
+                <div
+                  className="flex flex-col mx-6 mb-5 px-4 py-4"
+                  style={{ backgroundColor: "#0B1929", borderTop: "1px solid rgba(107,159,238,0.15)" }}
+                >
+                  <span
+                    className="text-[10px] font-semibold tracking-[0.25em] uppercase mb-1.5"
+                    style={{ color: "#A8C6F4" }}
+                  >
+                    {td.regimeLabel}
+                  </span>
+                  <span
+                    className="font-black leading-tight self-start"
+                    style={{ fontSize: "1.15rem", color: "#F0F5FF", letterSpacing: "-0.01em" }}
+                  >
+                    <RegimeVente label={regime.label} hint={regime.hint} />
+                  </span>
                 </div>
 
                 {/* Services */}

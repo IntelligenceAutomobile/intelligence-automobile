@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { normalizeSaleRegime } from "@/lib/sale-regime";
 
 // Liste légère pour la palette de commandes.
 export async function GET() {
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
         fuel: body.fuel,
         power: body.power ? parseInt(body.power) : null,
         origin: body.origin,
+        saleRegime: normalizeSaleRegime(body.saleRegime),
         description: body.description ?? "",
         features: JSON.stringify(body.features ?? []),
         images: JSON.stringify(body.images ?? []),

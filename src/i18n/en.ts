@@ -815,6 +815,22 @@ export const en: Translations = {
     presentationSection: "Overview",
     priceLabel: "Sale price",
     circLabel: "First reg.",
+    // Sale regime: the label is displayed, the explanation appears on hover.
+    regimeLabel: "Sale regime",
+    regimes: {
+      stock: {
+        label: "Own stock",
+        hint: "Vehicle owned by Intelligence Automobile.",
+      },
+      mandatClient: {
+        label: "Private mandate",
+        hint: "Sale carried out on behalf of a private owner.",
+      },
+      mandatProEu: {
+        label: "European trade mandate",
+        hint: "Vehicle entrusted by a European trade partner for sale in France.",
+      },
+    },
     dossierCta: "Receive the full file",
     testDriveLabel: "Test drive available by appointment",
     ctaTitle: "Contact Intelligence Automobile for a full presentation.",

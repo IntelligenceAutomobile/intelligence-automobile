@@ -818,6 +818,22 @@ export const fr = {
     presentationSection: "Présentation",
     priceLabel: "Prix de vente",
     circLabel: "Mise en circ.",
+    // Régime de vente : le libellé s'affiche, l'explication apparaît au survol.
+    regimeLabel: "Régime de vente",
+    regimes: {
+      stock: {
+        label: "En stock",
+        hint: "Véhicule détenu par Intelligence Automobile.",
+      },
+      mandatClient: {
+        label: "Mandat client",
+        hint: "Vente réalisée pour le compte d'un particulier.",
+      },
+      mandatProEu: {
+        label: "Mandat pro européen",
+        hint: "Véhicule confié par un partenaire professionnel européen pour sa diffusion en France.",
+      },
+    },
     dossierCta: "Recevoir le dossier complet",
     testDriveLabel: "Essai disponible sur rendez-vous",
     ctaTitle: "Contactez Intelligence Automobile pour une présentation complète.",

@@ -19,6 +19,9 @@ model Vehicle {
   fuel         String   @default("Diesel")
   power        Int?
   origin       String   @default("Allemagne")
+  // Régime de vente (mention légale affichée sur la fiche) :
+  // stock | mandat-client | mandat-pro-eu — voir src/lib/sale-regime.ts
+  saleRegime   String   @default("stock")
   description   String   @default("")
   descriptionEn String   @default("")
   features      String   @default("[]")

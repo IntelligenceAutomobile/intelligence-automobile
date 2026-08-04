@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { normalizeSaleRegime, SALE_REGIME_MENTION } from "@/lib/sale-regime";
 
 // Flux d'export XML du stock publié — la partie RÉELLE de la diffusion :
 // c'est ce fichier normalisé qu'un agrégateur de multidiffusion (Ubiflow,
@@ -37,6 +38,13 @@ export async function GET() {
       const photos = parseImages(v.images)
         .map((u) => `      <photo>${esc(u)}</photo>`)
         .join("\n");
+      // Régime de vente : la balise dédiée sert aux portails qui savent la lire,
+      // et la mention est recopiée à la fin du texte pour tous les autres, qui
+      // n'affichent que la description. Elle doit se voir dans l'annonce, pas
+      // seulement sur notre site.
+      const regime = normalizeSaleRegime(v.saleRegime);
+      const mention = SALE_REGIME_MENTION[regime];
+      const description = [v.description, mention].filter(Boolean).join("\n\n");
       return `  <annonce>
     <reference>${esc(v.id)}</reference>
     <marque>${esc(v.make)}</marque>
@@ -49,7 +57,8 @@ export async function GET() {
     ${v.power ? `<puissance unite="ch">${v.power}</puissance>` : "<puissance />"}
     <couleur>${esc(v.color)}</couleur>
     <origine>${esc(v.origin)}</origine>
-    <description>${esc(v.description)}</description>
+    <regime_vente>${esc(regime)}</regime_vente>
+    <description>${esc(description)}</description>
     <photos>
 ${photos}
     </photos>

@@ -207,6 +207,7 @@ export default async function VehiculeDetailPage({
     fuel: v.fuel,
     origin: v.origin,
     status: v.status,
+    saleRegime: v.saleRegime,
     descParagraphs,
     etatFacts,
     features,
@@ -233,7 +234,7 @@ export default async function VehiculeDetailPage({
         </>
       )}
       <Header />
-      <VehiculeDetailView model={model} t={t} isOnline={v.isPublished} vehicleId={id} />
+      <VehiculeDetailView model={model} t={t} vehicleId={id} />
       <Footer />
     </>
   );
