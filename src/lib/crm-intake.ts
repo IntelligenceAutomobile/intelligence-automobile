@@ -48,6 +48,8 @@ export async function createLeadFromSite(input: {
   source: Source;
   title: string;
   message?: string;
+  /** Véhicule du stock à l'origine de la demande, quand elle en vise un seul. */
+  vehicleId?: string;
 }) {
   const email = normaliserEmail(input.email);
   const phone = input.phone?.trim() ?? "";
@@ -76,6 +78,7 @@ export async function createLeadFromSite(input: {
       stage: "nouveau",
       source: input.source,
       title: input.title.slice(0, 120),
+      vehicleId: input.vehicleId || null,
       events: {
         create: {
           type: "creation",

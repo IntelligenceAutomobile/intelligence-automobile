@@ -5,6 +5,7 @@ import GalleryLightbox from "./GalleryLightbox";
 import EquipementsAccordion from "./EquipementsAccordion";
 import DescriptionBlock from "./DescriptionBlock";
 import EntretienDocumentsSection from "./EntretienDocumentsSection";
+import ReservationCta from "./ReservationCta";
 import { formatNumber } from "@/lib/format";
 import type { Translations } from "@/i18n/fr";
 
@@ -107,6 +108,7 @@ export default function VehiculeDetailView({
   t,
   isPreview = false,
   isOnline = false,
+  vehicleId,
 }: {
   model: VehiculeDetailModel;
   t: Translations;
@@ -114,6 +116,8 @@ export default function VehiculeDetailView({
   /** Fiche publiée : porte le repère « Test » à côté du statut. Une annonce
    *  masquée que consulte un admin reste sans repère. */
   isOnline?: boolean;
+  /** Fiche du stock à l'origine d'une demande de réservation. Absent en aperçu. */
+  vehicleId?: string;
 }) {
   const images = model.images;
   const { name, subtitle } = parseTitle(model.make, model.model, model.power);
@@ -562,13 +566,16 @@ export default function VehiculeDetailView({
               <div className="flex flex-col gap-2 mt-3">
                 {isAvailable ? (
                   <>
-                    <Link
-                      href={`/contact?vehicule=${encodeURIComponent(contactSlug)}&sujet=reservation`}
+                    <ReservationCta
+                      vehicle={contactSlug}
+                      price={model.price}
+                      vehicleId={vehicleId}
+                      labels={td.reservation}
                       className="block w-full text-center text-xs font-bold tracking-[0.2em] uppercase py-5 transition-all duration-300 hover:-translate-y-px hover:opacity-90"
                       style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
                     >
                       {tm.reserveCta}
-                    </Link>
+                    </ReservationCta>
                     <Link
                       href={`/contact?vehicule=${encodeURIComponent(contactSlug)}&sujet=dossier`}
                       className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-4 border transition-all duration-300 hover:border-[#6B9FEE] hover:text-[#6B9FEE]"
@@ -651,13 +658,16 @@ export default function VehiculeDetailView({
             </p>
             {isAvailable && (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href={`/contact?vehicule=${encodeURIComponent(contactSlug)}&sujet=reservation`}
+                <ReservationCta
+                  vehicle={contactSlug}
+                  price={model.price}
+                  vehicleId={vehicleId}
+                  labels={td.reservation}
                   className="px-10 py-5 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 hover:-translate-y-px hover:opacity-90"
                   style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
                 >
                   {tm.reserveCta}
-                </Link>
+                </ReservationCta>
                 <Link
                   href={`/contact?vehicule=${encodeURIComponent(contactSlug)}&sujet=dossier`}
                   className="px-10 py-5 text-xs font-semibold tracking-widest uppercase border transition-all duration-300"
@@ -683,13 +693,16 @@ export default function VehiculeDetailView({
             WebkitBackdropFilter: "blur(16px)",
           }}
         >
-          <Link
-            href={`/contact?vehicule=${encodeURIComponent(contactSlug)}&sujet=reservation`}
+          <ReservationCta
+            vehicle={contactSlug}
+            price={model.price}
+            vehicleId={vehicleId}
+            labels={td.reservation}
             className="block w-full text-center text-xs font-bold tracking-[0.2em] uppercase py-4"
             style={{ background: "linear-gradient(135deg, #6B9FEE 0%, #4A7FDE 100%)", color: "#070F1E" }}
           >
             {tm.reserveCta} · {formatNumber(model.price)} €
-          </Link>
+          </ReservationCta>
         </div>
       )}
 

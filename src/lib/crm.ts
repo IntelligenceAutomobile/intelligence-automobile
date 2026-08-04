@@ -28,7 +28,9 @@ export const JOURS_SANS_ECHANGE: Record<Stage, number> = {
 // offre, avec les mots justes. La laisser ici l'aurait fait remonter en tête de
 // la page Clients sous le libellé « Répondre à la demande », le jour même de sa
 // saisie, dès que le module cesserait d'écrire une note à la création.
-export const SOURCES_ENTRANTES = ["site-contact", "recherche-perso", "aide-vente"] as const;
+// « reservation » y figure de plein droit : quelqu'un demande à bloquer un
+// véhicule précis du stock, c'est la demande la plus périssable du site.
+export const SOURCES_ENTRANTES = ["site-contact", "recherche-perso", "aide-vente", "reservation"] as const;
 
 export const STAGE_LABEL: Record<Stage, string> = {
   nouveau: "Nouveau",
@@ -49,11 +51,12 @@ export const STAGE_TONE: Record<Stage, "accent" | "warning" | "success" | "dange
   perdu: "muted",
 };
 
-export const SOURCES = ["site-contact", "recherche-perso", "aide-vente", "reprise", "manuel", "telephone", "autre"] as const;
+export const SOURCES = ["site-contact", "reservation", "recherche-perso", "aide-vente", "reprise", "manuel", "telephone", "autre"] as const;
 export type Source = (typeof SOURCES)[number];
 
 export const SOURCE_LABEL: Record<Source, string> = {
   "site-contact": "Formulaire contact",
+  reservation: "Réservation véhicule",
   "recherche-perso": "Recherche personnalisée",
   "aide-vente": "Aide à la vente",
   reprise: "Reprise / estimation",

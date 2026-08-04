@@ -233,7 +233,7 @@ export default async function VehiculeDetailPage({
         </>
       )}
       <Header />
-      <VehiculeDetailView model={model} t={t} isOnline={v.isPublished} />
+      <VehiculeDetailView model={model} t={t} isOnline={v.isPublished} vehicleId={id} />
       <Footer />
     </>
   );
