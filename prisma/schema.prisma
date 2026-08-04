@@ -638,3 +638,49 @@ model RepriseEvent {
 
   @@index([repriseId])
 }
+
+// Visites du site public : une ligne par page affichée.
+//
+// Aucune relation vers Client ni Lead : le carnet clients et l'audience restent
+// étanches, et un effacement RGPD d'un côté laisse l'autre intact.
+//
+// Le visiteur porte un identifiant tiré au sort, posé en cookie technique et
+// périmé au bout de treize mois. L'adresse IP reste à l'écart de la table : le
+// pays vient d'un en-tête de l'hébergeur, lu puis oublié.
+//
+// `day` porte le jour de Paris, recopié à l'écriture : les compteurs se lisent
+// alors par journée sans refaire un calcul de fuseau à chaque requête, comme
+// les dates métier de Reprise. Aucune colonne `updatedAt` : une visite est un
+// fait daté, jamais retouché.
+//
+// L'origine (src, referrer, channel) est celle de la PREMIÈRE page de la visite,
+// recopiée sur chacune des suivantes via les cookies de visite. Un clic venu de
+// Leboncoin reste donc attribué sur la fiche ouverte trois pages plus loin.
+model PageView {
+  id String @id @default(cuid())
+
+  day  String // jour de Paris YYYY-MM-DD, recopié à l'écriture
+  path String // chemin sans paramètres ni ancre, ex "/vehicules/abc123"
+
+  // D'où : le marqueur ?src= des liens que l'on sème (annonces portails, carte
+  // de visite, signature email), et le site qui a renvoyé, à défaut.
+  src      String @default("") // valeur de ?src=, en minuscules, ex "leboncoin"
+  referrer String @default("") // domaine d'origine sans www, ex "google.fr"
+  channel  String @default("direct") // lien | recherche | portail | social | site | direct
+
+  // Qui, sans savoir qui
+  visitorId String  @default("") // identifiant tiré au sort, cookie de treize mois
+  sessionId String  @default("") // identifiant de la visite, cookie qui meurt avec l'onglet
+  device    String  @default("ordinateur") // mobile | tablette | ordinateur
+  country   String  @default("") // code pays à deux lettres fourni par l'hébergeur
+  isEntry   Boolean @default(false) // première page de la visite : une visite se compte ici
+  isNew     Boolean @default(false) // première venue de cet identifiant
+
+  createdAt DateTime @default(now())
+
+  // Deux index seulement : la table s'écrit bien plus souvent qu'elle ne se lit,
+  // et chaque index supplémentaire est un coût à chaque page vue. `day, isEntry`
+  // sert tous les comptages de l'écran, `createdAt` sert le journal.
+  @@index([day, isEntry])
+  @@index([createdAt])
+}

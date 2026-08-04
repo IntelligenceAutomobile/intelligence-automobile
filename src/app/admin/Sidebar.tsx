@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
   CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge,
-  NotebookPen, Check, MailWarning, Info, type LucideIcon,
+  NotebookPen, Check, MailWarning, Info, BarChart3, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -29,10 +29,18 @@ type NavItem = {
   soon?: boolean;
   cap?: Capability;
   revu?: string;
+  /** Écran nominatif : visible des seules personnes autorisées (voitAudience). */
+  prive?: boolean;
 };
 
 const NAV: { section: string; items: NavItem[] }[] = [
-  { section: "Pilotage", items: [{ icon: LayoutDashboard, label: "Tableau de bord", href: "/admin", exact: true }] },
+  {
+    section: "Pilotage",
+    items: [
+      { icon: LayoutDashboard, label: "Tableau de bord", href: "/admin", exact: true },
+      { icon: BarChart3, label: "Audience", href: "/admin/audience", revu: "3 août 2026", prive: true },
+    ],
+  },
   {
     section: "Activité",
     items: [
@@ -70,6 +78,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
 export default function Sidebar({
   name,
   role,
+  audience = false,
   brandName,
   brandTagline,
   showroom = false,
@@ -77,6 +86,8 @@ export default function Sidebar({
 }: {
   name: string;
   role: Role;
+  /** Droit d'ouvrir l'écran d'audience, accordé nominativement. */
+  audience?: boolean;
   brandName: string;
   brandTagline: string;
   showroom?: boolean;
@@ -86,8 +97,12 @@ export default function Sidebar({
   // Devis signés en ligne et pas encore consultés : la bonne nouvelle se voit
   // sans avoir à ouvrir la liste.
   const acceptations = useAcceptationCount();
-  // Filtre la navigation selon les capacités du rôle ; retire les sections vides.
-  const nav = NAV.map((g) => ({ ...g, items: g.items.filter((it) => !it.cap || can(role, it.cap)) })).filter((g) => g.items.length > 0);
+  // Filtre la navigation selon les capacités du rôle et les écrans nominatifs ;
+  // retire les sections vides.
+  const nav = NAV.map((g) => ({
+    ...g,
+    items: g.items.filter((it) => (!it.cap || can(role, it.cap)) && (!it.prive || audience)),
+  })).filter((g) => g.items.length > 0);
   const router = useRouter();
   const toast = useToast();
   const [, startTransition] = useTransition();

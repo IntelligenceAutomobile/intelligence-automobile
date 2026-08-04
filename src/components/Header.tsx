@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useLocale, LanguageSwitcher } from "@/i18n/context";
+import MesureVisite from "./MesureVisite";
 
 const MARK_SRC = "/Logo/v9%20Logo%20Sans%20texte.png";
 
@@ -228,6 +229,9 @@ export default function Header() {
         transition: "background-color 0.4s ease, box-shadow 0.4s ease",
       }}
     >
+      {/* Mesure d'audience : ne rend rien, signale la page ouverte. */}
+      <MesureVisite />
+
       {/* Filet accent top */}
       <div style={{ height: "1px", background: "linear-gradient(to right, transparent 0%, #6B9FEE 30%, #6B9FEE 70%, transparent 100%)", opacity: 0.45 }} />
 

@@ -19,6 +19,12 @@
 //   • factures et avoirs → nom et adresse CONSERVÉS (mention obligatoire),
 //     email et téléphone effacés, car eux ne sont exigés par aucun texte
 //   • une trace de la demande reste attachée à la fiche : c'est le registre.
+//
+// La table des visites du site (PageView, module Audience) reste hors de ce
+// périmètre, et le silence se lirait ici comme un oubli : elle ne porte aucun
+// nom, aucune adresse IP et aucune relation vers un client. Son identifiant de
+// visiteur est tiré au sort et périme au bout de treize mois, sans jamais
+// permettre de relier une visite à une personne.
 import { prisma } from "@/lib/prisma";
 
 export const EFFACE = "Personne effacée";

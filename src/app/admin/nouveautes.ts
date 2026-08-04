@@ -319,6 +319,51 @@ export const NOUVEAUTES: Nouveaute[] = [
       },
     ],
   },
+  {
+    href: "/admin/audience",
+    titre: "Audience",
+    date: "3 août 2026",
+    resume:
+      "Un écran neuf : combien de personnes viennent sur le site, par quelle porte elles entrent, et ce que rapporte chaque annonce que vous publiez.",
+    groupes: [
+      {
+        titre: "Les chiffres du site",
+        points: [
+          "Visites, pages vues et visiteurs, sur 7, 30 ou 90 jours.",
+          "L'évolution face à la période précédente s'affiche à côté du chiffre.",
+          "Une courbe suit les visites jour après jour, par semaine au-delà d'un mois.",
+          "Le camembert des appareils dit si vos visiteurs arrivent du téléphone ou de l'ordinateur.",
+        ],
+      },
+      {
+        titre: "Savoir ce que rapporte une annonce",
+        points: [
+          "Un lien marqué se fabrique depuis l'écran : vous choisissez la page, le nom de la campagne, et vous copiez.",
+          "Le lien peut ouvrir la page directement sur son formulaire.",
+          "Le tableau « Par lien » donne les visites reçues par chaque annonce, chaque flyer, chaque signature d'email.",
+          "Le marqueur suit le visiteur de page en page : un clic venu de Leboncoin reste attribué sur la fiche ouverte trois pages plus loin.",
+        ],
+      },
+      {
+        titre: "Par où ils passent",
+        points: [
+          "« Comment ils arrivent » range chaque visite : lien marqué, moteur de recherche, portail auto, réseaux sociaux, accès direct.",
+          "« Provenance » liste les sites qui renvoient vers le vôtre.",
+          "« Pages » donne les pages les plus vues, et celles par lesquelles les visiteurs entrent.",
+          "Un journal des trente derniers passages permet de voir arriver les visites en direct.",
+        ],
+      },
+      {
+        titre: "Une mesure discrète",
+        points: [
+          "La mesure reste anonyme : aucun nom, et l'adresse IP demeure à l'écart des enregistrements.",
+          "Les visites sont conservées treize mois, puis effacées d'elles-mêmes.",
+          "Votre propre navigation en tant qu'administrateur reste hors du comptage, comme les robots des moteurs de recherche.",
+          "Les mentions légales du site décrivent cette mesure, en français et en anglais.",
+        ],
+      },
+    ],
+  },
 ];
 
 export function nouveautePour(href: string | undefined): Nouveaute | undefined {

@@ -177,7 +177,7 @@ export const fr = {
   legal: {
     metaTitle: "Mentions légales & Confidentialité — Intelligence Automobile",
     title: "Mentions légales & Confidentialité",
-    updated: "Dernière mise à jour : 30 juillet 2026",
+    updated: "Dernière mise à jour : 3 août 2026",
     sections: [
       {
         heading: "Éditeur du site",
@@ -218,9 +218,11 @@ export const fr = {
         ],
       },
       {
-        heading: "Cookies",
+        heading: "Cookies et mesure d'audience",
         paragraphs: [
-          "Le site n'utilise aucun cookie de suivi publicitaire ni outil de mesure d'audience. Seul un cookie technique de préférence de langue est déposé pour améliorer votre navigation. Vous pouvez le supprimer à tout moment via les réglages de votre navigateur.",
+          "Le site dépose des cookies strictement techniques : votre préférence de langue, un identifiant de visite qui expire à la fermeture du navigateur, un identifiant de navigateur tiré au sort, et le marqueur du lien par lequel vous êtes arrivé. La publicité et le partage avec des tiers demeurent exclus.",
+          "Ces cookies alimentent une mesure d'audience interne : pages consultées, origine de la visite (moteur de recherche, site référent, lien de campagne), type d'appareil et pays transmis par l'hébergeur. La mesure reste anonyme, votre adresse IP demeurant à l'écart de nos enregistrements. Les données sont conservées treize mois, puis supprimées.",
+          "Cette mesure sert au seul suivi statistique du site. Vous pouvez supprimer ces cookies à tout moment via les réglages de votre navigateur.",
         ],
       },
       {

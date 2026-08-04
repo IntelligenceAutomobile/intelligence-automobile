@@ -179,7 +179,7 @@ export const en: Translations = {
   legal: {
     metaTitle: "Legal Notice & Privacy — Intelligence Automobile",
     title: "Legal Notice & Privacy",
-    updated: "Last updated: July 30, 2026",
+    updated: "Last updated: August 3, 2026",
     sections: [
       {
         heading: "Site publisher",
@@ -220,9 +220,11 @@ export const en: Translations = {
         ],
       },
       {
-        heading: "Cookies",
+        heading: "Cookies and audience measurement",
         paragraphs: [
-          "The site uses no advertising or analytics cookies. Only a technical language-preference cookie is stored to improve your browsing. You can delete it at any time via your browser settings.",
+          "The site stores strictly technical cookies: your language preference, a visit identifier that expires when the browser closes, a randomly generated browser identifier, and the marker of the link you arrived through. Advertising and sharing with third parties remain excluded.",
+          "These cookies feed an internal audience measurement: pages viewed, origin of the visit (search engine, referring site, campaign link), device type and country supplied by the hosting provider. The measurement remains anonymous, your IP address being kept out of our records. Data is retained for thirteen months, then deleted.",
+          "This measurement serves the statistical monitoring of the site alone. You can delete these cookies at any time via your browser settings.",
         ],
       },
       {

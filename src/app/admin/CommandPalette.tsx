@@ -7,13 +7,15 @@ import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
   Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, FileBadge,
-  NotebookPen, Undo2, type LucideIcon,
+  NotebookPen, Undo2, BarChart3, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
 import { formatDateFr, STATUS_LABEL, type QuoteStatus } from "@/lib/devis";
 import { T } from "./ui";
 
-type Item = { icon: LucideIcon; label: string; hint: string; href: string; cap?: Capability };
+// `prive` marque les écrans nominatifs : ils restent introuvables pour les
+// autres comptes, palette de commandes comprise.
+type Item = { icon: LucideIcon; label: string; hint: string; href: string; cap?: Capability; prive?: boolean };
 
 const STATIC_ITEMS: Item[] = [
   { icon: Plus, label: "Ajouter un véhicule", hint: "Action", href: "/admin/vehicules/nouveau" },
@@ -21,6 +23,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: Plus, label: "Nouvelle réunion", hint: "Action", href: "/admin/reunions?nouvelle=1" },
   { icon: Plus, label: "Nouvelle estimation", hint: "Action", href: "/admin/reprises/nouvelle" },
   { icon: LayoutDashboard, label: "Tableau de bord", hint: "Page", href: "/admin" },
+  { icon: BarChart3, label: "Audience", hint: "Page", href: "/admin/audience", prive: true },
   { icon: Car, label: "Stock", hint: "Page", href: "/admin/vehicules" },
   { icon: FileText, label: "Devis", hint: "Page", href: "/admin/devis" },
   { icon: ReceiptText, label: "Factures", hint: "Page", href: "/admin/factures" },
@@ -52,7 +55,7 @@ type VehicleLite = { id: string; make: string; model: string; year: number; stat
 type QuoteLite = { id: string; number: string; docType?: string; clientName?: string | null; clientCompany?: string | null; status: string };
 type ClientLite = { id: string; name: string; company: string; email: string };
 
-export default function CommandPalette({ role }: { role: Role }) {
+export default function CommandPalette({ role, audience = false }: { role: Role; audience?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -106,7 +109,9 @@ export default function CommandPalette({ role }: { role: Role }) {
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const stat = STATIC_ITEMS.filter((i) => (!i.cap || can(role, i.cap)) && (!q || i.label.toLowerCase().includes(q)));
+    const stat = STATIC_ITEMS.filter(
+      (i) => (!i.cap || can(role, i.cap)) && (!i.prive || audience) && (!q || i.label.toLowerCase().includes(q))
+    );
     const veh: Item[] = (vehicles ?? [])
       .filter((v) => q && `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(q))
       .slice(0, 5)

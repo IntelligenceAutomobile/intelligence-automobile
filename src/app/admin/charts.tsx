@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight, ArrowDownRight, Banknote, BadgeCheck, Clock3, Handshake,
-  FileText, Users, Table2, ChartArea, type LucideIcon,
+  FileText, Users, Table2, ChartArea, Eye, MousePointerClick, type LucideIcon,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { T, CHART } from "./ui";
@@ -72,6 +72,8 @@ const KPI_ICONS: Record<string, LucideIcon> = {
   handshake: Handshake,
   "file-text": FileText,
   users: Users,
+  eye: Eye,
+  click: MousePointerClick,
 };
 
 export function KpiTile({
@@ -136,13 +138,16 @@ function niceTicks(maxValue: number, count = 4): number[] {
 
 /* ── Courbe en aires : une série, crosshair + tooltip + vue tableau ── */
 export function AreaChart({
-  title, subtitle, data, labels, format,
+  title, subtitle, data, labels, format, axisLabel = "Mois",
 }: {
   title: string;
   subtitle?: string;
   data: number[];
   labels: string[];
   format?: ValueFormat;
+  /** En-tête de la colonne des abscisses dans la vue Tableau. Sur un axe en
+      jours, « Mois » mentait à la première curiosité de l'utilisateur. */
+  axisLabel?: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const [asTable, setAsTable] = useState(false);
@@ -177,7 +182,7 @@ export function AreaChart({
         <table className="w-full mt-3 text-sm" style={{ color: T.textDim }}>
           <thead>
             <tr style={{ color: T.muted }}>
-              <th className="text-left font-normal text-[11px] uppercase tracking-widest py-2" style={{ borderBottom: `1px solid ${T.border}` }}>Mois</th>
+              <th className="text-left font-normal text-[11px] uppercase tracking-widest py-2" style={{ borderBottom: `1px solid ${T.border}` }}>{axisLabel}</th>
               <th className="text-right font-normal text-[11px] uppercase tracking-widest py-2" style={{ borderBottom: `1px solid ${T.border}` }}>Valeur</th>
             </tr>
           </thead>

@@ -9,6 +9,7 @@ import { T, btnPrimaryClass, btnPrimaryStyle } from "./ui";
 import CommandPalette from "./CommandPalette";
 
 const SEGMENT_LABELS: Record<string, string> = {
+  audience: "Audience",
   vehicules: "Stock",
   devis: "Devis",
   factures: "Factures",
@@ -44,7 +45,7 @@ function crumbsFrom(pathname: string): { label: string; href?: string }[] {
   return crumbs;
 }
 
-export default function Topbar({ role }: { role: Role }) {
+export default function Topbar({ role, audience = false }: { role: Role; audience?: boolean }) {
   const pathname = usePathname();
   const crumbs = crumbsFrom(pathname);
 
@@ -73,7 +74,7 @@ export default function Topbar({ role }: { role: Role }) {
       </div>
 
       <div className="ml-auto flex items-center gap-3 min-w-0">
-        <CommandPalette role={role} />
+        <CommandPalette role={role} audience={audience} />
         <Link href="/admin/vehicules/nouveau" className={btnPrimaryClass + " flex-shrink-0"} style={btnPrimaryStyle}>
           <Plus size={14} />
           <span className="hidden sm:inline">Ajouter</span>

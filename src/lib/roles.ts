@@ -40,3 +40,18 @@ export function can(role: Role, capability: Capability): boolean {
 export function isRole(v: unknown): v is Role {
   return typeof v === "string" && (ROLES as readonly string[]).includes(v);
 }
+
+/* ── Écrans nominatifs ──
+   L'audience du site relève du pilotage de l'entreprise, pas du travail
+   quotidien : elle reste au fondateur, y compris le jour où un second compte
+   « patron » existera. Le rôle ne suffit donc pas, la personne est nommée.
+   La deuxième adresse est le compte de démonstration du poste local, absent de
+   la base de production. */
+const VOIENT_AUDIENCE = [
+  "contact@intelligenceautomobile.com",
+  "admin@intelligence-automobile.fr",
+];
+
+export function voitAudience(email: string | undefined | null): boolean {
+  return VOIENT_AUDIENCE.includes((email ?? "").trim().toLowerCase());
+}
