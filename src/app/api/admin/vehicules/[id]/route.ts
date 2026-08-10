@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { can, asRole } from "@/lib/roles";
 import { isVehicleStatus } from "@/lib/vehicules";
 import { normalizeSaleRegime } from "@/lib/sale-regime";
+import { effacerAnnonces, quitteLaVitrine, recapRetrait, retirerDesPortails } from "@/lib/diffusion-server";
 
 // Écriture partielle : seules les clés présentes dans le corps sont écrites.
 // Le PUT voisin réécrit la fiche entière et ne sait donc pas changer un seul
@@ -42,7 +43,18 @@ export async function PATCH(
     }
 
     const vehicle = await prisma.vehicle.update({ where: { id }, data });
-    return NextResponse.json(vehicle);
+
+    // Vendu ou masqué : les annonces passent au repos du même geste. Sans cela,
+    // la voiture quittait l'écran de diffusion en y laissant quatre portails
+    // verts, hors d'atteinte de l'interface.
+    const retirees = quitteLaVitrine(
+      data.status as string | undefined,
+      data.isPublished as boolean | undefined,
+    )
+      ? await retirerDesPortails(id)
+      : 0;
+
+    return NextResponse.json({ ...vehicle, retirees, retraitMessage: recapRetrait(retirees) });
   } catch {
     return NextResponse.json({ error: "Erreur mise à jour" }, { status: 500 });
   }
@@ -89,7 +101,15 @@ export async function PUT(
         isPublished: body.isPublished !== undefined ? Boolean(body.isPublished) : undefined,
       },
     });
-    return NextResponse.json(vehicle);
+
+    const retirees = quitteLaVitrine(
+      body.status,
+      body.isPublished !== undefined ? Boolean(body.isPublished) : undefined,
+    )
+      ? await retirerDesPortails(id)
+      : 0;
+
+    return NextResponse.json({ ...vehicle, retirees, retraitMessage: recapRetrait(retirees) });
   } catch {
     return NextResponse.json({ error: "Erreur mise à jour" }, { status: 500 });
   }
@@ -105,6 +125,9 @@ export async function DELETE(
 
   const { id } = await params;
   try {
+    // Les annonces partent avant la fiche : la table vit sans lien de parenté
+    // déclaré, donc sans effacement en cascade.
+    await effacerAnnonces(id);
     await prisma.vehicle.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch {

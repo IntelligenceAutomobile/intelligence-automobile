@@ -28,7 +28,9 @@ import { ConfirmDialog } from "../confirm";
 // Carnet d'écriture. Le back-office parle à l'API ; la démonstration publique
 // fournit le sien, qui écrit dans le bac à sable du visiteur.
 export type StockWriter = {
-  update: (id: string, delta: Record<string, unknown>) => Promise<void>;
+  /** Renvoie le message de retrait quand le serveur a sorti des annonces des
+   *  portails (passage en vendu, masquage). Vide sinon. */
+  update: (id: string, delta: Record<string, unknown>) => Promise<string>;
   remove: (id: string) => Promise<void>;
   duplicate: (id: string) => Promise<{ id: string }>;
 };
@@ -41,6 +43,8 @@ const apiWriter: StockWriter = {
       body: JSON.stringify(delta),
     });
     if (!res.ok) throw new Error();
+    const data = await res.json().catch(() => null);
+    return typeof data?.retraitMessage === "string" ? data.retraitMessage : "";
   },
   remove: async (id) => {
     const res = await fetch(`/api/admin/vehicules/${id}`, { method: "DELETE" });
@@ -642,7 +646,10 @@ export default function StockList({
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...delta } : r)));
     setBusy(id, true);
     try {
-      await writer.update(id, delta as Record<string, unknown>);
+      // Le serveur retire les annonces des portails quand la fiche quitte la
+      // vitrine : il faut le dire, sinon le retrait reste invisible.
+      const message = await writer.update(id, delta as Record<string, unknown>);
+      if (message) toast.info(message);
     } catch {
       setRows((prev) => prev.map((r) => (r.id === id ? previous : r)));
       toast.error("La mise à jour a échoué.");

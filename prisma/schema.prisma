@@ -268,6 +268,12 @@ model Lead {
   clientId  String
   stage     String      @default("nouveau") // nouveau | contacte | rdv | devis_envoye | gagne | perdu
   source    String      @default("manuel")  // site-contact | recherche-perso | aide-vente | manuel | telephone | autre
+
+  // D'OÙ vient le visiteur, par opposition à `source` qui dit par QUEL
+  // formulaire il est passé. Recopié du marqueur ?src= posé sur les liens semés
+  // dans les annonces portails : c'est ce qui rendra calculable le coût par
+  // contact, portail par portail.
+  srcMarker String      @default("") // lacentrale | leboncoin | autoscout24 | facebook | carte…
   title     String      @default("")        // objet (ex: "Recherche SUV hybride")
   vehicleId String?                          // véhicule du stock concerné (optionnel)
   budget    Int?                             // budget indicatif en euros
@@ -376,6 +382,12 @@ model Listing {
   portal      String                        // lacentrale | leboncoin | autoscout24 | facebook
   status      String    @default("non_diffuse") // publie | non_diffuse
   publishedAt DateTime?
+
+  // Empreinte du contenu au moment de la mise en ligne (prix, kilométrage,
+  // nombre de photos, description, équipements). Elle sert à dire « la fiche a
+  // bougé depuis » sans se fier à la date de dernière écriture, qui bougeait
+  // aussi pour un simple changement de statut.
+  publishedDigest String @default("")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

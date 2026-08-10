@@ -527,14 +527,40 @@ export function getDemoWarranties(): DemoWarranty[] {
 }
 
 /* ────────────────────────── Diffusion ────────────────────────── */
-export type DemoListing = { id: string; vehicleId: string; portal: string; status: string; publishedAt: Date };
+export type DemoListing = { id: string; vehicleId: string; portal: string; status: string; publishedAt: Date; publishedDigest: string };
 
 export function getDemoListings(): DemoListing[] {
   const portals = ["lacentrale", "leboncoin", "autoscout24", "facebook"];
   const out: DemoListing[] = [];
-  portals.forEach((portal, i) => out.push({ id: `lst-a${i}`, vehicleId: "veh-1", portal, status: "publie", publishedAt: daysAgo(12) }));
-  portals.slice(0, 2).forEach((portal, i) => out.push({ id: `lst-b${i}`, vehicleId: "veh-2", portal, status: "publie", publishedAt: daysAgo(5) }));
+  // La première annonce porte une empreinte périmée : sa fiche a bougé depuis
+  // la mise en ligne, elle ressort donc « à republier » sur La Centrale.
+  portals.forEach((portal, i) =>
+    out.push({
+      id: `lst-a${i}`,
+      vehicleId: "veh-1",
+      portal,
+      status: "publie",
+      publishedAt: daysAgo(12),
+      publishedDigest: i === 0 ? "empreinte-perimee" : "",
+    }),
+  );
+  portals.slice(0, 2).forEach((portal, i) =>
+    out.push({ id: `lst-b${i}`, vehicleId: "veh-2", portal, status: "publie", publishedAt: daysAgo(5), publishedDigest: "" }),
+  );
   return out;
+}
+
+/* Arrivées mesurées de la démonstration : nombres figés, du même ordre de
+   grandeur que ce que la mesure d'audience rapporte sur un stock de cette
+   taille. En production, ces valeurs viennent de la table des visites. */
+export type DemoArrivees = Record<string, { total: number; parPortail: Record<string, number> }>;
+
+export function getDemoArrivees(): DemoArrivees {
+  return {
+    "veh-1": { total: 412, parPortail: { leboncoin: 128, lacentrale: 96, autoscout24: 41, facebook: 22 } },
+    "veh-2": { total: 187, parPortail: { leboncoin: 74, lacentrale: 38 } },
+    "veh-3": { total: 44, parPortail: {} },
+  };
 }
 
 /* ────────────────────────── Atelier (notes d'équipe) ────────────────────────── */

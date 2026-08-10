@@ -88,6 +88,8 @@ export default function DemoVehiculesList() {
   const writer: StockWriter = {
     update: async (id, delta) => {
       actions.updateVehicle(id, delta as Partial<DemoVehicle>);
+      // Le bac à sable ne touche pas aux annonces : rien à annoncer.
+      return "";
     },
     remove: async (id) => {
       actions.removeVehicle(id);

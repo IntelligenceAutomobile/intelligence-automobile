@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
 
     // Lead CRM (en plus de l'email) : silencieux en cas d'échec.
     try {
+      // Le marqueur d'origine vient du cookie posé par la mesure : il rattache
+      // le contact au portail qui a amené le visiteur.
       await createLeadFromSite({
+        srcMarker: req.cookies.get("ia_src")?.value ?? "",
         name: `${prenom} ${nom}`.trim(),
         email,
         phone: telephone,

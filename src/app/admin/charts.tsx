@@ -3,10 +3,11 @@
 // Graphiques SVG maison du back-office (courbe, donut, barres, sparkline, KPI).
 // Couleurs de remplissage validées daltonisme (mode sombre, surface #112240) :
 // bleu #4B7FD8 · ambre #C08428 · vert #2FA97D — ΔE min 18 (cible ≥ 12).
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowUpRight, ArrowDownRight, Banknote, BadgeCheck, Clock3, Handshake,
-  FileText, Users, Table2, ChartArea, Eye, MousePointerClick, type LucideIcon,
+  FileText, Users, Table2, ChartArea, Eye, MousePointerClick, Radio, LayoutGrid,
+  type LucideIcon,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { T, CHART } from "./ui";
@@ -74,35 +75,53 @@ const KPI_ICONS: Record<string, LucideIcon> = {
   users: Users,
   eye: Eye,
   click: MousePointerClick,
+  radio: Radio,
+  grid: LayoutGrid,
 };
 
 export function KpiTile({
-  label, value, euro = false, delta, hint, spark, icon, index = 0,
+  label, value, euro = false, delta, hint, spark, icon, index = 0, onClick, pressed = false,
 }: {
   label: string;
   value: number;
   euro?: boolean;
   delta?: { value: number; suffix?: string; label: string } | null;
-  hint?: string;
+  hint?: ReactNode;
   spark?: number[];
   icon: keyof typeof KPI_ICONS;
   index?: number;
+  /* Tuile qui filtre la liste sous elle. Sans elle, la tuile reste une
+     information : elle perd alors le relief au survol, qui promettait un clic
+     que rien ne servait. */
+  onClick?: () => void;
+  pressed?: boolean;
 }) {
   const n = useCountUp(value);
   const Icon = KPI_ICONS[icon];
   const up = (delta?.value ?? 0) >= 0;
   const DeltaIcon = up ? ArrowUpRight : ArrowDownRight;
+  const Balise = onClick ? "button" : "div";
   return (
-    <div
-      className="adm-card adm-enter p-5 min-w-0"
-      style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: `${80 + index * 90}ms` }}
+    <Balise
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      aria-pressed={onClick ? pressed : undefined}
+      className={`${onClick ? "adm-card adm-btn-focus text-left w-full" : "relative"} adm-enter p-5 min-w-0`}
+      style={{
+        backgroundColor: T.surface,
+        border: `1px solid ${pressed ? T.accent : T.border}`,
+        animationDelay: `${80 + index * 90}ms`,
+      }}
     >
       <div className="adm-hairline" />
       <div className="flex items-start justify-between gap-3">
         <span className="text-[11px] tracking-[0.1em] uppercase font-semibold" style={{ color: "#C3D2EC" }}>{label}</span>
-        <Icon size={16} style={{ color: "#C7D3E8", opacity: 0.75, flexShrink: 0 }} />
+        <Icon size={16} style={{ color: pressed ? T.accent : T.icon, opacity: pressed ? 1 : 0.75, flexShrink: 0 }} />
       </div>
-      <div className="text-[31px] leading-none font-normal whitespace-nowrap mt-3" style={{ color: T.text, letterSpacing: "-0.01em" }}>
+      <div
+        className="text-[31px] leading-none font-normal whitespace-nowrap mt-3 tabular-nums"
+        style={{ color: T.text, letterSpacing: "-0.01em" }}
+      >
         {euro ? `${formatNumber(n)} €` : formatNumber(n)}
       </div>
       <div className="mt-2.5 min-h-[16px] relative z-[1]">
@@ -120,7 +139,7 @@ export function KpiTile({
           <Sparkline data={spark} />
         </div>
       )}
-    </div>
+    </Balise>
   );
 }
 

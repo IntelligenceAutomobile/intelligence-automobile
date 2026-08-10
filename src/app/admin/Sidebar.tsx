@@ -51,7 +51,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: Users, label: "Clients & leads", href: "/admin/clients" },
       { icon: HandCoins, label: "Reprises", href: "/admin/reprises", revu: "31 juillet 2026" },
       { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning", revu: "28 juillet 2026" },
-      { icon: Radio, label: "Diffusion", href: "/admin/diffusion" },
+      { icon: Radio, label: "Diffusion", href: "/admin/diffusion", revu: "10 août 2026" },
       { icon: ShieldCheck, label: "Garanties", href: "/admin/garanties" },
       { icon: FileBadge, label: "Immatriculations", href: "/admin/immatriculations" },
       { icon: Star, label: "Avis clients", href: "/admin/avis" },

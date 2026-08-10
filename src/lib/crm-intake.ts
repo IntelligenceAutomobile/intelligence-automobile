@@ -50,6 +50,9 @@ export async function createLeadFromSite(input: {
   message?: string;
   /** Véhicule du stock à l'origine de la demande, quand elle en vise un seul. */
   vehicleId?: string;
+  /** Marqueur d'origine du visiteur (?src=), tel que la mesure l'enregistre.
+   *  C'est lui qui rattachera plus tard un contact au portail qui l'a amené. */
+  srcMarker?: string;
 }) {
   const email = normaliserEmail(input.email);
   const phone = input.phone?.trim() ?? "";
@@ -77,6 +80,7 @@ export async function createLeadFromSite(input: {
       clientId: client.id,
       stage: "nouveau",
       source: input.source,
+      srcMarker: (input.srcMarker ?? "").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 24),
       title: input.title.slice(0, 120),
       vehicleId: input.vehicleId || null,
       events: {

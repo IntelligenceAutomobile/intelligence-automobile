@@ -1,158 +1,188 @@
 // Diffusion multi-portails de la démonstration /demopro (lecture seule).
-// Reproduit fidèlement le module de diffusion du back-office : états de
-// publication par portail, vues simulées et statistiques en tête. Les données
-// viennent des fixtures figées (src/lib/demo-data.ts). Aucun accès base, aucun
-// appel réseau : chaque action affiche un toast via DemoActionButton.
-import { Radio, Car, Eye, FileCode2, Check, CircleOff } from "lucide-react";
+// L'habillage vient du module partagé src/app/admin/diffusion/presentation.tsx :
+// ce qui change dans le back-office change ici du même coup. Cet écran ne
+// fournit que les valeurs (fixtures figées de src/lib/demo-data.ts) et des
+// boutons de démonstration, qui affichent un toast au lieu d'agir.
+import { FileCode2, CircleOff, Radio } from "lucide-react";
 import { formatNumber } from "@/lib/format";
-import { PORTALS, PORTAL_LABEL, simulatedViews } from "@/lib/diffusion";
-import { T, TONE, AdminPage, PageHeader, Thumb, firstImage, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui";
-import { getDemoVehicles, getDemoListings } from "@/lib/demo-data";
+import {
+  PORTALS, controleDiffusion, daysOnline, digestAnnonce, etatPortail, FENETRE_ARRIVEES_JOURS,
+  type EtatPortail, type Portal,
+} from "@/lib/diffusion";
+import { T, AdminPage, PageHeader, Tag, btnGhostClass, btnGhostStyle, firstImage } from "@/app/admin/ui";
+import { KpiTile } from "@/app/admin/charts";
+import {
+  BandeColonnes, ContenuCellule, LigneDiffusion, MentionArrivees, MentionPied,
+  actionLigneClass, celluleClass, libelleCellule, tonDe, type LigneVue,
+} from "@/app/admin/diffusion/presentation";
+import { getDemoVehicles, getDemoListings, getDemoArrivees } from "@/lib/demo-data";
 import DemoActionButton from "../DemoActionButton";
 
-export default function DemoDiffusionPage() {
+function compte(json: string): number {
+  try {
+    const arr = JSON.parse(json);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string" && x.trim() !== "").length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default async function DemoDiffusionPage() {
   // On diffuse le stock encore en vente (comme le back-office).
   const vehicles = getDemoVehicles().filter((v) => v.status === "disponible" || v.status === "reserve");
   const listings = getDemoListings();
+  const arrivees = getDemoArrivees();
+  const maintenant = new Date().getTime();
 
-  // Index des annonces par clé « véhicule:portail ».
-  const byKey = new Map<string, (typeof listings)[number]>();
-  listings.forEach((l) => byKey.set(`${l.vehicleId}:${l.portal}`, l));
+  const parCle = new Map(listings.map((l) => [`${l.vehicleId}:${l.portal}`, l]));
 
-  // Statistiques d'en-tête : annonces diffusées et vues cumulées.
-  let published = 0;
-  let totalViews = 0;
-  for (const v of vehicles) {
-    let anyPortal = false;
+  const lignes: LigneVue[] = vehicles.map((v) => {
+    const empreinte = digestAnnonce({
+      price: v.price,
+      mileage: v.mileage,
+      photoCount: compte(v.images),
+      description: v.description,
+      features: v.features,
+    });
+    const etats = {} as Record<Portal, EtatPortail>;
+    const dates: number[] = [];
     for (const p of PORTALS) {
-      const l = byKey.get(`${v.id}:${p}`);
-      if (l?.status === "publie") {
-        anyPortal = true;
-        totalViews += simulatedViews(v.id, p, l.publishedAt);
-      }
+      const l = parCle.get(`${v.id}:${p}`);
+      const publishedAt = l?.publishedAt ?? null;
+      etats[p] = etatPortail(l?.status, l?.publishedDigest ?? "", empreinte);
+      if (etats[p] !== "retire" && publishedAt) dates.push(publishedAt.getTime());
     }
-    if (anyPortal) published++;
-  }
+    const mesure = arrivees[v.id];
+    const controle = controleDiffusion({
+      photoCount: compte(v.images),
+      price: v.price,
+      mileage: v.mileage,
+      descriptionLength: v.description.trim().length,
+      featureCount: compte(v.features),
+    });
+    return {
+      id: v.id,
+      make: v.make,
+      model: v.model,
+      year: v.year,
+      price: v.price,
+      status: v.status,
+      image: firstImage(v.images),
+      etats,
+      joursEnLigne: dates.length ? daysOnline(new Date(Math.min(...dates)), maintenant) : null,
+      joursEnStock: daysOnline(v.createdAt, maintenant),
+      arrivees: mesure?.total ?? 0,
+      arriveesParPortail: (mesure?.parPortail ?? {}) as Record<Portal, number>,
+      bloquants: controle.bloquants,
+      aSignaler: controle.aSignaler,
+      dansLeFlux: v.status === "disponible",
+    };
+  });
+
+  const pris = lignes.reduce((n, l) => n + PORTALS.filter((p) => l.etats[p] !== "retire").length, 0);
+  const complets = lignes.filter((l) => PORTALS.every((p) => l.etats[p] !== "retire")).length;
+  const aRepublier = lignes.filter((l) => PORTALS.some((p) => l.etats[p] === "a-republier")).length;
+  const totalArrivees = lignes.reduce((n, l) => n + l.arrivees, 0);
+  const emplacements = lignes.length * PORTALS.length;
+  const libres = emplacements - pris;
+  const dansLeFlux = lignes.filter((l) => l.dansLeFlux).length;
 
   return (
     <AdminPage>
       <PageHeader
         title="Diffusion des annonces"
-        subtitle="Publication multi-portails de votre stock disponible."
+        badge={<Tag tone="warning">Simulation</Tag>}
+        subtitle={
+          <>
+            {formatNumber(lignes.length)} véhicules diffusables · {formatNumber(pris)} emplacements sur{" "}
+            {formatNumber(emplacements)} occupés · flux XML actif
+          </>
+        }
         action={
-          <DemoActionButton
-            className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-widest uppercase px-5 py-3 border transition-colors duration-200 hover:border-[#6B9FEE] hover:text-[#F0F5FF]"
-            style={{ borderColor: T.border, color: T.textDim }}
-          >
-            <FileCode2 size={14} />
-            Flux XML
-          </DemoActionButton>
+          <div className="flex flex-col items-stretch sm:items-end gap-1.5 max-w-full">
+            <DemoActionButton className={btnGhostClass} style={btnGhostStyle}>
+              <FileCode2 size={14} />
+              Télécharger le flux XML
+            </DemoActionButton>
+            <span className="text-[11px] leading-snug sm:text-right max-w-xs" style={{ color: T.muted }}>
+              {`Transmettez ce fichier à votre agrégateur, il publiera votre stock. ${formatNumber(dansLeFlux)} véhicules à l'intérieur.`}
+            </span>
+          </div>
         }
       />
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="adm-card adm-enter p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "60ms" }}>
-          <div className="adm-hairline" />
-          <div className="flex items-start justify-between">
-            <span className="text-[11px] tracking-[0.16em] uppercase" style={{ color: T.muted }}>Annonces diffusées</span>
-            <Radio size={16} style={{ color: "#C7D3E8", opacity: 0.75 }} />
-          </div>
-          <div className="text-[28px] font-light mt-3" style={{ color: T.text }}>
-            {published}
-            <span className="text-sm ml-1" style={{ color: T.muted }}>/ {vehicles.length}</span>
-          </div>
-        </div>
-        <div className="adm-card adm-enter p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "140ms" }}>
-          <div className="adm-hairline" />
-          <div className="flex items-start justify-between">
-            <span className="text-[11px] tracking-[0.16em] uppercase" style={{ color: T.muted }}>Portails actifs</span>
-            <Car size={16} style={{ color: "#C7D3E8", opacity: 0.75 }} />
-          </div>
-          <div className="text-[28px] font-light mt-3" style={{ color: T.text }}>{PORTALS.length}</div>
-        </div>
-        <div className="adm-card adm-enter p-5" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, animationDelay: "220ms" }}>
-          <div className="adm-hairline" />
-          <div className="flex items-start justify-between">
-            <span className="text-[11px] tracking-[0.16em] uppercase" style={{ color: T.muted }}>Vues cumulées</span>
-            <Eye size={16} style={{ color: "#C7D3E8", opacity: 0.75 }} />
-          </div>
-          <div className="text-[28px] font-light mt-3" style={{ color: T.text }}>{formatNumber(totalViews)}</div>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
+        <KpiTile
+          label="Diffusion complète"
+          value={complets}
+          icon="radio"
+          index={0}
+          hint={`sur ${formatNumber(lignes.length)} véhicules`}
+        />
+        <KpiTile
+          label="À compléter"
+          value={lignes.length - complets}
+          icon="grid"
+          index={1}
+          hint={`${formatNumber(libres)} emplacement${libres > 1 ? "s" : ""} libre${libres > 1 ? "s" : ""}`}
+        />
+        <KpiTile
+          label="À republier"
+          value={aRepublier}
+          icon="clock"
+          index={2}
+          hint="fiche modifiée depuis la mise en ligne"
+        />
+        <KpiTile
+          label={`Arrivées sur ${FENETRE_ARRIVEES_JOURS} j`}
+          value={totalArrivees}
+          icon="eye"
+          index={3}
+          hint="visites mesurées sur vos fiches"
+        />
       </div>
+      <MentionArrivees />
 
-      {/* Annonces */}
-      <div style={{ border: `1px solid ${T.border}` }}>
-        {vehicles.map((v, i) => {
-          const allPublished = PORTALS.every((p) => byKey.get(`${v.id}:${p}`)?.status === "publie");
+      <div className="@container" style={{ border: `1px solid ${T.border}` }}>
+        <BandeColonnes />
+
+        {lignes.map((vue, i) => {
+          const tout = PORTALS.every((p) => vue.etats[p] === "en-ligne");
+          const aRepublierIci = PORTALS.some((p) => vue.etats[p] === "a-republier");
           return (
-            <div
-              key={v.id}
-              className="flex flex-col lg:flex-row lg:items-center gap-3 px-4 py-4"
-              style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}
-            >
-              <div className="flex items-center gap-4 min-w-0 lg:w-72 flex-shrink-0">
-                <Thumb src={firstImage(v.images)} alt={`${v.make} ${v.model}`} />
-                <div className="min-w-0">
-                  <div className="flex items-baseline gap-2 min-w-0">
-                    <span className="text-xs tracking-widest uppercase flex-shrink-0" style={{ color: T.accent }}>{v.make}</span>
-                    <span className="text-sm font-medium truncate" style={{ color: T.text }}>{v.model}</span>
-                  </div>
-                  <span className="text-xs" style={{ color: T.muted }}>
-                    {v.year} · {formatNumber(v.price)} €
-                  </span>
-                </div>
-              </div>
-
-              {/* Portails */}
-              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
-                {PORTALS.map((portal) => {
-                  const l = byKey.get(`${v.id}:${portal}`);
-                  const isPub = l?.status === "publie";
-                  const views = isPub ? simulatedViews(v.id, portal, l.publishedAt) : 0;
-                  const tone = isPub ? TONE.success : TONE.muted;
-                  return (
-                    <DemoActionButton
-                      key={portal}
-                      title={isPub ? "Retirer l'annonce" : "Publier l'annonce"}
-                      className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase px-2.5 py-1.5 whitespace-nowrap transition-all hover:opacity-90"
-                      style={{ backgroundColor: tone.bg, border: `1px solid ${tone.bd}`, color: tone.fg }}
-                    >
-                      {isPub ? <Check size={11} /> : <CircleOff size={11} style={{ opacity: 0.6 }} />}
-                      {PORTAL_LABEL[portal]}
-                      {isPub && views > 0 && (
-                        <span className="normal-case tracking-normal" style={{ color: T.muted }}>
-                          · {formatNumber(views)} vues
-                        </span>
-                      )}
-                    </DemoActionButton>
-                  );
-                })}
-              </div>
-
-              <div className="flex-shrink-0">
-                {allPublished ? (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase" style={{ color: T.success }}>
-                    <Check size={13} />
-                    Diffusé partout
-                  </span>
-                ) : (
-                  <DemoActionButton className={btnPrimaryClass} style={btnPrimaryStyle}>
-                    <Radio size={13} />
-                    Diffuser
+            <LigneDiffusion
+              key={vue.id}
+              vue={vue}
+              first={i === 0}
+              href="/demopro/vehicules"
+              cellules={PORTALS.map((p) => {
+                const ton = tonDe(vue.etats[p]);
+                return (
+                  <DemoActionButton
+                    key={p}
+                    ariaLabel={libelleCellule(`${vue.make} ${vue.model}`, p, vue.etats[p])}
+                    className={celluleClass}
+                    style={{ backgroundColor: ton.bg, border: `1px solid ${ton.bd}`, color: ton.fg }}
+                  >
+                    <ContenuCellule portal={p} etat={vue.etats[p]} />
                   </DemoActionButton>
-                )}
-              </div>
-            </div>
+                );
+              })}
+              action={
+                <DemoActionButton
+                  className={actionLigneClass}
+                  style={{ color: tout ? T.muted : aRepublierIci ? T.warning : T.accent }}
+                >
+                  {tout ? <CircleOff size={12} /> : <Radio size={12} />}
+                  {tout ? "Tout retirer" : aRepublierIci ? "Republier" : "Diffuser"}
+                </DemoActionButton>
+              }
+            />
           );
         })}
       </div>
 
-      <p className="text-[11px] mt-4" style={{ color: T.muted }}>
-        Démonstration : les statuts et les vues sont des exemples figés. En conditions réelles, la publication
-        s&apos;appuie sur un compte agrégateur (Ubiflow, Spider VO…) ou des comptes professionnels sur chaque portail,
-        alimentés par un flux XML d&apos;export prêt à l&apos;emploi.
-      </p>
+      <MentionPied />
     </AdminPage>
   );
 }

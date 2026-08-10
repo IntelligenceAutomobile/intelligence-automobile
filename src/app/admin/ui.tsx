@@ -21,6 +21,10 @@ export const T = {
   danger: "#FF6B35",
   success: "#4ED1A1",
   warning: "#F0B45A",
+  // Gris argenté des icônes de tuile, et blanc de survol des actions : les deux
+  // étaient recopiés en dur d'un écran à l'autre.
+  icon: "#C7D3E8",
+  textHover: "#F0F5FF",
 } as const;
 
 /* ── Couleurs de remplissage des graphiques (validées daltonisme sur surface sombre) ── */
@@ -94,10 +98,14 @@ export function PageHeader({
   title,
   subtitle,
   action,
+  badge,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   action?: ReactNode;
+  /* Étiquette posée contre le titre, pour un écran dont le régime demande à se
+     voir tout de suite (une simulation, un brouillon). */
+  badge?: ReactNode;
 }) {
   // Sur téléphone, le titre refusait de se réduire et poussait les boutons hors
   // de l'écran, qui se mettait alors à défiler latéralement. Le bloc de titre
@@ -107,9 +115,12 @@ export function PageHeader({
     <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
       <div className="min-w-0">
         <div style={{ width: 24, height: 2, backgroundColor: T.accent }} className="mb-3" />
-        <h1 className="text-2xl font-light" style={{ color: T.text, letterSpacing: "-0.01em" }}>
-          {title}
-        </h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-light" style={{ color: T.text, letterSpacing: "-0.01em" }}>
+            {title}
+          </h1>
+          {badge}
+        </div>
         {subtitle && (
           <p className="text-sm mt-1.5" style={{ color: T.muted }}>
             {subtitle}
