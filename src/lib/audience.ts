@@ -126,6 +126,7 @@ export function estRobot(ua: string): boolean {
    Un chemin se lit mal dans un tableau de synthèse ; le nom de la page se lit
    d'un coup d'œil, le chemin reste affiché dessous. */
 const PAGES: Record<string, string> = {
+  "/avis": "Lien d'avis Google",
   "/": "Accueil",
   "/vehicules": "Nos véhicules",
   "/recherche-personnalisee": "Recherche personnalisée",
@@ -160,6 +161,8 @@ const SRC_LABEL: Record<string, string> = {
   signature: "Signature email",
   email: "Email",
   qr: "QR code",
+  avis: "Invitation d'avis",
+  "avis-comptoir": "Avis · QR code et carte",
   flyer: "Flyer",
   bouche: "Bouche à oreille",
 };

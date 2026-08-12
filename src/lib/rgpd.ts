@@ -158,9 +158,25 @@ export async function effacerPersonne(clientId: string, auteur: string, jour: st
     `Reprises anonymisées, opération d'achat conservée : ${reprises.length}.`,
   ].join(" ");
 
+  // Le journal des invitations d'avis garde ses dates et ses gestes, qui disent
+  // ce que l'entreprise a fait, et perd le nom qui les rattachait à quelqu'un.
+  await prisma.avisLog.updateMany({ where: { clientId }, data: { clientName: EFFACE } });
+
   await prisma.client.update({
     where: { id: clientId },
-    data: { name: EFFACE, company: "", email: "", phone: "", notes: trace },
+    data: {
+      name: EFFACE,
+      company: "",
+      email: "",
+      phone: "",
+      notes: trace,
+      // Le suivi de la demande d'avis parle d'une personne : il repart à zéro.
+      reviewRequestedAt: "",
+      reviewCount: 0,
+      reviewSnoozeUntil: "",
+      reviewOutcome: "",
+      reviewOutcomeNote: "",
+    },
   });
 
   return {

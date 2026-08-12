@@ -1,33 +1,87 @@
 // Avis clients de la démonstration /demopro (lecture seule).
-// Reproduit fidèlement le module « Avis clients » du back-office : on liste les
-// acheteurs à inviter à laisser un avis Google, puis ceux déjà sollicités.
-// Alimenté par des données d'exemple figées (src/lib/demo-data.ts). Aucun accès
-// base, aucun fetch : le bouton d'action affiche un simple toast de démo.
-import { Star, Send, Check, Link2 } from "lucide-react";
-import { formatDateFr } from "@/lib/devis";
-import { T, Tag, AdminPage, PageHeader } from "@/app/admin/ui";
-import { getDemoReviewClients } from "@/lib/demo-data";
+//
+// L'habillage vient du module partagé avec le back-office
+// (src/app/admin/avis/presentation.tsx) : ce qui change là-bas change ici,
+// sans recopie. Seules les données (exemples figés de src/lib/demo-data.ts) et
+// les actions (boutons de démonstration) diffèrent.
+import { Star, Clock3, Link2, Mail } from "lucide-react";
+import { daysSince } from "@/lib/relances";
+import { parisDay } from "@/lib/vehicules";
+import { etatAvis, motifAffiche, pretLe, rappelDu, AVIS_CONSEIL_MOMENT } from "@/lib/avis";
+import { T, AdminPage, PageHeader } from "@/app/admin/ui";
+import {
+  AvisJournal,
+  AvisLine,
+  AvisRegle,
+  AvisRepli,
+  AvisSection,
+  avisSubtitle,
+  type AvisLogView,
+  type AvisView,
+} from "@/app/admin/avis/presentation";
+import { getDemoAvisLogs, getDemoReviewClients } from "@/lib/demo-data";
 import { DEMO_REVIEW_LINK } from "@/app/demopro/demo";
-import DemoActionButton from "@/app/demopro/DemoActionButton";
+import DemoAvisButton, { DemoAvisMenu } from "./DemoAvisButton";
 
 export default function DemoAvisPage() {
-  const clients = getDemoReviewClients();
-  const toSolicit = clients.filter((c) => c.requestedAt === null);
-  const done = clients.filter((c) => c.requestedAt !== null);
+  const today = parisDay(new Date()).toISOString().slice(0, 10);
+
+  const rows: AvisView[] = getDemoReviewClients().map((c) => {
+    const requestedAt = c.requestedAt ?? "";
+    const count = c.count ?? 0;
+    const etat = etatAvis({ requestedAt, reasonDate: c.reasonDate, outcome: c.outcome ?? "" }, today);
+    return {
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      kind: c.kind,
+      reason: motifAffiche(c.kind, c.reason, etat),
+      reasonDate: c.reasonDate,
+      vehicle: c.vehicle,
+      requestedAt,
+      count,
+      snoozeUntil: "",
+      note: c.note ?? "",
+      clickedAt: c.clickedAt ?? "",
+      sinceDays: daysSince(requestedAt || c.reasonDate, today),
+      etat,
+      readyOn: pretLe(c.reasonDate),
+      rappelDu: rappelDu({ requestedAt, count, snoozeUntil: "" }, today),
+      blocked: Boolean(c.blocked),
+    };
+  });
+
+  const parAchat = (a: AvisView, b: AvisView) => b.reasonDate.localeCompare(a.reasonDate);
+  const parEnvoi = (a: AvisView, b: AvisView) => b.requestedAt.localeCompare(a.requestedAt);
+
+  const prets = rows.filter((r) => r.etat === "pret").sort(parAchat);
+  const bientot = rows.filter((r) => r.etat === "bientot").sort((a, b) => a.readyOn.localeCompare(b.readyOn));
+  const anciennes = rows.filter((r) => r.etat === "ancien").sort(parAchat);
+  const attente = rows
+    .filter((r) => r.etat === "attente")
+    .sort((a, b) => Number(b.rappelDu) - Number(a.rappelDu) || parEnvoi(a, b));
+  const avis = rows.filter((r) => r.etat === "avis").sort(parEnvoi);
+  const ecartes = rows.filter((r) => r.etat === "ecarte" || r.etat === "stop").sort(parAchat);
+
+  const journal: AvisLogView[] = getDemoAvisLogs().map((l) => ({
+    ...l,
+    at: `${l.at}T09:00:00.000Z`,
+    href: "/demopro/clients",
+  }));
 
   return (
     <AdminPage>
       <PageHeader
         title="Avis clients"
-        subtitle="Invitez vos acheteurs à vous noter sur Google, après la livraison."
+        subtitle={avisSubtitle(prets.length + anciennes.length, attente.length, avis.length)}
       />
 
       {/* Bandeau : lien Google configuré pour les invitations */}
       <div
-        className="flex flex-wrap items-center gap-3 px-5 py-3 mb-6"
+        className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 mb-6"
         style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}
       >
-        <Link2 size={16} style={{ color: T.accent }} />
+        <Link2 size={16} style={{ color: T.accent, flexShrink: 0 }} />
         <span className="text-sm" style={{ color: T.textDim }}>
           <span className="font-semibold" style={{ color: T.text }}>Lien Google configuré.</span>
           {" Les invitations renvoient vos acheteurs vers votre fiche Google."}
@@ -35,60 +89,82 @@ export default function DemoAvisPage() {
         <span className="text-xs truncate max-w-full sm:ml-auto" style={{ color: T.accent }}>{DEMO_REVIEW_LINK}</span>
       </div>
 
-      {/* À solliciter */}
-      <div className="flex items-center gap-2 mb-3">
-        <Star size={15} style={{ color: T.accent }} />
-        <h2 className="text-[15px] font-semibold" style={{ color: T.text }}>À solliciter</h2>
-        <span className="text-xs" style={{ color: T.muted }}>· {toSolicit.length}</span>
-      </div>
-      {toSolicit.length === 0 ? (
-        <div className="p-6 mb-8 text-sm inline-flex items-center gap-2" style={{ border: `1px solid ${T.border}`, color: T.muted }}>
-          <Check size={15} style={{ color: T.success }} />
-          Tous les acheteurs récents ont été sollicités.
-        </div>
-      ) : (
-        <div className="mb-8" style={{ border: `1px solid ${T.border}` }}>
-          {toSolicit.map((r, i) => (
-            <div key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-3.5" style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium truncate" style={{ color: T.text }}>{r.name}</span>
-                <span className="block text-xs truncate" style={{ color: T.muted }}>{r.reason}</span>
-              </span>
-              <span className="text-xs truncate hidden sm:inline" style={{ color: T.muted, minWidth: 180 }}>{r.email || "—"}</span>
-              <DemoActionButton
-                className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase px-3 py-2 transition-opacity hover:opacity-90"
-                style={{ backgroundColor: T.accent, color: T.bg }}
-              >
-                <Send size={13} />
-                Demander un avis
-              </DemoActionButton>
-            </div>
+      <AvisSection title="À solliciter" icon={Star} count={prets.length}>
+        {prets.map((r, i) => (
+          <AvisLine
+            key={r.id}
+            it={r}
+            first={i === 0}
+            href="/demopro/clients"
+            actions={
+              <>
+                <DemoAvisButton it={r} />
+                <DemoAvisMenu name={r.name} variante="a-faire" />
+              </>
+            }
+          />
+        ))}
+      </AvisSection>
+
+      {bientot.length > 0 && (
+        <AvisSection title="Bientôt" icon={Clock3} count={bientot.length} hint={AVIS_CONSEIL_MOMENT}>
+          {bientot.map((r, i) => (
+            <AvisLine key={r.id} it={r} first={i === 0} href="/demopro/clients" actions={<DemoAvisMenu name={r.name} variante="a-faire" />} />
           ))}
-        </div>
+        </AvisSection>
       )}
 
-      {/* Déjà sollicités */}
-      {done.length > 0 && (
-        <>
-          <div className="flex items-center gap-2 mb-3">
-            <Check size={15} style={{ color: T.success }} />
-            <h2 className="text-[15px] font-semibold" style={{ color: T.text }}>Déjà sollicités</h2>
-            <span className="text-xs" style={{ color: T.muted }}>· {done.length}</span>
-          </div>
-          <div style={{ border: `1px solid ${T.border}` }}>
-            {done.map((r, i) => (
-              <div key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderTop: i === 0 ? "none" : `1px solid ${T.border}` }}>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm truncate" style={{ color: T.textDim }}>{r.name}</span>
-                  <span className="block text-xs truncate" style={{ color: T.muted }}>{r.reason}</span>
-                </span>
-                <span className="text-xs truncate hidden sm:inline" style={{ color: T.muted, minWidth: 180 }}>{r.email || "—"}</span>
-                <Tag tone="success">Invité le {formatDateFr(r.requestedAt!)}</Tag>
-              </div>
-            ))}
-          </div>
-        </>
+      {attente.length > 0 && (
+        <AvisSection title="En attente de réponse" icon={Mail} count={attente.length}>
+          {attente.map((r, i) => (
+            <AvisLine
+              key={r.id}
+              it={r}
+              first={i === 0}
+              href="/demopro/clients"
+              actions={
+                <>
+                  {r.rappelDu && <DemoAvisButton it={r} rappel />}
+                  <DemoAvisMenu name={r.name} variante="attente" />
+                </>
+              }
+            />
+          ))}
+        </AvisSection>
       )}
+
+      <AvisRepli title="Ventes anciennes" count={anciennes.length}>
+        {anciennes.map((r, i) => (
+          <AvisLine
+            key={r.id}
+            it={r}
+            first={i === 0}
+            href="/demopro/clients"
+            actions={
+              <>
+                <DemoAvisButton it={r} />
+                <DemoAvisMenu name={r.name} variante="a-faire" />
+              </>
+            }
+          />
+        ))}
+      </AvisRepli>
+
+      <AvisRepli title="Avis obtenus" count={avis.length}>
+        {avis.map((r, i) => (
+          <AvisLine key={r.id} it={r} first={i === 0} href="/demopro/clients" actions={<DemoAvisMenu name={r.name} variante="clos" />} />
+        ))}
+      </AvisRepli>
+
+      <AvisRepli title="Écartés et arrêts" count={ecartes.length}>
+        {ecartes.map((r, i) => (
+          <AvisLine key={r.id} it={r} first={i === 0} href="/demopro/clients" actions={<DemoAvisMenu name={r.name} variante="clos" />} />
+        ))}
+      </AvisRepli>
+
+      <AvisJournal entries={journal} />
+
+      <AvisRegle />
     </AdminPage>
   );
 }

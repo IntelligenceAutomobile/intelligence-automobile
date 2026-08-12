@@ -27,6 +27,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       notes: client.notes,
       fichecreeeLe: client.createdAt,
       demandeAvisEnvoyeeLe: client.reviewRequestedAt || null,
+      demandesAvisEnvoyees: client.reviewCount,
+      demandeAvisIssue: client.reviewOutcome || null,
+      demandeAvisMotif: client.reviewOutcomeNote || null,
     },
     pistesCommerciales: client.leads.map((l) => ({
       objet: l.title,

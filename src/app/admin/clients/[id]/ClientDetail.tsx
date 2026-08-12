@@ -466,12 +466,41 @@ function LeadBlock({ lead, vehicles, canDelete }: { lead: LeadFull; vehicles: Ve
 }
 
 /* ── Page ── */
+/** Suivi de la demande d'avis, tel que la fiche le montre. */
+export type AvisFiche = {
+  requestedAt: string;
+  count: number;
+  outcome: string;
+  note: string;
+  snoozeUntil: string;
+  logs: { id: string; action: string; step: number; detail: string; author: string; at: string }[];
+};
+
+const AVIS_ACTION_LABEL: Record<string, string> = {
+  invitation: "Invitation envoyée",
+  rappel: "Rappel envoyé",
+  manuel: "Demandé sur place",
+  avis: "Avis reçu",
+  report: "Reporté",
+  arret: "Arrêt demandé",
+  ecart: "Écarté",
+  reprise: "Remis dans la liste",
+};
+
+const AVIS_ISSUE: Record<string, { label: string; tone: "success" | "muted" | "accent" }> = {
+  avis: { label: "Avis reçu", tone: "success" },
+  ecarte: { label: "Écarté", tone: "muted" },
+  stop: { label: "Arrêt demandé", tone: "muted" },
+};
+
 export default function ClientDetail({
-  client, vehicles, quotes, efface, canDelete,
+  client, vehicles, quotes, avis, efface, canDelete,
 }: {
   client: ClientFull;
   vehicles: VehicleLite[];
   quotes: QuoteLite[];
+  /** Où en est la demande d'avis pour cette personne. */
+  avis: AvisFiche;
   /** Fiche déjà effacée à la demande de la personne (verdict rendu côté serveur). */
   efface: boolean;
   /** Le compte a le droit de supprimer : sans lui, les routes répondent 403. */
@@ -805,6 +834,52 @@ export default function ClientDetail({
                   </li>
                 ))}
               </ul>
+            )}
+          </SectionCard>
+
+          <SectionCard title="Avis clients">
+            {avis.requestedAt || avis.outcome || avis.logs.length > 0 ? (
+              <>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  {avis.outcome && AVIS_ISSUE[avis.outcome] ? (
+                    <Tag tone={AVIS_ISSUE[avis.outcome].tone}>{AVIS_ISSUE[avis.outcome].label}</Tag>
+                  ) : (
+                    avis.requestedAt && <Tag tone="accent">En attente de réponse</Tag>
+                  )}
+                  {avis.requestedAt && (
+                    <span className="text-xs" style={{ color: T.muted }}>
+                      Dernier envoi le {formatDateFr(avis.requestedAt)}
+                      {avis.count > 1 ? ` · ${avis.count} envois` : ""}
+                    </span>
+                  )}
+                </div>
+                {avis.note && (
+                  <p className="text-xs italic mb-3" style={{ color: T.muted }}>{avis.note}</p>
+                )}
+                <ul>
+                  {avis.logs.map((l, i) => (
+                    <li
+                      key={l.id}
+                      className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2"
+                      style={{ borderTop: i === 0 ? "none" : `1px solid ${T.surfaceAlt}` }}
+                    >
+                      <span className="text-xs" style={{ color: T.textDim }}>
+                        {AVIS_ACTION_LABEL[l.action] ?? l.action}
+                        {l.step > 1 ? ` ×${l.step}` : ""}
+                      </span>
+                      {l.detail && <span className="text-[11px] truncate" style={{ color: T.muted }}>{l.detail}</span>}
+                      <span className="text-[11px] ml-auto whitespace-nowrap" style={{ color: T.muted }}>
+                        {l.author ? `${l.author} · ` : ""}
+                        {new Date(l.at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-sm" style={{ color: T.muted }}>
+                Cette personne apparaîtra dans <Link href="/admin/avis" className="underline underline-offset-2" style={{ color: T.accent }}>Avis clients</Link> dès qu&apos;une vente sera conclue.
+              </p>
             )}
           </SectionCard>
         </div>

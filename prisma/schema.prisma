@@ -197,6 +197,30 @@ model Quote {
 
 // Journal du centre de relances : chaque action (email envoyé, relance notée au
 // téléphone, report, arrêt, annulation) laisse une trace consultable à l'écran.
+// Journal de la demande d'avis, bâti comme RelanceLog : chaque geste laisse une
+// trace signée, et la question « est-ce que l'invitation est partie ? » se
+// répond ici, y compris pour un client sorti de la liste.
+//
+// Table autonome, sans relation vers Client : le nom est figé à l'écriture, si
+// bien que le journal survit à un effacement RGPD comme celui des relances
+// survit à la suppression d'un devis.
+model AvisLog {
+  id         String @id @default(cuid())
+  clientId   String
+  clientName String @default("")
+  action     String // invitation | rappel | manuel | avis | report | arret | reprise | ecart
+  channel    String @default("") // email | main (rencontre au comptoir)
+  step       Int    @default(0)  // 1 = invitation, 2 = rappel
+  sentDay    String @default("") // jour de Paris de l'envoi
+  detail     String @default("")
+  author     String @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@index([createdAt])
+}
+
 model RelanceLog {
   id      String @id @default(cuid())
   quoteId String
@@ -247,7 +271,21 @@ model Client {
   email            String   @default("")
   phone            String   @default("")
   notes            String   @default("")
-  reviewRequestedAt String  @default("") // YYYY-MM-DD : demande d'avis Google envoyée
+  // Suivi de la demande d'avis. `reviewRequestedAt` garde son sens d'origine :
+  // le jour du DERNIER envoi. Le reste porte la mémoire du module, qui tenait
+  // jusqu'ici dans cette seule chaîne : une invitation partie fermait le
+  // dossier pour de bon, sans rappel possible ni geste de rattrapage.
+  reviewRequestedAt String  @default("") // YYYY-MM-DD : dernière invitation envoyée
+  reviewCount       Int     @default(0)  // nombre d'envois : invitation puis rappel
+  reviewSnoozeUntil String  @default("") // YYYY-MM-DD : ligne mise de côté jusqu'à ce jour
+  reviewOutcome     String  @default("") // "" | avis | ecarte | stop
+  reviewOutcomeNote String  @default("") // motif court d'un écart
+
+  // Mesure du geste : le lien du message passe par le site avant Google, ce qui
+  // répond à la seule question qui compte, combien de clients l'ouvrent.
+  // Le jeton sert aussi au QR code, au SMS et au lien d'opposition.
+  reviewToken     String? @unique       // jeton du lien /avis/<jeton>
+  reviewClickedAt String  @default("")  // YYYY-MM-DD : lien d'avis ouvert
 
   // Dernière activité commerciale réelle. `updatedAt` ne bougeait que si la
   // fiche elle-même était retouchée : le carnet, trié dessus, laissait tout en

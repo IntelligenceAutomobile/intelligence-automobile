@@ -10,7 +10,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (!session) redirect("/admin/login");
 
   const { id } = await params;
-  const [client, vehicles, quotes] = await Promise.all([
+  const [client, vehicles, quotes, avisLogs] = await Promise.all([
     prisma.client.findUnique({
       where: { id },
       include: {
@@ -29,6 +29,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       orderBy: { updatedAt: "desc" },
       select: { id: true, number: true, status: true, issueDate: true },
     }),
+    // Journal de la demande d'avis : la fiche répond « où en est-on avec cette
+    // personne ? » sans passer par l'écran Avis clients.
+    prisma.avisLog.findMany({ where: { clientId: id }, orderBy: { createdAt: "desc" }, take: 12 }),
   ]);
   if (!client) notFound();
 
@@ -71,6 +74,21 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       client={full}
       vehicles={vehicles}
       quotes={quotes}
+      avis={{
+        requestedAt: client.reviewRequestedAt,
+        count: client.reviewCount,
+        outcome: client.reviewOutcome,
+        note: client.reviewOutcomeNote,
+        snoozeUntil: client.reviewSnoozeUntil,
+        logs: avisLogs.map((l) => ({
+          id: l.id,
+          action: l.action,
+          step: l.step,
+          detail: l.detail,
+          author: l.author,
+          at: l.createdAt.toISOString(),
+        })),
+      }}
       efface={client.name === EFFACE}
       canDelete={can(asRole(session.admin.role), "delete")}
     />

@@ -669,13 +669,68 @@ export function getDemoUsers(): DemoUser[] {
 }
 
 /* ────────────────────────── Avis clients ────────────────────────── */
-export type DemoReviewClient = { id: string; name: string; email: string; reason: string; requestedAt: string | null };
+// `reason` et `reasonDate` reprennent le motif d'éligibilité tel que le calcule
+// l'écran réel : la vente la plus récente du client, lead gagné ou facture
+// réglée. Un exemple porte une adresse manquante, un autre la liste rouge, pour
+// que la démonstration montre les deux garde-fous de la ligne.
+export type DemoReviewClient = {
+  id: string;
+  name: string;
+  email: string;
+  kind: "livraison" | "facture" | "vente";
+  reason: string;
+  reasonDate: string;
+  vehicle: string;
+  requestedAt: string | null;
+  /** Nombre d'envois partis, issue posée à la main, et son motif. */
+  count?: number;
+  outcome?: "" | "avis" | "ecarte" | "stop";
+  note?: string;
+  /** Jour où le client a ouvert le lien d'avis. */
+  clickedAt?: string;
+  blocked?: boolean;
+};
 
 export function getDemoReviewClients(): DemoReviewClient[] {
   return [
-    { id: "rev-1", name: "Karim Benali", email: "k.benali@gmail.com", reason: "Vente conclue · facture payée", requestedAt: null },
-    { id: "rev-2", name: "Amélie Rousseau", email: "amelie.rousseau@outlook.fr", reason: "Livraison effectuée", requestedAt: null },
-    { id: "rev-3", name: "Antoine Mercier", email: "a.mercier@gmail.com", reason: "Vente conclue", requestedAt: isoDay(-9) },
+    { id: "rev-1", name: "Karim Benali", email: "k.benali@gmail.com", vehicle: "Audi TT", kind: "livraison", reason: "Livraison effectuée", reasonDate: isoDay(-6), requestedAt: null },
+    { id: "rev-2", name: "Amélie Rousseau", email: "amelie.rousseau@outlook.fr", vehicle: "Peugeot 208", kind: "facture", reason: "Facture F-2026-012 réglée", reasonDate: isoDay(-11), requestedAt: null },
+    { id: "rev-3", name: "Garage Mercier SARL", email: "", vehicle: "Volkswagen Golf", kind: "facture", reason: "Facture F-2026-009 réglée", reasonDate: isoDay(-24), requestedAt: null },
+    // Livraison inscrite au planning pour après-demain : la demande attend.
+    { id: "rev-4", name: "Thomas Lefèvre", email: "t.lefevre@gmail.com", vehicle: "BMW 118d", kind: "livraison", reason: "Livraison effectuée", reasonDate: isoDay(2), requestedAt: null },
+    // Invité il y a neuf jours : le rappel se propose au quinzième.
+    { id: "rev-5", name: "Antoine Mercier", email: "a.mercier@gmail.com", vehicle: "Mercedes Classe A", kind: "livraison", reason: "Livraison effectuée", reasonDate: isoDay(-18), requestedAt: isoDay(-9), count: 1, clickedAt: isoDay(-8) },
+    // Invitée il y a un mois : le rappel est dû.
+    { id: "rev-6", name: "Sophie Nardin", email: "s.nardin@orange.fr", vehicle: "Renault Clio", kind: "facture", reason: "Facture F-2026-006 réglée", reasonDate: isoDay(-40), requestedAt: isoDay(-31), count: 1 },
+    // Avis obtenu, et reprise conclue écartée : les deux issues du module.
+    { id: "rev-7", name: "Claire Vasseur", email: "c.vasseur@gmail.com", vehicle: "Fiat 500", kind: "facture", reason: "Facture F-2026-004 réglée", reasonDate: isoDay(-55), requestedAt: isoDay(-48), count: 2, outcome: "avis", clickedAt: isoDay(-47) },
+    { id: "rev-8", name: "Hervé Ducasse", email: "h.ducasse@free.fr", vehicle: "Toyota Yaris", kind: "facture", reason: "Reprise conclue", reasonDate: isoDay(-33), requestedAt: null, outcome: "ecarte", note: "Adresse email invalide" },
+    // Vente d'il y a plus de six mois : rangée sous « Ventes anciennes ».
+    { id: "rev-9", name: "Bertrand Sallenave", email: "b.sallenave@sallenave-immo.com", vehicle: "Volvo XC60", kind: "vente", reason: "Vente conclue", reasonDate: isoDay(-224), requestedAt: null },
+  ];
+}
+
+/** Journal des invitations de la démonstration, du plus récent au plus ancien. */
+export type DemoAvisLog = {
+  id: string;
+  clientId: string;
+  clientName: string;
+  action: string;
+  channel: string;
+  step: number;
+  detail: string;
+  author: string;
+  at: string;
+};
+
+export function getDemoAvisLogs(): DemoAvisLog[] {
+  return [
+    { id: "alog-1", clientId: "rev-8", clientName: "Hervé Ducasse", action: "ecart", channel: "", step: 0, detail: "Adresse email invalide", author: "Julie", at: isoDay(-2) },
+    { id: "alog-2", clientId: "rev-7", clientName: "Claire Vasseur", action: "avis", channel: "", step: 0, detail: "Avis reçu", author: "Fabrice", at: isoDay(-40) },
+    { id: "alog-3", clientId: "rev-7", clientName: "Claire Vasseur", action: "rappel", channel: "email", step: 2, detail: "Message personnel joint", author: "Fabrice", at: isoDay(-44) },
+    { id: "alog-4", clientId: "rev-6", clientName: "Sophie Nardin", action: "invitation", channel: "email", step: 1, detail: "", author: "Fabrice", at: isoDay(-31) },
+    { id: "alog-5", clientId: "rev-5", clientName: "Antoine Mercier", action: "invitation", channel: "email", step: 1, detail: "", author: "Thomas", at: isoDay(-9) },
+    { id: "alog-6", clientId: "rev-7", clientName: "Claire Vasseur", action: "invitation", channel: "email", step: 1, detail: "", author: "Fabrice", at: isoDay(-48) },
   ];
 }
 
