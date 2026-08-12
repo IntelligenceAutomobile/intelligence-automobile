@@ -19,46 +19,15 @@ import VehiculeDetailView, {
   type VehiculeDetailModel,
 } from "./VehiculeDetailView";
 
-// ── Données legacy (fiches d'avant le formulaire structuré) ───────────────────
-const MAINTENANCE_DATA: Record<string, MaintenanceEntry[]> = {
-  "audi-tt-mk3-sline-2014": [
-    { date: "Fév. 2026", km: "~147 000 km", operation: "Bougies neuves, service Haldex quattro, remplacement pneus Michelin" },
-    { date: "Mars 2025", km: "—", operation: "Batterie VARTA A6 AGM neuve + montage en atelier", amount: "301,89 €", linkedDoc: "batterie-invoice-1.jpg" },
-  ],
-  "audi-tt-mk2-sline-2010": [
-    { date: "Janv. 2026", km: "151 042 km", operation: "Contrôle technique FAVORABLE, valide jusqu'au 28/01/2028 (Autosur Tremblay · PV N° 26049227)" },
-    { date: "Juil. 2025", km: "~151 000 km", operation: "Disques AV+AR neufs, plaquettes AV+AR neuves, filtres air et habitacle (Autodoc)", amount: "276,96 €" },
-    { date: "Nov. 2024", km: "145 762 km", operation: "Entretien intermédiaire huile 5W40 + diagnostic électronique complet (Midas Paris 17)", amount: "109,00 €" },
-    { date: "Août 2024", km: "140 168 km", operation: "Contrôle technique FAVORABLE (Securitest Mandelieu · PV N° 24073569)" },
-    { date: "Déc. 2023", km: "138 653 km", operation: "Vidange moteur, filtres" },
-    { date: "Déc. 2023", km: "134 073 km", operation: "Kit distribution, courroie multi-V, bougies, plaquettes AV (ByMyCar Vaucluse)", amount: "355,72 €" },
-    { date: "Avr. 2021", km: "134 073 km", operation: "Vidange moteur, filtres, contrôles (La Chaume Carpentras)" },
-    { date: "Août 2019", km: "130 874 km", operation: "Inspection, vidange, filtres air et habitacle, Haldex (Link Gengenbach GmbH DE)" },
-    { date: "Sept. 2018", km: "125 334 km", operation: "Inspection, vidange, filtres, Multitronic, Zahnriemen (ACTU GmbH Hannover DE)" },
-    { date: "Août 2017", km: "115 176 km", operation: "Inspection, vidange moteur 5W30LL, filtres (Audi Wolfsburg DE)" },
-    { date: "Août 2016", km: "105 885 km", operation: "Vidange moteur, huile 5W30LL (Audi Wolfsburg DE)" },
-    { date: "Avr. 2015", km: "90 010 km", operation: "Inspection + vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
-    { date: "Juil. 2014", km: "78 735 km", operation: "Inspection + vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
-    { date: "Août 2013", km: "61 225 km", operation: "Vidange moteur, filtres, contrôles (Glinicke Bad Oeynhausen DE)" },
-    { date: "Mai 2013", km: "55 432 km", operation: "Vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
-    { date: "Oct. 2012", km: "41 930 km", operation: "Vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
-    { date: "Mai 2012", km: "30 234 km", operation: "Vidange moteur, filtres (Glinicke Bad Oeynhausen DE)" },
-    { date: "Oct. 2011", km: "21 215 km", operation: "Inspection Audi, vidange moteur, remplacement filtres (Glinicke Bad Oeynhausen DE)" },
-  ],
-};
-
-const MAINTENANCE_HIGHLIGHTS: Record<string, MaintenanceHighlight[]> = {
-  "audi-tt-mk2-sline-2010": [
-    { icon: "📓", label: "Carnet d'origine", text: "Tampons de concessionnaires agréés Audi de mai 2010 à 2023", color: "#6B9FEE" },
-    { icon: "🧾", label: "Factures originales", text: "Interventions récentes documentées (Midas, Autodoc, ByMyCar)", color: "#C6CCD6" },
-    { icon: "✓", label: "Contrôle technique", text: "2 CT favorables, dernier valide jusqu'au 28/01/2028", color: "#5BD89A" },
-  ],
-};
-
-// Seules ces fiches utilisent le fallback legacy (données codées en dur + scan disque + heuristique).
+// ── Fiches legacy (créées avant le formulaire structuré) ─────────────────────
+// Leur entretien et leurs badges vivent désormais en base, comme partout
+// ailleurs, donc modifiables depuis l'administration. Il leur reste deux
+// béquilles : les documents lus depuis le dossier /public et l'extraction de la
+// section « État » à partir de la description. Renseigner ces deux champs dans
+// le formulaire suffit à s'en passer, la base prend alors le dessus.
 const LEGACY_IDS = new Set<string>([
-  ...Object.keys(MAINTENANCE_DATA),
-  ...Object.keys(MAINTENANCE_HIGHLIGHTS),
+  "audi-tt-mk3-sline-2014",
+  "audi-tt-mk2-sline-2010",
 ]);
 
 // La page et ses métadonnées ont besoin du même véhicule : `cache` fait tenir les
@@ -146,17 +115,16 @@ export default async function VehiculeDetailPage({
   const documents: (string | { url: string; label?: string })[] =
     dbDocuments.length > 0 ? dbDocuments : fsDocuments;
 
-  // Entretien : champ structuré si renseigné, sinon données legacy codées en dur
-  const dbMaintenance = JSON.parse(v.maintenanceHistory || "[]") as MaintenanceEntry[];
-  const maintenance = dbMaintenance.length > 0 ? dbMaintenance : (isLegacy ? (MAINTENANCE_DATA[id] ?? []) : []);
+  // Entretien
+  const maintenance = JSON.parse(v.maintenanceHistory || "[]") as MaintenanceEntry[];
 
-  // Badges de traçabilité : champ structuré (couleurs attribuées en cycle) sinon legacy
+  // Badges de traçabilité : couleurs attribuées en cycle
   const HIGHLIGHT_COLORS = ["#6B9FEE", "#C6CCD6", "#5BD89A"];
   const dbHighlights = JSON.parse(v.maintenanceHighlights || "[]") as (Omit<MaintenanceHighlight, "color"> & { color?: string })[];
-  const highlights: MaintenanceHighlight[] =
-    dbHighlights.length > 0
-      ? dbHighlights.map((h, i) => ({ ...h, color: h.color || HIGHLIGHT_COLORS[i % HIGHLIGHT_COLORS.length] }))
-      : (isLegacy ? (MAINTENANCE_HIGHLIGHTS[id] ?? []) : []);
+  const highlights: MaintenanceHighlight[] = dbHighlights.map((h, i) => ({
+    ...h,
+    color: h.color || HIGHLIGHT_COLORS[i % HIGHLIGHT_COLORS.length],
+  }));
 
   // État + présentation : champ structuré conditionFacts si renseigné ;
   // sinon extraction heuristique (legacy uniquement).

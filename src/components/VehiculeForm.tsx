@@ -1078,6 +1078,12 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
                         {documents.map((d) => (
                           <option key={d.url} value={d.url}>{d.label || d.url}</option>
                         ))}
+                        {/* Fiches anciennes : la facture liée désigne un fichier du dossier
+                            /public, absent de la liste ci-dessus. On la garde sélectionnable
+                            pour qu'un enregistrement la préserve. */}
+                        {m.linkedDoc && documents.every((d) => d.url !== m.linkedDoc) && (
+                          <option value={m.linkedDoc}>{m.linkedDoc.split("/").pop()} (fichier du site)</option>
+                        )}
                       </select>
                       <button type="button" disabled={i === 0} onClick={() => moveMaintenance(i, -1)} title="Monter" className={iconBtnClass} style={{ borderColor: T.border, color: T.textDim }}>↑</button>
                       <button type="button" disabled={i === maintenance.length - 1} onClick={() => moveMaintenance(i, 1)} title="Descendre" className={iconBtnClass} style={{ borderColor: T.border, color: T.textDim }}>↓</button>
