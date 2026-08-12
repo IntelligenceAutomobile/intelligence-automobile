@@ -259,14 +259,14 @@ export default async function HomePage() {
         <section style={{ position: "relative", height: "100dvh", minHeight: "520px", overflow: "hidden", backgroundColor: "#070F1E" }}>
           {/* fond flou plein écran : remplit l'écran sans rogner la photo principale */}
           <img
-            src="/Photo du Site/Accueil FInal 2.png"
+            src="/Photo du Site/Accueil FInal 3.png"
             alt=""
             aria-hidden="true"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", filter: "blur(26px) brightness(0.5)", transform: "scale(1.18)" }}
           />
           {/* photo nette, remplit tout le hero (cover) — recadrée sur le centre pour garder les voitures principales */}
           <img
-            src="/Photo du Site/Accueil FInal 2.png"
+            src="/Photo du Site/Accueil FInal 3.png"
             alt=""
             className="ia-hero-photo"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
