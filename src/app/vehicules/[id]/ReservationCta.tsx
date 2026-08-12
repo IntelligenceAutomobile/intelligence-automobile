@@ -7,10 +7,16 @@ import type { Translations } from "@/i18n/fr";
 
 export type ReservationLabels = Translations["vehicleDetail"]["reservation"];
 
+/** Ce que le visiteur demande : bloquer le véhicule, ou en recevoir le dossier. */
+export type DemandeKind = "reservation" | "dossier";
+
 type Status = "idle" | "sending" | "success" | "error";
 
-// ── Bouton « Réserver ce véhicule » ───────────────────────────────────────────
-// La fiche porte trois de ces boutons (carte de prix, encart du bas, barre
+// ── Boutons de demande de la fiche ────────────────────────────────────────────
+// « Réserver ce véhicule » et « Recevoir le dossier complet » ouvrent la même
+// fenêtre, avec leurs propres textes : deux formulaires à tenir pour la même
+// mécanique coûtaient plus cher que ce paramètre.
+// La fiche porte plusieurs de ces boutons (carte de prix, encart du bas, barre
 // mobile) : chacun garde son propre état d'ouverture, ce qui évite de faire
 // remonter un contexte à travers une vue qui se rend aussi côté serveur.
 export default function ReservationCta({
@@ -18,6 +24,7 @@ export default function ReservationCta({
   price,
   vehicleId,
   labels,
+  kind = "reservation",
   className,
   style,
   children,
@@ -27,6 +34,7 @@ export default function ReservationCta({
   price: number;
   vehicleId?: string;
   labels: ReservationLabels;
+  kind?: DemandeKind;
   className?: string;
   style?: React.CSSProperties;
   children: React.ReactNode;
@@ -45,6 +53,7 @@ export default function ReservationCta({
           price={price}
           vehicleId={vehicleId}
           labels={labels}
+          kind={kind}
           onClose={close}
         />
       )}
@@ -58,12 +67,14 @@ function ReservationDialog({
   price,
   vehicleId,
   labels,
+  kind,
   onClose,
 }: {
   vehicle: string;
   price: number;
   vehicleId?: string;
   labels: ReservationLabels;
+  kind: DemandeKind;
   onClose: () => void;
 }) {
   const [status, setStatus] = useState<Status>("idle");
@@ -109,6 +120,7 @@ function ReservationDialog({
           vehicule: vehicle,
           prix: price,
           vehiculeId: vehicleId ?? "",
+          type: kind,
           url: typeof window === "undefined" ? "" : window.location.href,
         }),
       });
@@ -322,6 +334,11 @@ function ReservationDialog({
                   );
                 })}
               </div>
+              {/* Les quatre pastilles couvrent la demi-journée : l'heure au
+                  quart d'heure près se dit dans le mot libre, juste dessous. */}
+              <p className="mt-2.5 text-[11px] leading-relaxed" style={{ color: "#7BA5DC" }}>
+                {labels.slotHint}
+              </p>
             </fieldset>
 
             <div className="mb-6">

@@ -589,13 +589,17 @@ export default function VehiculeDetailView({
                     >
                       {tm.reserveCta}
                     </ReservationCta>
-                    <Link
-                      href={`/contact?vehicule=${encodeURIComponent(contactSlug)}&sujet=dossier`}
+                    <ReservationCta
+                      vehicle={contactSlug}
+                      price={model.price}
+                      vehicleId={vehicleId}
+                      labels={td.dossierRequest}
+                      kind="dossier"
                       className="block w-full text-center text-xs font-semibold tracking-widest uppercase py-4 border transition-all duration-300 hover:border-[#6B9FEE] hover:text-[#6B9FEE]"
                       style={{ borderColor: "rgba(107,159,238,0.25)", color: "#C8D8EE" }}
                     >
                       {td.dossierCta}
-                    </Link>
+                    </ReservationCta>
                   </>
                 ) : (
                   <>
@@ -681,13 +685,17 @@ export default function VehiculeDetailView({
                 >
                   {tm.reserveCta}
                 </ReservationCta>
-                <Link
-                  href={`/contact?vehicule=${encodeURIComponent(contactSlug)}&sujet=dossier`}
+                <ReservationCta
+                  vehicle={contactSlug}
+                  price={model.price}
+                  vehicleId={vehicleId}
+                  labels={td.dossierRequest}
+                  kind="dossier"
                   className="px-10 py-5 text-xs font-semibold tracking-widest uppercase border transition-all duration-300"
                   style={{ borderColor: "rgba(107,159,238,0.4)", color: "#6B9FEE" }}
                 >
                   {td.dossierCta}
-                </Link>
+                </ReservationCta>
               </div>
             )}
           </div>

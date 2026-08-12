@@ -30,7 +30,7 @@ export const JOURS_SANS_ECHANGE: Record<Stage, number> = {
 // saisie, dès que le module cesserait d'écrire une note à la création.
 // « reservation » y figure de plein droit : quelqu'un demande à bloquer un
 // véhicule précis du stock, c'est la demande la plus périssable du site.
-export const SOURCES_ENTRANTES = ["site-contact", "recherche-perso", "aide-vente", "reservation"] as const;
+export const SOURCES_ENTRANTES = ["site-contact", "recherche-perso", "aide-vente", "reservation", "dossier"] as const;
 
 export const STAGE_LABEL: Record<Stage, string> = {
   nouveau: "Nouveau",
@@ -51,12 +51,13 @@ export const STAGE_TONE: Record<Stage, "accent" | "warning" | "success" | "dange
   perdu: "muted",
 };
 
-export const SOURCES = ["site-contact", "reservation", "recherche-perso", "aide-vente", "reprise", "manuel", "telephone", "autre"] as const;
+export const SOURCES = ["site-contact", "reservation", "dossier", "recherche-perso", "aide-vente", "reprise", "manuel", "telephone", "autre"] as const;
 export type Source = (typeof SOURCES)[number];
 
 export const SOURCE_LABEL: Record<Source, string> = {
   "site-contact": "Formulaire contact",
   reservation: "Réservation véhicule",
+  dossier: "Demande de dossier",
   "recherche-perso": "Recherche personnalisée",
   "aide-vente": "Aide à la vente",
   reprise: "Reprise / estimation",

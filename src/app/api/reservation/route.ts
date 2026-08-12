@@ -3,9 +3,10 @@ import { sendMail, MAIL_FROM } from "@/lib/mailer";
 import { createLeadFromSite } from "@/lib/crm-intake";
 import { formatNumber } from "@/lib/format";
 
-// Demande de réservation posée depuis la fiche d'un véhicule. Elle vise UN
-// véhicule du stock et attend un rappel : elle a donc son propre chemin, sa
-// propre origine dans le carnet, et un accusé de réception pour le client.
+// Demande posée depuis la fiche d'un véhicule : réserver le véhicule, ou en
+// recevoir le dossier complet. Les deux visent UN véhicule du stock et attendent
+// un rappel : même chemin, même accusé de réception, textes et origine dans le
+// carnet adaptés au bouton cliqué.
 const TO = process.env.RESEND_TO ?? "contact@intelligenceautomobile.com";
 const FROM = MAIL_FROM;
 
@@ -38,13 +39,14 @@ export async function POST(req: NextRequest) {
     const vehiculeId = String(body.vehiculeId ?? "").trim();
     const prix = Number(body.prix);
     const rappel = RAPPELS[String(body.rappel ?? "")] ?? RAPPELS["peu-importe"];
+    const dossier = String(body.type ?? "") === "dossier";
 
     if (!nom || !email || !telephone || !vehicule) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
     }
 
     const prixLabel = Number.isFinite(prix) && prix > 0 ? `${formatNumber(prix)} €` : "";
-    const objet = `Réservation — ${vehicule}`;
+    const objet = dossier ? `Demande de dossier — ${vehicule}` : `Réservation — ${vehicule}`;
 
     // Lead CRM (en plus de l'email) : silencieux en cas d'échec.
     try {
@@ -55,11 +57,11 @@ export async function POST(req: NextRequest) {
         name: nom,
         email,
         phone: telephone,
-        source: "reservation",
+        source: dossier ? "dossier" : "reservation",
         title: objet,
         vehicleId: vehiculeId,
         message: [
-          `Demande de réservation depuis le site.`,
+          dossier ? `Demande de dossier complet depuis le site.` : `Demande de réservation depuis le site.`,
           `Véhicule : ${vehicule}${prixLabel ? ` (${prixLabel})` : ""}`,
           `Rappel souhaité : ${rappel}`,
           message ? `Message du client : ${message}` : "",
@@ -86,12 +88,12 @@ export async function POST(req: NextRequest) {
 <body style="margin:0;padding:0;background:#070F1E;font-family:system-ui,sans-serif;">
   <div style="max-width:600px;margin:0 auto;padding:32px 24px;">
     <div style="border-top:2px solid #6B9FEE;padding-top:24px;margin-bottom:32px;">
-      <p style="color:#6B9FEE;font-size:10px;letter-spacing:0.35em;text-transform:uppercase;margin:0 0 8px;">Demande de réservation</p>
+      <p style="color:#6B9FEE;font-size:10px;letter-spacing:0.35em;text-transform:uppercase;margin:0 0 8px;">${dossier ? "Demande de dossier" : "Demande de réservation"}</p>
       <h1 style="color:#F0F5FF;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.02em;">${esc(vehicule)}</h1>
       ${prixLabel ? `<p style="color:#A8C6F4;font-size:14px;margin:8px 0 0;">${esc(prixLabel)}</p>` : ""}
     </div>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px;background:#0A1628;border:1px solid #1B3055;">
-      <tr><td colspan="2" style="padding:10px 16px;background:#040B16;color:#6B9FEE;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;border-bottom:1px solid #1B3055;">À rappeler</td></tr>
+      <tr><td colspan="2" style="padding:10px 16px;background:#040B16;color:#6B9FEE;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;border-bottom:1px solid #1B3055;">${dossier ? "Dossier à envoyer" : "À rappeler"}</td></tr>
       ${row("Nom", esc(nom))}
       ${row("Téléphone", esc(telephone))}
       ${row("Email", esc(email))}
@@ -120,10 +122,10 @@ export async function POST(req: NextRequest) {
       replyTo: email,
       subject: `${objet} — ${nom}`,
       html,
-      origin: "reservation",
+      origin: dossier ? "dossier" : "reservation",
     });
     if (!envoi.sent) {
-      console.log("=== Réservation (email non parti) ===");
+      console.log(`=== ${dossier ? "Demande de dossier" : "Réservation"} (email non parti) ===`);
       console.log({ nom, email, telephone, vehicule, rappel, message, raison: envoi.reason ?? envoi.error });
     }
 
@@ -138,18 +140,22 @@ export async function POST(req: NextRequest) {
   <div style="max-width:600px;margin:0 auto;padding:32px 24px;">
     <div style="border-top:2px solid #6B9FEE;padding-top:24px;margin-bottom:28px;">
       <p style="color:#6B9FEE;font-size:10px;letter-spacing:0.35em;text-transform:uppercase;margin:0 0 8px;">Intelligence Automobile</p>
-      <h1 style="color:#F0F5FF;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.02em;">Votre demande de réservation</h1>
+      <h1 style="color:#F0F5FF;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.02em;">${dossier ? "Votre demande de dossier" : "Votre demande de réservation"}</h1>
     </div>
     <p style="color:#C8D8EE;font-size:14px;line-height:1.8;margin:0 0 20px;">Bonjour ${esc(nom)},</p>
     <p style="color:#C8D8EE;font-size:14px;line-height:1.8;margin:0 0 20px;">
-      Nous avons bien reçu votre demande de réservation pour la <strong style="color:#F0F5FF;">${esc(vehicule)}</strong>${prixLabel ? ` (${esc(prixLabel)})` : ""}.
+      Nous avons bien reçu votre demande de ${dossier ? "dossier complet" : "réservation"} pour la <strong style="color:#F0F5FF;">${esc(vehicule)}</strong>${prixLabel ? ` (${esc(prixLabel)})` : ""}.
     </p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px;background:#0A1628;border:1px solid #1B3055;">
       ${row("Téléphone", esc(telephone))}
       ${row("Rappel", esc(rappel))}
     </table>
     <p style="color:#C8D8EE;font-size:14px;line-height:1.8;margin:0 0 20px;">
-      Nous vous rappelons sous 24 heures ouvrées pour bloquer le véhicule à votre nom et répondre à vos questions.
+      ${
+        dossier
+          ? "Nous vous envoyons le dossier complet du véhicule sous 24 heures ouvrées : photos détaillées, historique d'entretien, contrôles et conditions de financement. Nous vous rappelons dans la foulée pour répondre à vos questions."
+          : "Nous vous rappelons sous 24 heures ouvrées pour bloquer le véhicule à votre nom et répondre à vos questions."
+      }
     </p>
     <p style="color:#C8D8EE;font-size:14px;line-height:1.8;margin:0 0 28px;">
       Pour nous joindre avant : <a href="tel:+33620243879" style="color:#6B9FEE;">+33 6 20 24 38 79</a>.
@@ -164,16 +170,18 @@ export async function POST(req: NextRequest) {
     await sendMail({
       from: FROM,
       to: email,
-      subject: `Votre demande de réservation — ${vehicule}`,
+      subject: `${dossier ? "Votre demande de dossier" : "Votre demande de réservation"} — ${vehicule}`,
       html: accuse,
-      origin: "reservation-client",
+      origin: dossier ? "dossier-client" : "reservation-client",
     });
 
     // Notification WhatsApp optionnelle
     const cbPhone = process.env.CALLMEBOT_PHONE;
     const cbApiKey = process.env.CALLMEBOT_APIKEY;
     if (cbPhone && cbApiKey) {
-      const text = `🔒 Réservation ${vehicule}\n${nom} — ${telephone}\nRappel : ${rappel}`;
+      const text = dossier
+        ? `📄 Dossier ${vehicule}\n${nom} — ${telephone}\nRappel : ${rappel}`
+        : `🔒 Réservation ${vehicule}\n${nom} — ${telephone}\nRappel : ${rappel}`;
       await fetch(
         `https://api.callmebot.com/whatsapp.php?phone=${cbPhone}&text=${encodeURIComponent(text)}&apikey=${cbApiKey}`
       ).catch(() => {});
