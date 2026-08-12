@@ -29,6 +29,22 @@ const DOC_LABELS: Record<string, string> = {
   "demande-immat.jpg":      "Demande d'immatriculation",
 };
 
+// Une pièce jointe peut être une photo (facture scannée) ou un fichier
+// bureautique (PDF de dossier, Word…). Même règle que le back-office : seules
+// les images s'affichent en vignette et dans la visionneuse, le reste s'ouvre
+// dans un onglet — un PDF dans une balise <img> ne rend qu'une icône cassée.
+const DOC_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "tiff", "tif", "bmp", "avif"];
+
+function fileExt(nameOrUrl: string) {
+  const clean = nameOrUrl.split(/[?#]/)[0];
+  const base = clean.substring(clean.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  return dot >= 0 ? base.slice(dot + 1).toLowerCase() : "";
+}
+function isImageDoc(url: string) {
+  return DOC_IMAGE_EXTS.includes(fileExt(url));
+}
+
 const VISIBLE_COUNT = 5;
 
 export default function EntretienDocumentsSection({
@@ -70,9 +86,22 @@ export default function EntretienDocumentsSection({
       }),
     [documents]
   );
+  // La visionneuse plein écran ne parcourt que les photos : les autres fichiers
+  // s'ouvrent dans un onglet, ils n'ont pas leur place dans le carrousel.
+  const imageDocs = useMemo(() => docs.filter((d) => isImageDoc(d.url)), [docs]);
+
   // linkedDoc peut être une URL complète (nouveau) ou un nom de fichier (legacy)
-  const findDocIndex = (ref: string) =>
-    docs.findIndex((d) => d.url === ref || d.url.endsWith("/" + ref));
+  const findDoc = (ref: string) =>
+    docs.find((d) => d.url === ref || d.url.endsWith("/" + ref));
+
+  function openDoc(doc: { url: string; label: string }) {
+    if (isImageDoc(doc.url)) {
+      const idx = imageDocs.indexOf(doc);
+      if (idx >= 0) setLightboxIndex(idx);
+    } else {
+      window.open(doc.url, "_blank", "noopener,noreferrer");
+    }
+  }
 
   // Collapse only if it hides at least 2 entries
   const collapsible = maintenance.length > VISIBLE_COUNT + 1;
@@ -102,10 +131,16 @@ export default function EntretienDocumentsSection({
     if (valid) {
       setUnlocked(true);
       setError(false);
-      // If user clicked a linked entry before unlocking, open it now
+      // If user clicked a linked entry before unlocking, open it now.
+      // Réservé aux photos : un onglet ouvert après la vérification du mot de
+      // passe serait bloqué comme pop-up. Pour un PDF, le visiteur retrouve la
+      // tuile du fichier juste en dessous.
       if (pendingDoc) {
-        const idx = findDocIndex(pendingDoc);
-        if (idx >= 0) setLightboxIndex(idx);
+        const doc = findDoc(pendingDoc);
+        if (doc && isImageDoc(doc.url)) {
+          const idx = imageDocs.indexOf(doc);
+          if (idx >= 0) setLightboxIndex(idx);
+        }
         setPendingDoc(null);
       }
     } else {
@@ -116,8 +151,8 @@ export default function EntretienDocumentsSection({
 
   function handleLinkedEntryClick(linkedDoc: string) {
     if (isUnlocked) {
-      const idx = findDocIndex(linkedDoc);
-      if (idx >= 0) setLightboxIndex(idx);
+      const doc = findDoc(linkedDoc);
+      if (doc) openDoc(doc);
     } else {
       setPendingDoc(linkedDoc);
       // Scroll password form into view and focus it
@@ -130,11 +165,11 @@ export default function EntretienDocumentsSection({
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
   const goPrev = useCallback(() => {
-    setLightboxIndex((i) => (i !== null ? (i - 1 + docs.length) % docs.length : null));
-  }, [docs.length]);
+    setLightboxIndex((i) => (i !== null ? (i - 1 + imageDocs.length) % imageDocs.length : null));
+  }, [imageDocs.length]);
   const goNext = useCallback(() => {
-    setLightboxIndex((i) => (i !== null ? (i + 1) % docs.length : null));
-  }, [docs.length]);
+    setLightboxIndex((i) => (i !== null ? (i + 1) % imageDocs.length : null));
+  }, [imageDocs.length]);
 
   useEffect(() => {
     if (lightboxIndex === null) return;
@@ -147,7 +182,7 @@ export default function EntretienDocumentsSection({
     return () => window.removeEventListener("keydown", onKey);
   }, [lightboxIndex, goPrev, goNext, closeLightbox]);
 
-  const currentDoc = lightboxIndex !== null ? docs[lightboxIndex] : null;
+  const currentDoc = lightboxIndex !== null ? imageDocs[lightboxIndex] : null;
   const currentLabel = currentDoc?.label ?? "";
 
   return (
@@ -173,7 +208,7 @@ export default function EntretienDocumentsSection({
           >
             {currentLabel}
             <span className="ml-4 opacity-50">
-              {lightboxIndex + 1} / {docs.length}
+              {lightboxIndex + 1} / {imageDocs.length}
             </span>
           </div>
           <button
@@ -269,7 +304,7 @@ export default function EntretienDocumentsSection({
           <div style={{ border: "1px solid rgba(107,159,238,0.18)" }}>
             {visibleEntries.map((entry, i) => {
               // Lien actif seulement si le document référencé existe encore (pas de clic mort)
-              const isLinked = entry.linkedDoc ? findDocIndex(entry.linkedDoc) >= 0 : false;
+              const isLinked = entry.linkedDoc ? Boolean(findDoc(entry.linkedDoc)) : false;
               const isCT = /contrôle technique|ct favorable/i.test(entry.operation);
               return (
                 <div
@@ -412,25 +447,71 @@ export default function EntretienDocumentsSection({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {docs.map((doc, i) => (
-                <div
-                  key={doc.url}
-                  style={{ backgroundColor: "#0D1F3C", cursor: "pointer" }}
-                  onClick={() => setLightboxIndex(i)}
-                >
+              {docs.map((doc) => {
+                const header = (
                   <p
                     className="text-[10px] tracking-[0.25em] uppercase px-4 py-3"
                     style={{ color: "#C8D8EE", borderBottom: "1px solid #1B3055" }}
                   >
                     {doc.label}
                   </p>
-                  <img
-                    src={doc.url}
-                    alt={doc.label}
-                    className="w-full h-auto transition-opacity hover:opacity-80"
-                  />
-                </div>
-              ))}
+                );
+                // Photo : vignette cliquable qui ouvre la visionneuse.
+                if (isImageDoc(doc.url)) {
+                  return (
+                    <div
+                      key={doc.url}
+                      style={{ backgroundColor: "#0D1F3C", cursor: "pointer" }}
+                      onClick={() => openDoc(doc)}
+                    >
+                      {header}
+                      <img
+                        src={doc.url}
+                        alt={doc.label}
+                        className="w-full h-auto transition-opacity hover:opacity-80"
+                      />
+                    </div>
+                  );
+                }
+                // PDF ou bureautique : tuile lisible qui ouvre le fichier dans
+                // un onglet. Un vrai lien plutôt qu'un window.open, pour rester
+                // ouvrable au clic-droit et échapper aux bloqueurs de pop-up.
+                const ext = fileExt(doc.url);
+                return (
+                  <a
+                    key={doc.url}
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                    style={{ backgroundColor: "#0D1F3C" }}
+                  >
+                    {header}
+                    <div className="flex flex-col items-center justify-center gap-3 px-4 py-12 transition-opacity group-hover:opacity-80">
+                      <span style={{ fontSize: "34px", lineHeight: 1 }}>📄</span>
+                      {ext && (
+                        <span
+                          className="text-[10px] tracking-[0.2em] uppercase font-bold px-2.5 py-1"
+                          style={{
+                            color: "#6B9FEE",
+                            backgroundColor: "rgba(107,159,238,0.12)",
+                            border: "1px solid rgba(107,159,238,0.3)",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {ext}
+                        </span>
+                      )}
+                      <span
+                        className="text-[12px] tracking-[0.15em] uppercase font-semibold"
+                        style={{ color: "#6B9FEE" }}
+                      >
+                        Ouvrir le document ↗
+                      </span>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>
