@@ -837,7 +837,7 @@ export const fr = {
     dossierCta: "Recevoir le dossier complet",
     testDriveLabel: "Essai disponible sur rendez-vous",
     ctaTitle: "Contactez Intelligence Automobile pour une présentation complète.",
-    ctaSubtitle: "Inspection, financement, immatriculation : nous gérons tout.",
+    ctaSubtitle: "Inspection, financement, immatriculation : nous prenons en charge chaque étape.",
     soldMsg: "Ce véhicule a déjà trouvé preneur. Découvrez notre stock ou lancez une recherche personnalisée.",
     viewStock: "Voir le stock disponible",
     searchCta: "Lancer une recherche personnalisée",

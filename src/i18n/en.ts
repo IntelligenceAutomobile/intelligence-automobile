@@ -834,7 +834,7 @@ export const en: Translations = {
     dossierCta: "Receive the full file",
     testDriveLabel: "Test drive available by appointment",
     ctaTitle: "Contact Intelligence Automobile for a full presentation.",
-    ctaSubtitle: "Inspection, financing, registration: we handle everything.",
+    ctaSubtitle: "Inspection, financing, registration: we take care of every step.",
     soldMsg: "This vehicle has already found a buyer. Browse our stock or start a custom search.",
     viewStock: "View available stock",
     searchCta: "Start a custom search",
