@@ -556,7 +556,10 @@ export default function AudienceClient({
                         </span>
                         {v.nouveau && <Tag tone="success">Nouveau</Tag>}
                       </div>
-                      <div className="text-[11px] truncate mt-0.5" style={{ color: T.muted }}>
+                      {/* La ligne de détail se replie sur téléphone plutôt que
+                          de perdre l'origine et la date au bout des points de
+                          suspension. */}
+                      <div className="text-[11px] sm:truncate mt-0.5" style={{ color: T.muted }}>
                         {v.appareil}
                         {v.pays ? ` · ${v.pays}` : ""} · {v.origine} · 1ʳᵉ visite le {v.premiereVisite}
                       </div>
