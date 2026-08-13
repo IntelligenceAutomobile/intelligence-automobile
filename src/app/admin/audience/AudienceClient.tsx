@@ -6,7 +6,7 @@
 // les libellés et les anciennetés arrivent déjà écrits par la page serveur.
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Copy, Check, Link2 } from "lucide-react";
+import { Copy, Check, ChevronDown, Link2 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { T, CHART, AdminPage, PageHeader, Tag, fieldClass, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle } from "../ui";
 import { AreaChart, Donut, KpiTile } from "../charts";
@@ -30,6 +30,37 @@ export type LigneLien = { src: string; label: string; visites: number; part: num
 export type LignePage = { path: string; label: string; pages: number; arrivees: number; part: number };
 export type LigneProvenance = { referrer: string; canal: string; visites: number; part: number };
 export type Repartition = { label: string; valeur: number };
+/** Une visite dépliée : son moment, son origine et les pages dans l'ordre. */
+export type SessionVisiteur = {
+  id: string;
+  quand: string;
+  anciennete: string;
+  origine: string;
+  /** Visite entamée avant la période affichée : le début manque à l'écran. */
+  partielle: boolean;
+  pages: string[];
+  /** Pages au-delà de la borne d'affichage, à annoncer plutôt qu'à taire. */
+  pagesMasquees: number;
+};
+
+export type LigneVisiteur = {
+  id: string;
+  /** Numéro d'ordre d'apparition, stable d'une période à l'autre. */
+  numero: number;
+  appareil: string;
+  pays: string;
+  /** Origine de la toute première venue, déjà en libellé lisible. */
+  origine: string;
+  premiereVisite: string;
+  /** Visites comptées sur tout l'historique gardé, pas seulement la période. */
+  visitesTotal: number;
+  pagesPeriode: number;
+  derniere: string;
+  nouveau: boolean;
+  sessions: SessionVisiteur[];
+  sessionsMasquees: number;
+};
+
 export type LigneJournal = {
   id: string;
   heure: string;
@@ -175,6 +206,8 @@ export default function AudienceClient({
   provenances,
   appareils,
   canaux,
+  visiteurs,
+  visiteursAutres,
   dernieres,
   depuis,
 }: {
@@ -188,6 +221,8 @@ export default function AudienceClient({
   provenances: LigneProvenance[];
   appareils: Repartition[];
   canaux: Repartition[];
+  visiteurs: LigneVisiteur[];
+  visiteursAutres: number;
   dernieres: LigneJournal[];
   depuis: string;
 }) {
@@ -200,6 +235,21 @@ export default function AudienceClient({
   const [marqueur, setMarqueur] = useState("leboncoin");
   const [versFormulaire, setVersFormulaire] = useState(true);
   const [copie, setCopie] = useState(false);
+
+  // Vue Visiteurs : la ligne dépliée, et la copie du lien d'exclusion.
+  const [visiteurOuvert, setVisiteurOuvert] = useState<string | null>(null);
+  const [copieMoi, setCopieMoi] = useState(false);
+
+  async function copierLienMoi() {
+    try {
+      await navigator.clipboard.writeText(`${SITE}/moi`);
+      setCopieMoi(true);
+      toast.success("Lien copié, à ouvrir sur l'appareil à exclure");
+      setTimeout(() => setCopieMoi(false), 2000);
+    } catch {
+      toast.error("La copie a échoué, tapez l'adresse à la main");
+    }
+  }
 
   const pageChoisie = PAGES_PUBLIQUES.find((p) => p.path === page) ?? PAGES_PUBLIQUES[0];
   const lien = useMemo(() => {
@@ -484,8 +534,120 @@ export default function AudienceClient({
         </Carte>
       </div>
 
+      {/* ── Visiteurs ── */}
+      <div className="mb-5">
+        <Carte titre="Visiteurs" indice="Un numéro anonyme par appareil, reconnu à chacun de ses retours" delai={11}>
+          {visiteurs.length === 0 ? (
+            <Vide message="Les premiers visiteurs apparaîtront ici." />
+          ) : (
+            <ul>
+              {visiteurs.map((v) => (
+                <li key={v.id} style={{ borderTop: `1px solid ${T.surfaceAlt}` }}>
+                  <button
+                    type="button"
+                    onClick={() => setVisiteurOuvert(visiteurOuvert === v.id ? null : v.id)}
+                    aria-expanded={visiteurOuvert === v.id}
+                    className="w-full text-left px-3 py-2.5 flex items-center gap-3 min-w-0"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-medium" style={{ color: T.text }}>
+                          Visiteur n° {v.numero}
+                        </span>
+                        {v.nouveau && <Tag tone="success">Nouveau</Tag>}
+                      </div>
+                      <div className="text-[11px] truncate mt-0.5" style={{ color: T.muted }}>
+                        {v.appareil}
+                        {v.pays ? ` · ${v.pays}` : ""} · {v.origine} · 1ʳᵉ visite le {v.premiereVisite}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div
+                        className="text-sm font-semibold whitespace-nowrap"
+                        style={{ color: T.text, fontVariantNumeric: "tabular-nums" }}
+                      >
+                        {formatNumber(v.visitesTotal)} visite{v.visitesTotal > 1 ? "s" : ""} ·{" "}
+                        {formatNumber(v.pagesPeriode)} page{v.pagesPeriode > 1 ? "s" : ""}
+                      </div>
+                      <div className="text-[11px]" style={{ color: T.muted }}>{v.derniere}</div>
+                    </div>
+                    <ChevronDown
+                      size={14}
+                      style={{
+                        color: T.muted,
+                        flexShrink: 0,
+                        transform: visiteurOuvert === v.id ? "rotate(180deg)" : "none",
+                        transition: "transform 150ms",
+                      }}
+                    />
+                  </button>
+
+                  {visiteurOuvert === v.id && (
+                    <div className="px-3 pb-3 space-y-2">
+                      {v.sessions.map((s) => (
+                        <div
+                          key={s.id}
+                          className="px-3 py-2"
+                          style={{ backgroundColor: T.float, border: `1px solid ${T.border}` }}
+                        >
+                          <div className="text-[11px] mb-1" style={{ color: T.muted }}>
+                            {s.quand} · {s.anciennete} · {s.origine}
+                            {s.partielle && " · suite d'une visite entamée avant la période"}
+                          </div>
+                          <div className="text-[12px] leading-relaxed" style={{ color: T.textDim }}>
+                            {s.pages.join(" → ")}
+                            {s.pagesMasquees > 0 && (
+                              <span style={{ color: T.muted }}>
+                                {" "}→ … et {s.pagesMasquees} page{s.pagesMasquees > 1 ? "s" : ""} de plus
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {v.sessionsMasquees > 0 && (
+                        <p className="text-[11px]" style={{ color: T.muted }}>
+                          Et {v.sessionsMasquees} visite{v.sessionsMasquees > 1 ? "s" : ""} plus{" "}
+                          {v.sessionsMasquees > 1 ? "anciennes" : "ancienne"} sur la période.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {visiteursAutres > 0 && (
+            <p className="text-[11px] mt-3 px-3" style={{ color: T.muted }}>
+              La liste montre les {visiteurs.length} plus récents ; {formatNumber(visiteursAutres)}{" "}
+              autre{visiteursAutres > 1 ? "s" : ""} visiteur{visiteursAutres > 1 ? "s" : ""} sur la période.
+            </p>
+          )}
+
+          <div
+            className="mt-4 pt-4 flex flex-wrap items-center gap-3"
+            style={{ borderTop: `1px solid ${T.surfaceAlt}` }}
+          >
+            <p className="text-[11px] flex-1" style={{ color: T.muted, minWidth: 220 }}>
+              Vos appareils connectés au back-office restent déjà hors du comptage. Pour un téléphone
+              ou un poste déconnecté, ouvrez une fois la page {SITE.replace("https://", "")}/moi sur
+              l&apos;appareil : ses visites sortent des chiffres, les passées comme les futures.
+            </p>
+            <button
+              type="button"
+              onClick={copierLienMoi}
+              className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase px-3 py-2 border flex-shrink-0 transition-colors"
+              style={{ borderColor: T.border, color: T.textDim }}
+            >
+              {copieMoi ? <Check size={12} /> : <Copy size={12} />}
+              Copier le lien d&apos;exclusion
+            </button>
+          </div>
+        </Carte>
+      </div>
+
       {/* ── Journal ── */}
-      <Carte titre="Dernières visites" indice="Les trente derniers passages, tous liens confondus" delai={11}>
+      <Carte titre="Dernières visites" indice="Les trente derniers passages, tous liens confondus" delai={12}>
         {dernieres.length === 0 ? (
           <Vide message="Le journal se remplira dès la première visite." />
         ) : (

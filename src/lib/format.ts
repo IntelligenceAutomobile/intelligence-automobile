@@ -56,5 +56,13 @@ export function timeAgo(iso: string, now: Date = new Date()): string {
   if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
   if (s < 172800) return "hier";
   if (s < 2592000) return `il y a ${Math.floor(s / 86400)} j`;
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+  // Jour de Paris explicite : le serveur tourne en UTC, une visite de 0 h 30
+  // s'écrirait sinon à la date de la veille, à côté d'une heure de Paris qui
+  // dit le contraire.
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/Paris",
+  });
 }

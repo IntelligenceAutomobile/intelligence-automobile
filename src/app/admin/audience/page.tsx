@@ -18,6 +18,7 @@ import AudienceClient, {
   type LigneLien,
   type LignePage,
   type LigneProvenance,
+  type LigneVisiteur,
   type Repartition,
 } from "./AudienceClient";
 
@@ -27,10 +28,20 @@ const LIGNES_TABLEAU = 12;
 // Journal : de quoi voir la dernière heure d'un site qui vit, sans faire de la
 // page une liste à faire défiler.
 const LIGNES_JOURNAL = 30;
+// Vue par visiteur : les plus récemment vus, avec pour chacun ses dernières
+// visites dépliables. Les bornes gardent la page légère quand le site vivra.
+const VISITEURS_LISTE = 30;
+const SESSIONS_PAR_VISITEUR = 10;
+const PAGES_PAR_SESSION = 25;
 
 /** Jour de Paris décalé de n jours, au format YYYY-MM-DD. */
 function jourAvant(today: string, n: number): string {
   return new Date(Date.parse(`${today}T00:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** Jour de Paris d'un instant, « 2026-08-03 ». */
+function jourParisDe(d: Date): string {
+  return parisDay(d).toISOString().slice(0, 10);
 }
 
 /** « 2026-08-03 » → « 03/08 ». */
@@ -92,6 +103,8 @@ export default async function AudiencePage({
     parCanal,
     journal,
     premiere,
+    lignesVisiteurs,
+    numerotation,
   ] = await Promise.all([
     // Une visite se compte sur sa première page : `isEntry` évite de confondre
     // un visiteur curieux qui ouvre huit fiches avec huit visiteurs.
@@ -102,9 +115,12 @@ export default async function AudiencePage({
     }),
     prisma.pageView.count({ where: { day: { gte: debut }, isEntry: true } }),
     prisma.pageView.count({ where: { day: { gte: debut } } }),
+    // Le filtre sur l'identifiant écarte les lignes qui n'en portent pas (les
+    // clics du lien d'avis) : sans lui, elles formeraient un « visiteur » de
+    // plus dans la tuile.
     prisma.pageView.groupBy({
       by: ["visitorId"],
-      where: { day: { gte: debut }, isEntry: true },
+      where: { day: { gte: debut }, isEntry: true, visitorId: { not: "" } },
     }),
     prisma.pageView.count({ where: { day: { gte: debut }, isEntry: true, isNew: true } }),
     prisma.pageView.count({ where: { day: today, isEntry: true } }),
@@ -159,6 +175,34 @@ export default async function AudiencePage({
       },
     }),
     prisma.pageView.findFirst({ orderBy: { createdAt: "asc" }, select: { day: true } }),
+    // Toutes les lignes de la période, par visiteur : la vue « Visiteurs » se
+    // construit en mémoire, la table se lit une fois.
+    prisma.pageView.findMany({
+      where: { day: { gte: debut }, visitorId: { not: "" } },
+      orderBy: { createdAt: "asc" },
+      select: {
+        visitorId: true,
+        sessionId: true,
+        path: true,
+        day: true,
+        createdAt: true,
+        channel: true,
+        src: true,
+        referrer: true,
+        device: true,
+        country: true,
+        isEntry: true,
+      },
+    }),
+    // Numéro d'ordre de chaque visiteur : le premier navigateur jamais vu porte
+    // le n° 1. Le numéro tient d'une période à l'autre ; il recule d'un cran
+    // pour les suivants quand un visiteur antérieur disparaît (exclusion /moi,
+    // ou les treize mois de rétention qui effacent les plus anciens).
+    prisma.pageView.groupBy({
+      by: ["visitorId"],
+      where: { visitorId: { not: "" } },
+      _min: { createdAt: true },
+    }),
   ]);
 
   /* ── Courbe ──
@@ -282,6 +326,100 @@ export default async function AudiencePage({
     nouveau: v.isNew,
   }));
 
+  /* ── Visiteurs ──
+     Les lignes de la période se regroupent par identifiant, puis l'historique
+     complet des plus récents vient dire depuis quand chacun revient. */
+  type LignePeriode = (typeof lignesVisiteurs)[number];
+  const parVisiteur = new Map<string, LignePeriode[]>();
+  for (const l of lignesVisiteurs) {
+    const existantes = parVisiteur.get(l.visitorId);
+    if (existantes) existantes.push(l);
+    else parVisiteur.set(l.visitorId, [l]);
+  }
+
+  // Les lignes arrivent triées par date : la dernière de chaque groupe est la
+  // plus récente, et c'est elle qui ordonne la liste.
+  const idsRecents = [...parVisiteur.entries()]
+    .sort(
+      (a, b) =>
+        b[1][b[1].length - 1].createdAt.getTime() - a[1][a[1].length - 1].createdAt.getTime()
+    )
+    .slice(0, VISITEURS_LISTE)
+    .map(([id]) => id);
+
+  // Tout l'historique d'entrées des visiteurs listés : première venue, origine
+  // d'origine et nombre de visites se comptent sur les treize mois gardés.
+  const entreesHistoriques = idsRecents.length
+    ? await prisma.pageView.findMany({
+        where: { visitorId: { in: idsRecents }, isEntry: true },
+        orderBy: { createdAt: "asc" },
+        select: { visitorId: true, createdAt: true, channel: true, src: true, referrer: true },
+      })
+    : [];
+
+  const numeros = new Map(
+    numerotation
+      .slice()
+      .sort((a, b) => (a._min.createdAt?.getTime() ?? 0) - (b._min.createdAt?.getTime() ?? 0))
+      .map((r, i) => [r.visitorId, i + 1] as const)
+  );
+
+  const origineDe = (v: { src: string; referrer: string; channel: string }) =>
+    v.src ? libelleSrc(v.src) : v.referrer || CANAL_LABEL[v.channel] || CANAL_LABEL.direct;
+
+  // Un identifiant absent de la numérotation est un visiteur effacé par /moi
+  // entre les deux lectures : sa ligne partirait au prochain rechargement, elle
+  // part tout de suite au lieu d'afficher « Visiteur n° 0 ».
+  const idsNumerotes = idsRecents.filter((id) => numeros.has(id));
+
+  const visiteursListe: LigneVisiteur[] = idsNumerotes.map((id) => {
+    const lignes = parVisiteur.get(id)!;
+    const historiques = entreesHistoriques.filter((e) => e.visitorId === id);
+    const premiereEntree = historiques[0];
+    const derniereLigne = lignes[lignes.length - 1];
+
+    const parSession = new Map<string, LignePeriode[]>();
+    for (const l of lignes) {
+      const s = parSession.get(l.sessionId);
+      if (s) s.push(l);
+      else parSession.set(l.sessionId, [l]);
+    }
+    const toutesSessions = [...parSession.values()].sort(
+      (a, b) => b[0].createdAt.getTime() - a[0].createdAt.getTime()
+    );
+    const sessionsGardees = toutesSessions.slice(0, SESSIONS_PAR_VISITEUR);
+
+    return {
+      id,
+      numero: numeros.get(id) ?? 0,
+      appareil: APPAREIL_LABEL[derniereLigne.device] ?? derniereLigne.device,
+      pays: derniereLigne.country,
+      origine: origineDe(premiereEntree ?? lignes[0]),
+      premiereVisite: etiquetteJour(
+        premiereEntree ? jourParisDe(premiereEntree.createdAt) : lignes[0].day
+      ),
+      visitesTotal: Math.max(1, historiques.length),
+      pagesPeriode: lignes.length,
+      derniere: timeAgo(derniereLigne.createdAt.toISOString(), maintenant),
+      nouveau: premiereEntree ? jourParisDe(premiereEntree.createdAt) >= debut : false,
+      sessions: sessionsGardees.map((s) => ({
+        id: s[0].sessionId,
+        quand: `${etiquetteJour(s[0].day)} à ${heureParis(s[0].createdAt)}`,
+        anciennete: timeAgo(s[0].createdAt.toISOString(), maintenant),
+        // Une visite entamée avant la période arrive sans ligne d'entrée : sa
+        // première page de la fenêtre porte alors l'origine, recopiée par les
+        // cookies de visite, et `partielle` le dit à l'écran plutôt que de
+        // laisser croire à une visite commencée là.
+        origine: origineDe(s.find((l) => l.isEntry) ?? s[0]),
+        partielle: !s[0].isEntry,
+        pages: s.slice(0, PAGES_PAR_SESSION).map((l) => libellePage(l.path)),
+        pagesMasquees: Math.max(0, s.length - PAGES_PAR_SESSION),
+      })),
+      sessionsMasquees: toutesSessions.length - sessionsGardees.length,
+    };
+  });
+  const visiteursAutres = Math.max(0, parVisiteur.size - idsRecents.length);
+
   return (
     <AudienceClient
       periode={periode}
@@ -294,6 +432,8 @@ export default async function AudiencePage({
       provenances={provenances}
       appareils={appareils}
       canaux={canaux}
+      visiteurs={visiteursListe}
+      visiteursAutres={visiteursAutres}
       dernieres={dernieres}
       depuis={premiere ? etiquetteJour(premiere.day) : ""}
     />

@@ -2,6 +2,7 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parisDay } from "@/lib/vehicules";
 import {
+  COOKIE_EXCLUSION,
   RETENTION_JOURS,
   canalDe,
   cheminMesurable,
@@ -31,6 +32,16 @@ const COOKIE = {
   path: "/",
 };
 
+// Les identifiants sont posés par crypto.randomUUID() : toute autre forme est
+// un cookie forgé. Le refuser ici garde la base aux dimensions prévues, un
+// cookie de 4 Ko rejoué en boucle gonflerait chaque ligne écrite.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** La valeur du cookie si elle a la forme d'un UUID, sinon rien. */
+function uuidOuRien(v: string | undefined): string {
+  return v && UUID.test(v) ? v : "";
+}
+
 export async function POST(req: NextRequest) {
   const vide = () => new NextResponse(null, { status: 204 });
 
@@ -52,6 +63,16 @@ export async function POST(req: NextRequest) {
   // à chaque page vue du site.
   if (req.cookies.get("ia_session")) return vide();
 
+  // Un appareil passé par la page /moi porte le cookie d'exclusion : c'est un
+  // téléphone ou un poste de l'équipe, ses visites restent dehors même
+  // déconnecté du back-office. Le cookie se re-pose au passage : l'exclusion
+  // glisse de treize mois à chaque visite au lieu d'expirer en silence.
+  if (req.cookies.get(COOKIE_EXCLUSION)) {
+    const reponse = vide();
+    reponse.cookies.set(COOKIE_EXCLUSION, "1", { ...COOKIE, maxAge: VIE_VISITEUR });
+    return reponse;
+  }
+
   const ua = req.headers.get("user-agent") ?? "";
   if (estRobot(ua)) return vide();
 
@@ -71,7 +92,7 @@ export async function POST(req: NextRequest) {
 
   // Première page de la visite : c'est là que l'origine se décide, et c'est
   // cette ligne qui comptera pour une visite.
-  const visiteEnCours = req.cookies.get("ia_vis")?.value ?? "";
+  const visiteEnCours = uuidOuRien(req.cookies.get("ia_vis")?.value);
   const isEntry = visiteEnCours === "";
 
   // L'origine de la première page suit le visiteur jusqu'à la dernière : un clic
@@ -83,7 +104,7 @@ export async function POST(req: NextRequest) {
     ? domaineDe(typeof corps.referrer === "string" ? corps.referrer : "", hote)
     : (req.cookies.get("ia_ref")?.value ?? "").slice(0, 60);
 
-  const vid = req.cookies.get("ia_vid")?.value ?? "";
+  const vid = uuidOuRien(req.cookies.get("ia_vid")?.value);
   const isNew = vid === "";
   const visitorId = vid || crypto.randomUUID();
   const sessionId = visiteEnCours || crypto.randomUUID();

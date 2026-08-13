@@ -4,8 +4,13 @@
 
 /* ── Ce qui reste hors du comptage ──
    La liste du robots.txt, à la lettre : le back-office, les routes techniques,
-   la vitrine de démarchage et les devis nominatifs. */
-export const CHEMINS_EXCLUS = ["/admin", "/api", "/demopro", "/devis"] as const;
+   la vitrine de démarchage, les devis nominatifs et la page d'exclusion. */
+export const CHEMINS_EXCLUS = ["/admin", "/api", "/demopro", "/devis", "/moi"] as const;
+
+/** Cookie posé par la page /moi : l'appareil qui le porte est celui d'un membre
+    de l'équipe, ses visites restent hors du comptage. Même durée que le cookie
+    visiteur : l'exclusion survit à toutes les visites qu'elle doit couvrir. */
+export const COOKIE_EXCLUSION = "ia_moi";
 
 /** Treize mois : le plafond accordé à une mesure d'audience interne, et la
     durée annoncée dans les mentions légales. */
