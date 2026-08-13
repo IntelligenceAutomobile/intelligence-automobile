@@ -731,9 +731,12 @@ model PageView {
 
   createdAt DateTime @default(now())
 
-  // Deux index seulement : la table s'écrit bien plus souvent qu'elle ne se lit,
-  // et chaque index supplémentaire est un coût à chaque page vue. `day, isEntry`
-  // sert tous les comptages de l'écran, `createdAt` sert le journal.
+  // Trois index, pas plus : la table s'écrit bien plus souvent qu'elle ne se
+  // lit, et chaque index supplémentaire est un coût à chaque page vue.
+  // `day, isEntry` sert tous les comptages de l'écran, `createdAt` sert le
+  // journal, `visitorId` sert la vue par visiteur et l'effacement de /moi
+  // (sans lui, chaque exclusion parcourait la table entière).
   @@index([day, isEntry])
   @@index([createdAt])
+  @@index([visitorId])
 }
