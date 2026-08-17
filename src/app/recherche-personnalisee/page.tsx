@@ -23,11 +23,14 @@ export default async function RecherchePage2() {
       <main style={{ backgroundColor: "#070F1E", color: "#F0F5FF" }}>
 
         {/* CSS : cadrage responsive — la photo est au format 3/2, donc au-delà de ce ratio
-            (desktop) elle se rogne en haut/bas et `center` suffit. En dessous (téléphone/tablette)
-            elle se rogne sur les côtés : on décale vers la droite pour garder l'écran de recherche
-            entier, avec l'arrière de la Porsche encore visible à gauche. */}
+            (desktop) elle se rogne en haut/bas : on vise 20 % depuis le haut pour que les
+            moniteurs (bande 22-65 % de la photo) restent entiers même sur une fenêtre large
+            et peu haute, où `center` coupait le haut de l'écran sous le menu. En dessous
+            (téléphone/tablette) elle se rogne sur les côtés : on décale vers la droite pour
+            garder l'écran de recherche entier, avec l'arrière de la Porsche encore visible
+            à gauche. */}
         <style dangerouslySetInnerHTML={{ __html: `
-          .ia-recherche-photo { object-position: center; }
+          .ia-recherche-photo { object-position: center 20%; }
           @media (max-aspect-ratio: 3/2) {
             .ia-recherche-photo { object-position: 62% 50%; }
           }
