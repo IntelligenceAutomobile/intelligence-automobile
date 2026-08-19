@@ -1,29 +1,16 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
-import { can, asRole } from "@/lib/roles";
-import { mailMode } from "@/lib/mailer";
-import MailingsClient from "./MailingsClient";
 
-export default async function MailingsPage({
+// L'écran Mailings a rejoint la Messagerie. Les liens « Répondre » déjà
+// ouverts et les habitudes continuent de fonctionner : tout est transmis.
+export default async function AncienneMailingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ a?: string; objet?: string }>;
 }) {
-  const session = await requireAdmin();
-  if (!session) redirect("/admin/login");
-  // Cet écran écrit à de vraies personnes : même réserve que l'écran Emails.
-  if (!can(asRole(session.admin.role), "settings")) redirect("/admin");
-
-  // « Répondre » depuis l'écran Réception arrive ici avec l'adresse et
-  // l'objet : la composition s'ouvre directement, préremplie.
-  const params = await searchParams;
-
-  return (
-    <MailingsClient
-      mode={mailMode()}
-      hasKey={Boolean((process.env.RESEND_API_KEY ?? "").trim())}
-      initialTo={(params.a ?? "").slice(0, 200)}
-      initialSubject={(params.objet ?? "").slice(0, 200)}
-    />
-  );
+  const p = await searchParams;
+  const qs = new URLSearchParams();
+  if (p.a) qs.set("a", p.a);
+  if (p.objet) qs.set("objet", p.objet);
+  const suffixe = qs.size > 0 ? `?${qs.toString()}` : "";
+  redirect(`/admin/messagerie${suffixe}`);
 }
