@@ -67,7 +67,7 @@ function puces(items: string[]): string {
 }
 
 function bouton(label: string, url: string): string {
-  return `<tr><td class="ia-pad" align="left" style="padding:22px 32px 0;"><table role="presentation" class="ia-btn" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td align="center" style="background-color:#6B9FEE;"><a href="${escapeHtml(url)}" style="display:inline-block;padding:15px 28px;color:#070F1E;font-size:13px;line-height:16px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;">${escapeHtml(label)}</a></td></tr></table></td></tr>`;
+  return `<tr><td class="ia-pad" align="left" style="padding:22px 32px 0;"><table role="presentation" class="ia-btn" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td align="center" bgcolor="#6B9FEE" style="background-color:#6B9FEE;background-image:linear-gradient(#6B9FEE,#6B9FEE);"><a href="${escapeHtml(url)}" style="display:inline-block;padding:15px 28px;color:#070F1E;font-size:13px;line-height:16px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;">${escapeHtml(label)}</a></td></tr></table></td></tr>`;
 }
 
 function signature(note: string): string {
@@ -77,7 +77,7 @@ function signature(note: string): string {
   return `<tr><td class="ia-pad" style="padding:30px 32px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td style="padding:26px 0 0;border-top:1px solid #1B3055;">
 <p style="margin:0 0 3px;color:#F0F5FF;font-size:16px;line-height:22px;font-weight:700;">C&eacute;sar Vachon</p>
 <p style="margin:0 0 16px;color:#6B9FEE;font-size:10px;line-height:16px;letter-spacing:0.3em;text-transform:uppercase;">Fondateur &middot; Intelligence Automobile</p>
-<p style="margin:0 0 5px;color:#C8D8EE;font-size:14px;line-height:22px;">T&eacute;l&eacute;phone et WhatsApp : <a href="tel:+33620243879" style="color:#6B9FEE;text-decoration:none;">+33 6 20 24 38 79</a></p>
+<p style="margin:0 0 5px;color:#C8D8EE;font-size:14px;line-height:22px;">T&eacute;l&eacute;phone et WhatsApp : <a href="https://wa.me/33620243879" style="color:#6B9FEE;text-decoration:none;">+33 6 20 24 38 79</a></p>
 <p style="margin:0 0 5px;color:#C8D8EE;font-size:14px;line-height:22px;"><a href="mailto:contact@intelligenceautomobile.com" style="color:#6B9FEE;text-decoration:none;">contact@intelligenceautomobile.com</a></p>
 <p style="margin:0 0 16px;color:#C8D8EE;font-size:14px;line-height:22px;"><a href="https://intelligenceautomobile.fr" style="color:#6B9FEE;text-decoration:none;">intelligenceautomobile.fr</a></p>
 ${extra}
@@ -117,7 +117,13 @@ ${c.titre.trim() ? `<h1 class="ia-titre" style="margin:0;color:#F0F5FF;font-size
 </td></tr>`
       : "";
 
+  // Blindage du fond sombre : certaines boîtes mail (Gmail sur téléphone en
+  // tête) repeignent les couleurs d'un email sombre et le rendent tout blanc.
+  // Trois parades cumulées : les métas color-scheme, l'attribut bgcolor
+  // historique, et un dégradé uni en image de fond, que ces boîtes ne
+  // retouchent jamais.
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">
 <style>
 body,table,td,a{-webkit-text-size-adjust:100%}
 img{border:0;height:auto;line-height:100%}
@@ -130,11 +136,11 @@ a{color:#6B9FEE}
 .ia-btn a{display:block!important;width:auto!important;text-align:center!important}
 }
 </style></head>
-<body style="margin:0;padding:0;background-color:#070F1E;">
+<body bgcolor="#070F1E" style="margin:0;padding:0;background-color:#070F1E;background-image:linear-gradient(#070F1E,#070F1E);">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#070F1E;font-size:1px;line-height:1px;">${escapeHtml(c.preheader)}&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background-color:#070F1E;"><tr><td align="center" style="padding:28px 12px;">
-<table role="presentation" class="ia-wrap" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px;border-collapse:collapse;background-color:#070F1E;font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;">
-<tr><td style="height:2px;line-height:2px;font-size:0;background-color:#6B9FEE;">&nbsp;</td></tr>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#070F1E" style="border-collapse:collapse;background-color:#070F1E;background-image:linear-gradient(#070F1E,#070F1E);"><tr><td align="center" style="padding:28px 12px;">
+<table role="presentation" class="ia-wrap" cellpadding="0" cellspacing="0" border="0" width="600" bgcolor="#070F1E" style="width:100%;max-width:600px;border-collapse:collapse;background-color:#070F1E;background-image:linear-gradient(#070F1E,#070F1E);font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;">
+<tr><td bgcolor="#6B9FEE" style="height:2px;line-height:2px;font-size:0;background-color:#6B9FEE;background-image:linear-gradient(#6B9FEE,#6B9FEE);">&nbsp;</td></tr>
 ${enTete}
 ${corps}
 ${signature(c.signatureNote)}
