@@ -107,6 +107,16 @@ export function renderMailing(c: MailingContent): string {
     })
     .join("");
 
+  // Un message vierge se passe d'en-tête : la petite ligne et le titre ne
+  // s'affichent que s'ils sont remplis.
+  const enTete =
+    c.kicker.trim() || c.titre.trim()
+      ? `<tr><td class="ia-pad" style="padding:28px 32px 0;">
+${c.kicker.trim() ? `<p style="margin:0 0 10px;color:#6B9FEE;font-size:10px;line-height:16px;letter-spacing:0.3em;text-transform:uppercase;">${escapeHtml(c.kicker)}</p>` : ""}
+${c.titre.trim() ? `<h1 class="ia-titre" style="margin:0;color:#F0F5FF;font-size:22px;line-height:30px;font-weight:800;letter-spacing:-0.02em;">${escapeHtml(c.titre)}</h1>` : ""}
+</td></tr>`
+      : "";
+
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body,table,td,a{-webkit-text-size-adjust:100%}
@@ -125,15 +135,28 @@ a{color:#6B9FEE}
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background-color:#070F1E;"><tr><td align="center" style="padding:28px 12px;">
 <table role="presentation" class="ia-wrap" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px;border-collapse:collapse;background-color:#070F1E;font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;">
 <tr><td style="height:2px;line-height:2px;font-size:0;background-color:#6B9FEE;">&nbsp;</td></tr>
-<tr><td class="ia-pad" style="padding:28px 32px 0;">
-<p style="margin:0 0 10px;color:#6B9FEE;font-size:10px;line-height:16px;letter-spacing:0.3em;text-transform:uppercase;">${escapeHtml(c.kicker)}</p>
-<h1 class="ia-titre" style="margin:0;color:#F0F5FF;font-size:22px;line-height:30px;font-weight:800;letter-spacing:-0.02em;">${escapeHtml(c.titre)}</h1>
-</td></tr>
+${enTete}
 ${corps}
 ${signature(c.signatureNote)}
 ${pied(c.motif)}
 </table></td></tr></table></body></html>`;
 }
+
+// ── Message vierge ──────────────────────────────────────────────────────────
+// Le point de départ par défaut de l'écran Mailings : un mail nu, habillé du
+// gabarit maison (filet, signature, pied légal) mais libre de tout texte.
+export const MAILING_VIERGE: MailingContent = {
+  subject: "",
+  preheader: "",
+  kicker: "",
+  titre: "",
+  blocks: [
+    { type: "paragraphe", text: "Bonjour," },
+    { type: "paragraphe", text: "" },
+  ],
+  signatureNote: "",
+  motif: "à la suite de nos échanges",
+};
 
 // ── Les trois modèles ───────────────────────────────────────────────────────
 // Textes validés le 19 août 2026. L'écran Mailings les charge tels quels et
