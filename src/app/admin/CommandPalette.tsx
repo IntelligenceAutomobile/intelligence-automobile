@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
   Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, FileBadge,
-  NotebookPen, FolderKanban, Undo2, BarChart3, type LucideIcon,
+  NotebookPen, FolderKanban, Undo2, BarChart3, ImagePlus, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
 import { formatDateFr, STATUS_LABEL, type QuoteStatus } from "@/lib/devis";
@@ -38,6 +38,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: Star, label: "Avis clients", hint: "Page", href: "/admin/avis" },
   { icon: MessagesSquare, label: "Atelier", hint: "Page", href: "/admin/atelier" },
   { icon: FolderKanban, label: "Projets", hint: "Page", href: "/admin/projets" },
+  { icon: ImagePlus, label: "Visuels", hint: "Page", href: "/admin/visuels" },
   { icon: NotebookPen, label: "Réunions", hint: "Page", href: "/admin/reunions" },
   { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes", cap: "finances" },
   { icon: UserCog, label: "Utilisateurs", hint: "Réglages", href: "/admin/utilisateurs", cap: "users" },

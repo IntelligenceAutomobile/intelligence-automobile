@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
   CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge,
-  NotebookPen, FolderKanban, Check, MailWarning, Info, BarChart3, type LucideIcon,
+  NotebookPen, FolderKanban, Check, MailWarning, Info, BarChart3, ImagePlus, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -62,6 +62,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     items: [
       { icon: MessagesSquare, label: "Atelier", href: "/admin/atelier", revu: "29 juillet 2026" },
       { icon: FolderKanban, label: "Projets", href: "/admin/projets" },
+      { icon: ImagePlus, label: "Visuels", href: "/admin/visuels" },
       { icon: NotebookPen, label: "Réunions", href: "/admin/reunions", revu: "29 juillet 2026" },
       { icon: Wallet, label: "Comptes", href: "/admin/comptes", cap: "finances" },
     ],
