@@ -79,7 +79,7 @@ function signature(note: string): string {
 <p style="margin:0 0 16px;color:#6B9FEE;font-size:10px;line-height:16px;letter-spacing:0.3em;text-transform:uppercase;">Fondateur &middot; Intelligence Automobile</p>
 <p style="margin:0 0 5px;color:#C8D8EE;font-size:14px;line-height:22px;">T&eacute;l&eacute;phone et WhatsApp : <a href="tel:+33620243879" style="color:#6B9FEE;text-decoration:none;">+33 6 20 24 38 79</a></p>
 <p style="margin:0 0 5px;color:#C8D8EE;font-size:14px;line-height:22px;"><a href="mailto:contact@intelligenceautomobile.com" style="color:#6B9FEE;text-decoration:none;">contact@intelligenceautomobile.com</a></p>
-<p style="margin:0 0 16px;color:#C8D8EE;font-size:14px;line-height:22px;"><a href="https://intelligenceautomobile.com" style="color:#6B9FEE;text-decoration:none;">intelligenceautomobile.com</a></p>
+<p style="margin:0 0 16px;color:#C8D8EE;font-size:14px;line-height:22px;"><a href="https://intelligenceautomobile.fr" style="color:#6B9FEE;text-decoration:none;">intelligenceautomobile.fr</a></p>
 ${extra}
 <p style="margin:0;color:#7C92B5;font-size:11px;line-height:18px;">SASU Intelligence Automobile au capital de 2&nbsp;000&nbsp;&euro;, 30 rue Pouchet, 75017 Paris.<br>RCS Paris 108&nbsp;086&nbsp;646 &middot; SIRET 108&nbsp;086&nbsp;646&nbsp;00016 &middot; TVA FR08108086646.</p>
 </td></tr></table></td></tr>`;
@@ -173,7 +173,7 @@ export const MAILING_TEMPLATES: MailingTemplate[] = [
           text: "Intelligence Automobile est une SASU immatriculée au RCS de Paris (108 086 646), couverte par une assurance responsabilité civile professionnelle.",
         },
         { type: "paragraphe", text: "Notre vitrine vous montre la présentation réservée à vos véhicules :" },
-        { type: "bouton", label: "Voir notre vitrine", url: "https://intelligenceautomobile.com" },
+        { type: "bouton", label: "Voir notre vitrine", url: "https://intelligenceautomobile.fr" },
         {
           type: "paragraphe",
           text: "Si vous souhaitez travailler avec nous, ou simplement en savoir plus, répondez à ce message : nous serons ravis d'un premier échange au téléphone, à l'heure qui vous arrange.",
@@ -222,7 +222,7 @@ export const MAILING_TEMPLATES: MailingTemplate[] = [
           type: "paragraphe",
           text: "Curieux de savoir ce que vaut votre voiture aujourd'hui ? Décrivez-la en deux minutes, nous revenons vers vous avec un prix et un plan de vente.",
         },
-        { type: "bouton", label: "Recevoir mon estimation", url: "https://intelligenceautomobile.com/revente-sur-mesure" },
+        { type: "bouton", label: "Recevoir mon estimation", url: "https://intelligenceautomobile.fr/revente-sur-mesure" },
       ],
       signatureNote: "Estimation gratuite · Honoraires annoncés avant tout accord · Règlement le jour de la vente conclue",
       motif: "à la suite de votre annonce publiée en ligne et de votre accord pour recevoir nos informations",
@@ -265,7 +265,7 @@ export const MAILING_TEMPLATES: MailingTemplate[] = [
           type: "paragraphe",
           text: "Vous avez un projet, même encore flou ? Décrivez la voiture qui vous ferait plaisir dans notre formulaire de recherche personnalisée. Et si vous préférez en parler de vive voix, nous serons ravis d'un premier échange au téléphone : une simple prise de contact, qui vous laisse entièrement libre de la suite.",
         },
-        { type: "bouton", label: "Lancer ma recherche", url: "https://intelligenceautomobile.com/recherche-personnalisee" },
+        { type: "bouton", label: "Lancer ma recherche", url: "https://intelligenceautomobile.fr/recherche-personnalisee" },
       ],
       signatureNote:
         "Intelligence Automobile intervient en qualité d'importateur et de mandataire automobile. Les prestations de financement et d'assurance relèvent de partenaires immatriculés à l'ORIAS, seuls habilités à les proposer.",
