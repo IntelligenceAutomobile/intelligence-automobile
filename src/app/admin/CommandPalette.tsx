@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
   Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, FileBadge,
-  NotebookPen, Undo2, BarChart3, type LucideIcon,
+  NotebookPen, FolderKanban, Undo2, BarChart3, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
 import { formatDateFr, STATUS_LABEL, type QuoteStatus } from "@/lib/devis";
@@ -22,6 +22,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: Plus, label: "Nouveau devis", hint: "Action", href: "/admin/devis/nouveau" },
   { icon: Plus, label: "Nouvelle réunion", hint: "Action", href: "/admin/reunions?nouvelle=1" },
   { icon: Plus, label: "Nouvelle estimation", hint: "Action", href: "/admin/reprises/nouvelle" },
+  { icon: Plus, label: "Nouveau projet", hint: "Action", href: "/admin/projets?nouveau=1" },
   { icon: LayoutDashboard, label: "Tableau de bord", hint: "Page", href: "/admin" },
   { icon: BarChart3, label: "Audience", hint: "Page", href: "/admin/audience", prive: true },
   { icon: Car, label: "Stock", hint: "Page", href: "/admin/vehicules" },
@@ -36,6 +37,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: FileBadge, label: "Immatriculations", hint: "Page", href: "/admin/immatriculations" },
   { icon: Star, label: "Avis clients", hint: "Page", href: "/admin/avis" },
   { icon: MessagesSquare, label: "Atelier", hint: "Page", href: "/admin/atelier" },
+  { icon: FolderKanban, label: "Projets", hint: "Page", href: "/admin/projets" },
   { icon: NotebookPen, label: "Réunions", hint: "Page", href: "/admin/reunions" },
   { icon: Wallet, label: "Comptes", hint: "Page", href: "/admin/comptes", cap: "finances" },
   { icon: UserCog, label: "Utilisateurs", hint: "Réglages", href: "/admin/utilisateurs", cap: "users" },

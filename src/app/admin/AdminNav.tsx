@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Car, FileText, Wallet, MessagesSquare, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Car, FileText, Wallet, MessagesSquare, FolderKanban, type LucideIcon } from "lucide-react";
 import { T } from "./ui";
 
 const LINKS: { href: string; label: string; exact: boolean; icon: LucideIcon }[] = [
@@ -11,6 +11,7 @@ const LINKS: { href: string; label: string; exact: boolean; icon: LucideIcon }[]
   { href: "/admin/devis", label: "Devis", exact: false, icon: FileText },
   { href: "/admin/comptes", label: "Comptes", exact: false, icon: Wallet },
   { href: "/admin/atelier", label: "Atelier", exact: false, icon: MessagesSquare },
+  { href: "/admin/projets", label: "Projets", exact: false, icon: FolderKanban },
 ];
 
 export default function AdminNav() {

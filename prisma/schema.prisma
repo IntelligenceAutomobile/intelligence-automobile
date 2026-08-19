@@ -740,3 +740,67 @@ model PageView {
   @@index([createdAt])
   @@index([visitorId])
 }
+
+// Projets d'équipe : les chantiers qui durent plusieurs jours ou semaines
+// (blog signature, mailings types, flyers, cartes de visite). Chaque projet
+// rassemble des propositions à soumettre au retour de l'autre : pouce, pouce
+// visuel par visuel, commentaires. Distinct de l'Atelier, qui reste le flux
+// des petites notes du quotidien.
+model Projet {
+  id           String        @id @default(cuid())
+  title        String
+  description  String        @default("")
+  status       String        @default("en_cours") // en_cours | en_pause | termine
+  author       String
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  propositions Proposition[]
+}
+
+model Proposition {
+  id          String    @id @default(cuid())
+  projetId    String
+  title       String    @default("")
+  content     String    @default("")
+  attachments String    @default("[]") // Attachment[] JSON (visuels + fichiers)
+  author      String
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  projet    Projet                @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  reactions PropositionReaction[]
+  comments  PropositionComment[]
+
+  @@index([projetId])
+}
+
+// Un pouce par personne : sur la proposition entière (imageUrl vide), ou sur
+// un visuel précis (imageUrl = adresse du visuel). value : 1 j'aime, -1 j'aime pas.
+model PropositionReaction {
+  id            String   @id @default(cuid())
+  propositionId String
+  imageUrl      String   @default("")
+  author        String
+  value         Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  proposition Proposition @relation(fields: [propositionId], references: [id], onDelete: Cascade)
+
+  @@unique([propositionId, imageUrl, author])
+}
+
+model PropositionComment {
+  id            String   @id @default(cuid())
+  propositionId String
+  content       String
+  attachments   String   @default("[]")
+  author        String
+  createdAt     DateTime @default(now())
+
+  proposition Proposition @relation(fields: [propositionId], references: [id], onDelete: Cascade)
+
+  @@index([propositionId])
+}

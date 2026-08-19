@@ -5,7 +5,7 @@ import { T, SectionCard, btnPrimaryClass, btnPrimaryStyle } from "@/app/admin/ui
 
 const NAMES = ["César", "Fab"];
 
-export default function NamePicker() {
+export default function NamePicker({ title = "Atelier — qui êtes-vous ?" }: { title?: string }) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -27,7 +27,7 @@ export default function NamePicker() {
 
   return (
     <div className="max-w-sm mx-auto px-6 py-16">
-      <SectionCard title="Atelier — qui êtes-vous ?">
+      <SectionCard title={title}>
         <p className="text-sm" style={{ color: T.muted }}>
           Sélectionnez votre nom : il sert à signer vos notes et commentaires.
         </p>
