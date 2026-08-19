@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, List, LayoutGrid, Eye, EyeOff, ExternalLink, Pencil, ClipboardList, X, Check,
   ChevronRight, ChevronUp, ChevronDown, AlertTriangle, Car, Undo2, Copy, Trash2,
-  SlidersHorizontal, Rows3, Keyboard,
+  SlidersHorizontal, Rows3, Keyboard, FileText,
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import {
@@ -24,6 +24,7 @@ import {
 import { T, Tag, StatusBadge, Thumb, fieldStyle, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../ui";
 import { useToast } from "../toast";
 import { ConfirmDialog } from "../confirm";
+import DocumentDialog from "./DocumentDialog";
 
 // Carnet d'écriture. Le back-office parle à l'API ; la démonstration publique
 // fournit le sien, qui écrit dans le bac à sable du visiteur.
@@ -130,7 +131,7 @@ const GROUPS: { value: GroupKey; label: string }[] = [
 ];
 
 /* Préférence de vue persistée, lue via useSyncExternalStore : le serveur rend
-   toujours "list", le client se synchronise sur localStorage sans effet. */
+   toujours "grid", le client se synchronise sur localStorage sans effet. */
 const VIEW_KEY = "admin_stock_view";
 // « compact » retire la vignette et la ligne de contexte : une quarantaine de
 // véhicules tiennent alors dans un écran.
@@ -147,9 +148,9 @@ function subscribeView(cb: () => void) {
 function readView(): View {
   try {
     const v = localStorage.getItem(VIEW_KEY);
-    return v === "grid" || v === "compact" ? v : "list";
+    return v === "list" || v === "compact" ? v : "grid";
   } catch {
-    return "list";
+    return "grid";
   }
 }
 function changeView(v: View) {
@@ -283,7 +284,7 @@ function MenuTitre({ children }: { children: React.ReactNode }) {
   return <div className="px-3 pt-2 pb-1 text-[10px] tracking-[0.14em] uppercase" style={{ color: T.border }}>{children}</div>;
 }
 
-function ContextMenu({ state, canDelete, base, publicBase, onClose, onStatus, onPublish, onDuplicate, onDelete }: {
+function ContextMenu({ state, canDelete, base, publicBase, onClose, onStatus, onPublish, onDuplicate, onDelete, onDocument }: {
   state: ContextMenuState;
   canDelete: boolean;
   base: string;
@@ -293,6 +294,7 @@ function ContextMenu({ state, canDelete, base, publicBase, onClose, onStatus, on
   onPublish: (v: StockItem) => void;
   onDuplicate: (v: StockItem) => void;
   onDelete: (v: StockItem) => void;
+  onDocument?: (v: StockItem) => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const { v } = state;
@@ -314,7 +316,7 @@ function ContextMenu({ state, canDelete, base, publicBase, onClose, onStatus, on
   }, [onClose]);
 
   // Le menu bascule vers la gauche et vers le haut au bord de l'écran.
-  const W = 224, H = 320;
+  const W = 224, H = 352;
   const left = Math.min(state.x, window.innerWidth - W - 8);
   const top = Math.min(state.y, Math.max(8, window.innerHeight - H - 8));
 
@@ -333,6 +335,7 @@ function ContextMenu({ state, canDelete, base, publicBase, onClose, onStatus, on
       <MenuItem onClose={onClose} label="Ouvrir le suivi" hint="S" onPick={() => { window.location.href = `${base}/${v.id}/suivi`; }} />
       {publicBase && <MenuItem onClose={onClose} label="Voir l'annonce" onPick={() => window.open(`${publicBase}/${v.id}`, "_blank")} />}
       <MenuItem onClose={onClose} label="Dupliquer" hint="D" onPick={() => onDuplicate(v)} />
+      {onDocument && <MenuItem onClose={onClose} label="Devis / Facture…" hint="F" onPick={() => onDocument(v)} />}
 
       <MenuSep />
       <MenuTitre>Statut</MenuTitre>
@@ -359,7 +362,7 @@ function ContextMenu({ state, canDelete, base, publicBase, onClose, onStatus, on
 }
 
 /* ── Feuille des raccourcis ── */
-function ShortcutSheet({ onClose }: { onClose: () => void }) {
+function ShortcutSheet({ onClose, facturation = false }: { onClose: () => void; facturation?: boolean }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
     window.addEventListener("keydown", onKey);
@@ -368,7 +371,14 @@ function ShortcutSheet({ onClose }: { onClose: () => void }) {
 
   const groupes: { titre: string; lignes: [string, string][] }[] = [
     { titre: "Chercher", lignes: [["/", "Aller dans la recherche"], ["Échap", "Effacer la recherche"]] },
-    { titre: "Agir sur la ligne survolée", lignes: [["E", "Modifier la fiche"], ["S", "Ouvrir le suivi"], ["P", "Publier ou masquer"], ["D", "Dupliquer"], ["Suppr", "Supprimer"]] },
+    {
+      titre: "Agir sur la ligne survolée",
+      lignes: [
+        ["E", "Modifier la fiche"], ["S", "Ouvrir le suivi"], ["P", "Publier ou masquer"], ["D", "Dupliquer"],
+        ...(facturation ? ([["F", "Devis ou facture"]] as [string, string][]) : []),
+        ["Suppr", "Supprimer"],
+      ],
+    },
     { titre: "Revenir", lignes: [["Ctrl Z", "Annuler la dernière action"], ["Échap", "Fermer un menu ou vider la sélection"]] },
     { titre: "Apprendre", lignes: [["?", "Cette feuille"], ["Clic droit", "Toutes les actions d'un véhicule"]] },
   ];
@@ -415,18 +425,31 @@ function ShortcutSheet({ onClose }: { onClose: () => void }) {
 }
 
 /* ── Actions d'une ligne ── */
-function RowActions({ v, canDelete, base, publicBase, onDuplicate, onDelete }: {
+function RowActions({ v, canDelete, base, publicBase, onDuplicate, onDelete, onDocument }: {
   v: StockItem;
   canDelete: boolean;
   base: string;
   publicBase: string | null;
   onDuplicate: (v: StockItem) => void;
   onDelete: (v: StockItem) => void;
+  onDocument?: (v: StockItem) => void;
 }) {
   const iconBtn = "adm-act inline-flex items-center justify-center transition-colors flex-shrink-0";
   const size = { width: 28, height: 28 };
   return (
     <>
+      {onDocument && (
+        <button
+          type="button"
+          title="Créer un devis ou une facture"
+          aria-label="Créer un devis ou une facture"
+          className={iconBtn}
+          style={{ ...size, color: T.muted }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDocument(v); }}
+        >
+          <FileText size={14} />
+        </button>
+      )}
       {publicBase && (
         <Link
           href={`${publicBase}/${v.id}`}
@@ -496,6 +519,7 @@ export default function StockList({
   writer = apiWriter,
   base = "/admin/vehicules",
   publicBase = "/vehicules",
+  facturation = false,
 }: {
   vehicles: StockItem[];
   initialFilter?: string;
@@ -510,6 +534,9 @@ export default function StockList({
   // pas d'annonce en ligne.
   base?: string;
   publicBase?: string | null;
+  // Action « Devis / Facture » sur chaque véhicule. Réservée au vrai
+  // back-office : la démonstration reste sans elle, ses fiches sont des exemples.
+  facturation?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -531,7 +558,9 @@ export default function StockList({
   const [undoItem, setUndoItem] = useState<{ label: string; run: () => void } | null>(null);
   const [confirmBulk, setConfirmBulk] = useState(false);
   const [confirmOne, setConfirmOne] = useState<StockItem | null>(null);
-  const view = useSyncExternalStore(subscribeView, readView, () => "list" as View);
+  // Véhicule pour lequel la fenêtre « Devis / Facture » est ouverte.
+  const [docFor, setDocFor] = useState<StockItem | null>(null);
+  const view = useSyncExternalStore(subscribeView, readView, () => "grid" as View);
   const searchRef = useRef<HTMLInputElement>(null);
   const lastClicked = useRef<string | null>(null);
 
@@ -768,6 +797,7 @@ export default function StockList({
       else if (e.key === "s" || e.key === "S") { e.preventDefault(); router.push(`${base}/${v.id}/suivi`); }
       else if (e.key === "p" || e.key === "P") { e.preventDefault(); togglePublished(v); }
       else if (e.key === "d" || e.key === "D") { e.preventDefault(); duplicate(v); }
+      else if ((e.key === "f" || e.key === "F") && facturation) { e.preventDefault(); setDocFor(v); }
       else if (e.key === "Delete" || e.key === "Backspace") {
         if (!canDelete) return;
         e.preventDefault();
@@ -776,7 +806,7 @@ export default function StockList({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undoItem, router, canDelete, base, togglePublished, duplicate]);
+  }, [undoItem, router, canDelete, base, togglePublished, duplicate, facturation]);
 
 
   /* ── Sélection ── */
@@ -1068,7 +1098,7 @@ export default function StockList({
         />
       ) : view === "grid" ? (
         <div className="@container">
-          <GridView rows={filtered} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={duplicate} onDelete={setConfirmOne} />
+          <GridView rows={filtered} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={duplicate} onDelete={setConfirmOne} onDocument={facturation ? setDocFor : undefined} />
         </div>
       ) : (
         // Les colonnes suivent la largeur du CADRE, pas celle de la fenêtre : la
@@ -1124,6 +1154,7 @@ export default function StockList({
                   onTogglePublished={togglePublished}
                   onDuplicate={duplicate}
                   onDelete={setConfirmOne}
+                  onDocument={facturation ? setDocFor : undefined}
                   onContextMenu={(x, y) => setCtxMenu({ x, y, v })}
                   onHover={(item) => { hoveredRef.current = item; }}
                 />
@@ -1192,10 +1223,13 @@ export default function StockList({
           onPublish={togglePublished}
           onDuplicate={duplicate}
           onDelete={setConfirmOne}
+          onDocument={facturation ? setDocFor : undefined}
         />
       )}
 
-      {showSheet && <ShortcutSheet onClose={() => setShowSheet(false)} />}
+      {showSheet && <ShortcutSheet onClose={() => setShowSheet(false)} facturation={facturation} />}
+
+      {docFor && <DocumentDialog vehicle={docFor} onClose={() => setDocFor(null)} />}
 
       <ConfirmDialog
         open={confirmBulk}
@@ -1239,7 +1273,7 @@ export default function StockList({
 function Row({
   v, index, ordered, compact, selected, busy, canDelete, base, publicBase, statusMenuOpen,
   onToggleSelect, onOpenStatusMenu, onChangeStatus, onTogglePublished, onDuplicate, onDelete,
-  onContextMenu, onHover,
+  onDocument, onContextMenu, onHover,
 }: {
   v: StockItem;
   index: number;
@@ -1257,6 +1291,7 @@ function Row({
   onTogglePublished: (v: StockItem) => void;
   onDuplicate: (v: StockItem) => void;
   onDelete: (v: StockItem) => void;
+  onDocument?: (v: StockItem) => void;
   onContextMenu: (x: number, y: number) => void;
   onHover: (v: StockItem | null) => void;
 }) {
@@ -1455,7 +1490,7 @@ function Row({
           >
             {v.isPublished ? <Eye size={14} /> : <EyeOff size={14} />}
           </button>
-          <RowActions v={v} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={onDuplicate} onDelete={onDelete} />
+          <RowActions v={v} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={onDuplicate} onDelete={onDelete} onDocument={onDocument} />
           <ChevronRight size={14} style={{ color: T.border }} />
         </div>
 
@@ -1476,6 +1511,17 @@ function Row({
           <Link href={`${base}/${v.id}/suivi`} aria-label="Ouvrir le suivi" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.muted }}>
             <ClipboardList size={16} />
           </Link>
+          {onDocument && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); onDocument(v); }}
+              aria-label="Créer un devis ou une facture"
+              className="inline-flex items-center justify-center flex-1"
+              style={{ height: 40, color: T.muted }}
+            >
+              <FileText size={16} />
+            </button>
+          )}
           {publicBase && (
             <Link href={`${publicBase}/${v.id}`} target="_blank" aria-label="Voir l'annonce publique" className="inline-flex items-center justify-center flex-1" style={{ height: 40, color: T.muted }}>
               <ExternalLink size={16} />
@@ -1499,13 +1545,14 @@ function Row({
 }
 
 /* ── Vue photos ── */
-function GridView({ rows, canDelete, base, publicBase, onDuplicate, onDelete }: {
+function GridView({ rows, canDelete, base, publicBase, onDuplicate, onDelete, onDocument }: {
   rows: StockItem[];
   canDelete: boolean;
   base: string;
   publicBase: string | null;
   onDuplicate: (v: StockItem) => void;
   onDelete: (v: StockItem) => void;
+  onDocument?: (v: StockItem) => void;
 }) {
   return (
     <div className="grid grid-cols-1 @[560px]:grid-cols-2 @[900px]:grid-cols-3 gap-4">
@@ -1562,7 +1609,7 @@ function GridView({ rows, canDelete, base, publicBase, onDuplicate, onDelete }: 
                 <StatusBadge status={v.status} />
               </div>
               <div className="flex items-center gap-0.5 mt-3 pt-3" style={{ borderTop: `1px solid ${T.border}` }}>
-                <RowActions v={v} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={onDuplicate} onDelete={onDelete} />
+                <RowActions v={v} canDelete={canDelete} base={base} publicBase={publicBase} onDuplicate={onDuplicate} onDelete={onDelete} onDocument={onDocument} />
                 <span className="ml-auto text-[10px]" style={{ color: ageTone(v.daysInStock) === "muted" ? T.muted : T.warning }}>
                   {formatDays(v.daysInStock)}
                 </span>

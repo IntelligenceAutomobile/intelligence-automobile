@@ -125,6 +125,7 @@ export default async function AdminVehiculesList({
         initialQuery={q ?? ""}
         initialSort={initialSort}
         canDelete={canDelete}
+        facturation
       />
     </AdminPage>
   );
