@@ -24,13 +24,28 @@ const label = "block text-[10px] tracking-[0.14em] uppercase mb-1.5";
 // Icône de chaque modèle sur l'accueil.
 const MODELE_ICONS = [Briefcase, Tags, KeyRound] as const;
 
-export default function MailingsClient({ mode, hasKey }: { mode: string; hasKey: boolean }) {
+export default function MailingsClient({
+  mode,
+  hasKey,
+  initialTo = "",
+  initialSubject = "",
+}: {
+  mode: string;
+  hasKey: boolean;
+  /** Arrivée depuis « Répondre » de l'écran Réception : composition directe. */
+  initialTo?: string;
+  initialSubject?: string;
+}) {
   const toast = useToast();
-  const [etape, setEtape] = useState<"accueil" | "composition">("accueil");
+  const [etape, setEtape] = useState<"accueil" | "composition">(initialTo ? "composition" : "accueil");
   // null = message vierge ; sinon l'id du modèle chargé.
   const [modeleId, setModeleId] = useState<string | null>(null);
-  const [content, setContent] = useState<MailingContent>(() => copie(MAILING_VIERGE));
-  const [to, setTo] = useState("");
+  const [content, setContent] = useState<MailingContent>(() => {
+    const base = copie(MAILING_VIERGE);
+    if (initialSubject) base.subject = initialSubject;
+    return base;
+  });
+  const [to, setTo] = useState(initialTo);
   const [viewport, setViewport] = useState<"bureau" | "telephone">("bureau");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
