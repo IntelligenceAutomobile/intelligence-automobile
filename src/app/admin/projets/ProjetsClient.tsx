@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Plus, FolderKanban } from "lucide-react";
 import { T, AdminPage, PageHeader, fieldStyle, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "@/app/admin/ui";
-import { STATUS_META, attendRetour, fmtDate, type ProjetLight } from "./shared";
+import { STATUS_META, attendRetour, fmtDate, projetImages, type ProjetLight } from "./shared";
 
 export default function ProjetsClient({ authorName, autoCreate = false }: { authorName: string; autoCreate?: boolean }) {
   const [projets, setProjets] = useState<ProjetLight[]>([]);
@@ -135,51 +135,107 @@ export default function ProjetsClient({ authorName, autoCreate = false }: { auth
           </p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {projets.map(projet => {
-            const meta = STATUS_META[projet.status] ?? STATUS_META.en_cours;
-            const total = projet.propositions.length;
-            const pending = projet.propositions.filter(attendRetour).length;
-            return (
-              <Link
-                key={projet.id}
-                href={`/admin/projets/${projet.id}`}
-                className="block p-5 transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
-                style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, borderLeft: `3px solid ${meta.color}` }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-base font-medium leading-snug min-w-0" style={{ color: T.text }}>
-                    {projet.title}
-                  </h2>
-                  <span
-                    className="inline-block text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap flex-shrink-0"
-                    style={{ backgroundColor: meta.bg, border: `1px solid ${meta.bd}`, color: meta.color }}
-                  >
-                    {meta.label}
-                  </span>
-                </div>
-                {projet.description && (
-                  <p className="text-xs mt-2 leading-relaxed" style={{ color: T.muted, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                    {projet.description}
-                  </p>
-                )}
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-4 text-xs" style={{ color: T.muted }}>
-                  <span>{total === 0 ? "Aucune proposition" : total === 1 ? "1 proposition" : `${total} propositions`}</span>
-                  {pending > 0 && (
-                    <span
-                      className="px-2 py-0.5"
-                      style={{ backgroundColor: "rgba(240,180,90,0.10)", border: "1px solid rgba(240,180,90,0.38)", color: T.warning }}
-                    >
-                      {pending === 1 ? "1 en attente de retour" : `${pending} en attente de retour`}
-                    </span>
-                  )}
-                  <span className="ml-auto">Activité : {fmtDate(projet.updatedAt)}</span>
-                </div>
-              </Link>
-            );
-          })}
+        <div className="grid sm:grid-cols-2 gap-5">
+          {projets.map(projet => <ProjetCard key={projet.id} projet={projet} />)}
         </div>
       )}
     </AdminPage>
+  );
+}
+
+/* ─── Carte d'un projet : couverture visuelle + repères ── */
+
+function ProjetCard({ projet }: { projet: ProjetLight }) {
+  const meta = STATUS_META[projet.status] ?? STATUS_META.en_cours;
+  const total = projet.propositions.length;
+  const pending = projet.propositions.filter(attendRetour).length;
+
+  // Le dernier visuel déposé fait la couverture ; les trois suivants se posent
+  // en vignettes dessus, une pastille compte le reste.
+  const images = projetImages(projet);
+  const cover = images[0];
+  const thumbs = images.slice(1, 4);
+  const rest = images.length - 4;
+
+  return (
+    <Link
+      href={`/admin/projets/${projet.id}`}
+      className="block transition-all duration-200 hover:-translate-y-px hover:border-[#6B9FEE]"
+      style={{ backgroundColor: T.surface, border: `1px solid ${T.border}`, borderLeft: `3px solid ${meta.color}` }}
+    >
+      {/* Couverture : le visuel en grand, ou l'initiale du projet en filigrane
+          pour que les cartes sans image gardent la même silhouette. */}
+      <div className="relative h-44 overflow-hidden" style={{ backgroundColor: T.float }}>
+        {cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cover} alt="" loading="lazy" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center" aria-hidden>
+            <span style={{ fontSize: 84, fontWeight: 200, color: T.border, lineHeight: 1, userSelect: "none" }}>
+              {projet.title.trim().charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
+        {/* Fondu vers la carte, comme les encarts de l'accueil du site */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
+          style={{ background: `linear-gradient(to top, ${T.surface}, transparent)` }}
+        />
+        {thumbs.length > 0 && (
+          <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
+            {thumbs.map(url => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={url}
+                src={url}
+                alt=""
+                loading="lazy"
+                className="object-cover"
+                style={{ width: 44, height: 44, border: "1px solid rgba(199,211,232,0.35)", backgroundColor: T.float }}
+              />
+            ))}
+            {rest > 0 && (
+              <span
+                className="flex items-center justify-center text-[11px] font-medium"
+                style={{ width: 44, height: 44, backgroundColor: "rgba(4,11,22,0.78)", border: "1px solid rgba(199,211,232,0.35)", color: T.textDim }}
+              >
+                +{rest}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="px-5 pb-5 pt-3">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-lg font-medium leading-snug min-w-0" style={{ color: T.text }}>
+            {projet.title}
+          </h2>
+          <span
+            className="inline-block text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap flex-shrink-0 mt-1"
+            style={{ backgroundColor: meta.bg, border: `1px solid ${meta.bd}`, color: meta.color }}
+          >
+            {meta.label}
+          </span>
+        </div>
+        {projet.description && (
+          <p className="text-xs mt-2 leading-relaxed" style={{ color: T.muted, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {projet.description}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-4 text-xs" style={{ color: T.muted }}>
+          <span>{total === 0 ? "Aucune proposition" : total === 1 ? "1 proposition" : `${total} propositions`}</span>
+          {pending > 0 && (
+            <span
+              className="px-2 py-0.5"
+              style={{ backgroundColor: "rgba(240,180,90,0.10)", border: "1px solid rgba(240,180,90,0.38)", color: T.warning }}
+            >
+              {pending === 1 ? "1 en attente de retour" : `${pending} en attente de retour`}
+            </span>
+          )}
+          <span className="ml-auto">Activité : {fmtDate(projet.updatedAt)}</span>
+        </div>
+      </div>
+    </Link>
   );
 }

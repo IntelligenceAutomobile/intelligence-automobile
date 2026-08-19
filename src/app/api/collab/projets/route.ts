@@ -3,7 +3,8 @@ import { getCollabSession } from "@/lib/collab-auth";
 import { prisma } from "@/lib/prisma";
 
 // Liste des projets d'équipe, avec le minimum utile par proposition pour que
-// l'écran calcule « en attente de retour » (auteurs des pouces et commentaires).
+// l'écran calcule « en attente de retour » (auteurs des pouces et commentaires)
+// et compose la couverture de chaque carte (visuels, du plus récent au plus ancien).
 export async function GET() {
   const session = await getCollabSession();
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -14,10 +15,12 @@ export async function GET() {
     include: {
       propositions: {
         where: { deletedAt: null },
+        orderBy: { createdAt: "desc" },
         select: {
           id: true,
           author: true,
           createdAt: true,
+          attachments: true,
           reactions: { select: { author: true } },
           comments: { select: { author: true } },
         },

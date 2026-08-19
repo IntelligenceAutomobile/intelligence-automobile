@@ -1,5 +1,7 @@
 // Types et repères partagés des écrans Projets (liste et détail).
 
+import { parseAttachments } from "@/lib/collab-attachments";
+
 export const STATUS_META: Record<string, { label: string; color: string; bg: string; bd: string }> = {
   en_cours: { label: "En cours", color: "#6B9FEE", bg: "rgba(107,159,238,0.10)", bd: "rgba(107,159,238,0.40)" },
   en_pause: { label: "En pause", color: "#F0B45A", bg: "rgba(240,180,90,0.10)", bd: "rgba(240,180,90,0.38)" },
@@ -50,11 +52,13 @@ export interface Projet {
   propositions: Proposition[];
 }
 
-/** Version allégée renvoyée par la liste : juste de quoi compter les retours. */
+/** Version allégée renvoyée par la liste : de quoi compter les retours et
+ *  composer la couverture visuelle de la carte. */
 export interface PropositionLight {
   id: string;
   author: string;
   createdAt: string;
+  attachments: string;
   reactions: { author: string }[];
   comments: { author: string }[];
 }
@@ -75,6 +79,14 @@ export interface ProjetLight {
 export function attendRetour(p: { author: string; reactions: { author: string }[]; comments: { author: string }[] }): boolean {
   const autres = [...p.reactions, ...p.comments].filter(r => r.author !== p.author);
   return autres.length === 0;
+}
+
+/** Visuels d'un projet pour la carte de la liste, du plus récent au plus
+ *  ancien (les propositions arrivent déjà triées ainsi par l'API). */
+export function projetImages(projet: ProjetLight): string[] {
+  return projet.propositions.flatMap(p =>
+    parseAttachments(p.attachments).filter(a => a.kind === "image").map(a => a.url)
+  );
 }
 
 export function fmtDate(iso: string) {
