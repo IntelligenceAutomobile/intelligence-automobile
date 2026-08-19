@@ -20,6 +20,11 @@ export const DOC_PREFIX = "documents/";
 // relit, et parce que ces clichés partent d'un téléphone, souvent lourds.
 export const REPRISE_PREFIX = "reprises/";
 
+// Bibliothèque des visuels composés (/admin/visuels). Le dossier garde deux
+// fichiers par visuel : la photo d'origine, souvent un cliché plein format sorti
+// d'un appareil, et le rendu composé. D'où une limite plus haute qu'ailleurs.
+export const VISUEL_PREFIX = "visuels/";
+
 export const IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -72,6 +77,10 @@ export function uploadRule(pathname: string, isAdmin: boolean): UploadRule | nul
   }
   if (path.startsWith(REPRISE_PREFIX)) {
     return { allowedContentTypes: IMAGE_TYPES, maximumSizeInBytes: 15 * MB };
+  }
+  if (path.startsWith(VISUEL_PREFIX)) {
+    // Deux visuels enregistrés sous le même nom gardent chacun le sien.
+    return { allowedContentTypes: IMAGE_TYPES, maximumSizeInBytes: 25 * MB, addRandomSuffix: true };
   }
   return { allowedContentTypes: IMAGE_TYPES, maximumSizeInBytes: 15 * MB };
 }

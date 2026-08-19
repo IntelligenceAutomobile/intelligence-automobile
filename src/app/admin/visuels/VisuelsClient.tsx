@@ -10,7 +10,11 @@
    d'une police ou d'un demi-pixel. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, ImagePlus } from "lucide-react";
+import { upload } from "@vercel/blob/client";
+import { Download, ImagePlus, Save, Trash2 } from "lucide-react";
+import { VISUEL_PREFIX } from "@/lib/upload-rules";
+import { ConfirmDialog } from "../confirm";
+import { useToast } from "../toast";
 import {
   AdminPage,
   PageHeader,
@@ -42,14 +46,17 @@ type FormatCle = (typeof FORMATS)[number]["cle"];
    Exprimés en part de la largeur pour tenir à tous les formats. Les valeurs de
    couleur et les fondus sont, eux, repris à l'identique. */
 const MARGE_GAUCHE = 0.06; // 6vw
-const MARGE_BAS = 0.08; // 8vh
 const LARGEUR_TITRE = 0.62; // le titre respire, il coupe avant le bord
 const LARGEUR_SOUS = 0.5;
 const INTERLIGNE_TITRE = 0.88; // lineHeight du h1
 const INTERLIGNE_SOUS = 1.8;
 const BLEU = "#6B9FEE";
 const BLANC = "#F0F5FF";
-const GRIS = "rgba(214,228,246,0.85)";
+/* Le site pose cette phrase à 85 % d'opacité en graisse 300. Sur un écran, la
+   finesse passe ; gravée dans une image que Leboncoin recompresse et réduit en
+   vignette, elle se délite. Elle garde donc sa teinte, en pleine opacité et
+   d'un cran plus épaisse. */
+const GRIS = "#DCE8F8";
 
 type Reglages = {
   titre1: string;
@@ -59,6 +66,9 @@ type Reglages = {
   cadrageX: number;
   cadrageY: number;
   taille: number;
+  /** Distance entre le bas du bloc de texte et le bas de l'image, en pourcents. */
+  hauteur: number;
+  italique: boolean;
 };
 
 /** Découpe une phrase en lignes qui tiennent dans la largeur donnée. */
@@ -145,7 +155,7 @@ function compose(
   // Mesure d'abord, dessine ensuite : le bloc est calé sur sa base, donc sa
   // hauteur totale doit être connue avant le premier trait d'encre.
   poseInterlettrage("0.01em");
-  ctx.font = `italic 300 ${corpsSous}px ${famille}`;
+  ctx.font = `${r.italique ? "italic " : ""}400 ${corpsSous}px ${famille}`;
   const lignesSous = decoupe(ctx, r.sousTitre.trim(), w * LARGEUR_SOUS);
 
   poseInterlettrage("-0.03em");
@@ -162,7 +172,7 @@ function compose(
   const ecartTraitSous = corpsSous * 0.6;
   const hTotal = hTitre + ecartTitreTrait + traitH + ecartTraitSous + hSous;
 
-  let y = h - h * MARGE_BAS - hTotal;
+  let y = h - h * (r.hauteur / 100) - hTotal;
 
   // Titre : la seconde ligne prend le bleu de l'accent, comme sur le site.
   poseInterlettrage("-0.03em");
@@ -184,7 +194,7 @@ function compose(
     y += traitH + ecartTraitSous;
 
     poseInterlettrage("0.01em");
-    ctx.font = `italic 300 ${corpsSous}px ${famille}`;
+    ctx.font = `${r.italique ? "italic " : ""}400 ${corpsSous}px ${famille}`;
     ctx.fillStyle = GRIS;
     lignesSous.forEach((ligne) => {
       ctx.fillText(ligne, x, y);
@@ -195,12 +205,48 @@ function compose(
   poseInterlettrage("normal");
 }
 
-export default function VisuelsClient() {
+/** Une fiche de la bibliothèque, telle que la renvoie /api/admin/visuels. */
+type VisuelEnregistre = {
+  id: string;
+  nom: string;
+  imageUrl: string;
+  photoUrl: string;
+  largeur: number;
+  hauteur: number;
+  reglages: string;
+  createdAt: string;
+};
+
+/** Ramène un nom de fichier propre depuis le titre saisi. */
+function slug(texte: string): string {
+  return (
+    texte
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 50) || "visuel"
+  );
+}
+
+export default function VisuelsClient({ initial }: { initial: VisuelEnregistre[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fichierRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [survol, setSurvol] = useState(false);
   const [famille, setFamille] = useState("sans-serif");
+
+  /* Provenance de la photo affichée. Un fichier venu du disque part sur le
+     stockage au premier enregistrement ; une photo déjà rangée dans la
+     bibliothèque garde son adresse et évite un second envoi. */
+  const [source, setSource] = useState<{ fichier: File | null; url: string }>({ fichier: null, url: "" });
+  const [bibliotheque, setBibliotheque] = useState<VisuelEnregistre[]>(initial);
+  const [nom, setNom] = useState("");
+  const [enregistrement, setEnregistrement] = useState(false);
+  const [aSupprimer, setASupprimer] = useState<VisuelEnregistre | null>(null);
+  const [renomme, setRenomme] = useState<{ id: string; valeur: string } | null>(null);
+  const toast = useToast();
 
   const [r, setR] = useState<Reglages>({
     titre1: "LIVRAISON, GARANTIE,",
@@ -210,6 +256,8 @@ export default function VisuelsClient() {
     cadrageX: 50,
     cadrageY: 50,
     taille: 100,
+    hauteur: 8,
+    italique: true,
   });
 
   const modifie = <K extends keyof Reglages>(cle: K, valeur: Reglages[K]) =>
@@ -238,6 +286,7 @@ export default function VisuelsClient() {
     const img = new Image();
     img.onload = () => {
       setImage(img);
+      setSource({ fichier, url: "" });
       URL.revokeObjectURL(url);
     };
     img.onerror = () => URL.revokeObjectURL(url);
@@ -283,8 +332,147 @@ export default function VisuelsClient() {
         URL.revokeObjectURL(url);
       },
       type,
-      0.92
+      // Qualité haute : la compression s'attaque d'abord aux contours fins, et
+      // c'est justement le texte qui en pâtit.
+      0.95
     );
+  }
+
+  /* ── Bibliothèque ──
+     La liste arrive garnie par le serveur ; elle se relit après chaque
+     enregistrement, ce qui suffit à la tenir à jour. */
+
+  const chargeBibliotheque = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/visuels");
+      if (res.ok) setBibliotheque(await res.json());
+    } catch {
+      /* réseau absent : la liste garde son état, l'atelier fonctionne */
+    }
+  }, []);
+
+  /** La toile, en fichier prêt à partir sur le stockage. */
+  function toileEnFichier(nomFichier: string): Promise<File | null> {
+    return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return resolve(null);
+      canvas.toBlob(
+        (blob) => resolve(blob ? new File([blob], nomFichier, { type: "image/jpeg" }) : null),
+        "image/jpeg",
+        0.95
+      );
+    });
+  }
+
+  async function enregistre() {
+    if (!image || enregistrement) return;
+    setEnregistrement(true);
+    try {
+      const titre = nom.trim() || [r.titre1, r.titre2].filter(Boolean).join(" ").trim() || "Visuel";
+      const base = slug(titre);
+
+      const rendu = await toileEnFichier(`${base}.jpg`);
+      if (!rendu) throw new Error("composition");
+
+      // La photo d'origine ne repart que la première fois : rouvrir puis
+      // réenregistrer un visuel réutilise le fichier déjà en place.
+      const [blobRendu, urlPhoto] = await Promise.all([
+        upload(`${VISUEL_PREFIX}${base}.jpg`, rendu, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+        }),
+        source.url
+          ? Promise.resolve({ url: source.url })
+          : source.fichier
+            ? upload(`${VISUEL_PREFIX}source-${base}`, source.fichier, {
+                access: "public",
+                handleUploadUrl: "/api/upload",
+              })
+            : Promise.resolve({ url: "" }),
+      ]);
+
+      const res = await fetch("/api/admin/visuels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nom: titre,
+          imageUrl: blobRendu.url,
+          photoUrl: urlPhoto.url,
+          largeur: canvasRef.current?.width ?? 0,
+          hauteur: canvasRef.current?.height ?? 0,
+          reglages: JSON.stringify(r),
+        }),
+      });
+      if (!res.ok) throw new Error("enregistrement");
+
+      // L'adresse retenue évite un second envoi de la photo au prochain
+      // enregistrement de la même image.
+      if (urlPhoto.url) setSource({ fichier: null, url: urlPhoto.url });
+      setNom("");
+      toast.success("Visuel enregistré dans la bibliothèque.");
+      await chargeBibliotheque();
+    } catch {
+      toast.error("L'enregistrement a échoué.");
+    } finally {
+      setEnregistrement(false);
+    }
+  }
+
+  /** Remet un visuel enregistré sur l'établi : sa photo et tous ses réglages. */
+  function ouvre(v: VisuelEnregistre) {
+    if (!v.photoUrl) {
+      toast.error("Ce visuel a été enregistré avant sa photo d'origine.");
+      return;
+    }
+    const img = new Image();
+    // Sans cette mention, une photo venue du stockage souille la toile et le
+    // téléchargement se refuse ensuite.
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      setImage(img);
+      setSource({ fichier: null, url: v.photoUrl });
+      setNom(v.nom);
+      try {
+        const lus = JSON.parse(v.reglages) as Partial<Reglages>;
+        setR((prec) => ({ ...prec, ...lus }));
+      } catch {
+        /* réglages illisibles : la photo revient avec ceux de l'écran */
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    img.onerror = () => toast.error("La photo de ce visuel est introuvable.");
+    img.src = v.photoUrl;
+  }
+
+  async function supprime(v: VisuelEnregistre) {
+    setASupprimer(null);
+    try {
+      const res = await fetch(`/api/admin/visuels/${v.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setBibliotheque((prec) => prec.filter((x) => x.id !== v.id));
+      toast.success("Visuel supprimé.");
+    } catch {
+      toast.error("La suppression a échoué.");
+    }
+  }
+
+  async function renomeValide() {
+    if (!renomme) return;
+    const valeur = renomme.valeur.trim();
+    const cible = renomme.id;
+    setRenomme(null);
+    if (!valeur) return;
+    try {
+      const res = await fetch(`/api/admin/visuels/${cible}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nom: valeur }),
+      });
+      if (!res.ok) throw new Error();
+      setBibliotheque((prec) => prec.map((x) => (x.id === cible ? { ...x, nom: valeur } : x)));
+    } catch {
+      toast.error("Le renommage a échoué.");
+    }
   }
 
   const format = FORMATS.find((f) => f.cle === r.format) ?? FORMATS[0];
@@ -314,6 +502,16 @@ export default function VisuelsClient() {
               disabled={!image}
             >
               PNG
+            </button>
+            <button
+              type="button"
+              onClick={enregistre}
+              className={btnGhostClass}
+              style={btnGhostStyle}
+              disabled={!image || enregistrement}
+            >
+              <Save size={14} />
+              {enregistrement ? "Enregistrement…" : "Enregistrer"}
             </button>
           </div>
         }
@@ -456,10 +654,136 @@ export default function VisuelsClient() {
                 suffixe="%"
                 onChange={(v) => modifie("taille", v)}
               />
+              <Curseur
+                label="Hauteur du texte"
+                valeur={r.hauteur}
+                min={2}
+                max={55}
+                suffixe="%"
+                onChange={(v) => modifie("hauteur", v)}
+              />
+
+              {/* L'italique du site est simulé par le navigateur : il penche les
+                  lettres sans les redessiner, ce qui adoucit leurs bords. Le
+                  décocher rend la phrase plus franche. */}
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={r.italique}
+                  onChange={(e) => modifie("italique", e.target.checked)}
+                  style={{ accentColor: BLEU, width: 15, height: 15 }}
+                />
+                <span className="text-xs tracking-widest uppercase" style={{ color: T.muted }}>
+                  Phrase en italique
+                </span>
+              </label>
             </div>
+          </SectionCard>
+
+          <SectionCard title="Nom de l'enregistrement">
+            <input
+              className={fieldClass}
+              style={fieldStyle}
+              placeholder="Hero transport, sunset"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+            />
+            <p className="text-xs mt-3" style={{ color: T.muted }}>
+              Laissé vide, le visuel prend le titre écrit dessus.
+            </p>
           </SectionCard>
         </div>
       </div>
+
+      {/* ── Bibliothèque ── */}
+      <div className="mt-10">
+        <SectionCard title={`Bibliothèque${bibliotheque.length > 0 ? ` · ${bibliotheque.length}` : ""}`}>
+          {bibliotheque.length === 0 ? (
+            <p className="text-sm" style={{ color: T.muted }}>
+              Les visuels enregistrés apparaissent ici, avec leur photo d&apos;origine et leurs
+              réglages. Un clic les remet sur l&apos;établi pour les retoucher.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {bibliotheque.map((v) => (
+                <div key={v.id} style={{ border: `1px solid ${T.border}`, backgroundColor: T.float }}>
+                  <button
+                    type="button"
+                    onClick={() => ouvre(v)}
+                    className="block w-full"
+                    title="Remettre ce visuel sur l'établi"
+                    style={{ cursor: "pointer" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={v.imageUrl}
+                      alt={v.nom}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        aspectRatio: "4 / 3",
+                        objectFit: "cover",
+                        borderBottom: `1px solid ${T.border}`,
+                      }}
+                    />
+                  </button>
+
+                  <div className="px-3 py-2.5 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      {renomme?.id === v.id ? (
+                        <input
+                          autoFocus
+                          className="w-full text-xs px-1.5 py-1 outline-none"
+                          style={{ ...fieldStyle, width: "100%" }}
+                          value={renomme.valeur}
+                          onChange={(e) => setRenomme({ id: v.id, valeur: e.target.value })}
+                          onBlur={renomeValide}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") renomeValide();
+                            if (e.key === "Escape") setRenomme(null);
+                          }}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setRenomme({ id: v.id, valeur: v.nom })}
+                          className="block text-left text-xs truncate w-full"
+                          title="Renommer"
+                          style={{ color: T.textDim, cursor: "text" }}
+                        >
+                          {v.nom}
+                        </button>
+                      )}
+                      <span className="block text-[10px] mt-1" style={{ color: T.muted }}>
+                        {v.largeur} × {v.hauteur} px
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setASupprimer(v)}
+                      className="adm-act flex-shrink-0"
+                      title="Supprimer ce visuel"
+                      aria-label={`Supprimer ${v.nom}`}
+                      style={{ color: T.muted }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+
+      <ConfirmDialog
+        open={aSupprimer !== null}
+        title="Supprimer ce visuel ?"
+        description={`« ${aSupprimer?.nom ?? ""} » part de la bibliothèque, avec sa photo d'origine et son rendu.`}
+        confirmLabel="Supprimer"
+        onConfirm={() => aSupprimer && supprime(aSupprimer)}
+        onCancel={() => setASupprimer(null)}
+      />
     </AdminPage>
   );
 }

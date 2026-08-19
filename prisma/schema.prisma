@@ -804,3 +804,22 @@ model PropositionComment {
 
   @@index([propositionId])
 }
+
+/* Visuels composés dans le back-office (/admin/visuels) : une photo, un titre,
+   une phrase, aux réglages du hero du site. La fiche garde la photo d'origine
+   ET le rendu, pour qu'un visuel se rouvre et se retouche des mois plus tard. */
+model Visuel {
+  id        String   @id @default(cuid())
+  nom       String
+  imageUrl  String
+  photoUrl  String   @default("")
+  largeur   Int      @default(0)
+  hauteur   Int      @default(0)
+  /** Réglages du composeur, en JSON : titres, cadrage, taille, hauteur. */
+  reglages  String   @default("{}")
+  author    String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
