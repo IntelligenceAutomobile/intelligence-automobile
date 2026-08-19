@@ -66,6 +66,8 @@ type Reglages = {
   cadrageX: number;
   cadrageY: number;
   taille: number;
+  /** Corps de la seconde ligne du titre, en part de la première. */
+  tailleLigne2: number;
   /** Distance entre le bas du bloc de texte et le bas de l'image, en pourcents. */
   hauteur: number;
   italique: boolean;
@@ -134,9 +136,13 @@ function compose(
   ctx.fillStyle = bas;
   ctx.fillRect(0, basY, w, h - basY);
 
-  /* ── Bloc de texte ── */
+  /* ── Bloc de texte ──
+     La seconde ligne se règle en part de la première : le curseur d'ensemble
+     garde ainsi la main sur tout le bloc, et celui de la seconde ligne dose le
+     rapport entre les deux. */
   const echelleTexte = r.taille / 100;
   const corpsTitre = w * 0.055 * echelleTexte;
+  const corpsTitre2 = corpsTitre * (r.tailleLigne2 / 100);
   const corpsSous = w * 0.021 * echelleTexte;
   const x = w * MARGE_GAUCHE;
 
@@ -158,16 +164,27 @@ function compose(
   ctx.font = `${r.italique ? "italic " : ""}400 ${corpsSous}px ${famille}`;
   const lignesSous = decoupe(ctx, r.sousTitre.trim(), w * LARGEUR_SOUS);
 
+  /* Chaque ligne du titre porte désormais son corps et sa couleur : les deux
+     lignes ont des tailles distinctes, donc leur découpe comme leur hauteur se
+     mesurent séparément. */
   poseInterlettrage("-0.03em");
-  ctx.font = `900 ${corpsTitre}px ${famille}`;
-  const lignesTitre = [r.titre1, r.titre2]
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .flatMap((l) => decoupe(ctx, l, w * LARGEUR_TITRE));
+  const lignesTitre: { texte: string; corps: number; couleur: string }[] = [];
+  for (const [texte, corps, couleur] of [
+    [r.titre1.trim(), corpsTitre, BLANC],
+    [r.titre2.trim(), corpsTitre2, BLEU],
+  ] as const) {
+    if (!texte) continue;
+    ctx.font = `900 ${corps}px ${famille}`;
+    for (const ligne of decoupe(ctx, texte, w * LARGEUR_TITRE)) {
+      lignesTitre.push({ texte: ligne, corps, couleur });
+    }
+  }
 
-  const hTitre = lignesTitre.length * corpsTitre * INTERLIGNE_TITRE;
+  const hTitre = lignesTitre.reduce((somme, l) => somme + l.corps * INTERLIGNE_TITRE, 0);
   const hSous = lignesSous.length * corpsSous * INTERLIGNE_SOUS;
   const traitH = Math.max(1, Math.round(w * 0.0008));
+  // L'écart sous le titre suit la taille d'ensemble, jamais celle de la seconde
+  // ligne : une ligne rapetissée rapprocherait sinon le trait du texte.
   const ecartTitreTrait = lignesTitre.length > 0 ? corpsTitre * 0.42 : 0;
   const ecartTraitSous = corpsSous * 0.6;
   const hTotal = hTitre + ecartTitreTrait + traitH + ecartTraitSous + hSous;
@@ -176,12 +193,11 @@ function compose(
 
   // Titre : la seconde ligne prend le bleu de l'accent, comme sur le site.
   poseInterlettrage("-0.03em");
-  ctx.font = `900 ${corpsTitre}px ${famille}`;
-  const indexBleu = r.titre1.trim() ? 1 : 0;
-  lignesTitre.forEach((ligne, i) => {
-    ctx.fillStyle = i >= indexBleu ? BLEU : BLANC;
-    ctx.fillText(ligne, x, y);
-    y += corpsTitre * INTERLIGNE_TITRE;
+  lignesTitre.forEach((ligne) => {
+    ctx.font = `900 ${ligne.corps}px ${famille}`;
+    ctx.fillStyle = ligne.couleur;
+    ctx.fillText(ligne.texte, x, y);
+    y += ligne.corps * INTERLIGNE_TITRE;
   });
 
   // Le petit trait bleu qui sépare le titre de la phrase.
@@ -204,6 +220,22 @@ function compose(
 
   poseInterlettrage("normal");
 }
+
+/* Réglages de départ, et repli d'un visuel rouvert : une fiche enregistrée
+   avant l'arrivée d'un réglage repart ainsi de sa valeur normale, au lieu
+   d'hériter de ce qui traînait à l'écran. */
+const REGLAGES_DEFAUT: Reglages = {
+  titre1: "LIVRAISON, GARANTIE,",
+  titre2: "CARTE GRISE",
+  sousTitre: "Une prise en charge intégrale, partout en France.",
+  format: "4:3",
+  cadrageX: 50,
+  cadrageY: 50,
+  taille: 100,
+  tailleLigne2: 100,
+  hauteur: 8,
+  italique: true,
+};
 
 /** Une fiche de la bibliothèque, telle que la renvoie /api/admin/visuels. */
 type VisuelEnregistre = {
@@ -248,17 +280,7 @@ export default function VisuelsClient({ initial }: { initial: VisuelEnregistre[]
   const [renomme, setRenomme] = useState<{ id: string; valeur: string } | null>(null);
   const toast = useToast();
 
-  const [r, setR] = useState<Reglages>({
-    titre1: "LIVRAISON, GARANTIE,",
-    titre2: "CARTE GRISE",
-    sousTitre: "Une prise en charge intégrale, partout en France.",
-    format: "4:3",
-    cadrageX: 50,
-    cadrageY: 50,
-    taille: 100,
-    hauteur: 8,
-    italique: true,
-  });
+  const [r, setR] = useState<Reglages>(REGLAGES_DEFAUT);
 
   const modifie = <K extends keyof Reglages>(cle: K, valeur: Reglages[K]) =>
     setR((prec) => ({ ...prec, [cle]: valeur }));
@@ -434,7 +456,7 @@ export default function VisuelsClient({ initial }: { initial: VisuelEnregistre[]
       setNom(v.nom);
       try {
         const lus = JSON.parse(v.reglages) as Partial<Reglages>;
-        setR((prec) => ({ ...prec, ...lus }));
+        setR({ ...REGLAGES_DEFAUT, ...lus });
       } catch {
         /* réglages illisibles : la photo revient avec ceux de l'écran */
       }
@@ -653,6 +675,14 @@ export default function VisuelsClient({ initial }: { initial: VisuelEnregistre[]
                 max={170}
                 suffixe="%"
                 onChange={(v) => modifie("taille", v)}
+              />
+              <Curseur
+                label="Taille de la 2e ligne"
+                valeur={r.tailleLigne2}
+                min={40}
+                max={200}
+                suffixe="%"
+                onChange={(v) => modifie("tailleLigne2", v)}
               />
               <Curseur
                 label="Hauteur du texte"
