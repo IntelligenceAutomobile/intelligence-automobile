@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
   CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge,
-  NotebookPen, FolderKanban, Check, MailWarning, Info, BarChart3, ImagePlus, type LucideIcon,
+  NotebookPen, FolderKanban, Check, MailWarning, Send, Info, BarChart3, ImagePlus, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -71,6 +71,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     section: "Réglages",
     items: [
       { icon: MailWarning, label: "Emails", href: "/admin/emails", cap: "settings", revu: "30 juillet 2026" },
+      { icon: Send, label: "Mailings", href: "/admin/mailings", cap: "settings" },
       { icon: UserCog, label: "Utilisateurs", href: "/admin/utilisateurs", cap: "users" },
       { icon: Palette, label: "Marque blanche", href: "/admin/marque", cap: "settings" },
     ],
