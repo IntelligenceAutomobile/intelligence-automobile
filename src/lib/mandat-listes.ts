@@ -16,10 +16,13 @@
 // jours arrive en tête, l'exception reste accessible plus bas.
 import { prisma } from "./prisma";
 import { MANDAT_TYPES, type MandatType } from "./mandats";
+import { MAKES_COURANTES, MODELS_BY_MAKE, getModelsForMake, normalizeLabel } from "./vehicle-catalog";
 
 export type ListesMandat = {
   marques: string[];
   modeles: string[];
+  /** Les modèles rangés par marque, la clé étant la marque sans accent ni casse. */
+  modelesParMarque: Record<string, string[]>;
   versions: string[];
   couleurs: string[];
   energies: string[];
@@ -36,9 +39,22 @@ const PAYS_SEMES = [
 ];
 
 const LIMITE = 60;
+/** Les listes de modèles sont plus longues : un catalogue de marque les remplit. */
+const LIMITE_MODELES = 120;
 
-/** Classe par nombre d'occurrences, puis par ordre alphabétique. */
-function parFrequence(valeurs: (string | null | undefined)[], semees: string[] = []): string[] {
+/**
+ * Classe par nombre d'occurrences, puis par l'ordre de la liste semée, puis
+ * par ordre alphabétique.
+ *
+ * Le rang de semis compte : « Allemagne » ouvre les pays d'import et « Audi »
+ * les marques parce qu'ils arrivent en tête de leur liste, sans attendre qu'un
+ * dossier les ait fait remonter.
+ */
+function parFrequence(
+  valeurs: (string | null | undefined)[],
+  semees: string[] = [],
+  limite = LIMITE,
+): string[] {
   const compte = new Map<string, number>();
   for (const brut of valeurs) {
     const v = (brut ?? "").trim();
@@ -53,15 +69,23 @@ function parFrequence(valeurs: (string | null | undefined)[], semees: string[] =
     if (v === "") continue;
     if (!formes.has(v.toLowerCase())) formes.set(v.toLowerCase(), v);
   }
-  for (const s of semees) {
+  const rang = new Map<string, number>();
+  semees.forEach((s, i) => {
     const cle = s.toLowerCase();
     if (!compte.has(cle)) compte.set(cle, 0);
     if (!formes.has(cle)) formes.set(cle, s);
-  }
+    if (!rang.has(cle)) rang.set(cle, i);
+  });
+  const SANS_RANG = Number.MAX_SAFE_INTEGER;
   return [...compte.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"))
+    .sort(
+      (a, b) =>
+        b[1] - a[1] ||
+        (rang.get(a[0]) ?? SANS_RANG) - (rang.get(b[0]) ?? SANS_RANG) ||
+        a[0].localeCompare(b[0], "fr"),
+    )
     .map(([cle]) => formes.get(cle) ?? cle)
-    .slice(0, LIMITE);
+    .slice(0, limite);
 }
 
 /**
@@ -86,9 +110,29 @@ export async function listesMandat(): Promise<ListesMandat> {
     make?: string; model?: string; version?: string; color?: string; fuel?: string;
   }[];
 
+  // Les modèles se rangent sous leur marque : choisir « Renault » doit
+  // proposer la Clio et le Captur, pas les Q5 du stock. Ce que la maison a
+  // déjà vendu passe devant le catalogue.
+  const vus = new Map<string, string[]>();
+  for (const v of tout) {
+    const marque = normalizeLabel(v.make ?? "");
+    const modele = (v.model ?? "").trim();
+    if (marque === "" || modele === "") continue;
+    vus.set(marque, [...(vus.get(marque) ?? []), modele]);
+  }
+  const modelesParMarque: Record<string, string[]> = {};
+  for (const marque of new Set([...vus.keys(), ...Object.keys(MODELS_BY_MAKE).map(normalizeLabel)])) {
+    modelesParMarque[marque] = parFrequence(
+      vus.get(marque) ?? [],
+      getModelsForMake(marque),
+      LIMITE_MODELES,
+    );
+  }
+
   return {
-    marques: parFrequence(tout.map((v) => v.make)),
+    marques: parFrequence(tout.map((v) => v.make), MAKES_COURANTES),
     modeles: parFrequence(tout.map((v) => v.model)),
+    modelesParMarque,
     versions: parFrequence(tout.map((v) => v.version)),
     couleurs: parFrequence(tout.map((v) => v.color)),
     energies: parFrequence(tout.map((v) => v.fuel)),

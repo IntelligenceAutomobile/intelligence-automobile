@@ -239,13 +239,175 @@ const PORSCHE_MODELS = [
   "356", "550 Spyder", "912", "914", "924", "928", "944", "968",
 ];
 
+// ── Les marques de grande diffusion ──
+//
+// Cinq marques portent l'activité et ont ci-dessus un catalogue détaillé. Les
+// vingt suivantes reviennent tout le temps en reprise, en recherche et en
+// import : elles méritent leurs modèles, classés du plus vendu au plus rare,
+// pour que le champ « Modèle » propose quelque chose dès que la marque est
+// choisie. Les générations anciennes ferment chaque liste.
+
+const RENAULT_MODELS = [
+  "Clio", "Captur", "Mégane", "Scénic", "Austral", "Arkana", "Twingo", "Zoe",
+  "Kadjar", "Rafale", "Espace", "Kangoo", "Trafic", "Master", "Koleos",
+  "Talisman", "Symbioz", "Mégane E-Tech", "Scénic E-Tech", "5 E-Tech", "4 E-Tech",
+  "Laguna", "Modus", "Fluence", "Wind", "Vel Satis", "Avantime", "Safrane",
+  "Espace F1", "Clio Williams", "R5", "R21", "R25", "Alpine A610",
+];
+
+const PEUGEOT_MODELS = [
+  "208", "2008", "308", "3008", "508", "5008", "408", "108", "e-208", "e-2008",
+  "Rifter", "Partner", "Expert", "Traveller", "Boxer", "3008 Hybrid",
+  "107", "206", "207", "307", "407", "607", "1007", "4007", "4008",
+  "RCZ", "205", "306", "405", "406", "205 GTI", "309", "504", "505",
+];
+
+const CITROEN_MODELS = [
+  "C3", "C3 Aircross", "C4", "C4 X", "C5 Aircross", "C5 X", "Berlingo", "Ami",
+  "ë-C3", "ë-C4", "SpaceTourer", "Jumpy", "Jumper", "C4 Cactus", "C-Elysée",
+  "C1", "C2", "C5", "C6", "C8", "C15", "Xsara", "Xsara Picasso", "C4 Picasso",
+  "Grand C4 Picasso", "Saxo", "ZX", "BX", "Xantia", "XM", "2CV", "DS", "SM", "Méhari",
+];
+
+const TOYOTA_MODELS = [
+  "Yaris", "Yaris Cross", "Corolla", "C-HR", "RAV4", "Aygo", "Aygo X", "Prius",
+  "Proace", "Proace City", "bZ4X", "Highlander", "Camry", "Land Cruiser",
+  "Hilux", "Auris", "Avensis", "Verso", "Urban Cruiser", "Mirai",
+  "GR Yaris", "GR86", "Supra", "Celica", "MR2", "Starlet", "Carina", "Previa",
+];
+
+const SKODA_MODELS = [
+  "Octavia", "Fabia", "Superb", "Kodiaq", "Karoq", "Kamiq", "Scala", "Enyaq",
+  "Elroq", "Enyaq Coupé", "Rapid", "Citigo", "Yeti", "Roomster", "Praktik",
+  "Octavia RS", "Fabia RS", "Felicia", "Favorit", "Forman",
+];
+
+const DACIA_MODELS = [
+  "Sandero", "Sandero Stepway", "Duster", "Jogger", "Spring", "Bigster",
+  "Logan", "Logan MCV", "Lodgy", "Dokker", "Dokker Van", "Solenza",
+];
+
+const FORD_MODELS = [
+  "Fiesta", "Focus", "Puma", "Kuga", "Mondeo", "EcoSport", "Mustang",
+  "Mustang Mach-E", "Explorer", "Ranger", "Transit", "Transit Custom",
+  "Tourneo Connect", "Tourneo Custom", "S-Max", "Galaxy", "C-Max", "B-Max",
+  "Ka", "Ka+", "Fusion", "Escort", "Sierra", "Capri", "Cortina", "Bronco", "GT",
+];
+
+const VOLVO_MODELS = [
+  "XC40", "XC60", "XC90", "V60", "V90", "S60", "S90", "C40", "EX30", "EX40",
+  "EX90", "V40", "S40", "C30", "V50", "XC70", "V70", "S80", "S70", "850",
+  "240", "740", "940", "Amazon", "P1800", "PV544",
+];
+
+const MINI_MODELS = [
+  "Cooper", "Cooper S", "Cooper SE", "Cooper D", "One", "Countryman",
+  "Clubman", "Cabrio", "Aceman", "John Cooper Works", "Paceman", "Coupé",
+  "Roadster", "Clubvan", "Mini Classique",
+];
+
+const LAND_ROVER_MODELS = [
+  "Range Rover Evoque", "Range Rover Sport", "Range Rover", "Range Rover Velar",
+  "Discovery Sport", "Discovery", "Defender", "Defender 90", "Defender 110",
+  "Freelander", "Freelander 2", "Discovery 3", "Discovery 4", "Series III",
+];
+
+const FIAT_MODELS = [
+  "500", "500X", "500L", "500e", "Panda", "Tipo", "600", "600e", "Doblo",
+  "Ducato", "Fiorino", "Scudo", "Talento", "Punto", "Grande Punto", "Bravo",
+  "Croma", "Multipla", "Sedici", "Idea", "124 Spider", "Barchetta", "Coupé",
+  "Uno", "Cinquecento", "Seicento", "Panda 4x4", "Dino",
+];
+
+const OPEL_MODELS = [
+  "Corsa", "Astra", "Mokka", "Crossland", "Grandland", "Frontera", "Insignia",
+  "Combo", "Vivaro", "Movano", "Zafira", "Meriva", "Adam", "Karl", "Agila",
+  "Antara", "Vectra", "Omega", "Tigra", "Speedster", "Calibra", "Manta",
+  "Kadett", "Ascona", "GT",
+];
+
+const SEAT_MODELS = [
+  "Ibiza", "Leon", "Arona", "Ateca", "Tarraco", "Alhambra", "Mii", "Toledo",
+  "Altea", "Altea XL", "Exeo", "Cordoba", "Inca", "Marbella", "Ronda",
+  "Leon Cupra", "Ibiza Cupra",
+];
+
+const NISSAN_MODELS = [
+  "Qashqai", "Juke", "X-Trail", "Micra", "Leaf", "Ariya", "Note", "Pulsar",
+  "Townstar", "Primastar", "Interstar", "Navara", "Almera", "Primera",
+  "Pathfinder", "Patrol", "Murano", "370Z", "350Z", "GT-R", "Skyline",
+  "Silvia", "200SX", "Figaro",
+];
+
+const TESLA_MODELS = [
+  "Model 3", "Model Y", "Model S", "Model X", "Cybertruck", "Roadster",
+];
+
+const HYUNDAI_MODELS = [
+  "Tucson", "Kona", "i10", "i20", "i30", "Bayon", "Santa Fe", "Ioniq 5",
+  "Ioniq 6", "Ioniq 9", "Kona Electric", "Ioniq", "i40", "ix20", "ix35",
+  "Getz", "Accent", "Matrix", "Terracan", "Coupé",
+];
+
+const KIA_MODELS = [
+  "Sportage", "Ceed", "Picanto", "Rio", "Niro", "Stonic", "XCeed", "ProCeed",
+  "EV3", "EV6", "EV9", "Sorento", "Soul", "Venga", "Carens", "Stinger",
+  "Optima", "Cee'd", "Sephia", "Pride",
+];
+
+const CUPRA_MODELS = [
+  "Formentor", "Leon", "Born", "Ateca", "Terramar", "Tavascan",
+];
+
+const ALFA_ROMEO_MODELS = [
+  "Giulia", "Stelvio", "Tonale", "Junior", "Giulietta", "MiTo", "Brera",
+  "159", "156", "147", "GT", "GTV", "Spider", "4C", "8C Competizione",
+  "166", "145", "146", "75", "33", "Giulia GTA", "Alfetta", "Montreal",
+];
+
+const JAGUAR_MODELS = [
+  "F-Pace", "E-Pace", "I-Pace", "XE", "XF", "XJ", "F-Type", "X-Type",
+  "S-Type", "XK", "XKR", "XK8", "E-Type", "Mark 2", "Type E",
+];
+
 export const MODELS_BY_MAKE: Record<string, string[]> = {
   Audi: AUDI_MODELS,
   BMW: BMW_MODELS,
   "Mercedes-Benz": MERCEDES_MODELS,
   Volkswagen: VOLKSWAGEN_MODELS,
   Porsche: PORSCHE_MODELS,
+  Renault: RENAULT_MODELS,
+  Peugeot: PEUGEOT_MODELS,
+  "Citroën": CITROEN_MODELS,
+  Toyota: TOYOTA_MODELS,
+  "Škoda": SKODA_MODELS,
+  Dacia: DACIA_MODELS,
+  Ford: FORD_MODELS,
+  Volvo: VOLVO_MODELS,
+  Mini: MINI_MODELS,
+  "Land Rover": LAND_ROVER_MODELS,
+  Fiat: FIAT_MODELS,
+  Opel: OPEL_MODELS,
+  Seat: SEAT_MODELS,
+  Nissan: NISSAN_MODELS,
+  Tesla: TESLA_MODELS,
+  Hyundai: HYUNDAI_MODELS,
+  Kia: KIA_MODELS,
+  Cupra: CUPRA_MODELS,
+  "Alfa Romeo": ALFA_ROMEO_MODELS,
+  Jaguar: JAGUAR_MODELS,
 };
+
+/**
+ * Les marques que la maison traite couramment, dans l'ordre où elles se
+ * présentent : les cinq du cœur d'activité, puis les grandes diffusions.
+ * Sert à garnir les menus déroulants d'un mandat avant même qu'un véhicule de
+ * cette marque soit passé par le stock.
+ */
+export const MAKES_COURANTES: string[] = [
+  ...MAIN_MAKES,
+  ...Object.keys(MODELS_BY_MAKE).filter((m) => !MAIN_MAKES.includes(m as (typeof MAIN_MAKES)[number])),
+];
 
 /**
  * Modèles connus d'une marque. La comparaison ignore casse et accents, pour

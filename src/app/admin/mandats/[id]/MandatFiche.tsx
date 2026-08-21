@@ -36,6 +36,7 @@ import {
 } from "@/lib/mandats";
 import type { MandatForm } from "@/lib/mandat-form";
 import type { ListesMandat } from "@/lib/mandat-listes";
+import { normalizeLabel } from "@/lib/vehicle-catalog";
 import {
   T, TONE, PageHeader, SectionCard, fieldStyle, labelClass,
   btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle,
@@ -75,7 +76,7 @@ export type VehiculeBref = {
 // Listes vides par défaut : la fiche s'affiche même si rien n'a encore été
 // saisi dans la maison, les champs restent alors de simples champs libres.
 const SANS_LISTE: ListesMandat = {
-  marques: [], modeles: [], versions: [], couleurs: [], energies: [],
+  marques: [], modeles: [], modelesParMarque: {}, versions: [], couleurs: [], energies: [],
   pays: [], lieux: [], assureurs: [],
 };
 
@@ -241,7 +242,11 @@ export default function MandatFiche({
   useEffect(() => {
     const cadre = cadreRef.current;
     if (!cadre) return;
-    const calcul = () => (zoom === "fit" ? Math.min(1, (cadre.clientWidth - 28) / A4_W) : zoom);
+    // Le plancher compte : sous 1400 px la colonne est masquée, sa largeur
+    // tombe à zéro et l'échelle passerait en négatif, ce qui retourne le
+    // document au moment où la fenêtre repasse au-dessus du seuil.
+    const calcul = () =>
+      zoom === "fit" ? Math.max(0.2, Math.min(1, (cadre.clientWidth - 28) / A4_W)) : zoom;
     const ro = new ResizeObserver(() => setScale(calcul()));
     ro.observe(cadre);
     return () => ro.disconnect();
@@ -294,6 +299,19 @@ export default function MandatFiche({
   const refModifiable = mode === "creation" || f.status === "brouillon";
 
   const L = listes ?? SANS_LISTE;
+
+  // Le menu des modèles suit la marque tapée juste au-dessus : « Renault »
+  // propose la Clio et le Captur.
+  //
+  // Marque vide, le menu montre tout ce que la maison connaît : on peut partir
+  // du modèle. Marque renseignée mais inconnue au catalogue (une Ferrari, une
+  // marque de niche), le champ redevient libre : proposer une Clio sous
+  // « Ferrari » embrouille plus que ça n'aide.
+  const modeles = useMemo(() => {
+    const marque = normalizeLabel(f.make);
+    if (marque === "") return L.modeles;
+    return L.modelesParMarque[marque] ?? [];
+  }, [L, f.make]);
 
   /** Reprend une fiche du carnet clients : le mandant se remplit tout seul. */
   function reprendreClient(id: string) {
@@ -779,17 +797,23 @@ export default function MandatFiche({
               <ArrowLeft size={14} />
               Retour
             </Link>
-            <button
-              type="button"
-              onClick={() => setApercu((v) => !v)}
-              aria-pressed={apercu}
-              className={`${btnGhostClass} hidden xl:inline-flex`}
-              style={btnGhostStyle}
-              title="Le document tel qu'il s'imprimera, mis à jour à la frappe"
-            >
-              {apercu ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
-              {apercu ? "Masquer l'aperçu" : "Aperçu"}
-            </button>
+            {/* L'aperçu n'existe qu'à partir de 1400 px : sa commande se cache
+                avec lui. Le masquage tient sur cette enveloppe, sinon la classe
+                d'affichage du bouton l'emporterait et la commande resterait
+                visible sur téléphone, sans rien à montrer. */}
+            <span className="hidden min-[1400px]:block">
+              <button
+                type="button"
+                onClick={() => setApercu((v) => !v)}
+                aria-pressed={apercu}
+                className={btnGhostClass}
+                style={btnGhostStyle}
+                title="Le document tel qu'il s'imprimera, mis à jour à la frappe"
+              >
+                {apercu ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+                {apercu ? "Masquer l'aperçu" : "Aperçu"}
+              </button>
+            </span>
             {mode === "fiche" && (
               <Link href={`/admin/mandats/${mandat.id}/imprimer`} className={btnGhostClass} style={btnGhostStyle}>
                 <Printer size={14} />
@@ -809,11 +833,11 @@ export default function MandatFiche({
       <div
         className={
           apercu
-            ? "grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.55fr)] gap-5 pb-28"
-            : "grid grid-cols-1 lg:grid-cols-3 gap-5 pb-28"
+            ? "grid grid-cols-1 min-[1280px]:grid-cols-3 min-[1400px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.55fr)] gap-5 pb-28"
+            : "grid grid-cols-1 min-[1280px]:grid-cols-3 gap-5 pb-28"
         }
       >
-        <div className={apercu ? "lg:col-span-2 xl:col-span-1 space-y-5" : "lg:col-span-2 space-y-5"}>
+        <div className={apercu ? "min-[1280px]:col-span-2 min-[1400px]:col-span-1 space-y-5" : "min-[1280px]:col-span-2 space-y-5"}>
 
           <SectionCard title="Le mandat">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -944,7 +968,7 @@ export default function MandatFiche({
                 <ChampListe liste="l-marque" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, BMW…" />
               </Field>
               <Field label="Modèle *">
-                <ChampListe liste="l-modele" options={L.modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="TT" />
+                <ChampListe liste="l-modele" options={modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="TT" />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1013,7 +1037,7 @@ export default function MandatFiche({
                   <ChampListe liste="l-marque-cible" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, Porsche…" />
                 </Field>
                 <Field label="Modèle">
-                  <ChampListe liste="l-modele-cible" options={L.modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="Macan" />
+                  <ChampListe liste="l-modele-cible" options={modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="Macan" />
                 </Field>
                 <Field label="Version, finition">
                   <ChampListe liste="l-version-cible" options={L.versions} value={f.version} onChange={(v) => set("version", v)} placeholder="S 3.0 V6, toit pano…" />
@@ -1300,13 +1324,20 @@ export default function MandatFiche({
                 <input type="date" value={f.signedOn} onChange={(e) => set("signedOn", e.target.value)} className={inputClass} style={fieldStyle} />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="RC pro — police n°">
-                <input value={f.rcPolicy} onChange={(e) => set("rcPolicy", e.target.value)} className={inputClass} style={fieldStyle} />
-              </Field>
-              <Field label="RC pro — assureur">
-                <ChampListe liste="l-assureur" options={L.assureurs} value={f.rcInsurer} onChange={(v) => set("rcInsurer", v)} />
-              </Field>
+            {/* Ces deux-là portent du texte long (« RC-2026-8841 »,
+                « AXA Entreprises ») là où les autres couples portent une date
+                ou un nombre : côte à côte dans une colonne étroite, la valeur
+                se coupait. Ils ne se rangent en deux que si la place existe,
+                mesurée sur la colonne et non sur la fenêtre. */}
+            <div className="@container">
+              <div className="grid grid-cols-1 @[380px]:grid-cols-2 gap-4">
+                <Field label="RC pro — police n°">
+                  <input value={f.rcPolicy} onChange={(e) => set("rcPolicy", e.target.value)} className={inputClass} style={fieldStyle} />
+                </Field>
+                <Field label="RC pro — assureur">
+                  <ChampListe liste="l-assureur" options={L.assureurs} value={f.rcInsurer} onChange={(v) => set("rcInsurer", v)} />
+                </Field>
+              </div>
             </div>
             {f.rcPolicy.trim() === "" && (
               <Avertissement>
@@ -1513,10 +1544,10 @@ export default function MandatFiche({
         {/* ── L'aperçu en direct ──
             Le document tel qu'il s'imprimera, à côté de la saisie : le même
             composant que la page d'impression, mis à l'échelle du cadre. Il
-            disparaît sous 1280 px, où la place manque ; le bouton « Imprimer
+            disparaît sous 1400 px, où les valeurs se coupaient dans les champs ; le bouton « Imprimer
             le mandat » y donne accès. */}
         {apercu && (
-          <div className="hidden xl:block sticky top-6 self-start">
+          <div className="hidden min-[1400px]:block sticky top-6 self-start">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="text-[11px] tracking-widest uppercase" style={{ color: T.muted }}>
                 Aperçu en direct

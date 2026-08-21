@@ -13,6 +13,7 @@ import { formatDateFr } from "@/lib/devis";
 import MandatDocument, { type PrintMandat, type Emetteur } from "@/app/admin/mandats/[id]/imprimer/MandatDocument";
 import MandatDocumentRecherche from "@/app/admin/mandats/[id]/imprimer/MandatDocumentRecherche";
 import MandatDocumentImport from "@/app/admin/mandats/[id]/imprimer/MandatDocumentImport";
+import DocAdapte from "@/app/admin/mandats/[id]/imprimer/DocAdapte";
 import SignerForm from "./SignerForm";
 
 export const dynamic = "force-dynamic";
@@ -141,7 +142,7 @@ export default async function MandatPublicPage({ params }: { params: Promise<{ t
         </div>
       </div>
 
-      <div style={{ overflowX: "auto" }}>
+      <DocAdapte>
         {type === "recherche" ? (
           <MandatDocumentRecherche m={m} emetteur={emetteur} />
         ) : type === "import" ? (
@@ -149,7 +150,7 @@ export default async function MandatPublicPage({ params }: { params: Promise<{ t
         ) : (
           <MandatDocument m={m} emetteur={emetteur} />
         )}
-      </div>
+      </DocAdapte>
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 16px" }}>
         <SignerForm

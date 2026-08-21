@@ -10,6 +10,7 @@ import MandatDocument, { type PrintMandat, type Emetteur } from "./MandatDocumen
 import MandatDocumentRecherche from "./MandatDocumentRecherche";
 import MandatDocumentImport from "./MandatDocumentImport";
 import PrintToolbar from "./PrintToolbar";
+import DocAdapte from "./DocAdapte";
 
 // CSS d'impression : masque l'habillage admin et la barre d'outils, papier A4
 // plein cadre. Même approche que les offres de reprise, avec une différence :
@@ -121,13 +122,15 @@ export default async function ImprimerMandatPage({ params }: { params: Promise<{
     <>
       <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
       <PrintToolbar />
-      {row.type === "recherche" ? (
-        <MandatDocumentRecherche m={m} emetteur={emetteur} />
-      ) : row.type === "import" ? (
-        <MandatDocumentImport m={m} emetteur={emetteur} />
-      ) : (
-        <MandatDocument m={m} emetteur={emetteur} />
-      )}
+      <DocAdapte>
+        {row.type === "recherche" ? (
+          <MandatDocumentRecherche m={m} emetteur={emetteur} />
+        ) : row.type === "import" ? (
+          <MandatDocumentImport m={m} emetteur={emetteur} />
+        ) : (
+          <MandatDocument m={m} emetteur={emetteur} />
+        )}
+      </DocAdapte>
     </>
   );
 }
