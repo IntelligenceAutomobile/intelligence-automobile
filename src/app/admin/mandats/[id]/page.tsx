@@ -147,6 +147,7 @@ export default async function MandatPage({ params }: { params: Promise<{ id: str
       : m.signedOn
         ? formatDateFr(m.signedOn)
         : "",
+    signedAtIso: m.signedAt,
     signedIp: m.signedIp,
   };
 
@@ -156,6 +157,7 @@ export default async function MandatPage({ params }: { params: Promise<{ id: str
       mode="fiche"
       canDelete={can(asRole(session.admin.role), "delete")}
       today={today}
+      createdOn={parisDay(m.createdAt).toISOString().slice(0, 10)}
       evenements={evenements}
       vehiculeExiste={vehiculeExiste}
       signature={signature}

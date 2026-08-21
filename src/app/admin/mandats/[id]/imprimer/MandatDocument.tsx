@@ -1,7 +1,7 @@
 // Mandat de vente imprimable, en 16 articles : le modèle validé le 20 août
-// 2026, généré avec les valeurs de la fiche. Rendu papier A4, noir sur blanc,
-// trois feuilles paginées à la main comme le modèle d'origine, bordereau de
-// rétractation détachable en dernière page.
+// 2026, rempli avec les valeurs de la fiche. Quatre feuilles A4 habillées par
+// la charte commune des mandats (MandatDocUI), bordereau de rétractation
+// détachable en dernière page.
 //
 // Ce papier engage la société : chaque clause chiffrée (commission, plancher,
 // plafond, indemnité forfaitaire) vient de src/lib/mandats.ts, jamais d'un
@@ -17,15 +17,16 @@ import {
   INDEMNITE_FORFAITAIRE_CENTS, MEDIATEUR, MANDATAIRE_IDENTITE,
   commissionEstimee, echeanceMandat, mandatVehiculeLabel,
 } from "@/lib/mandats";
+import {
+  Feuille, TitreDoc, Barrette, Art, P, Champs, ZoneTexte, Encart, Encarts,
+  CocheDoc, Encadre, Signatures, Bordereau, adresseLigne, ligne,
+  type Emetteur,
+} from "./MandatDocUI";
 
-/** Adresse de l'émetteur sur une ligne, sans la mention du pays. */
-function adresseLigne(address: string): string {
-  return address
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l !== "" && l.toLowerCase() !== "france")
-    .join(", ");
-}
+export type { Emetteur };
+
+// Le fil rouge imprimé en tête de chaque feuille.
+const SURTITRE = "Mandat de vente — Revente sur mesure";
 
 export type PrintMandat = {
   reference: string;
@@ -79,198 +80,6 @@ export type PrintMandat = {
   signedIp: string;
 };
 
-export type Emetteur = {
-  name: string;
-  address: string;
-  representative: string;
-  email: string;
-  phone: string;
-  siret: string;
-  tva: string;
-};
-
-const SHEET: React.CSSProperties = {
-  width: "210mm",
-  minHeight: "297mm",
-  padding: "0 0 8mm",
-  backgroundColor: "#fff",
-  color: "#111",
-  fontSize: "8.8pt",
-  lineHeight: 1.45,
-  margin: "0 auto",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const BODY: React.CSSProperties = { padding: "5mm 14mm 0", flex: 1 };
-
-// Un trait d'écriture : la valeur si elle existe, une ligne à compléter sinon.
-function ligne(valeur: string): string {
-  return valeur.trim() !== "" ? valeur : "________________";
-}
-
-/* ── Bandeau bleu nuit, repris de la charte des documents ── */
-function Bandeau({ emetteur, page }: { emetteur: Emetteur; page: number }) {
-  return (
-    <div
-      style={{
-        backgroundColor: "#0A1628",
-        color: "#FFFFFF",
-        padding: page === 1 ? "7mm 14mm" : "4.5mm 14mm",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        WebkitPrintColorAdjust: "exact",
-        printColorAdjust: "exact",
-      }}
-    >
-      <div>
-        <div style={{ fontSize: page === 1 ? "12pt" : "9.5pt", fontWeight: 600, letterSpacing: "0.24em", textTransform: "uppercase" }}>
-          {emetteur.name.replace(/^SASU\s+/i, "")}
-        </div>
-      </div>
-      <div style={{ fontSize: "7pt", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9FB3D4", textAlign: "right" }}>
-        Mandat de vente — Revente sur mesure
-      </div>
-    </div>
-  );
-}
-
-/* ── Pied de page : identité + paraphes, sur chaque feuille ── */
-function Pied({ emetteur, page }: { emetteur: Emetteur; page: number }) {
-  const adresse = adresseLigne(emetteur.address);
-  return (
-    <div
-      style={{
-        margin: "5mm 14mm 0",
-        paddingTop: "2mm",
-        borderTop: "1px solid #DDD",
-        display: "flex",
-        justifyContent: "space-between",
-        gap: 12,
-        fontSize: "6.8pt",
-        color: "#777",
-      }}
-    >
-      <span>
-        {emetteur.name} · {adresse}
-        {emetteur.siret ? ` · SIRET ${emetteur.siret}` : ""}
-        {emetteur.tva ? ` · TVA ${emetteur.tva}` : ""}
-      </span>
-      <span style={{ whiteSpace: "nowrap" }}>Page {page} / 4 — paraphes : ______ / ______</span>
-    </div>
-  );
-}
-
-/* ── Titre d'article ── */
-function Art({ n, titre, children }: { n: number; titre: string; children: React.ReactNode }) {
-  return (
-    <div className="mandat-avoid-break" style={{ marginTop: "3.6mm" }}>
-      <h2 style={{ fontSize: "8.8pt", fontWeight: 700, margin: "0 0 1.2mm", letterSpacing: "0.02em" }}>
-        ARTICLE {n} — {titre.toUpperCase()}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-function P({ children }: { children: React.ReactNode }) {
-  return <p style={{ margin: "0 0 1.6mm", textAlign: "justify" }}>{children}</p>;
-}
-
-/* ── Grille de champs à la manière du modèle : libellé gris, valeur soulignée ── */
-function Champs({ items }: { items: { label: string; value: string; span?: number }[] }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", columnGap: "5mm", rowGap: "1.6mm", margin: "1mm 0 1.6mm" }}>
-      {items.map((c) => (
-        <div key={c.label} style={{ gridColumn: `span ${c.span ?? 2}` }}>
-          <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>{c.label}</div>
-          <div style={{ borderBottom: "1px solid #BBB", padding: "0.4mm 0 0.6mm", fontWeight: 600, minHeight: "4mm" }}>
-            {c.value.trim() !== "" ? c.value : " "}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ── Case à cocher contractuelle, imprimée cochée ou vide selon la fiche ── */
-function CocheDoc({ checked, children }: { checked: boolean; children: React.ReactNode }) {
-  return (
-    <div
-      className="mandat-avoid-break"
-      style={{
-        display: "flex",
-        gap: "2.4mm",
-        alignItems: "flex-start",
-        border: "1px solid #C9D2E2",
-        backgroundColor: checked ? "#EFF4FC" : "#FFFFFF",
-        padding: "1.8mm 2.6mm",
-        margin: "0 0 1.6mm",
-        WebkitPrintColorAdjust: "exact",
-        printColorAdjust: "exact",
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          width: "3.4mm",
-          height: "3.4mm",
-          border: "1.2px solid #111",
-          flexShrink: 0,
-          marginTop: "0.5mm",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "7.5pt",
-          fontWeight: 700,
-          lineHeight: 1,
-        }}
-      >
-        {checked ? "✕" : ""}
-      </span>
-      <span style={{ textAlign: "justify" }}>{children}</span>
-    </div>
-  );
-}
-
-function Signatures({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
-  // Signé en ligne : le cachet horodaté tient lieu de signature manuscrite,
-  // avec le nom tapé, l'instant précis et l'adresse d'origine.
-  const enLigne = m.signedAt !== "" && m.signerName !== "";
-  const quand = enLigne
-    ? new Date(m.signedAt).toLocaleString("fr-FR", {
-        day: "numeric", month: "long", year: "numeric",
-        hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
-      })
-    : "";
-  return (
-    <div className="mandat-avoid-break" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5mm", marginTop: "3mm" }}>
-      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
-        <div style={{ fontWeight: 700 }}>Le Vendeur</div>
-        {enLigne ? (
-          <div style={{ fontSize: "7.6pt", marginTop: "1mm", lineHeight: 1.55 }}>
-            <div style={{ fontSize: "9.5pt", fontWeight: 700 }}>{m.signerName}</div>
-            <div>Signé en ligne le {quand}</div>
-            {m.signedIp !== "" && <div style={{ color: "#666" }}>Adresse IP : {m.signedIp}</div>}
-            <div style={{ color: "#666" }}>Mention «&nbsp;Lu et approuvé, bon pour mandat&nbsp;» validée en ligne</div>
-          </div>
-        ) : (
-          <div style={{ fontSize: "7.2pt", color: "#666" }}>
-            Signature précédée de la mention manuscrite «&nbsp;Lu et approuvé, bon pour mandat&nbsp;»
-          </div>
-        )}
-      </div>
-      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
-        <div style={{ fontWeight: 700 }}>Le Mandataire</div>
-        <div style={{ fontSize: "7.2pt", color: "#666" }}>
-          {emetteur.name} — {emetteur.representative}, président
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function MandatDocument({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
   const e = echeanceMandat(m.startDate, m.durationDays, m.startDate || m.createdOn);
   const commission = commissionEstimee(m.priceCents);
@@ -279,29 +88,29 @@ export default function MandatDocument({ m, emetteur }: { m: PrintMandat; emette
   const aDomicile = m.signMode !== "distance";
 
   const feuille = (page: number, children: React.ReactNode) => (
-    <div key={page} className="mandat-sheet" style={SHEET}>
-      <Bandeau emetteur={emetteur} page={page} />
-      <div style={BODY}>{children}</div>
-      <Pied emetteur={emetteur} page={page} />
-    </div>
+    <Feuille key={page} emetteur={emetteur} surtitre={SURTITRE} reference={m.reference} page={page} total={4}>
+      {children}
+    </Feuille>
   );
 
   return (
     <div className="mandat-screen-bg" style={{ backgroundColor: "#0A1628", padding: "24px 0", display: "flex", flexDirection: "column", gap: 24 }}>
 
-      {/* ── Feuille 1 : parties, véhicule, prix, honoraires, durée ── */}
+      {/* ── Feuille 1 : les parties et le véhicule confié ── */}
       {feuille(1, (
         <>
-          <div style={{ textAlign: "center", margin: "3mm 0 1mm" }}>
-            <h1 style={{ fontSize: "15pt", fontWeight: 800, letterSpacing: "0.04em", margin: 0 }}>MANDAT DE VENTE</h1>
-            <div style={{ color: "#555", fontSize: "8pt", marginTop: "0.8mm" }}>
-              Revente sur mesure — mandat d’entremise sans pouvoir de conclure ni d’encaisser
-            </div>
-          </div>
-          <Champs items={[
-            { label: "Mandat n°", value: m.reference, span: 3 },
-            { label: "Établi le", value: m.createdOn ? formatDateFr(m.createdOn) : "", span: 3 },
-          ]} />
+          <TitreDoc
+            titre="MANDAT DE VENTE"
+            sousTitre="Mandat d’entremise sans pouvoir de conclure ni d’encaisser"
+          />
+          <Barrette
+            items={[
+              { label: "Mandat n°", value: m.reference },
+              { label: "Établi le", value: m.createdOn ? formatDateFr(m.createdOn) : "" },
+              { label: "Durée", value: `${m.durationDays} jours` },
+              { label: "Régime", value: "Exclusif" },
+            ]}
+          />
 
           <Art n={1} titre="Les parties">
             <P><strong>Le mandant</strong> — ci-après «&nbsp;le Vendeur&nbsp;»</P>
@@ -347,30 +156,38 @@ export default function MandatDocument({ m, emetteur }: { m: PrintMandat; emette
               <strong>Déclarations du Vendeur.</strong>
               {` Le Vendeur déclare être le seul propriétaire du véhicule, celui-ci étant libre de tout gage, opposition, location avec option d’achat ou crédit en cours. Il certifie l’exactitude du kilométrage porté ci-dessus, déclare n’avoir connaissance d’aucun sinistre ni d’aucune avarie non mentionnés, et remet au mandataire l’ensemble des documents énumérés à l’article 12. Toute inexactitude engage sa seule responsabilité.`}
             </P>
-            <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>
-              Sinistres, réparations ou particularités déclarés par le Vendeur
-            </div>
-            <div style={{ borderBottom: "1px solid #BBB", minHeight: "8mm", padding: "0.6mm 0", whiteSpace: "pre-line" }}>
-              {m.disclosures}
-            </div>
+            <ZoneTexte
+              label="Sinistres, réparations ou particularités déclarés par le Vendeur"
+              valeur={m.disclosures}
+            />
           </Art>
 
+
+        </>
+      ))}
+
+      {/* ── Feuille 2 : prix, rémunération, durée, vie du mandat ── */}
+      {feuille(2, (
+        <>
           <Art n={4} titre="Prix de vente et prix plancher">
-            <Champs items={[
-              { label: "Prix de vente affiché à l’annonce (€ TTC)", value: m.priceCents > 0 ? formatEuroCents(m.priceCents) : "", span: 3 },
-              { label: "Prix plancher net vendeur (€)", value: m.floorCents > 0 ? formatEuroCents(m.floorCents) : "", span: 3 },
-            ]} />
+            <Encarts>
+              <Encart
+                label="Prix de vente affiché à l’annonce"
+                valeur={m.priceCents > 0 ? `${formatEuroCents(m.priceCents)} TTC` : ""}
+                mention="Le prix porté sur l’annonce et les supports de diffusion."
+              />
+              <Encart
+                label="Prix plancher net vendeur"
+                valeur={m.floorCents > 0 ? formatEuroCents(m.floorCents) : ""}
+                mention="Le montant que le Vendeur percevra au minimum."
+                ton="neutre"
+              />
+            </Encarts>
             <P>
               {`Le `}<strong>prix plancher net vendeur</strong>{` est le montant que le Vendeur percevra au minimum. Le mandataire ne peut consentir aucune remise conduisant à un montant inférieur sans l’accord écrit préalable du Vendeur. Toute modification du prix affiché fait l’objet d’un avenant signé des deux parties.`}
             </P>
           </Art>
 
-        </>
-      ))}
-
-      {/* ── Feuille 2 : rémunération, durée, vie du mandat ── */}
-      {feuille(2, (
-        <>
           <Art n={5} titre="Rémunération du mandataire">
             <P>{`La rémunération du mandataire n’est due qu’en cas de vente effective du véhicule. Les parties retiennent la formule suivante :`}</P>
             <CocheDoc checked={m.feeFormula === "acquereur"}>
@@ -463,17 +280,7 @@ export default function MandatDocument({ m, emetteur }: { m: PrintMandat; emette
             </P>
           </Art>
           <Art n={14} titre="Droit de rétractation">
-            <div
-              className="mandat-avoid-break"
-              style={{
-                borderLeft: "2.5px solid #0A1628",
-                backgroundColor: "#F2F5FB",
-                padding: "2mm 3mm",
-                marginBottom: "1.6mm",
-                WebkitPrintColorAdjust: "exact",
-                printColorAdjust: "exact",
-              }}
-            >
+            <Encadre>
               <P>
                 <strong>
                   {aDomicile
@@ -489,7 +296,7 @@ export default function MandatDocument({ m, emetteur }: { m: PrintMandat; emette
                   {`Conformément à l’article L. 221-10 du code de la consommation, aucun paiement ne peut être exigé du Vendeur avant l’expiration d’un délai de sept jours à compter de la signature.`}
                 </P>
               )}
-            </div>
+            </Encadre>
             <CocheDoc checked={m.immediateExecution}>
               {`Le Vendeur demande expressément l’exécution du mandat avant la fin du délai de rétractation. Il reconnaît qu’en cas de rétractation postérieure, il devra régler le montant des prestations effectivement fournies au prorata, dans la limite de ${indemnite} TTC, et que si la vente du véhicule est conclue avant la fin du délai, le mandat est alors pleinement exécuté et il renonce expressément à son droit de rétractation (article L. 221-28, 1°, du code de la consommation).`}
             </CocheDoc>
@@ -521,32 +328,18 @@ export default function MandatDocument({ m, emetteur }: { m: PrintMandat; emette
             { label: "Le", value: m.signedOn ? formatDateFr(m.signedOn) : "", span: 3 },
           ]} />
 
-          <Signatures m={m} emetteur={emetteur} />
+          <Signatures
+            emetteur={emetteur}
+            roleClient="Le Vendeur"
+            signerName={m.signerName}
+            signedAt={m.signedAt}
+            signedIp={m.signedIp}
+          />
 
-          <div style={{ margin: "5mm 0 2mm", borderTop: "1.5px dashed #999", position: "relative" }}>
-            <span style={{ position: "absolute", top: "-2.6mm", left: 0, backgroundColor: "#fff", paddingRight: "2mm", fontSize: "7pt", color: "#777" }}>✂</span>
-          </div>
-
-          <div className="mandat-avoid-break">
-            <h2 style={{ fontSize: "10pt", fontWeight: 800, letterSpacing: "0.04em", margin: "2mm 0 1mm" }}>BORDEREAU DE RÉTRACTATION</h2>
-            <P>
-              <span style={{ color: "#555", fontSize: "7.6pt" }}>
-                {`À compléter et renvoyer uniquement si vous souhaitez vous rétracter du mandat, dans un délai de quatorze jours à compter de sa signature.`}
-              </span>
-            </P>
-            <P>
-              {`À l’attention de : ${emetteur.name}, ${adresseLigne(emetteur.address)}${emetteur.email ? ` — ${emetteur.email}` : ""}`}
-            </P>
-            <P>
-              {`Je vous notifie par la présente ma rétractation du mandat de vente n° ${m.reference} signé le __________ portant sur le véhicule ${vehicule}${m.plate ? ` immatriculé ${m.plate}` : ""}.`}
-            </P>
-            <Champs items={[
-              { label: "Nom et prénom du Vendeur", value: "", span: 4 },
-              { label: "Date", value: "", span: 2 },
-              { label: "Adresse", value: "", span: 6 },
-              { label: "Signature", value: "", span: 3 },
-            ]} />
-          </div>
+          <Bordereau
+            emetteur={emetteur}
+            phrase={`Je vous notifie par la présente ma rétractation du mandat de vente n° ${m.reference} signé le __________ portant sur le véhicule ${vehicule}${m.plate ? ` immatriculé ${m.plate}` : ""}.`}
+          />
         </>
       ))}
     </div>

@@ -16,185 +16,13 @@ import {
 } from "@/lib/mandats";
 import type { PrintMandat, Emetteur } from "./MandatDocument";
 
-const SHEET: React.CSSProperties = {
-  width: "210mm",
-  minHeight: "297mm",
-  padding: "0 0 8mm",
-  backgroundColor: "#fff",
-  color: "#111",
-  fontSize: "8.8pt",
-  lineHeight: 1.45,
-  margin: "0 auto",
-  display: "flex",
-  flexDirection: "column",
-};
+import {
+  Feuille, TitreDoc, Barrette, Art, P, Champs, ZoneTexte, Encart, Encarts,
+  CocheDoc, Encadre, Signatures, Bordereau, adresseLigne, ligne,
+} from "./MandatDocUI";
 
-const BODY: React.CSSProperties = { padding: "5mm 14mm 0", flex: 1 };
-
-function ligne(valeur: string): string {
-  return valeur.trim() !== "" ? valeur : "________________";
-}
-
-/** Adresse de l'émetteur sur une ligne, sans la mention du pays. */
-function adresseLigne(address: string): string {
-  return address
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l !== "" && l.toLowerCase() !== "france")
-    .join(", ");
-}
-
-function Bandeau({ emetteur, page }: { emetteur: Emetteur; page: number }) {
-  return (
-    <div
-      style={{
-        backgroundColor: "#0A1628",
-        color: "#FFFFFF",
-        padding: page === 1 ? "7mm 14mm" : "4.5mm 14mm",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        WebkitPrintColorAdjust: "exact",
-        printColorAdjust: "exact",
-      }}
-    >
-      <div style={{ fontSize: page === 1 ? "12pt" : "9.5pt", fontWeight: 600, letterSpacing: "0.24em", textTransform: "uppercase" }}>
-        {emetteur.name.replace(/^SASU\s+/i, "")}
-      </div>
-      <div style={{ fontSize: "7pt", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9FB3D4", textAlign: "right" }}>
-        Mandat d’import — Union européenne
-      </div>
-    </div>
-  );
-}
-
-function Pied({ emetteur, page }: { emetteur: Emetteur; page: number }) {
-  return (
-    <div
-      style={{
-        margin: "5mm 14mm 0",
-        paddingTop: "2mm",
-        borderTop: "1px solid #DDD",
-        display: "flex",
-        justifyContent: "space-between",
-        gap: 12,
-        fontSize: "6.8pt",
-        color: "#777",
-      }}
-    >
-      <span>
-        {emetteur.name} · {adresseLigne(emetteur.address)}
-        {emetteur.siret ? ` · SIRET ${emetteur.siret}` : ""}
-        {emetteur.tva ? ` · TVA ${emetteur.tva}` : ""}
-      </span>
-      <span style={{ whiteSpace: "nowrap" }}>Page {page} / 4 — paraphes : ______ / ______</span>
-    </div>
-  );
-}
-
-function Art({ n, titre, children }: { n: number; titre: string; children: React.ReactNode }) {
-  return (
-    <div className="mandat-avoid-break" style={{ marginTop: "3.6mm" }}>
-      <h2 style={{ fontSize: "8.8pt", fontWeight: 700, margin: "0 0 1.2mm", letterSpacing: "0.02em" }}>
-        ARTICLE {n} — {titre.toUpperCase()}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-function P({ children }: { children: React.ReactNode }) {
-  return <p style={{ margin: "0 0 1.6mm", textAlign: "justify" }}>{children}</p>;
-}
-
-function Champs({ items }: { items: { label: string; value: string; span?: number }[] }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", columnGap: "5mm", rowGap: "1.6mm", margin: "1mm 0 1.6mm" }}>
-      {items.map((c) => (
-        <div key={c.label} style={{ gridColumn: `span ${c.span ?? 2}` }}>
-          <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>{c.label}</div>
-          <div style={{ borderBottom: "1px solid #BBB", padding: "0.4mm 0 0.6mm", fontWeight: 600, minHeight: "4mm", overflowWrap: "anywhere" }}>
-            {c.value.trim() !== "" ? c.value : " "}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CocheDoc({ checked, children }: { checked: boolean; children: React.ReactNode }) {
-  return (
-    <div
-      className="mandat-avoid-break"
-      style={{
-        display: "flex",
-        gap: "2.4mm",
-        alignItems: "flex-start",
-        border: "1px solid #C9D2E2",
-        backgroundColor: checked ? "#EFF4FC" : "#FFFFFF",
-        padding: "1.8mm 2.6mm",
-        margin: "0 0 1.6mm",
-        WebkitPrintColorAdjust: "exact",
-        printColorAdjust: "exact",
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          width: "3.4mm",
-          height: "3.4mm",
-          border: "1.2px solid #111",
-          flexShrink: 0,
-          marginTop: "0.5mm",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "7.5pt",
-          fontWeight: 700,
-          lineHeight: 1,
-        }}
-      >
-        {checked ? "✕" : ""}
-      </span>
-      <span style={{ textAlign: "justify" }}>{children}</span>
-    </div>
-  );
-}
-
-function Signatures({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
-  const enLigne = m.signedAt !== "" && m.signerName !== "";
-  const quand = enLigne
-    ? new Date(m.signedAt).toLocaleString("fr-FR", {
-        day: "numeric", month: "long", year: "numeric",
-        hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
-      })
-    : "";
-  return (
-    <div className="mandat-avoid-break" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5mm", marginTop: "3mm" }}>
-      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
-        <div style={{ fontWeight: 700 }}>Le Client</div>
-        {enLigne ? (
-          <div style={{ fontSize: "7.6pt", marginTop: "1mm", lineHeight: 1.55 }}>
-            <div style={{ fontSize: "9.5pt", fontWeight: 700 }}>{m.signerName}</div>
-            <div>Signé en ligne le {quand}</div>
-            {m.signedIp !== "" && <div style={{ color: "#666" }}>Adresse IP : {m.signedIp}</div>}
-            <div style={{ color: "#666" }}>Mention «&nbsp;Lu et approuvé, bon pour mandat&nbsp;» validée en ligne</div>
-          </div>
-        ) : (
-          <div style={{ fontSize: "7.2pt", color: "#666" }}>
-            Signature précédée de la mention manuscrite «&nbsp;Lu et approuvé, bon pour mandat&nbsp;»
-          </div>
-        )}
-      </div>
-      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
-        <div style={{ fontWeight: 700 }}>Le Mandataire</div>
-        <div style={{ fontSize: "7.2pt", color: "#666" }}>
-          {emetteur.name} — {emetteur.representative}, président
-        </div>
-      </div>
-    </div>
-  );
-}
+// Le fil rouge imprimé en tête de chaque feuille.
+const SURTITRE = "Mandat d'import — Union européenne";
 
 export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
   const e = echeanceMandat(m.startDate, m.durationDays, m.startDate || m.createdOn);
@@ -203,11 +31,9 @@ export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; 
   const cible = [m.make, m.model, m.version].filter((s) => s.trim() !== "").join(" ");
 
   const feuille = (page: number, children: React.ReactNode) => (
-    <div key={page} className="mandat-sheet" style={SHEET}>
-      <Bandeau emetteur={emetteur} page={page} />
-      <div style={BODY}>{children}</div>
-      <Pied emetteur={emetteur} page={page} />
-    </div>
+    <Feuille key={page} emetteur={emetteur} surtitre={SURTITRE} reference={m.reference} page={page} total={4}>
+      {children}
+    </Feuille>
   );
 
   return (
@@ -216,16 +42,18 @@ export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; 
       {/* ── Feuille 1 : parties, objet, véhicule visé ── */}
       {feuille(1, (
         <>
-          <div style={{ textAlign: "center", margin: "3mm 0 1mm" }}>
-            <h1 style={{ fontSize: "15pt", fontWeight: 800, letterSpacing: "0.04em", margin: 0 }}>MANDAT D’IMPORT</h1>
-            <div style={{ color: "#555", fontSize: "8pt", marginTop: "0.8mm" }}>
-              Acquisition d’un véhicule dans l’Union européenne — mandat d’entremise sans pouvoir de conclure ni d’encaisser
-            </div>
-          </div>
-          <Champs items={[
-            { label: "Mandat n°", value: m.reference, span: 3 },
-            { label: "Établi le", value: m.createdOn ? formatDateFr(m.createdOn) : "", span: 3 },
-          ]} />
+          <TitreDoc
+            titre="MANDAT D’IMPORT"
+            sousTitre="Acquisition dans l’Union européenne — mandat d’entremise sans pouvoir de conclure ni d’encaisser"
+          />
+          <Barrette
+            items={[
+              { label: "Mandat n°", value: m.reference },
+              { label: "Établi le", value: m.createdOn ? formatDateFr(m.createdOn) : "" },
+              { label: "Durée", value: `${m.durationDays} jours` },
+              { label: "Régime", value: "Exclusif" },
+            ]}
+          />
 
           <Art n={1} titre="Les parties">
             <P><strong>Le mandant</strong> — ci-après «&nbsp;le Client&nbsp;»</P>
@@ -263,12 +91,10 @@ export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; 
               { label: "Kilométrage plafond", value: m.mileageMaxKm > 0 ? `${formatNumber(m.mileageMaxKm)} km` : "", span: 3 },
               { label: "1re mise en circulation à partir de", value: m.regMinYear > 0 ? String(m.regMinYear) : "", span: 3 },
             ]} />
-            <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>
-              Critères libres convenus avec le Client
-            </div>
-            <div style={{ borderBottom: "1px solid #BBB", minHeight: "8mm", padding: "0.6mm 0", whiteSpace: "pre-line", marginBottom: "1.6mm" }}>
-              {m.searchSpec}
-            </div>
+            <ZoneTexte
+              label="Critères libres convenus avec le Client"
+              valeur={m.searchSpec}
+            />
             <P>
               {`Le budget s’entend toutes taxes comprises, hors TVA française éventuelle de l’article 6. Toute proposition qui le dépasse demande l’accord écrit du Client.`}
             </P>
@@ -280,6 +106,19 @@ export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; 
       {feuille(2, (
         <>
           <Art n={4} titre="Le forfait d'import">
+            <Encarts>
+              <Encart
+                label="Forfait d’import"
+                valeur={m.feeCents > 0 ? `${formatEuroCents(m.feeCents)} TTC` : ""}
+                mention="Quitus fiscal et immatriculation française inclus."
+              />
+              <Encart
+                label="Budget d’achat maximal"
+                valeur={m.budgetCents > 0 ? `${formatEuroCents(m.budgetCents)} TTC` : ""}
+                mention="Hors TVA française éventuelle de l’article 6."
+                ton="neutre"
+              />
+            </Encarts>
             <P>
               {`Les honoraires du mandataire sont convenus à la somme forfaitaire de `}
               <strong>{m.feeCents > 0 ? `${formatEuroCents(m.feeCents)} TTC` : "__________ € TTC"}</strong>
@@ -341,17 +180,7 @@ export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; 
           </Art>
 
           <Art n={11} titre="Droit de rétractation">
-            <div
-              className="mandat-avoid-break"
-              style={{
-                borderLeft: "2.5px solid #0A1628",
-                backgroundColor: "#F2F5FB",
-                padding: "2mm 3mm",
-                marginBottom: "1.6mm",
-                WebkitPrintColorAdjust: "exact",
-                printColorAdjust: "exact",
-              }}
-            >
+            <Encadre>
               <P>
                 <strong>
                   {aDomicile
@@ -367,7 +196,7 @@ export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; 
                   {`Conformément à l’article L. 221-10 du code de la consommation, aucun paiement ne peut être exigé du Client avant l’expiration d’un délai de sept jours à compter de la signature.`}
                 </P>
               )}
-            </div>
+            </Encadre>
             <CocheDoc checked={m.immediateExecution}>
               {`Le Client demande expressément l’exécution du mandat avant la fin du délai de rétractation. Il reconnaît qu’en cas de rétractation postérieure, il devra régler le montant des prestations effectivement fournies au prorata, dans la limite de ${indemnite} TTC, et que si l’achat du véhicule est conclu avant la fin du délai, le mandat est alors pleinement exécuté et il renonce expressément à son droit de rétractation (article L. 221-28, 1°, du code de la consommation).`}
             </CocheDoc>
@@ -398,11 +227,18 @@ export default function MandatDocumentImport({ m, emetteur }: { m: PrintMandat; 
             { label: "Le", value: m.signedOn ? formatDateFr(m.signedOn) : "", span: 3 },
           ]} />
 
-          <Signatures m={m} emetteur={emetteur} />
+          <Signatures
+            emetteur={emetteur}
+            roleClient="Le Client"
+            signerName={m.signerName}
+            signedAt={m.signedAt}
+            signedIp={m.signedIp}
+          />
 
-          <div style={{ margin: "5mm 0 2mm", borderTop: "1.5px dashed #999", position: "relative" }}>
-            <span style={{ position: "absolute", top: "-2.6mm", left: 0, backgroundColor: "#fff", paddingRight: "2mm", fontSize: "7pt", color: "#777" }}>✂</span>
-          </div>
+          <Bordereau
+            emetteur={emetteur}
+            phrase={`Je vous notifie par la présente ma rétractation du mandat d’import n° ${m.reference} signé le __________${cible ? `, portant sur l’acquisition d’un véhicule ${cible}` : ""}.`}
+          />
 
           <div className="mandat-avoid-break">
             <h2 style={{ fontSize: "10pt", fontWeight: 800, letterSpacing: "0.04em", margin: "2mm 0 1mm" }}>BORDEREAU DE RÉTRACTATION</h2>

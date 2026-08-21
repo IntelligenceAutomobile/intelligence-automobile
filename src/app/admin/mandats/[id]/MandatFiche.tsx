@@ -6,17 +6,22 @@
 // déclarations, puis les conditions (prix, honoraires, durée, garde,
 // signature). Ce qui se remplit ici se retrouve mot pour mot sur le mandat en
 // 16 articles ; l'écran dit d'ailleurs quel article chaque bloc alimente.
-import { useMemo, useRef, useState, useTransition } from "react";
+//
+// L'aperçu de droite rend LE MÊME composant que la page d'impression : ce que
+// l'on voit en tapant est exactement ce qui sortira de l'imprimante, mis à
+// l'échelle. Même recette que l'éditeur de devis.
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Trash2, User, AlertTriangle, History, CalendarClock, Printer, Paperclip, X, Car,
-  Send, Copy, CheckCircle2, Eye, ReceiptText, CalendarPlus,
+  Send, Copy, CheckCircle2, Eye, ReceiptText, CalendarPlus, Maximize2, PanelRightClose, PanelRightOpen,
 } from "lucide-react";
 import { upload } from "@vercel/blob/client";
 import { lireMontantEuros, lireEntier } from "@/lib/format";
 import { formatEuroCents } from "@/lib/comptes";
 import { formatDateFr } from "@/lib/devis";
+import { COMPANY } from "@/lib/company";
 import { KM_MAX } from "@/lib/reprise-serialize";
 import { REPRISE_FUELS, CT_STATUSES, CT_STATUS_LABEL } from "@/lib/reprises";
 import {
@@ -30,11 +35,16 @@ import {
 } from "@/lib/mandats";
 import type { MandatForm } from "@/lib/mandat-form";
 import {
-  T, TONE, AdminPage, PageHeader, SectionCard, fieldStyle, labelClass,
+  T, TONE, PageHeader, SectionCard, fieldStyle, labelClass,
   btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle,
 } from "../../ui";
 import { useToast } from "../../toast";
 import { ConfirmDialog } from "../../confirm";
+import { mandatFormToPrint } from "./apercu";
+import MandatDocument from "./imprimer/MandatDocument";
+import MandatDocumentRecherche from "./imprimer/MandatDocumentRecherche";
+import MandatDocumentImport from "./imprimer/MandatDocumentImport";
+import type { Emetteur } from "./imprimer/MandatDocUI";
 
 export type MandatEventRow = { id: string; type: string; content: string; author: string; createdAt: string };
 
@@ -47,10 +57,28 @@ export type SignatureInfo = {
   token: string | null;
   signerName: string;
   signedAtFr: string;
+  /** Horodatage brut, celui que le cachet du document met en forme. */
+  signedAtIso: string;
   signedIp: string;
 };
 
 export type Mandat = MandatForm;
+
+// Largeur d'une feuille A4 à 96 points par pouce : l'aperçu se met à l'échelle
+// par rapport à elle.
+const A4_W = 793.7;
+
+// Un contrat se signe au nom réel : l'aperçu porte la même identité que la
+// page d'impression, jamais celle de la marque blanche.
+const EMETTEUR: Emetteur = {
+  name: COMPANY.legalName,
+  address: COMPANY.addressLines.join("\n"),
+  representative: COMPANY.representative,
+  email: COMPANY.email,
+  phone: COMPANY.phone,
+  siret: COMPANY.siret,
+  tva: COMPANY.tvaNumber,
+};
 
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
@@ -99,12 +127,14 @@ function Avertissement({ children }: { children: React.ReactNode }) {
 }
 
 export default function MandatFiche({
-  mandat, mode, canDelete, today, evenements = [], vehiculeExiste = false, signature, regInfo, factureInfo,
+  mandat, mode, canDelete, today, createdOn, evenements = [], vehiculeExiste = false, signature, regInfo, factureInfo,
 }: {
   mandat: Mandat;
   mode: "creation" | "fiche";
   canDelete: boolean;
   today: string;
+  /** Jour d'établissement imprimé sur le document ; le jour même en création. */
+  createdOn?: string;
   evenements?: MandatEventRow[];
   /** La fiche de stock existe encore : le rattachement est une colonne nue,
       qu'aucune contrainte protège d'une suppression du véhicule. */
@@ -127,6 +157,40 @@ export default function MandatFiche({
   const [envois, setEnvois] = useState(0);
   const [confirmEnvoi, setConfirmEnvoi] = useState(false);
   const [confirmProlonger, setConfirmProlonger] = useState(false);
+
+  /* ── L'aperçu en direct ── */
+  const [apercu, setApercu] = useState(true);
+  const [zoom, setZoom] = useState<"fit" | 0.75 | 1>("fit");
+  const [scale, setScale] = useState(0.55);
+  const [docH, setDocH] = useState(4500);
+  const [pleinEcran, setPleinEcran] = useState(false);
+  const cadreRef = useRef<HTMLDivElement>(null);
+  const docRef = useRef<HTMLDivElement>(null);
+
+  // « Ajuster » suit la largeur du cadre ; 75 % et 100 % fixent l'échelle et
+  // laissent le cadre défiler. Les 28 px retirés sont le retrait intérieur.
+  // L'observateur se déclenche dès la mise en place : inutile de poser
+  // l'échelle à la main, ce que la règle des effets refuse.
+  useEffect(() => {
+    const cadre = cadreRef.current;
+    if (!cadre) return;
+    const calcul = () => (zoom === "fit" ? Math.min(1, (cadre.clientWidth - 28) / A4_W) : zoom);
+    const ro = new ResizeObserver(() => setScale(calcul()));
+    ro.observe(cadre);
+    return () => ro.disconnect();
+  }, [zoom, apercu]);
+
+  // La hauteur du document change à la frappe (un texte plus long pousse les
+  // pages) : le cadre doit suivre, sinon l'aperçu laisse un grand vide ou se
+  // fait couper. La mise à l'échelle ne change pas la place occupée, d'où ce
+  // calcul en propre.
+  useEffect(() => {
+    const doc = docRef.current;
+    if (!doc) return;
+    const ro = new ResizeObserver(() => setDocH(doc.scrollHeight));
+    ro.observe(doc);
+    return () => ro.disconnect();
+  }, [apercu]);
   // À l'écran, le chemin suffit et reste identique côté serveur et côté
   // navigateur ; l'adresse complète se compose au moment de la copie.
   const cheminPublic = signature?.token ? `/mandat/${signature.token}` : "";
@@ -168,6 +232,17 @@ export default function MandatFiche({
     () => echeanceMandat(f.startDate, Number(f.durationDays) || 0, today),
     [f.startDate, f.durationDays, today],
   );
+
+  // Le document de l'aperçu, refait à chaque frappe. Le composant qui le rend
+  // est celui de l'impression, choisi selon le type de mandat.
+  const documentApercu = useMemo(
+    () =>
+      mandatFormToPrint(f, createdOn || today, signature
+        ? { signerName: signature.signerName, signedAt: signature.signedAtIso, signedIp: signature.signedIp }
+        : undefined),
+    [f, createdOn, today, signature],
+  );
+  const Doc = estImport ? MandatDocumentImport : estVente ? MandatDocument : MandatDocumentRecherche;
 
   const honorairesPhrase = estVente
     ? f.feeFormula === "vendeur"
@@ -513,7 +588,9 @@ export default function MandatFiche({
   const tonalite = TONE[MANDAT_STATUS_TONE[f.status]];
 
   return (
-    <AdminPage>
+    // La page s'élargit quand l'aperçu est ouvert : la saisie garde sa place,
+    // le document tient à côté sans être réduit à une vignette.
+    <div className="mx-auto px-6 py-10" style={{ maxWidth: apercu ? 1560 : 1152 }}>
       <PageHeader
         title={mode === "creation" ? `Nouveau mandat ${MANDAT_TYPE_DE[f.type]}` : titre}
         subtitle={
@@ -531,6 +608,17 @@ export default function MandatFiche({
               <ArrowLeft size={14} />
               Retour
             </Link>
+            <button
+              type="button"
+              onClick={() => setApercu((v) => !v)}
+              aria-pressed={apercu}
+              className={`${btnGhostClass} hidden xl:inline-flex`}
+              style={btnGhostStyle}
+              title="Le document tel qu'il s'imprimera, mis à jour à la frappe"
+            >
+              {apercu ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+              {apercu ? "Masquer l'aperçu" : "Aperçu"}
+            </button>
             {mode === "fiche" && (
               <Link href={`/admin/mandats/${mandat.id}/imprimer`} className={btnGhostClass} style={btnGhostStyle}>
                 <Printer size={14} />
@@ -547,8 +635,14 @@ export default function MandatFiche({
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-28">
-        <div className="lg:col-span-2 space-y-5">
+      <div
+        className={
+          apercu
+            ? "grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.55fr)] gap-5 pb-28"
+            : "grid grid-cols-1 lg:grid-cols-3 gap-5 pb-28"
+        }
+      >
+        <div className={apercu ? "lg:col-span-2 xl:col-span-1 space-y-5" : "lg:col-span-2 space-y-5"}>
 
           <SectionCard title="Le mandant — article 1">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1159,6 +1253,72 @@ export default function MandatFiche({
             </Field>
           </SectionCard>
         </div>
+
+        {/* ── L'aperçu en direct ──
+            Le document tel qu'il s'imprimera, à côté de la saisie : le même
+            composant que la page d'impression, mis à l'échelle du cadre. Il
+            disparaît sous 1280 px, où la place manque ; le bouton « Imprimer
+            le mandat » y donne accès. */}
+        {apercu && (
+          <div className="hidden xl:block sticky top-6 self-start">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="text-[11px] tracking-widest uppercase" style={{ color: T.muted }}>
+                Aperçu en direct
+              </span>
+              <div className="flex ml-auto" style={{ border: `1px solid ${T.border}` }}>
+                {([["fit", "Ajuster"], [0.75, "75 %"], [1, "100 %"]] as const).map(([v, lab]) => (
+                  <button
+                    key={String(v)}
+                    type="button"
+                    onClick={() => setZoom(v)}
+                    aria-pressed={zoom === v}
+                    className="adm-chip text-[10px] tracking-widest uppercase px-2.5 py-1.5 transition-colors"
+                    style={{ backgroundColor: zoom === v ? T.accent : "transparent", color: zoom === v ? T.bg : T.textDim }}
+                  >
+                    {lab}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setPleinEcran(true)}
+                title="Voir le document en grand"
+                aria-label="Voir le document en grand"
+                className="adm-act inline-flex items-center justify-center w-7 h-7"
+                style={{ color: T.muted }}
+              >
+                <Maximize2 size={14} />
+              </button>
+            </div>
+
+            {/* Cadre borné avec défilement interne : le contrat fait plusieurs
+                feuilles, le bas doit rester atteignable sans quitter la page. */}
+            <div
+              ref={cadreRef}
+              style={{
+                position: "relative",
+                width: "100%",
+                maxHeight: "calc(100vh - 150px)",
+                overflow: "auto",
+                border: `1px solid ${T.border}`,
+                backgroundColor: "#04080F",
+                padding: 14,
+              }}
+            >
+              <div style={{ position: "relative", width: A4_W * scale, height: docH * scale, margin: "0 auto" }}>
+                <div style={{ position: "absolute", top: 0, left: 0, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+                  <div ref={docRef} style={{ width: A4_W }}>
+                    <Doc m={documentApercu} emetteur={EMETTEUR} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] mt-2 text-right" style={{ color: T.muted }}>
+              {mandatVehiculeLabel({ make: f.make, model: f.model })} · le document se met à jour à mesure que vous remplissez
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Barre d'enregistrement collée en bas : le bouton reste sous la main à
@@ -1168,7 +1328,7 @@ export default function MandatFiche({
         className="fixed bottom-0 left-0 right-0 z-40 lg:left-[232px]"
         style={{ backgroundColor: T.float, borderTop: `1px solid ${T.border}` }}
       >
-        <div className="mx-auto max-w-6xl px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="mx-auto px-6 py-3.5 flex flex-wrap items-center justify-between gap-3" style={{ maxWidth: apercu ? 1560 : 1152 }}>
           <span className="text-sm min-w-0 truncate" style={{ color: T.muted }}>
             {(estVente ? prixCents : budgetCents) > 0 ? (
               <>
@@ -1260,6 +1420,34 @@ export default function MandatFiche({
         onConfirm={() => { setDoublon(null); enregistrer(true); }}
         onCancel={() => setDoublon(null)}
       />
-    </AdminPage>
+      {/* Le document en grand, par-dessus la page : pour relire une clause
+          sans lancer l'impression. */}
+      {pleinEcran && (
+        <div
+          className="fixed inset-0 z-[70] overflow-auto"
+          style={{ backgroundColor: "rgba(4,11,22,0.94)" }}
+          onClick={() => setPleinEcran(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Aperçu du mandat"
+        >
+          <button
+            type="button"
+            onClick={() => setPleinEcran(false)}
+            aria-label="Fermer l'aperçu"
+            className="adm-act fixed top-4 right-5 z-10 inline-flex items-center justify-center w-9 h-9"
+            style={{ color: T.textDim, backgroundColor: T.surface, border: `1px solid ${T.border}` }}
+          >
+            <X size={16} />
+          </button>
+          <div
+            style={{ width: A4_W, maxWidth: "100%", margin: "0 auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Doc m={documentApercu} emetteur={EMETTEUR} />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
