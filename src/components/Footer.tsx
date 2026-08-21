@@ -131,6 +131,15 @@ export default function Footer() {
             >
               {t.footer.cgvLink}
             </Link>
+            <Link
+              href="/honoraires"
+              className="text-xs transition-colors duration-200"
+              style={{ color: "#9DBFF2" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#6B9FEE")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#9DBFF2")}
+            >
+              {t.footer.feesLink}
+            </Link>
           </div>
           <p className="text-xs" style={{ color: "#9DBFF2" }}>
             {t.footer.tagline}

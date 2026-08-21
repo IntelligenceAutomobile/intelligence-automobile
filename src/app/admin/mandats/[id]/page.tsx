@@ -32,6 +32,17 @@ export default async function MandatPage({ params }: { params: Promise<{ id: str
     ? (await prisma.vehicle.count({ where: { id: m.vehicleId } })) > 0
     : false;
 
+  // La facture d'honoraires créée en un clic : même règle de colonne nue.
+  const facture = m.feeInvoiceId
+    ? await prisma.quote.findUnique({
+        where: { id: m.feeInvoiceId },
+        select: { id: true, number: true, paymentStatus: true },
+      })
+    : null;
+  const factureInfo = facture
+    ? { id: facture.id, number: facture.number, payee: facture.paymentStatus === "payee" }
+    : null;
+
   // Le dossier d'immatriculation d'un import : même règle de colonne nue.
   const reg = m.registrationId
     ? await prisma.registration.findUnique({
@@ -149,6 +160,7 @@ export default async function MandatPage({ params }: { params: Promise<{ id: str
       vehiculeExiste={vehiculeExiste}
       signature={signature}
       regInfo={regInfo}
+      factureInfo={factureInfo}
     />
   );
 }

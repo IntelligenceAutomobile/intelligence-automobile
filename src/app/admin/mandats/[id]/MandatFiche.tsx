@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Trash2, User, AlertTriangle, History, CalendarClock, Printer, Paperclip, X, Car,
-  Send, Copy, CheckCircle2, Eye,
+  Send, Copy, CheckCircle2, Eye, ReceiptText, CalendarPlus,
 } from "lucide-react";
 import { upload } from "@vercel/blob/client";
 import { lireMontantEuros, lireEntier } from "@/lib/format";
@@ -99,7 +99,7 @@ function Avertissement({ children }: { children: React.ReactNode }) {
 }
 
 export default function MandatFiche({
-  mandat, mode, canDelete, today, evenements = [], vehiculeExiste = false, signature, regInfo,
+  mandat, mode, canDelete, today, evenements = [], vehiculeExiste = false, signature, regInfo, factureInfo,
 }: {
   mandat: Mandat;
   mode: "creation" | "fiche";
@@ -113,6 +113,8 @@ export default function MandatFiche({
   signature?: SignatureInfo;
   /** Dossier d'immatriculation ouvert depuis un mandat d'import. */
   regInfo?: { id: string; reference: string; statusLabel: string } | null;
+  /** Facture d'honoraires créée en un clic depuis ce mandat. */
+  factureInfo?: { id: string; number: string; payee: boolean } | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -124,6 +126,7 @@ export default function MandatFiche({
   const [docs, setDocs] = useState<MandatDoc[]>(mandat.documents);
   const [envois, setEnvois] = useState(0);
   const [confirmEnvoi, setConfirmEnvoi] = useState(false);
+  const [confirmProlonger, setConfirmProlonger] = useState(false);
   // À l'écran, le chemin suffit et reste identique côté serveur et côté
   // navigateur ; l'adresse complète se compose au moment de la copie.
   const cheminPublic = signature?.token ? `/mandat/${signature.token}` : "";
@@ -406,6 +409,55 @@ export default function MandatFiche({
       startTransition(() => router.refresh());
     } catch (e) {
       toast.error(e instanceof Error && e.message ? e.message : "L'envoi a échoué.");
+    } finally {
+      envoiEnCours.current = false;
+      setBusy(false);
+    }
+  }
+
+  /** Crée la facture d'honoraires depuis le mandat conclu : la conversion
+      commune du module Devis s'applique, même numérotation FAC-. */
+  async function creerFacture() {
+    if (envoiEnCours.current) return;
+    envoiEnCours.current = true;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/mandats/${mandat.id}/facture`, { method: "POST" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error);
+      if (j.manque) {
+        toast.error(`Le devis ${j.number} est prêt, il attend encore : ${j.manque}`);
+      } else {
+        toast.success(`Facture ${j.number} créée.`);
+      }
+      startTransition(() => router.refresh());
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : "La création de la facture a échoué.");
+    } finally {
+      envoiEnCours.current = false;
+      setBusy(false);
+    }
+  }
+
+  /** Prolonge le mandat de 60 jours, après accord écrit du client. */
+  async function prolonger() {
+    if (envoiEnCours.current) return;
+    envoiEnCours.current = true;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/mandats/${mandat.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prolongerJours: 60 }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error);
+      set("durationDays", String((Number(f.durationDays) || 0) + 60));
+      setConfirmProlonger(false);
+      toast.success("Mandat prolongé de 60 jours.");
+      startTransition(() => router.refresh());
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : "La prolongation a échoué.");
     } finally {
       envoiEnCours.current = false;
       setBusy(false);
@@ -846,6 +898,12 @@ export default function MandatFiche({
                 Jusqu&apos;au {formatDateFr(echeanceLue.echeance)} · {echeanceLue.phrase} · renouvelable par écrit
               </p>
             )}
+            {mode === "fiche" && f.status === "signe" && echeanceLue && (echeanceLue.proche || echeanceLue.expiree) && (
+              <button type="button" onClick={() => setConfirmProlonger(true)} disabled={busy} className={btnGhostClass} style={btnGhostStyle}>
+                <CalendarPlus size={13} />
+                Prolonger de 60 jours
+              </button>
+            )}
             {estVente && (
               <>
                 <Field label="Garde du véhicule">
@@ -1024,6 +1082,26 @@ export default function MandatFiche({
                   >
                     <input inputMode="numeric" value={f.feeFinalEuros} onChange={(e) => set("feeFinalEuros", e.target.value)} className={inputClass} style={fieldStyle} />
                   </Field>
+                  {factureInfo ? (
+                    <Link
+                      href={`/admin/devis/${factureInfo.id}`}
+                      className="inline-flex items-center gap-2 text-[12px]"
+                      style={{ color: factureInfo.payee ? TONE.success.fg : T.accent }}
+                    >
+                      <ReceiptText size={13} />
+                      Facture {factureInfo.number} · {factureInfo.payee ? "payée" : "impayée"}
+                    </Link>
+                  ) : estVente && f.feeFormula === "acquereur" ? (
+                    <p className="text-[12px]" style={{ color: T.muted }}>
+                      Formule A : le pack de livraison se facture à l&apos;acquéreur, depuis le module
+                      Devis.
+                    </p>
+                  ) : (
+                    <button type="button" onClick={creerFacture} disabled={busy} className={btnPrimaryClass} style={btnPrimaryStyle}>
+                      <ReceiptText size={14} />
+                      Créer la facture d&apos;honoraires
+                    </button>
+                  )}
                 </>
               )}
               {f.status === "retire" && (
@@ -1142,6 +1220,25 @@ export default function MandatFiche({
         busy={busy}
         onConfirm={envoyerPourSignature}
         onCancel={() => setConfirmEnvoi(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmProlonger}
+        title="Prolonger le mandat de 60 jours ?"
+        confirmLabel="Prolonger"
+        description={
+          <>
+            <span className="block" style={{ color: T.text }}>{mandat.reference} · {titre}</span>
+            <span className="block mt-2">
+              Le contrat se renouvelle par accord écrit des parties : obtenez l&apos;accord du
+              {" "}{clientMot} (un email suffit) et versez-le aux pièces du dossier. La prolongation
+              s&apos;inscrit au journal avec la nouvelle échéance.
+            </span>
+          </>
+        }
+        busy={busy}
+        onConfirm={prolonger}
+        onCancel={() => setConfirmProlonger(false)}
       />
 
       <ConfirmDialog

@@ -2,6 +2,7 @@
 //   lot 1 — Mandat + MandatEvent (contrats de mission, mandat de vente d'abord)
 //   lot 2 — colonnes d'envoi et de signature en ligne sur Mandat
 //   lot 3 — cahier des charges, forfait et dossier d'immatriculation (recherche, import)
+//   lot 4 — facture d'honoraires en un clic
 //
 // Idempotent : chaque lot ne s'applique que s'il manque. Recette du projet :
 // la CLI Prisma ne sait pas parler à Turso, on passe par le client libsql.
@@ -64,6 +65,12 @@ if (aColonne("searchSpec")) {
   console.log("Lot 3 (recherche et import) déjà en place.");
 } else {
   await appliquer("20260820220000_mandats_recherche_import");
+}
+
+if (aColonne("feeInvoiceId")) {
+  console.log("Lot 4 (facture d'honoraires) déjà en place.");
+} else {
+  await appliquer("20260821080000_mandats_facture");
 }
 
 console.log("Migrations des Mandats à jour.");

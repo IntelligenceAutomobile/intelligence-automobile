@@ -6,7 +6,7 @@ import { can, asRole } from "@/lib/roles";
 import { parisDay } from "@/lib/vehicules";
 import { formatEuroCents } from "@/lib/comptes";
 import {
-  isMandatStatus, MANDAT_STATUS_LABEL, MANDAT_CLOSED_STATUSES, lireDocuments,
+  isMandatStatus, MANDAT_STATUS_LABEL, MANDAT_CLOSED_STATUSES, lireDocuments, echeanceMandat,
 } from "@/lib/mandats";
 import { mandatChangesFromBody } from "@/lib/mandat-serialize";
 
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const avant = await prisma.mandat.findUnique({
       where: { id },
-      select: { type: true, status: true, signedOn: true, startDate: true, decidedOn: true, soldOn: true, vehicleId: true, documents: true },
+      select: { type: true, status: true, signedOn: true, startDate: true, durationDays: true, decidedOn: true, soldOn: true, vehicleId: true, documents: true },
     });
     if (!avant) return NextResponse.json({ error: "Mandat introuvable." }, { status: 404 });
 
@@ -39,6 +39,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const data: Record<string, unknown> = { ...input };
     const traces: { type: string; content: string; author: string }[] = [];
+
+    // Prolongation : le contrat se renouvelle « par accord écrit des parties ».
+    // Le geste allonge la durée et se raconte au journal ; l'écrit du client
+    // (un email suffit) se verse aux pièces du dossier.
+    const prolonger = Math.round(Number(body.prolongerJours) || 0);
+    if (prolonger > 0 && prolonger <= 365) {
+      if (avant.status !== "signe") {
+        return NextResponse.json({ error: "Seul un mandat signé et en cours se prolonge." }, { status: 409 });
+      }
+      const duree = avant.durationDays + prolonger;
+      data.durationDays = duree;
+      const e = echeanceMandat(avant.startDate, duree, jour);
+      traces.push({
+        type: "statut",
+        content: `Mandat prolongé de ${prolonger} jours par accord écrit${e ? ` (échéance au ${e.echeance})` : ""}`,
+        author,
+      });
+    }
 
     // Une pièce versée au dossier se raconte : le journal dit quand le mandat
     // signé, la carte grise ou le contrôle technique sont arrivés.

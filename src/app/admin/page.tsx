@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileBadge, ReceiptText, ShieldCheck, MessagesSquare, NotebookPen, XCircle, Send, Users, HandCoins } from "lucide-react";
+import { BadgeCheck, BellRing, Car, CalendarClock, ChevronRight, FileText, FileBadge, FileSignature, ReceiptText, ShieldCheck, MessagesSquare, NotebookPen, XCircle, Send, Users, HandCoins } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/format";
@@ -12,6 +12,8 @@ import { PIPELINE_STAGES, EVENT_LABEL, type EventType, type Stage } from "@/lib/
 import { TYPE_LABEL, TYPE_COLOR, formatMin, toDateKey, authorColor, signatureOf, type AppointmentType } from "@/lib/planning";
 import { missingEssentials, parisDay } from "@/lib/vehicules";
 import { validite } from "@/lib/reprises";
+import { echeanceMandat } from "@/lib/mandats";
+import { voitMandats } from "@/lib/roles";
 import { deadlines as regDeadlines, isRegType } from "@/lib/immatriculation";
 import { T, CHART, AdminPage, StatusBadge, firstImage } from "./ui";
 import { KpiTile, AreaChart, Donut, Bars } from "./charts";
@@ -131,7 +133,7 @@ export default async function AdminDashboard() {
   warrantyToDate.setDate(warrantyToDate.getDate() + 60);
   const warrantyTo = warrantyToDate.toISOString().slice(0, 10);
 
-  const [disponibles, reserves, vendus, valueAgg, recent, tousVehicules, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, lateMeetingActions, openRegistrations, offresOuvertes] =
+  const [disponibles, reserves, vendus, valueAgg, recent, tousVehicules, masquees, allVehicleDates, allQuotes, recentNotes, ledgerRows, allLeads, recentLeadEvents, upcomingRdv, unpaidInvoices, expiringWarranties, lateMeetingActions, openRegistrations, offresOuvertes, mandatsSignes] =
     await Promise.all([
       prisma.vehicle.count({ where: { status: "disponible" } }),
       prisma.vehicle.count({ where: { status: "reserve" } }),
@@ -188,6 +190,12 @@ export default async function AdminDashboard() {
         where: { status: { in: ["brouillon", "proposee"] } },
         select: { offerDate: true, validityDays: true },
       }),
+      // Mandats signés en cours d'exécution : leur échéance appelle le
+      // renouvellement écrit avant de tomber.
+      prisma.mandat.findMany({
+        where: { status: "signe" },
+        select: { startDate: true, durationDays: true },
+      }),
     ]);
 
   // Une offre qui dort est une offre perdue : celles qui approchent de leur fin
@@ -196,6 +204,13 @@ export default async function AdminDashboard() {
   const offresQuiExpirent = offresOuvertes.filter((r) => {
     const v = validite(r.offerDate, r.validityDays, jourParis);
     return v !== null && (v.expiree || v.proche);
+  }).length;
+
+  // Mandats à l'échéance, visibles des seules personnes du lancement nominatif.
+  const mandatsVisibles = voitMandats(session.admin.email, cookieStore.get("ia_collab_name")?.value);
+  const mandatsAEcheance = mandatsSignes.filter((m) => {
+    const e = echeanceMandat(m.startDate, m.durationDays, jourParis);
+    return e !== null && (e.expiree || e.proche);
   }).length;
 
   const stockValue = valueAgg._sum.price ?? 0;
@@ -450,6 +465,27 @@ export default async function AdminDashboard() {
             </span>
             <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
               Voir les reprises
+              <ChevronRight size={12} />
+            </span>
+          </Link>
+        )}
+
+        {/* Alerte mandats à l'échéance (lancement nominatif : Fab puis César) */}
+        {mandatsVisibles && mandatsAEcheance > 0 && (
+          <Link
+            href="/admin/mandats?statut=echeance"
+            className="adm-enter flex items-center gap-3 px-5 py-3 mb-5"
+            style={{ backgroundColor: T.surface, border: "1px solid rgba(240,180,90,0.4)" }}
+          >
+            <FileSignature size={16} style={{ color: T.warning }} />
+            <span className="text-sm" style={{ color: T.textDim }}>
+              <span className="font-semibold" style={{ color: T.warning }}>
+                {mandatsAEcheance} mandat{mandatsAEcheance > 1 ? "s" : ""}
+              </span>
+              {` ${mandatsAEcheance > 1 ? "arrivent" : "arrive"} à échéance · proposez le renouvellement écrit`}
+            </span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[11px] tracking-widest uppercase" style={{ color: T.accent }}>
+              Voir les mandats
               <ChevronRight size={12} />
             </span>
           </Link>

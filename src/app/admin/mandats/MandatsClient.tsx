@@ -8,7 +8,7 @@
 // deux choses qu'une action de liste bâclerait.
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Plus, FileSignature, Search, X } from "lucide-react";
+import { Plus, FileSignature, Search, X, Download } from "lucide-react";
 import { formatEuroCents } from "@/lib/comptes";
 import { formatNumber } from "@/lib/format";
 import { matchesSearch } from "@/lib/vehicules";
@@ -17,7 +17,7 @@ import {
   ECHEANCE_ALERTE_JOURS,
   type MandatStatus, type MandatType, type MandatFilter,
 } from "@/lib/mandats";
-import { T, TONE, Tag, AdminPage, PageHeader, fieldStyle, btnPrimaryClass, btnPrimaryStyle } from "../ui";
+import { T, TONE, Tag, AdminPage, PageHeader, fieldStyle, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../ui";
 
 export type MandatRow = {
   id: string;
@@ -295,10 +295,24 @@ export default function MandatsClient({
             : `${total} mandat${total > 1 ? "s" : ""}${pilotage.enCours > 0 ? ` · ${pilotage.enCours} en cours d'exécution` : ""}.`
         }
         action={
-          <Link href="/admin/mandats/nouveau" className={btnPrimaryClass} style={btnPrimaryStyle}>
-            <Plus size={14} />
-            Nouveau mandat
-          </Link>
+          <span className="flex flex-wrap items-center gap-3">
+            {total > 0 && (
+              <button
+                type="button"
+                onClick={() => { window.location.href = "/api/admin/mandats/export"; }}
+                className={btnGhostClass}
+                style={btnGhostStyle}
+                title="Le registre chronologique complet, en CSV pour le comptable"
+              >
+                <Download size={14} />
+                Exporter le registre
+              </button>
+            )}
+            <Link href="/admin/mandats/nouveau" className={btnPrimaryClass} style={btnPrimaryStyle}>
+              <Plus size={14} />
+              Nouveau mandat
+            </Link>
+          </span>
         }
       />
 

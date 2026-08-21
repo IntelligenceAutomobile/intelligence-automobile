@@ -791,6 +791,7 @@ model Mandat {
   soldOn         String @default("")     // jour de la vente YYYY-MM-DD
   soldPriceCents Int    @default(0)      // prix de vente réalisé
   feeFinalCents  Int    @default(0)      // rémunération réellement facturée
+  feeInvoiceId   String?                 // facture d'honoraires créée en un clic
   outcomeNote    String @default("")
 
   documents String   @default("[]")      // JSON [{ label, url, uploadedAt }]

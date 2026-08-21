@@ -35,6 +35,7 @@ export const en: Translations = {
     tagline: "Premium imports · European Union → France",
     legalLink: "Legal notice",
     cgvLink: "Terms",
+    feesLink: "Fees",
   },
 
   cgv: {
@@ -171,6 +172,86 @@ export const en: Translations = {
         blocks: [
           { text: "To be completed and returned only in the event of withdrawal, to SASU Intelligence Automobile (contact@intelligenceautomobile.com)." },
           { text: "I hereby give notice of withdrawal from the contract for the sale or service below: Quote dated … · Quote number … · Vehicle concerned … · Date of receipt … · Client name … · Address … · Date … · Client signature." },
+        ],
+      },
+    ],
+  },
+
+  fees: {
+    metaTitle: "Fees — Intelligence Automobile",
+    title: "Fees",
+    updated: "Fee schedule effective 21 August 2026",
+    sections: [
+      {
+        heading: "A public fee schedule, announced before any commitment",
+        blocks: [
+          { text: "Every assignment starts with a figure in writing. Our fees appear on the mandate before signature, then on the invoice: the amount you read here is the amount you will find on your documents. All amounts include VAT." },
+        ],
+      },
+      {
+        heading: "Sales mandate — Tailored resale",
+        blocks: [
+          { text: "We sell your car on your behalf: valuation, preparation, professional photos, advertising, enquiry handling, accompanied test drives, secured transaction. Two formulas, at your choice, written into the mandate:" },
+          {
+            list: [
+              "Formula A — fees borne by the buyer: you pay €0, the buyer pays for the delivery pack they select.",
+              "Formula B — a commission of 5% of the achieved sale price, with a minimum of €890 and a cap of €2,990.",
+            ],
+          },
+          { text: "The commission is settled on the day the sale completes, out of the price achieved. If the car remains unsold, you owe €0: preparation, photography and advertising costs stay with us." },
+        ],
+      },
+      {
+        heading: "Search mandate — Tailored search",
+        blocks: [
+          { text: "You describe the car, we find it in France or across Europe. Fees are set at signature according to your purchase budget, and are due on success only: car found and bought." },
+          {
+            list: [
+              "Budget up to €20,000: €990",
+              "€20,000 to €40,000: €1,490",
+              "€40,000 to €80,000: €1,990",
+              "Above: amount agreed in the mandate",
+            ],
+          },
+          { text: "Signing the mandate is free. If the search comes to nothing, you owe €0." },
+        ],
+      },
+      {
+        heading: "Import mandate — European Union",
+        blocks: [
+          { text: "You found the listing, or we find it: seller verification, negotiation, document checks, insured transport, French tax clearance and registration. The flat fee depends on the price of the car and applies equally when you bring the listing." },
+          {
+            list: [
+              "Car up to €50,000: €1,490",
+              "€50,000 to €100,000: €1,990",
+              "Above: €2,490",
+            ],
+          },
+          { text: "The flat fee includes the tax clearance request and French registration. Transport is re-invoiced at cost, against receipts, and the European certificate of conformity, where required, at the manufacturer's price." },
+        ],
+      },
+      {
+        heading: "Payment and safeguards",
+        blocks: [
+          {
+            list: [
+              "Signing a mandate is free: the first euro is paid when the assignment succeeds.",
+              "The price of the car flows directly between buyer and seller, and the purchase invoice is issued in your name: our fee is the only sum that comes to us.",
+              "Fees are settled by bank transfer or card, when the assignment completes.",
+            ],
+          },
+        ],
+      },
+      {
+        heading: "Revocation and withdrawal",
+        blocks: [
+          { text: "A mandate signed remotely or away from business premises opens a fourteen-day withdrawal period, with its form attached to the contract. The mandate remains revocable at any time: search and import mandates then unwind pro rata to the work performed, and the sales mandate provides for a flat indemnity of €490 where the car is sold directly or withdrawn during the assignment. Each contract details these terms article by article." },
+        ],
+      },
+      {
+        heading: "Complaints and mediation",
+        blocks: [
+          { text: "Any complaint should be sent to contact@intelligenceautomobile.com. Failing an amicable outcome, our consumer mediator can be reached free of charge: Médiation de la consommation & patrimoine (MCP), 12 square Desnouettes, 75015 Paris, mcpmediation.org." },
         ],
       },
     ],

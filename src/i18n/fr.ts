@@ -33,6 +33,7 @@ export const fr = {
     tagline: "Import premium · Union européenne → France",
     legalLink: "Mentions légales",
     cgvLink: "CGV",
+    feesLink: "Honoraires",
   },
 
   cgv: {
@@ -169,6 +170,86 @@ export const fr = {
         blocks: [
           { text: "À compléter et renvoyer uniquement en cas de rétractation, à SASU Intelligence Automobile (contact@intelligenceautomobile.com)." },
           { text: "Je notifie par la présente la rétractation du contrat portant sur la vente ou la prestation ci-dessous : Devis du … · Numéro de devis … · Véhicule concerné … · Date de réception … · Nom du Client … · Adresse … · Date … · Signature du Client." },
+        ],
+      },
+    ],
+  },
+
+  fees: {
+    metaTitle: "Honoraires — Intelligence Automobile",
+    title: "Honoraires",
+    updated: "Grille en vigueur au 21 août 2026",
+    sections: [
+      {
+        heading: "Une grille publique, annoncée avant tout engagement",
+        blocks: [
+          { text: "Chaque mission commence par un chiffre écrit noir sur blanc. Nos honoraires figurent sur le mandat avant signature, puis sur la facture : le montant que vous lisez ici est celui que vous retrouverez sur vos documents. Tous les montants s'entendent toutes taxes comprises." },
+        ],
+      },
+      {
+        heading: "Mandat de vente — Revente sur mesure",
+        blocks: [
+          { text: "Nous vendons votre véhicule pour votre compte : estimation, préparation, reportage photo, diffusion, gestion des contacts, essais accompagnés, sécurisation de la transaction. Deux formules, au choix, inscrites au mandat :" },
+          {
+            list: [
+              "Formule A — frais à la charge de l'acquéreur : vous versez 0 €, l'acquéreur règle le pack de livraison qu'il retient.",
+              "Formule B — commission de 5 % du prix de vente réalisé, avec un minimum de 890 € et un plafond de 2 990 €.",
+            ],
+          },
+          { text: "La commission se règle le jour de la vente conclue, sur le prix obtenu. Le véhicule reste invendu ? Vous nous devez 0 € : les frais de préparation, de reportage et de diffusion restent à notre charge." },
+        ],
+      },
+      {
+        heading: "Mandat de recherche — Recherche personnalisée",
+        blocks: [
+          { text: "Vous décrivez le véhicule, nous le trouvons en France ou en Europe. Les honoraires sont fixés à la signature selon votre budget d'achat, et dus uniquement au succès : véhicule trouvé et acheté." },
+          {
+            list: [
+              "Budget jusqu'à 20 000 € : 990 €",
+              "De 20 000 à 40 000 € : 1 490 €",
+              "De 40 000 à 80 000 € : 1 990 €",
+              "Au-delà : montant convenu au mandat",
+            ],
+          },
+          { text: "La signature du mandat est gratuite. La recherche reste vaine ? Vous nous devez 0 €." },
+        ],
+      },
+      {
+        heading: "Mandat d'import — Union européenne",
+        blocks: [
+          { text: "Vous avez repéré l'annonce, ou nous la trouvons : vérification du vendeur, négociation, contrôle documentaire, transport assuré, quitus fiscal et carte grise française. Le forfait dépend du prix du véhicule et s'applique de la même façon quand vous apportez l'annonce." },
+          {
+            list: [
+              "Véhicule jusqu'à 50 000 € : 1 490 €",
+              "De 50 000 à 100 000 € : 1 990 €",
+              "Au-delà : 2 490 €",
+            ],
+          },
+          { text: "Le forfait inclut la demande de quitus fiscal et l'immatriculation française. Le transport est refacturé à prix coûtant, sur justificatifs, et le certificat de conformité européen, s'il est requis, au tarif du constructeur." },
+        ],
+      },
+      {
+        heading: "Paiement et garanties",
+        blocks: [
+          {
+            list: [
+              "La signature d'un mandat est gratuite : le premier euro se règle au succès de la mission.",
+              "Le prix du véhicule circule directement entre acheteur et vendeur, et la facture d'achat est établie à votre nom : nos honoraires sont la seule somme qui nous revient.",
+              "Les honoraires se règlent par virement ou carte bancaire, à la conclusion de la mission.",
+            ],
+          },
+        ],
+      },
+      {
+        heading: "Révocation et rétractation",
+        blocks: [
+          { text: "Un mandat signé à distance ou hors établissement ouvre un délai de rétractation de quatorze jours, avec son bordereau joint au contrat. Le mandat reste révocable à tout moment : les mandats de recherche et d'import se dénouent alors au prorata des diligences engagées, et le mandat de vente prévoit une indemnité forfaitaire de 490 € en cas de vente directe ou de retrait du véhicule en cours de mission. Chaque contrat détaille ces conditions article par article." },
+        ],
+      },
+      {
+        heading: "Réclamations et médiation",
+        blocks: [
+          { text: "Toute réclamation s'adresse à contact@intelligenceautomobile.com. À défaut de solution amiable, le médiateur de la consommation dont nous relevons est accessible gratuitement : Médiation de la consommation & patrimoine (MCP), 12 square Desnouettes, 75015 Paris, mcpmediation.org." },
         ],
       },
     ],

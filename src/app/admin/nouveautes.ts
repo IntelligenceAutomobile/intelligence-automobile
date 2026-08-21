@@ -61,6 +61,16 @@ export const NOUVEAUTES: Nouveaute[] = [
         ],
       },
       {
+        titre: "La mission se conclut proprement",
+        points: [
+          "Mission conclue : la facture d'honoraires se crée en un clic, pré-remplie au montant du contrat, TVA 20 %, même numérotation que le reste de l'outil.",
+          "Un mandat qui approche de sa fin se prolonge de 60 jours en un geste, après l'accord écrit du client, avec la trace au journal.",
+          "Le tableau de bord alerte quand des mandats arrivent à échéance.",
+          "Le registre chronologique complet s'exporte en CSV pour le comptable, depuis la liste.",
+          "La grille d'honoraires est publiée sur le site, page Honoraires, au pied de chaque page.",
+        ],
+      },
+      {
         titre: "La mission se suit",
         points: [
           "Les échéances se surveillent depuis la liste : un mandat qui expire sous 10 jours s'allume pour proposer le renouvellement écrit.",
