@@ -6,6 +6,7 @@ import { can, asRole, voitMandats } from "@/lib/roles";
 import { parisDay } from "@/lib/vehicules";
 import { timeAgo } from "@/lib/format";
 import { isMandatStatus, isMandatType, lireDocuments } from "@/lib/mandats";
+import { listesMandat } from "@/lib/mandat-listes";
 import { REG_STATUS_LABEL, type RegStatus } from "@/lib/immatriculation";
 import { formatDateFr } from "@/lib/devis";
 import MandatFiche, { type Mandat, type MandatEventRow, type SignatureInfo } from "./MandatFiche";
@@ -57,6 +58,10 @@ export default async function MandatPage({ params }: { params: Promise<{ id: str
         statusLabel: REG_STATUS_LABEL[reg.status as RegStatus] ?? reg.status,
       }
     : null;
+
+  // Les listes déroulantes des champs libres : elles servent aussi quand on
+  // reprend un mandat existant pour corriger une marque ou une couleur.
+  const listes = await listesMandat();
 
   const today = parisDay(new Date()).toISOString().slice(0, 10);
   const maintenant = new Date();
@@ -163,6 +168,7 @@ export default async function MandatPage({ params }: { params: Promise<{ id: str
       signature={signature}
       regInfo={regInfo}
       factureInfo={factureInfo}
+      listes={listes}
     />
   );
 }

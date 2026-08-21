@@ -232,26 +232,6 @@ export default function MandatDocumentRecherche({ m, emetteur }: { m: PrintManda
             phrase={`Je vous notifie par la présente ma rétractation du mandat de recherche n° ${m.reference} signé le __________${cible ? `, portant sur la recherche d’un véhicule ${cible}` : ""}.`}
           />
 
-          <div className="mandat-avoid-break">
-            <h2 style={{ fontSize: "10pt", fontWeight: 800, letterSpacing: "0.04em", margin: "2mm 0 1mm" }}>BORDEREAU DE RÉTRACTATION</h2>
-            <P>
-              <span style={{ color: "#555", fontSize: "7.6pt" }}>
-                {`À compléter et renvoyer uniquement si vous souhaitez vous rétracter du mandat, dans un délai de quatorze jours à compter de sa signature.`}
-              </span>
-            </P>
-            <P>
-              {`À l’attention de : ${emetteur.name}, ${adresseLigne(emetteur.address)}${emetteur.email ? ` — ${emetteur.email}` : ""}`}
-            </P>
-            <P>
-              {`Je vous notifie par la présente ma rétractation du mandat de recherche n° ${m.reference} signé le __________${cible ? `, portant sur la recherche d’un véhicule ${cible}` : ""}.`}
-            </P>
-            <Champs items={[
-              { label: "Nom et prénom du Client", value: "", span: 4 },
-              { label: "Date", value: "", span: 2 },
-              { label: "Adresse", value: "", span: 6 },
-              { label: "Signature", value: "", span: 3 },
-            ]} />
-          </div>
         </>
       ))}
     </div>

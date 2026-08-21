@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
-import { getCollabSession } from "@/lib/collab-auth";
+import { requireMandats } from "@/lib/mandats-acces";
 import { trouverClientExistant, normaliserEmail } from "@/lib/crm-intake";
 import { parisDay } from "@/lib/vehicules";
 import { formatNumber } from "@/lib/format";
-import { MANDAT_TYPE_LABEL, mandatVehiculeLabel } from "@/lib/mandats";
+import {
+  MANDAT_TYPE_LABEL, mandatVehiculeLabel,
+  mandatPrefix, prochaineReference, nettoyerReference, type MandatType,
+} from "@/lib/mandats";
 import { mandatFromBody, manquesAlaCreation } from "@/lib/mandat-serialize";
 
-/** Référence lisible du mandat : MV-2026-001, remise à 1 chaque année.
-    Le préfixe porte le type : MR- et MI- suivront aux lots recherche et import. */
-async function nextReference(type: string): Promise<string> {
-  const year = new Date().getFullYear();
-  const lettre = type === "recherche" ? "R" : type === "import" ? "I" : "V";
-  const prefix = `M${lettre}-${year}-`;
-  const last = await prisma.mandat.findFirst({
+/** Référence proposée : MV-2026-001, une série par type, remise à 1 chaque
+    année. L'année est celle de Paris : le 31 décembre au soir, un serveur en
+    temps universel aurait déjà changé de série. */
+async function referenceProposee(type: MandatType): Promise<string> {
+  const annee = parisDay(new Date()).toISOString().slice(0, 4);
+  const prefix = mandatPrefix(type, annee);
+  const prises = await prisma.mandat.findMany({
     where: { reference: { startsWith: prefix } },
-    orderBy: { reference: "desc" },
     select: { reference: true },
   });
-  const seq = last ? parseInt(last.reference.slice(prefix.length), 10) : 0;
-  return `${prefix}${String((Number.isFinite(seq) ? seq : 0) + 1).padStart(3, "0")}`;
+  return prochaineReference(prefix, prises.map((m) => m.reference));
 }
 
 /**
@@ -32,8 +32,8 @@ async function nextReference(type: string): Promise<string> {
  * pas les lignes en cours d'écriture.
  */
 export async function POST(req: NextRequest) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
 
   try {
     const body = (await req.json()) as Record<string, unknown>;
@@ -77,14 +77,29 @@ export async function POST(req: NextRequest) {
     // (« partir d'un véhicule ») : une simple trace, jamais une relation.
     const vehicleId = typeof body.vehicleId === "string" && body.vehicleId.trim() !== "" ? body.vehicleId : null;
 
-    const collab = await getCollabSession();
-    const author = collab?.name ?? session.admin.email ?? "";
+    const author = acces.author;
     const jour = parisDay(new Date()).toISOString().slice(0, 10);
     const titre = `${MANDAT_TYPE_LABEL[input.type]} ${mandatVehiculeLabel(input)}`;
+
     // La référence se calcule AVANT la transaction : une lecture hors du
     // contexte transactionnel pendant qu'il tient la connexion se bloquerait
     // elle-même sur SQLite.
-    const reference = await nextReference(input.type);
+    //
+    // Celle saisie à la main prime sur la proposition : un dossier se retient
+    // parfois mieux sous le nom du client que sous un numéro. La collision se
+    // vérifie ici pour pouvoir la dire clairement, l'index unique de la base
+    // restant le dernier mot en cas de simultanéité.
+    const voulue = nettoyerReference(body.reference);
+    const reference = voulue || (await referenceProposee(input.type));
+    if (voulue) {
+      const prise = await prisma.mandat.findUnique({ where: { reference: voulue }, select: { id: true } });
+      if (prise) {
+        return NextResponse.json(
+          { error: `La référence « ${voulue} » est déjà portée par un autre mandat.` },
+          { status: 409 },
+        );
+      }
+    }
 
     const mandat = await prisma.$transaction(async (tx) => {
       let clientId: string;
@@ -153,7 +168,7 @@ export async function POST(req: NextRequest) {
     // renvoyer une panne muette.
     if (e instanceof Error && /unique/i.test(e.message) && /reference/i.test(e.message)) {
       return NextResponse.json(
-        { error: "Un autre mandat vient d'être créé. Réessayez." },
+        { error: "Cette référence vient d'être prise par un autre mandat. Réessayez ou choisissez la vôtre." },
         { status: 409 },
       );
     }

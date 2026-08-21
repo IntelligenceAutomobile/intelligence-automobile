@@ -25,7 +25,8 @@ import { COMPANY } from "@/lib/company";
 import { KM_MAX } from "@/lib/reprise-serialize";
 import { REPRISE_FUELS, CT_STATUSES, CT_STATUS_LABEL } from "@/lib/reprises";
 import {
-  MANDAT_STATUSES, MANDAT_STATUS_TONE, MANDAT_TYPE_DE, mandatStatusLabel,
+  MANDAT_STATUSES, MANDAT_STATUS_TONE, MANDAT_TYPE_DE, MANDAT_TYPES, MANDAT_TYPE_LABEL,
+  mandatStatusLabel, type MandatType,
   FEE_FORMULAS, FEE_FORMULA_LABEL, SIGN_MODES, SIGN_MODE_LABEL, CUSTODIES, CUSTODY_LABEL,
   COMMISSION_TAUX_POURCENT, COMMISSION_MIN_CENTS, COMMISSION_PLAFOND_CENTS,
   INDEMNITE_FORFAITAIRE_CENTS, commissionEstimee, echeanceMandat, mandatVehiculeLabel,
@@ -34,6 +35,7 @@ import {
   type MandatStatus, type MandatDoc,
 } from "@/lib/mandats";
 import type { MandatForm } from "@/lib/mandat-form";
+import type { ListesMandat } from "@/lib/mandat-listes";
 import {
   T, TONE, PageHeader, SectionCard, fieldStyle, labelClass,
   btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle,
@@ -64,6 +66,19 @@ export type SignatureInfo = {
 
 export type Mandat = MandatForm;
 
+export type ClientBref = { id: string; name: string; company: string; email: string; phone: string };
+export type VehiculeBref = {
+  id: string; make: string; model: string; year: number; mileage: number;
+  fuel: string; color: string; price: number; power: number | null; status: string;
+};
+
+// Listes vides par défaut : la fiche s'affiche même si rien n'a encore été
+// saisi dans la maison, les champs restent alors de simples champs libres.
+const SANS_LISTE: ListesMandat = {
+  marques: [], modeles: [], versions: [], couleurs: [], energies: [],
+  pays: [], lieux: [], assureurs: [],
+};
+
 // Largeur d'une feuille A4 à 96 points par pouce : l'aperçu se met à l'échelle
 // par rapport à elle.
 const A4_W = 793.7;
@@ -92,6 +107,42 @@ function Field({ label, children, hint }: { label: string; children: React.React
 
 const inputClass = "px-4 py-3 text-sm outline-none w-full focus:border-[#6B9FEE]";
 const selectClass = "px-4 py-3 text-sm outline-none w-full cursor-pointer focus:border-[#6B9FEE]";
+
+/* ── Champ à liste ouverte ──
+   Un champ de saisie ordinaire, doublé d'un menu des valeurs déjà utilisées
+   dans la maison : on choisit dans la liste, ou on tape autre chose. Les
+   marques, modèles, couleurs et pays reviennent d'un mandat à l'autre, les
+   retaper en entier à chaque fois était du temps perdu. */
+function ChampListe({
+  liste, options, value, onChange, placeholder, mono = false,
+}: {
+  /** Identifiant du menu, unique dans la page. */
+  liste: string;
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  mono?: boolean;
+}) {
+  return (
+    <>
+      <input
+        list={options.length > 0 ? liste : undefined}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={mono ? `${inputClass} font-mono` : inputClass}
+        style={fieldStyle}
+        autoComplete="off"
+      />
+      {options.length > 0 && (
+        <datalist id={liste}>
+          {options.map((o) => <option key={o} value={o} />)}
+        </datalist>
+      )}
+    </>
+  );
+}
 
 /* ── Case à cocher qui porte une conséquence contractuelle ── */
 function Coche({
@@ -127,7 +178,8 @@ function Avertissement({ children }: { children: React.ReactNode }) {
 }
 
 export default function MandatFiche({
-  mandat, mode, canDelete, today, createdOn, evenements = [], vehiculeExiste = false, signature, regInfo, factureInfo,
+  mandat, mode, canDelete, today, createdOn, evenements = [], vehiculeExiste = false, signature, regInfo, factureInfo, suggestions,
+  listes, clients = [], vehicules = [],
 }: {
   mandat: Mandat;
   mode: "creation" | "fiche";
@@ -145,6 +197,15 @@ export default function MandatFiche({
   regInfo?: { id: string; reference: string; statusLabel: string } | null;
   /** Facture d'honoraires créée en un clic depuis ce mandat. */
   factureInfo?: { id: string; number: string; payee: boolean } | null;
+  /** Référence proposée pour chaque type, à la création : changer de type
+      change la proposition, sauf si une référence a été écrite à la main. */
+  suggestions?: Record<MandatType, string>;
+  /** Les valeurs déjà saisies ailleurs, proposées sous les champs libres. */
+  listes?: ListesMandat;
+  /** Le carnet clients, pour reprendre une fiche au lieu de tout retaper. */
+  clients?: ClientBref[];
+  /** Le parc encore à vendre, pour partir d'une fiche de stock. */
+  vehicules?: VehiculeBref[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -154,6 +215,10 @@ export default function MandatFiche({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [doublon, setDoublon] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
   const [docs, setDocs] = useState<MandatDoc[]>(mandat.documents);
+  // La liste vivante des pièces. Deux dépôts rapprochés partaient chacun de la
+  // liste capturée à leur début : le second enregistrement écrasait le premier
+  // et une pièce disparaissait du dossier. La référence, elle, suit.
+  const docsRef = useRef<MandatDoc[]>(mandat.documents);
   const [envois, setEnvois] = useState(0);
   const [confirmEnvoi, setConfirmEnvoi] = useState(false);
   const [confirmProlonger, setConfirmProlonger] = useState(false);
@@ -163,6 +228,8 @@ export default function MandatFiche({
   const [zoom, setZoom] = useState<"fit" | 0.75 | 1>("fit");
   const [scale, setScale] = useState(0.55);
   const [docH, setDocH] = useState(4500);
+  /** Les feuilles dont le contenu dépasse la page, relevées pendant la frappe. */
+  const [debordent, setDebordent] = useState<number[]>([]);
   const [pleinEcran, setPleinEcran] = useState(false);
   const cadreRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<HTMLDivElement>(null);
@@ -184,10 +251,23 @@ export default function MandatFiche({
   // pages) : le cadre doit suivre, sinon l'aperçu laisse un grand vide ou se
   // fait couper. La mise à l'échelle ne change pas la place occupée, d'où ce
   // calcul en propre.
+  //
+  // Au passage, on relève les feuilles qui dépassent la page. Les champs
+  // libres (critères, sinistres déclarés, lien d'annonce) grandissent sans
+  // limite : un texte un peu long faisait sortir le contrat sur une feuille
+  // de plus, sans bandeau et avec un pied qui annonçait « Page 1 / 4 ».
+  // L'aperçu montrait le document mais taisait la limite ; il la dit
+  // maintenant, pendant la frappe.
   useEffect(() => {
     const doc = docRef.current;
     if (!doc) return;
-    const ro = new ResizeObserver(() => setDocH(doc.scrollHeight));
+    const ro = new ResizeObserver(() => {
+      setDocH(doc.scrollHeight);
+      // Une feuille qui tient mesure exactement la page (1123 px à 96 points
+      // par pouce), sa hauteur minimale. Au-delà, c'est le contenu qui pousse.
+      const feuilles = Array.from(doc.querySelectorAll<HTMLElement>(".mandat-sheet"));
+      setDebordent(feuilles.map((s, i) => (s.scrollHeight > 1124 ? i + 1 : 0)).filter(Boolean));
+    });
     ro.observe(doc);
     return () => ro.disconnect();
   }, [apercu]);
@@ -209,6 +289,56 @@ export default function MandatFiche({
   const estVente = f.type === "vente";
   const estImport = f.type === "import";
   const clientMot = estVente ? "vendeur" : "client";
+  // La référence se renomme tant que le contrat reste un brouillon ; signée,
+  // elle est celle du document remis au client.
+  const refModifiable = mode === "creation" || f.status === "brouillon";
+
+  const L = listes ?? SANS_LISTE;
+
+  /** Reprend une fiche du carnet clients : le mandant se remplit tout seul. */
+  function reprendreClient(id: string) {
+    const c = clients.find((x) => x.id === id);
+    if (!c) return;
+    setF((x) => ({
+      ...x,
+      clientId: c.id,
+      ownerName: c.company || c.name,
+      ownerEmail: c.email,
+      ownerPhone: c.phone,
+    }));
+    toast.success(`${c.company || c.name} repris du carnet. Complétez l'adresse.`);
+  }
+
+  /** Part d'une fiche du parc : le bloc véhicule et le prix se remplissent. */
+  function reprendreVehicule(id: string) {
+    const v = vehicules.find((x) => x.id === id);
+    if (!v) return;
+    setF((x) => ({
+      ...x,
+      vehicleId: v.id,
+      make: v.make,
+      model: v.model,
+      mileageKm: v.mileage > 0 ? String(v.mileage) : x.mileageKm,
+      fuel: v.fuel || x.fuel,
+      color: v.color || x.color,
+      power: v.power ? `${v.power} ch` : x.power,
+      priceEuros: v.price > 0 ? String(v.price) : x.priceEuros,
+    }));
+    toast.success(`${v.make} ${v.model} repris du stock. Complétez la plaque et le numéro de série.`);
+  }
+
+  /** Changer de type à la création : la référence proposée suit, une référence
+      écrite à la main reste. */
+  function changerType(suivant: MandatType) {
+    setF((x) => ({
+      ...x,
+      type: suivant,
+      reference: suggestions && x.reference === suggestions[x.type] ? suggestions[suivant] : x.reference,
+      // Un mandat de recherche ou d'import part de loin par nature : le lien
+      // de signature s'envoie, il ne se signe pas au domicile.
+      signMode: suivant === "vente" ? "domicile" : "distance",
+    }));
+  }
 
   const enCentimes = (v: string) => {
     const lu = lireMontantEuros(v);
@@ -251,6 +381,30 @@ export default function MandatFiche({
     : honorairesCents > 0
       ? `honoraires ${formatEuroCents(honorairesCents)} au succès`
       : grilleCents > 0 ? `grille : ${formatEuroCents(grilleCents)}` : "";
+
+  /**
+   * Repose dans le formulaire ce que le serveur a calculé de son côté : jour
+   * de vente, honoraires retenus, date d'effet, durée après prolongation.
+   *
+   * Sans ce retour, ces champs restaient vides à l'écran alors que la base les
+   * portait, et le vide les écrasait au prochain enregistrement : une facture
+   * de 900 € se retrouvait en face d'un mandat annonçant zéro.
+   */
+  function reposer(champs: Record<string, unknown> | undefined) {
+    if (!champs) return;
+    const euros = (v: unknown) => (typeof v === "number" && v > 0 ? String(Math.round(v / 100)) : "");
+    setF((x) => ({
+      ...x,
+      ...(typeof champs.status === "string" ? { status: champs.status as MandatStatus } : {}),
+      ...(typeof champs.reference === "string" ? { reference: champs.reference } : {}),
+      ...(typeof champs.signedOn === "string" ? { signedOn: champs.signedOn } : {}),
+      ...(typeof champs.startDate === "string" ? { startDate: champs.startDate } : {}),
+      ...(typeof champs.durationDays === "number" ? { durationDays: String(champs.durationDays) } : {}),
+      ...(typeof champs.soldOn === "string" ? { soldOn: champs.soldOn } : {}),
+      ...(typeof champs.feeFinalCents === "number" ? { feeFinalEuros: euros(champs.feeFinalCents) } : {}),
+      ...(typeof champs.immediateExecution === "boolean" ? { immediateExecution: champs.immediateExecution } : {}),
+    }));
+  }
 
   /** Corps de requête, après contrôle de chaque saisie chiffrée. */
   function corps(forcerRattachement = false): Record<string, unknown> | null {
@@ -313,6 +467,9 @@ export default function MandatFiche({
 
     return {
       type: f.type,
+      // La référence part telle qu'elle est affichée : le serveur la nettoie,
+      // vérifie qu'elle est libre, et refuse de la changer sur un mandat signé.
+      reference: f.reference,
       ownerName: f.ownerName,
       ownerBirthDate: f.ownerBirthDate,
       ownerAddress: f.ownerAddress,
@@ -394,6 +551,7 @@ export default function MandatFiche({
         toast.success(`Mandat ${j.reference} enregistré.`);
         router.push(`/admin/mandats/${j.id}`);
       } else {
+        reposer(j.champs);
         toast.success("Mandat enregistré.");
       }
       startTransition(() => router.refresh());
@@ -431,22 +589,30 @@ export default function MandatFiche({
       }),
     );
     if (ajoutees.length > 0) {
-      const suite = [...docs, ...ajoutees];
-      setDocs(suite);
-      await enregistrerPieces(suite);
+      // La liste de départ est celle d'AUJOURD'HUI, pas celle capturée quand
+      // l'envoi a commencé : un dépôt rapide pendant qu'un gros fichier monte
+      // se voyait sinon effacé par l'enregistrement du gros.
+      await enregistrerPieces([...docsRef.current, ...ajoutees]);
     }
   }
 
   async function retirerPiece(url: string) {
-    const suite = docs.filter((d) => d.url !== url);
-    setDocs(suite);
-    await enregistrerPieces(suite);
+    await enregistrerPieces(docsRef.current.filter((d) => d.url !== url));
   }
 
   /** Les pièces s'enregistrent seules, sans attendre le bouton : un mandat
-      signé déposé puis perdu au rechargement serait pire que rien. */
+      signé déposé puis perdu au rechargement serait pire que rien.
+      L'écran ne montre la liste qu'une fois la base d'accord : une pièce
+      affichée mais absente du dossier serait pire encore. */
   async function enregistrerPieces(suite: MandatDoc[]) {
-    if (mode === "creation") return;
+    if (mode === "creation") {
+      docsRef.current = suite;
+      setDocs(suite);
+      return;
+    }
+    const avant = docsRef.current;
+    docsRef.current = suite;
+    setDocs(suite);
     try {
       const res = await fetch(`/api/admin/mandats/${mandat.id}`, {
         method: "PATCH",
@@ -455,7 +621,11 @@ export default function MandatFiche({
       });
       if (!res.ok) throw new Error();
     } catch {
-      toast.error("L'enregistrement des pièces a échoué.");
+      // La liste revient à ce qu'elle était : une pièce affichée sans être au
+      // dossier se découvrirait le jour où on la cherche.
+      docsRef.current = avant;
+      setDocs(avant);
+      toast.error("L'enregistrement des pièces a échoué, le dossier reste tel qu'il était.");
     }
   }
 
@@ -503,6 +673,7 @@ export default function MandatFiche({
       if (j.manque) {
         toast.error(`Le devis ${j.number} est prêt, il attend encore : ${j.manque}`);
       } else {
+        reposer(j.champs);
         toast.success(`Facture ${j.number} créée.`);
       }
       startTransition(() => router.refresh());
@@ -527,7 +698,7 @@ export default function MandatFiche({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error);
-      set("durationDays", String((Number(f.durationDays) || 0) + 60));
+      reposer(j.champs);
       setConfirmProlonger(false);
       toast.success("Mandat prolongé de 60 jours.");
       startTransition(() => router.refresh());
@@ -644,10 +815,95 @@ export default function MandatFiche({
       >
         <div className={apercu ? "lg:col-span-2 xl:col-span-1 space-y-5" : "lg:col-span-2 space-y-5"}>
 
+          <SectionCard title="Le mandat">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field
+                label="Référence"
+                hint={
+                  refModifiable
+                    ? "Le numéro proposé suit la série de l'année. Remplacez-le par le vôtre si un nom parle mieux : il figure sur le contrat, sur la facture d'honoraires et dans le registre."
+                    : "Le contrat remis au client porte cette référence : elle reste telle quelle."
+                }
+              >
+                <input
+                  value={f.reference}
+                  onChange={(e) => set("reference", e.target.value)}
+                  disabled={!refModifiable}
+                  placeholder={suggestions ? suggestions[f.type] : "MV-2026-001"}
+                  autoFocus={mode === "creation"}
+                  className={inputClass}
+                  style={{ ...fieldStyle, opacity: refModifiable ? 1 : 0.6 }}
+                />
+              </Field>
+              <Field
+                label="Type de mandat"
+                hint={mode === "creation" ? "Il décide du contrat imprimé et des champs à remplir." : undefined}
+              >
+                {mode === "creation" ? (
+                  <select
+                    value={f.type}
+                    onChange={(e) => changerType(e.target.value as MandatType)}
+                    className={selectClass}
+                    style={fieldStyle}
+                  >
+                    {MANDAT_TYPES.map((t) => (
+                      <option key={t} value={t}>{MANDAT_TYPE_LABEL[t]}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="px-4 py-3 text-sm" style={{ border: `1px solid ${T.border}`, backgroundColor: T.float, color: T.textDim }}>
+                    {MANDAT_TYPE_LABEL[f.type]}
+                  </p>
+                )}
+              </Field>
+            </div>
+
+            {/* Partir de ce que la maison connaît déjà, au lieu de tout
+                retaper : une fiche du carnet clients, une voiture du parc. */}
+            {mode === "creation" && (clients.length > 0 || (estVente && vehicules.length > 0)) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {clients.length > 0 && (
+                  <Field label="Reprendre un client" hint="Son nom, son email et son téléphone se remplissent. L'adresse reste à saisir.">
+                    <select
+                      value=""
+                      onChange={(e) => e.target.value && reprendreClient(e.target.value)}
+                      className={selectClass}
+                      style={fieldStyle}
+                    >
+                      <option value="">Saisir un nouveau client</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.company || c.name}{c.email ? ` · ${c.email}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+                {estVente && vehicules.length > 0 && (
+                  <Field label="Partir d'un véhicule du stock" hint="Marque, modèle, kilométrage, couleur et prix se remplissent.">
+                    <select
+                      value=""
+                      onChange={(e) => e.target.value && reprendreVehicule(e.target.value)}
+                      className={selectClass}
+                      style={fieldStyle}
+                    >
+                      <option value="">Saisir un véhicule hors stock</option>
+                      {vehicules.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.make} {v.model}{v.year > 0 ? ` — ${v.year}` : ""}{v.status === "reserve" ? " (réservé)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+              </div>
+            )}
+          </SectionCard>
+
           <SectionCard title="Le mandant — article 1">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Nom et prénom *">
-                <input value={f.ownerName} onChange={(e) => set("ownerName", e.target.value)} autoFocus={mode === "creation"} className={inputClass} style={fieldStyle} />
+                <input value={f.ownerName} onChange={(e) => set("ownerName", e.target.value)} className={inputClass} style={fieldStyle} />
               </Field>
               <Field label="Né(e) le">
                 <input type="date" value={f.ownerBirthDate} onChange={(e) => set("ownerBirthDate", e.target.value)} className={inputClass} style={fieldStyle} />
@@ -685,15 +941,15 @@ export default function MandatFiche({
                 <input type="date" value={f.firstRegDate} onChange={(e) => set("firstRegDate", e.target.value)} className={inputClass} style={fieldStyle} />
               </Field>
               <Field label="Marque *">
-                <input value={f.make} onChange={(e) => set("make", e.target.value)} placeholder="Audi, BMW…" className={inputClass} style={fieldStyle} />
+                <ChampListe liste="l-marque" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, BMW…" />
               </Field>
               <Field label="Modèle *">
-                <input value={f.model} onChange={(e) => set("model", e.target.value)} placeholder="TT" className={inputClass} style={fieldStyle} />
+                <ChampListe liste="l-modele" options={L.modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="TT" />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Version">
-                <input value={f.version} onChange={(e) => set("version", e.target.value)} placeholder="2.0 TFSI 200 S-Line" className={inputClass} style={fieldStyle} />
+                <ChampListe liste="l-version" options={L.versions} value={f.version} onChange={(v) => set("version", v)} placeholder="2.0 TFSI 200 S-Line" />
               </Field>
               <Field label="Puissance">
                 <input value={f.power} onChange={(e) => set("power", e.target.value)} placeholder="200 ch" className={inputClass} style={fieldStyle} />
@@ -710,7 +966,7 @@ export default function MandatFiche({
                 </select>
               </Field>
               <Field label="Couleur">
-                <input value={f.color} onChange={(e) => set("color", e.target.value)} placeholder="Gris Daytona" className={inputClass} style={fieldStyle} />
+                <ChampListe liste="l-couleur" options={L.couleurs} value={f.color} onChange={(v) => set("color", v)} placeholder="Gris Daytona" />
               </Field>
               <Field label="Clés remises ou présentées">
                 <input inputMode="numeric" value={f.keys} onChange={(e) => set("keys", e.target.value)} placeholder="2" className={inputClass} style={fieldStyle} />
@@ -754,13 +1010,13 @@ export default function MandatFiche({
             <SectionCard title="Le cahier des charges — article 3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Marque souhaitée">
-                  <input value={f.make} onChange={(e) => set("make", e.target.value)} placeholder="Audi, Porsche…" className={inputClass} style={fieldStyle} />
+                  <ChampListe liste="l-marque-cible" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, Porsche…" />
                 </Field>
                 <Field label="Modèle">
-                  <input value={f.model} onChange={(e) => set("model", e.target.value)} placeholder="Macan" className={inputClass} style={fieldStyle} />
+                  <ChampListe liste="l-modele-cible" options={L.modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="Macan" />
                 </Field>
                 <Field label="Version, finition">
-                  <input value={f.version} onChange={(e) => set("version", e.target.value)} placeholder="S 3.0 V6, toit pano…" className={inputClass} style={fieldStyle} />
+                  <ChampListe liste="l-version-cible" options={L.versions} value={f.version} onChange={(v) => set("version", v)} placeholder="S 3.0 V6, toit pano…" />
                 </Field>
                 <Field label="Énergie">
                   <select value={f.fuel} onChange={(e) => set("fuel", e.target.value)} className={selectClass} style={fieldStyle}>
@@ -778,7 +1034,7 @@ export default function MandatFiche({
                 </Field>
                 {estImport && (
                   <Field label="Pays d'achat visé">
-                    <input value={f.countryOrigin} onChange={(e) => set("countryOrigin", e.target.value)} placeholder="Allemagne" className={inputClass} style={fieldStyle} />
+                    <ChampListe liste="l-pays" options={L.pays} value={f.countryOrigin} onChange={(v) => set("countryOrigin", v)} placeholder="Allemagne" />
                   </Field>
                 )}
               </div>
@@ -823,7 +1079,7 @@ export default function MandatFiche({
                   <input inputMode="numeric" value={f.mileageKm} onChange={(e) => set("mileageKm", e.target.value)} className={inputClass} style={fieldStyle} />
                 </Field>
                 <Field label="Couleur">
-                  <input value={f.color} onChange={(e) => set("color", e.target.value)} className={inputClass} style={fieldStyle} />
+                  <ChampListe liste="l-couleur-retenu" options={L.couleurs} value={f.color} onChange={(v) => set("color", v)} />
                 </Field>
                 <Field label="Puissance">
                   <input value={f.power} onChange={(e) => set("power", e.target.value)} placeholder="354 ch" className={inputClass} style={fieldStyle} />
@@ -1038,7 +1294,7 @@ export default function MandatFiche({
             )}
             <div className="grid grid-cols-2 gap-4">
               <Field label="Fait à">
-                <input value={f.signPlace} onChange={(e) => set("signPlace", e.target.value)} placeholder="Paris" className={inputClass} style={fieldStyle} />
+                <ChampListe liste="l-lieu" options={L.lieux} value={f.signPlace} onChange={(v) => set("signPlace", v)} placeholder="Paris" />
               </Field>
               <Field label="Signé le">
                 <input type="date" value={f.signedOn} onChange={(e) => set("signedOn", e.target.value)} className={inputClass} style={fieldStyle} />
@@ -1049,7 +1305,7 @@ export default function MandatFiche({
                 <input value={f.rcPolicy} onChange={(e) => set("rcPolicy", e.target.value)} className={inputClass} style={fieldStyle} />
               </Field>
               <Field label="RC pro — assureur">
-                <input value={f.rcInsurer} onChange={(e) => set("rcInsurer", e.target.value)} className={inputClass} style={fieldStyle} />
+                <ChampListe liste="l-assureur" options={L.assureurs} value={f.rcInsurer} onChange={(v) => set("rcInsurer", v)} />
               </Field>
             </div>
             {f.rcPolicy.trim() === "" && (
@@ -1314,9 +1570,22 @@ export default function MandatFiche({
               </div>
             </div>
 
-            <p className="text-[11px] mt-2 text-right" style={{ color: T.muted }}>
-              {mandatVehiculeLabel({ make: f.make, model: f.model })} · le document se met à jour à mesure que vous remplissez
-            </p>
+            {debordent.length > 0 ? (
+              <div className="flex items-start gap-2.5 px-4 py-3 mt-2" style={{ backgroundColor: TONE.warning.bg, border: `1px solid ${TONE.warning.bd}` }}>
+                <AlertTriangle size={14} style={{ color: TONE.warning.fg, flexShrink: 0, marginTop: 2 }} />
+                <p className="text-[12px] leading-relaxed" style={{ color: T.textDim }}>
+                  {debordent.length > 1
+                    ? `Les feuilles ${debordent.join(" et ")} dépassent la page.`
+                    : `La feuille ${debordent[0]} dépasse la page.`}
+                  {" "}Le contrat sortira sur une feuille de plus, mal numérotée. Raccourcissez le texte
+                  libre le plus long de cette page.
+                </p>
+              </div>
+            ) : (
+              <p className="text-[11px] mt-2 text-right" style={{ color: T.muted }}>
+                {mandatVehiculeLabel({ make: f.make, model: f.model })} · le document se met à jour à mesure que vous remplissez
+              </p>
+            )}
           </div>
         )}
       </div>

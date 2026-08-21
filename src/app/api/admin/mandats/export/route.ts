@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
-import { getCollabSession } from "@/lib/collab-auth";
-import { voitMandats } from "@/lib/roles";
+import { requireMandats } from "@/lib/mandats-acces";
 import { parisDay } from "@/lib/vehicules";
 import {
   MANDAT_TYPE_LABEL, isMandatType, isMandatStatus, mandatStatusLabel,
@@ -13,10 +11,20 @@ import {
 // chronologique complète, un mandat par ligne, montants en euros.
 // Point-virgule et BOM : le fichier s'ouvre proprement dans Excel en français.
 
-/** Une cellule CSV : guillemets doublés, valeur encadrée dès qu'elle l'exige. */
+/**
+ * Une cellule CSV : guillemets doublés, valeur encadrée dès qu'elle l'exige.
+ *
+ * Un tableur lit « = », « + », « - » et « @ » en tête de cellule comme le
+ * début d'une formule : un téléphone international « +33 6 … » s'affichait en
+ * erreur dans Excel, et une note commençant par « = » aurait pu s'exécuter.
+ * Ces valeurs sont donc encadrées ET précédées d'une apostrophe, la marque que
+ * les tableurs reconnaissent pour « ceci est du texte ».
+ */
 function cellule(v: string | number): string {
   const s = String(v);
-  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  const formule = /^[=+\-@\t\r]/.test(s);
+  const texte = formule ? `'${s}` : s;
+  return formule || /[";\n]/.test(texte) ? `"${texte.replace(/"/g, '""')}"` : texte;
 }
 
 function euros(cents: number): string {
@@ -24,12 +32,8 @@ function euros(cents: number): string {
 }
 
 export async function GET() {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  const collab = await getCollabSession();
-  if (!voitMandats(session.admin.email, collab?.name)) {
-    return NextResponse.json({ error: "Accès réservé." }, { status: 403 });
-  }
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
 
   const rows = await prisma.mandat.findMany({ orderBy: { createdAt: "asc" } });
   const today = parisDay(new Date()).toISOString().slice(0, 10);
@@ -51,7 +55,9 @@ export async function GET() {
       m.reference,
       MANDAT_TYPE_LABEL[type],
       mandatStatusLabel(type, status),
-      m.createdAt.toISOString().slice(0, 10),
+      // Jour de Paris : le serveur tourne en temps universel, et un mandat
+      // saisi après minuit sortait daté de la veille dans le registre.
+      parisDay(m.createdAt).toISOString().slice(0, 10),
       m.signedOn,
       m.startDate,
       e ? e.echeance : "",

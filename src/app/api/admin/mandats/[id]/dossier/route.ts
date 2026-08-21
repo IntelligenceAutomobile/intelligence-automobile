@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
-import { getCollabSession } from "@/lib/collab-auth";
+import { requireMandats } from "@/lib/mandats-acces";
 import { parisDay } from "@/lib/vehicules";
 import { assessVat } from "@/lib/immatriculation";
 import { mandatVehiculeLabel } from "@/lib/mandats";
@@ -26,8 +25,8 @@ async function nextReference(): Promise<string> {
  * Immatriculations, prérempli avec le client et le véhicule retenu.
  */
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
 
   const { id } = await params;
   try {
@@ -44,8 +43,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Le dossier s'ouvre une fois le mandat signé." }, { status: 409 });
     }
 
-    const collab = await getCollabSession();
-    const author = collab?.name ?? session.admin.email ?? "";
+    const author = acces.author;
     const jour = parisDay(new Date()).toISOString().slice(0, 10);
     const acquiredOn = row.soldOn || jour;
 

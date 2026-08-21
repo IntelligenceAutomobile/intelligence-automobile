@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
-import { getCollabSession } from "@/lib/collab-auth";
+import { requireMandats } from "@/lib/mandats-acces";
 import { can, asRole } from "@/lib/roles";
 import { parisDay } from "@/lib/vehicules";
 import { formatEuroCents } from "@/lib/comptes";
 import {
   isMandatStatus, MANDAT_STATUS_LABEL, MANDAT_CLOSED_STATUSES, lireDocuments, echeanceMandat,
+  nettoyerReference,
 } from "@/lib/mandats";
 import { mandatChangesFromBody } from "@/lib/mandat-serialize";
 
@@ -19,8 +19,8 @@ import { mandatChangesFromBody } from "@/lib/mandat-serialize";
  * versées au dossier. C'est le début de la reddition de comptes.
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
 
   const { id } = await params;
   try {
@@ -29,16 +29,70 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const avant = await prisma.mandat.findUnique({
       where: { id },
-      select: { type: true, status: true, signedOn: true, startDate: true, durationDays: true, decidedOn: true, soldOn: true, vehicleId: true, documents: true },
+      select: {
+        type: true, status: true, reference: true, signedOn: true, signedAt: true,
+        immediateExecution: true, startDate: true, durationDays: true,
+        decidedOn: true, soldOn: true, feeFinalCents: true, vehicleId: true, documents: true,
+      },
     });
     if (!avant) return NextResponse.json({ error: "Mandat introuvable." }, { status: 404 });
 
-    const collab = await getCollabSession();
-    const author = collab?.name ?? session.admin.email ?? "";
+    const author = acces.author;
     const jour = parisDay(new Date()).toISOString().slice(0, 10);
 
     const data: Record<string, unknown> = { ...input };
     const traces: { type: string; content: string; author: string }[] = [];
+
+    /* ── Le contrat signé se défend tout seul ──
+       La fiche garde en mémoire la situation du moment où elle a été ouverte
+       et renvoie TOUT le formulaire à l'enregistrement. Une fiche restée
+       ouverte pendant que le client signait de son côté ramenait donc le
+       mandat en brouillon, effaçait sa date de signature et son choix
+       d'exécution immédiate, puis rouvrait le bouton « Supprimer » — le
+       garde-fou « un contrat signé se conserve » sautait exactement là.
+       Le refus se joue ici, côté serveur : il vaut quel que soit l'onglet,
+       et quelle que soit la personne. Les clôtures normales (vendu, retiré,
+       échu, rétracté) restent libres. */
+    const dejaSigne = avant.signedAt !== "" || avant.signedOn !== "";
+    if (dejaSigne) {
+      if (body.status === "brouillon" && avant.status !== "brouillon") {
+        return NextResponse.json(
+          {
+            error:
+              "Ce mandat porte une signature : il se clôt (vendu, retiré, échu, rétracté) plutôt que de revenir en brouillon.",
+          },
+          { status: 409 },
+        );
+      }
+      // Une fiche ouverte AVANT la signature renvoie ces champs vides : ils
+      // gardent ce que la signature a écrit.
+      if (data.signedOn === "") delete data.signedOn;
+      if (data.immediateExecution === false && avant.immediateExecution) delete data.immediateExecution;
+    }
+
+    // La référence se renomme tant que le mandat est un brouillon. Passé la
+    // signature elle se fige : le contrat remis au client la porte, la facture
+    // d'honoraires la reprend, et le registre du comptable la suit.
+    if ("reference" in body) {
+      const voulue = nettoyerReference(body.reference);
+      if (voulue !== "" && voulue !== avant.reference) {
+        if (avant.status !== "brouillon") {
+          return NextResponse.json(
+            { error: "Ce mandat est signé : sa référence reste celle du contrat remis au client." },
+            { status: 409 },
+          );
+        }
+        const prise = await prisma.mandat.findUnique({ where: { reference: voulue }, select: { id: true } });
+        if (prise && prise.id !== id) {
+          return NextResponse.json(
+            { error: `La référence « ${voulue} » est déjà portée par un autre mandat.` },
+            { status: 409 },
+          );
+        }
+        data.reference = voulue;
+        traces.push({ type: "note", content: `Référence changée : ${avant.reference} → ${voulue}`, author });
+      }
+    }
 
     // Prolongation : le contrat se renouvelle « par accord écrit des parties ».
     // Le geste allonge la durée et se raconte au journal ; l'écrit du client
@@ -120,15 +174,41 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
-    return NextResponse.json({ id: mandat.id, reference: mandat.reference });
-  } catch {
+    // Ce que le serveur a décidé revient à l'écran : la fiche repose ces
+    // valeurs dans son formulaire. Sans ce retour, le champ restait vide sous
+    // les yeux de l'utilisateur et le vide écrasait la valeur au prochain
+    // enregistrement — la date de vente et les honoraires disparaissaient.
+    return NextResponse.json({
+      id: mandat.id,
+      reference: mandat.reference,
+      champs: {
+        status: mandat.status,
+        reference: mandat.reference,
+        signedOn: mandat.signedOn,
+        startDate: mandat.startDate,
+        durationDays: mandat.durationDays,
+        soldOn: mandat.soldOn,
+        feeFinalCents: mandat.feeFinalCents,
+        immediateExecution: mandat.immediateExecution,
+      },
+    });
+  } catch (e) {
+    // Deux renommages simultanés vers la même référence : l'index unique de la
+    // base tranche, le message le dit plutôt que d'annoncer une panne.
+    if (e instanceof Error && /unique/i.test(e.message) && /reference/i.test(e.message)) {
+      return NextResponse.json(
+        { error: "Cette référence vient d'être prise par un autre mandat." },
+        { status: 409 },
+      );
+    }
     return NextResponse.json({ error: "Erreur lors de la mise à jour." }, { status: 500 });
   }
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
+  const { session } = acces;
   if (!can(asRole(session.admin.role), "delete")) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 
   const { id } = await params;

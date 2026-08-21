@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireMandats } from "@/lib/mandats-acces";
 import { mandatVehiculeLabel } from "@/lib/mandats";
 
 // Mandats signés en ligne par le vendeur, du plus récent au plus ancien.
 // Interrogée en boucle par le back-office pour annoncer une signature où que
 // l'on soit dans l'outil, comme les acceptations de devis.
 export async function GET(req: NextRequest) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
 
   // `signedAt` est un horodatage ISO : la comparaison de chaînes suit l'ordre
   // chronologique, aucune conversion nécessaire.

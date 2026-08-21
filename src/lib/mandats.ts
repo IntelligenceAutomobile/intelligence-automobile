@@ -30,6 +30,62 @@ export const MANDAT_TYPE_DE: Record<MandatType, string> = {
   import: "d'import",
 };
 
+/* ── La référence du mandat ──
+   Une série par type et par année, remise à 1 chaque janvier : MV-2026-001.
+   Elle se PROPOSE à la création et se remplace librement tant que le mandat
+   reste un brouillon : certains dossiers se retiennent mieux sous le nom du
+   client que sous un numéro. Une fois le contrat signé, elle se fige — le
+   document remis au client la porte, la facture d'honoraires la reprend. */
+
+export const MANDAT_LETTRE: Record<MandatType, string> = {
+  vente: "V",
+  recherche: "R",
+  import: "I",
+};
+
+export function mandatPrefix(type: MandatType, annee: string | number): string {
+  return `M${MANDAT_LETTRE[type]}-${annee}-`;
+}
+
+/**
+ * Le numéro suivant d'une série, calculé sur les références DÉJÀ attribuées.
+ *
+ * Le maximum, jamais un comptage : une suppression laisserait sinon deux
+ * mandats porter le même numéro. Les références libres, qui ne finissent pas
+ * par des chiffres, sont ignorées — sans quoi un « MV-2026-Dupont » classé en
+ * tête ramenait la série à 001 et provoquait une collision.
+ */
+export function prochaineReference(prefix: string, prises: readonly string[]): string {
+  let max = 0;
+  for (const r of prises) {
+    if (!r.startsWith(prefix)) continue;
+    const suite = r.slice(prefix.length);
+    if (!/^\d+$/.test(suite)) continue;
+    const n = parseInt(suite, 10);
+    if (n > max) max = n;
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
+/**
+ * Référence saisie à la main : espaces resserrés, longueur bornée, et les
+ * caractères qui gênent un nom de fichier écartés — la référence sert de nom
+ * au PDF enregistré depuis la page d'impression.
+ */
+export function nettoyerReference(v: unknown): string {
+  return String(v ?? "")
+    // Ce qui gênerait un nom de fichier part : la référence sert de nom au PDF
+    // enregistré depuis la page d'impression.
+    .replace(/[\\/:*?"<>|]/g, " ")
+    .replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, " ")
+    // Un tableur lit « = », « + » et « @ » en tête de cellule comme une
+    // formule : le registre exporté doit rester du texte.
+    .replace(/^[=+@-]+/, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+}
+
 /* ── Cycle de vie ──
    Un contrat signé se conserve : seuls les brouillons se suppriment. La
    rétractation garde son statut à elle, parce qu'elle se relit des mois plus

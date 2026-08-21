@@ -59,9 +59,19 @@ export function voitAudience(email: string | undefined | null): boolean {
 /* ── Mandats : lancement nominatif du 21 août 2026 ──
    Le module vient d'arriver : Fab seul jusqu'à 16 h (heure de Paris) le jour
    du lancement, puis César le rejoint. Le reste de l'équipe attend l'ouverture
-   générale, qui se fera en retirant ce verrou. La personne se reconnaît par
-   son compte (les mêmes que l'audience pour le fondateur) ou par le prénom
-   posé dans le back-office. */
+   générale, qui se fera en retirant ce verrou.
+
+   CE QUE CE VERROU EST, ET CE QU'IL N'EST PAS. L'équipe partage UN SEUL compte
+   de back-office : le prénom choisi à l'écran est donc le seul élément qui
+   distingue Fab de César, et ce prénom se déclare librement. Ce verrou est un
+   rideau de lancement, pas un coffre : il évite qu'un collègue tombe sur le
+   module avant l'heure, et rien de plus. La vraie porte reste le mot de passe
+   du back-office, commun à tous. Le jour où chacun aura son compte, ce verrou
+   se fondera sur l'email, comme voitAudience().
+
+   Il vaut pour les écrans ET pour les adresses techniques : sans le contrôle
+   côté serveur, le module s'utilisait par requête directe sans passer par la
+   page. Voir requireMandats() dans src/lib/mandats-acces.ts. */
 const MANDATS_CESAR_A_PARTIR_DE = Date.parse("2026-08-21T14:00:00Z"); // 16 h à Paris
 
 export function voitMandats(
@@ -69,13 +79,14 @@ export function voitMandats(
   nom: string | undefined | null,
   now: Date = new Date(),
 ): boolean {
-  if (voitAudience(email)) return true;
-  const prenom = (nom ?? "").trim().toLowerCase();
+  // Une session valide d'abord : sans compte, aucun prénom n'ouvre le module.
   const compte = (email ?? "").trim().toLowerCase();
+  if (compte === "") return false;
+
+  const prenom = (nom ?? "").trim().toLowerCase();
   if (prenom.startsWith("fab")) return true;
   if (now.getTime() >= MANDATS_CESAR_A_PARTIR_DE) {
-    return prenom.startsWith("césar") || prenom.startsWith("cesar") ||
-      compte.startsWith("césar") || compte.startsWith("cesar");
+    return prenom.startsWith("césar") || prenom.startsWith("cesar");
   }
   return false;
 }

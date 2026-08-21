@@ -18,6 +18,9 @@
 //   • devis jamais facturés → anonymisés en totalité
 //   • factures et avoirs → nom et adresse CONSERVÉS (mention obligatoire),
 //     email et téléphone effacés, car eux ne sont exigés par aucun texte
+//   • mandats signés → nom et adresse conservés (ce sont les parties au
+//     contrat, sa substance même), le reste effacé et le lien public refermé ;
+//     mandats restés en brouillon → anonymisés en totalité
 //   • une trace de la demande reste attachée à la fiche : c'est le registre.
 //
 // La table des visites du site (PageView, module Audience) reste hors de ce
@@ -38,6 +41,7 @@ export type EffacementBilan = {
   garantiesAnonymisees: number;
   dossiersAnonymises: number;
   reprisesAnonymisees: number;
+  mandatsAnonymises: number;
 };
 
 /** Ce que le back-office détient sur une personne, pour lui remettre ou l'effacer. */
@@ -53,7 +57,7 @@ export async function dossierPersonnel(clientId: string) {
   const email = client.email.trim();
   const ouEmail = email ? [{ clientId }, { clientEmail: email }] : [{ clientId }];
 
-  const [quotes, appointments, warranties, registrations, reprises] = await Promise.all([
+  const [quotes, appointments, warranties, registrations, reprises, mandats] = await Promise.all([
     prisma.quote.findMany({ where: { OR: ouEmail }, orderBy: { issueDate: "asc" } }),
     prisma.appointment.findMany({ where: { clientId }, orderBy: { date: "asc" } }),
     email
@@ -63,9 +67,13 @@ export async function dossierPersonnel(clientId: string) {
     // Les reprises survivent au deleteMany des pistes : leur table est
     // autonome, et une opération d'achat se conserve.
     prisma.reprise.findMany({ where: { OR: ouEmail.map((o) => ("clientEmail" in o ? { ownerEmail: o.clientEmail } : o)) }, orderBy: { createdAt: "asc" } }),
+    // Les mandats suivent la même règle que les reprises : table autonome, et
+    // un contrat se conserve. Ils portent le nom, l'adresse, le téléphone,
+    // l'email, la pièce d'identité et l'adresse de connexion à la signature.
+    prisma.mandat.findMany({ where: { OR: ouEmail.map((o) => ("clientEmail" in o ? { ownerEmail: o.clientEmail } : o)) }, orderBy: { createdAt: "asc" } }),
   ]);
 
-  return { client, quotes, appointments, warranties, registrations, reprises };
+  return { client, quotes, appointments, warranties, registrations, reprises, mandats };
 }
 
 /**
@@ -76,7 +84,7 @@ export async function dossierPersonnel(clientId: string) {
 export async function effacerPersonne(clientId: string, auteur: string, jour: string): Promise<EffacementBilan | null> {
   const dossier = await dossierPersonnel(clientId);
   if (!dossier) return null;
-  const { client, quotes, appointments, warranties, registrations, reprises } = dossier;
+  const { client, quotes, appointments, warranties, registrations, reprises, mandats } = dossier;
 
   // Un devis converti en facture reste rattaché à une pièce comptable : son
   // anonymisation complète ferait perdre le lien entre la facture et son devis.
@@ -139,6 +147,32 @@ export async function effacerPersonne(clientId: string, auteur: string, jour: st
     });
   }
 
+  // Un mandat signé est un contrat : ses parties en sont la substance, le nom
+  // et l'adresse restent, comme sur une facture. Tout le reste part, y compris
+  // l'adresse de connexion relevée à la signature, et le lien public se referme
+  // — il donnait accès au contrat complet à qui détenait encore le message.
+  // Un mandat resté en brouillon n'engage personne : il s'anonymise en entier.
+  for (const m of mandats) {
+    const signe = m.signedAt !== "" || m.signedOn !== "";
+    await prisma.mandat.update({
+      where: { id: m.id },
+      data: {
+        ownerName: signe ? m.ownerName : EFFACE,
+        ownerAddress: signe ? m.ownerAddress : "",
+        ownerEmail: "",
+        ownerPhone: "",
+        ownerIdNumber: "",
+        ownerBirthDate: "",
+        signerName: signe ? m.signerName : "",
+        signedIp: "",
+        publicToken: null,
+        notes: "",
+        clientId: null,
+        leadId: null,
+      },
+    });
+  }
+
   for (const a of appointments) {
     await prisma.appointment.update({ where: { id: a.id }, data: { clientId: null, person: EFFACE, notes: "" } });
   }
@@ -156,6 +190,7 @@ export async function effacerPersonne(clientId: string, auteur: string, jour: st
     `Factures et avoirs conservés au titre de l'obligation comptable de dix ans : ${facturesConservees}.`,
     "Nom et adresse maintenus sur ces pièces (mentions obligatoires), email et téléphone effacés.",
     `Reprises anonymisées, opération d'achat conservée : ${reprises.length}.`,
+    `Mandats traités : ${mandats.length}. Les contrats signés gardent le nom et l'adresse des parties, le lien public de signature est refermé.`,
   ].join(" ");
 
   // Le journal des invitations d'avis garde ses dates et ses gestes, qui disent
@@ -188,5 +223,6 @@ export async function effacerPersonne(clientId: string, auteur: string, jour: st
     garantiesAnonymisees: warranties.length,
     dossiersAnonymises: registrations.length,
     reprisesAnonymisees: reprises.length,
+    mandatsAnonymises: mandats.length,
   };
 }

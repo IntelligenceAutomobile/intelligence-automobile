@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
-import { getCollabSession } from "@/lib/collab-auth";
+import { requireMandats } from "@/lib/mandats-acces";
 import { formatEuroCents } from "@/lib/comptes";
 import {
   emptyQuote, brandingFromTheme, mergeBranding, nextNumber, quotePrefix, formatDateFr, type QuoteItem,
@@ -22,8 +21,8 @@ import {
  * l'ACQUÉREUR, dont l'identité vit hors du mandat ; le module Devis s'en charge.
  */
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
 
   const { id } = await params;
   try {
@@ -115,8 +114,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ devisId: created.id, number: created.number, manque: result.error });
     }
 
-    const collab = await getCollabSession();
-    const author = collab?.name ?? session.admin.email ?? "";
+    const author = acces.author;
     await prisma.mandat.update({
       where: { id },
       data: {
@@ -132,7 +130,14 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
-    return NextResponse.json({ factureId: result.id, number: result.number });
+    // Le montant retenu revient à l'écran : la fiche le repose dans le champ
+    // « Honoraires facturés », resté vide jusque-là. Sans ce retour, le
+    // prochain enregistrement renvoyait un zéro qui écrasait la somme.
+    return NextResponse.json({
+      factureId: result.id,
+      number: result.number,
+      champs: { feeFinalCents: row.feeFinalCents > 0 ? row.feeFinalCents : montantCents },
+    });
   } catch {
     return NextResponse.json({ error: "La création de la facture a échoué." }, { status: 500 });
   }

@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { sendMail, MAIL_FROM, blockedByRedList, ajoutsListeRouge, journaliseRefus } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
-import { getCollabSession } from "@/lib/collab-auth";
+import { requireMandats } from "@/lib/mandats-acces";
 import { formatEuroCents } from "@/lib/comptes";
 import { escapeHtml } from "@/lib/html";
 import { COMPANY } from "@/lib/company";
@@ -69,8 +68,8 @@ function envoiEmail(opts: {
 // d'envoi posée, mode de signature « à distance » puisque le contrat part de
 // loin. Même parcours que l'envoi d'un devis.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const acces = await requireMandats();
+  if (!acces.ok) return acces.refus;
 
   const { id } = await params;
   try {
@@ -148,8 +147,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     if (!envoi.sent) console.log(`[Envoi mandat ${row.reference}] → ${to} retenu (${envoi.reason})\n${link}`);
 
-    const collab = await getCollabSession();
-    const author = collab?.name ?? session.admin.email ?? "";
+    const author = acces.author;
     const premierEnvoi = row.sentAt === "";
 
     await prisma.mandat.update({
