@@ -3,13 +3,14 @@ import { cookies } from "next/headers";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { relancesDues } from "@/lib/relances-server";
-import { asRole, voitAudience } from "@/lib/roles";
+import { asRole, voitAudience, voitMandats } from "@/lib/roles";
 import { LogoFull } from "@/components/Header";
 import AdminNav from "./AdminNav";
 import AdminLogout from "./AdminLogout";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import AcceptationsWatcher from "./AcceptationsWatcher";
+import MandatSignaturesWatcher from "./MandatSignaturesWatcher";
 import { ToastProvider } from "./toast";
 import { T } from "./ui";
 import "./admin.css";
@@ -33,6 +34,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Écran d'audience : réservé nominativement, la ligne de menu et la palette
   // de commandes l'ignorent pour tous les autres comptes.
   const audience = voitAudience(session.admin.email);
+  // Mandats : lancement nominatif du 21 août 2026, Fab puis César à 16 h.
+  const mandats = voitMandats(session.admin.email, cookieStore.get("ia_collab_name")?.value);
 
   // Badge « relances à faire » de la navigation : la page travaille seulement
   // si on pense à l'ouvrir, le compteur y amène.
@@ -46,8 +49,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       >
         {/* Annonce des devis signés en ligne, où que l'on soit dans l'outil. */}
         <AcceptationsWatcher />
+        {mandats && <MandatSignaturesWatcher />}
 
-        <Sidebar name={name} role={role} audience={audience} brandName={brandName} brandTagline={brandTagline} showroom={isShowroom} relanceCount={relances.count} />
+        <Sidebar name={name} role={role} audience={audience} mandats={mandats} brandName={brandName} brandTagline={brandTagline} showroom={isShowroom} relanceCount={relances.count} />
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile : logo + nav horizontale (la sidebar est masquée sous lg) */}
@@ -63,7 +67,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
           </div>
 
-          <Topbar role={role} audience={audience} />
+          <Topbar role={role} audience={audience} mandats={mandats} />
 
           <main className="flex-1 min-w-0">{children}</main>
         </div>

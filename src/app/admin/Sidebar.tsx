@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Car, FileText, ReceiptText, BellRing, Wallet, MessagesSquare, Users,
   CalendarClock, Radio, HandCoins, ShieldCheck, Star, UserCog, ExternalLink, Palette, RotateCcw, FileBadge,
-  NotebookPen, FolderKanban, Check, Mail, Info, BarChart3, ImagePlus, type LucideIcon,
+  NotebookPen, FolderKanban, Check, Mail, Info, BarChart3, ImagePlus, FileSignature, type LucideIcon,
 } from "lucide-react";
 import { can, ROLE_LABEL, type Role, type Capability } from "@/lib/roles";
 import { T } from "./ui";
@@ -15,6 +15,7 @@ import AdminLogout from "./AdminLogout";
 import { ConfirmDialog } from "./confirm";
 import { useToast } from "./toast";
 import { useAcceptationCount } from "./AcceptationsWatcher";
+import { useMandatSignatureCount } from "./MandatSignaturesWatcher";
 import NouveautesModal from "./NouveautesModal";
 import { nouveautePour, type Nouveaute } from "./nouveautes";
 
@@ -50,6 +51,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { icon: BellRing, label: "Relances", href: "/admin/relances", revu: "30 juillet 2026" },
       { icon: Users, label: "Clients & leads", href: "/admin/clients" },
       { icon: HandCoins, label: "Reprises", href: "/admin/reprises", revu: "31 juillet 2026" },
+      { icon: FileSignature, label: "Mandats", href: "/admin/mandats" },
       { icon: CalendarClock, label: "Planning atelier", href: "/admin/planning", revu: "28 juillet 2026" },
       { icon: Radio, label: "Diffusion", href: "/admin/diffusion", revu: "10 août 2026" },
       { icon: ShieldCheck, label: "Garanties", href: "/admin/garanties" },
@@ -81,6 +83,7 @@ export default function Sidebar({
   name,
   role,
   audience = false,
+  mandats = true,
   brandName,
   brandTagline,
   showroom = false,
@@ -90,20 +93,29 @@ export default function Sidebar({
   role: Role;
   /** Droit d'ouvrir l'écran d'audience, accordé nominativement. */
   audience?: boolean;
+  /** Lancement nominatif des mandats (Fab puis César) : voir voitMandats(). */
+  mandats?: boolean;
   brandName: string;
   brandTagline: string;
   showroom?: boolean;
   relanceCount?: number;
 }) {
   const pathname = usePathname();
-  // Devis signés en ligne et pas encore consultés : la bonne nouvelle se voit
-  // sans avoir à ouvrir la liste.
+  // Devis et mandats signés en ligne, pas encore consultés : la bonne nouvelle
+  // se voit sans avoir à ouvrir la liste.
   const acceptations = useAcceptationCount();
+  const mandatsSignes = useMandatSignatureCount();
   // Filtre la navigation selon les capacités du rôle et les écrans nominatifs ;
   // retire les sections vides.
   const nav = NAV.map((g) => ({
     ...g,
-    items: g.items.filter((it) => (!it.cap || can(role, it.cap)) && (!it.prive || audience)),
+    items: g.items.filter(
+      (it) =>
+        (!it.cap || can(role, it.cap)) &&
+        (!it.prive || audience) &&
+        // Verrou de lancement des mandats : la ligne s'efface pour les autres.
+        (it.href !== "/admin/mandats" || mandats),
+    ),
   })).filter((g) => g.items.length > 0);
   const router = useRouter();
   const toast = useToast();
@@ -228,6 +240,20 @@ export default function Sidebar({
                         aria-label={`${acceptations} devis accepté${acceptations > 1 ? "s" : ""} par un client`}
                       >
                         {acceptations}
+                      </span>
+                    )}
+                    {item.href === "/admin/mandats" && mandatsSignes > 0 && (
+                      <span
+                        className="ml-auto text-[10px] px-1.5 py-0.5 flex-shrink-0"
+                        style={{
+                          backgroundColor: "rgba(78,209,161,0.10)",
+                          border: "1px solid rgba(78,209,161,0.40)",
+                          color: T.success,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                        aria-label={`${mandatsSignes} mandat${mandatsSignes > 1 ? "s" : ""} signé${mandatsSignes > 1 ? "s" : ""} par un client`}
+                      >
+                        {mandatsSignes}
                       </span>
                     )}
                     {item.href === "/admin/relances" && relanceCount > 0 && (

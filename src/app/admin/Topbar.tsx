@@ -45,7 +45,7 @@ function crumbsFrom(pathname: string): { label: string; href?: string }[] {
   return crumbs;
 }
 
-export default function Topbar({ role, audience = false }: { role: Role; audience?: boolean }) {
+export default function Topbar({ role, audience = false, mandats = true }: { role: Role; audience?: boolean; mandats?: boolean }) {
   const pathname = usePathname();
   const crumbs = crumbsFrom(pathname);
 
@@ -74,7 +74,7 @@ export default function Topbar({ role, audience = false }: { role: Role; audienc
       </div>
 
       <div className="ml-auto flex items-center gap-3 min-w-0">
-        <CommandPalette role={role} audience={audience} />
+        <CommandPalette role={role} audience={audience} mandats={mandats} />
         <Link href="/admin/vehicules/nouveau" className={btnPrimaryClass + " flex-shrink-0"} style={btnPrimaryStyle}>
           <Plus size={14} />
           <span className="hidden sm:inline">Ajouter</span>

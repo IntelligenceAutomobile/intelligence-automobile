@@ -13,7 +13,8 @@ export const COMPANY = {
   // européen VIES. Les lignes vides ne s'affichent pas sur le document.
   tvaNumber: "FR08108086646",
   rcs: "Paris 108 086 646",
-  email: "",
+  // Celle des CGV et des mentions légales ; la boîte IONOS la relève.
+  email: "contact@intelligenceautomobile.com",
   phone: "+33 6 20 24 38 79",
   website: "",
   // Logo affiché en haut du devis (sur fond blanc). Chemin public, espaces encodés.

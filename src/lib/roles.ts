@@ -55,3 +55,27 @@ const VOIENT_AUDIENCE = [
 export function voitAudience(email: string | undefined | null): boolean {
   return VOIENT_AUDIENCE.includes((email ?? "").trim().toLowerCase());
 }
+
+/* ── Mandats : lancement nominatif du 21 août 2026 ──
+   Le module vient d'arriver : Fab seul jusqu'à 16 h (heure de Paris) le jour
+   du lancement, puis César le rejoint. Le reste de l'équipe attend l'ouverture
+   générale, qui se fera en retirant ce verrou. La personne se reconnaît par
+   son compte (les mêmes que l'audience pour le fondateur) ou par le prénom
+   posé dans le back-office. */
+const MANDATS_CESAR_A_PARTIR_DE = Date.parse("2026-08-21T14:00:00Z"); // 16 h à Paris
+
+export function voitMandats(
+  email: string | undefined | null,
+  nom: string | undefined | null,
+  now: Date = new Date(),
+): boolean {
+  if (voitAudience(email)) return true;
+  const prenom = (nom ?? "").trim().toLowerCase();
+  const compte = (email ?? "").trim().toLowerCase();
+  if (prenom.startsWith("fab")) return true;
+  if (now.getTime() >= MANDATS_CESAR_A_PARTIR_DE) {
+    return prenom.startsWith("césar") || prenom.startsWith("cesar") ||
+      compte.startsWith("césar") || compte.startsWith("cesar");
+  }
+  return false;
+}

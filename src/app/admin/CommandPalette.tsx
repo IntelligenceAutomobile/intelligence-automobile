@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, Car, FileText, ReceiptText, BellRing, Plus, LayoutDashboard, Wallet, MessagesSquare,
   Users, HandCoins, ShieldCheck, Star, UserCog, CalendarClock, Radio, CornerDownLeft, FileBadge,
-  NotebookPen, FolderKanban, Undo2, BarChart3, ImagePlus, type LucideIcon,
+  NotebookPen, FolderKanban, Undo2, BarChart3, ImagePlus, FileSignature, type LucideIcon,
 } from "lucide-react";
 import { can, type Role, type Capability } from "@/lib/roles";
 import { formatDateFr, STATUS_LABEL, type QuoteStatus } from "@/lib/devis";
@@ -22,6 +22,9 @@ const STATIC_ITEMS: Item[] = [
   { icon: Plus, label: "Nouveau devis", hint: "Action", href: "/admin/devis/nouveau" },
   { icon: Plus, label: "Nouvelle réunion", hint: "Action", href: "/admin/reunions?nouvelle=1" },
   { icon: Plus, label: "Nouvelle estimation", hint: "Action", href: "/admin/reprises/nouvelle" },
+  { icon: Plus, label: "Nouveau mandat de vente", hint: "Action", href: "/admin/mandats/nouveau" },
+  { icon: Plus, label: "Nouveau mandat de recherche", hint: "Action", href: "/admin/mandats/nouveau?type=recherche" },
+  { icon: Plus, label: "Nouveau mandat d'import", hint: "Action", href: "/admin/mandats/nouveau?type=import" },
   { icon: Plus, label: "Nouveau projet", hint: "Action", href: "/admin/projets?nouveau=1" },
   { icon: LayoutDashboard, label: "Tableau de bord", hint: "Page", href: "/admin" },
   { icon: BarChart3, label: "Audience", hint: "Page", href: "/admin/audience", prive: true },
@@ -31,6 +34,7 @@ const STATIC_ITEMS: Item[] = [
   { icon: BellRing, label: "Relances", hint: "Page", href: "/admin/relances" },
   { icon: Users, label: "Clients & leads", hint: "Page", href: "/admin/clients" },
   { icon: HandCoins, label: "Reprises", hint: "Page", href: "/admin/reprises" },
+  { icon: FileSignature, label: "Mandats", hint: "Page", href: "/admin/mandats" },
   { icon: CalendarClock, label: "Planning atelier", hint: "Page", href: "/admin/planning" },
   { icon: Radio, label: "Diffusion", hint: "Page", href: "/admin/diffusion" },
   { icon: ShieldCheck, label: "Garanties", hint: "Page", href: "/admin/garanties" },
@@ -58,7 +62,7 @@ type VehicleLite = { id: string; make: string; model: string; year: number; stat
 type QuoteLite = { id: string; number: string; docType?: string; clientName?: string | null; clientCompany?: string | null; status: string };
 type ClientLite = { id: string; name: string; company: string; email: string };
 
-export default function CommandPalette({ role, audience = false }: { role: Role; audience?: boolean }) {
+export default function CommandPalette({ role, audience = false, mandats = true }: { role: Role; audience?: boolean; mandats?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -113,7 +117,12 @@ export default function CommandPalette({ role, audience = false }: { role: Role;
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const stat = STATIC_ITEMS.filter(
-      (i) => (!i.cap || can(role, i.cap)) && (!i.prive || audience) && (!q || i.label.toLowerCase().includes(q))
+      (i) =>
+        (!i.cap || can(role, i.cap)) &&
+        (!i.prive || audience) &&
+        // Verrou de lancement des mandats : introuvables pour les autres.
+        (!i.href.startsWith("/admin/mandats") || mandats) &&
+        (!q || i.label.toLowerCase().includes(q))
     );
     const veh: Item[] = (vehicles ?? [])
       .filter((v) => q && `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(q))

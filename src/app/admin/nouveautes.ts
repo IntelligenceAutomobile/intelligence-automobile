@@ -19,6 +19,58 @@ export type Nouveaute = {
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    href: "/admin/mandats",
+    titre: "Mandats",
+    date: "20 août 2026",
+    resume:
+      "Le contrat de la revente sur mesure se remplit à l'écran et s'imprime en 16 articles, prêt à signer avec le vendeur.",
+    groupes: [
+      {
+        titre: "Le contrat se prépare ici",
+        points: [
+          "La fiche suit le document : le mandant, le véhicule et ses déclarations, le prix plancher, les honoraires.",
+          "Deux formules de rémunération au choix : frais à la charge de l'acquéreur, ou commission de 5 % au vendeur, entre 890 € et 2 990 €.",
+          "Chaque mandat reçoit son numéro : MV-2026-001, remis à 1 chaque année.",
+          "La création retrouve la fiche client existante et ouvre l'affaire dans le pipeline, comme les reprises.",
+        ],
+      },
+      {
+        titre: "Le document fait foi",
+        points: [
+          "Quatre pages A4 à la charte, avec les cases cochées selon la fiche : formule, garde du véhicule, exécution immédiate.",
+          "Le bordereau de rétractation détachable ferme le document, le médiateur est nommé, l'article 14 s'adapte au lieu de signature.",
+          "Le mandat signé se scanne et se verse au dossier, chaque pièce laisse une trace au journal.",
+        ],
+      },
+      {
+        titre: "Trois missions, trois contrats",
+        points: [
+          "Le mandat de recherche (MR-) contractualise la recherche personnalisée : cahier des charges, budget, honoraires dus uniquement au succès (990 à 1 990 € selon le budget).",
+          "Le mandat d'import (MI-) sécurise une acquisition en Europe : forfait fixe de 1 490 à 2 490 €, quitus et carte grise inclus, transport à prix coûtant, paiement direct au vendeur étranger.",
+          "Le forfait d'import vaut aussi quand le client colle son annonce, comme le propose le site.",
+          "Un mandat d'import signé ouvre son dossier d'immatriculation en un clic, prérempli, suivi depuis le module Immatriculations.",
+        ],
+      },
+      {
+        titre: "La signature se fait en ligne",
+        points: [
+          "« Envoyer pour signature » adresse au vendeur un lien où il lit les quatre pages telles qu'elles s'impriment.",
+          "Il tape son nom, valide la mention « Lu et approuvé, bon pour mandat » et choisit lui-même l'exécution immédiate.",
+          "Nom, date et adresse de connexion s'enregistrent, le cachet s'appose sur la dernière page du document.",
+          "Vous voyez s'il a ouvert le lien, une fenêtre annonce la signature où que vous soyez, et une pastille s'allume sur « Mandats ».",
+        ],
+      },
+      {
+        titre: "La mission se suit",
+        points: [
+          "Les échéances se surveillent depuis la liste : un mandat qui expire sous 10 jours s'allume pour proposer le renouvellement écrit.",
+          "À la signature, la fiche véhicule passe en régime « Mandat client » et la mention légale suit sur les annonces.",
+          "L'issue se pose sur la fiche : vendu avec son prix, retiré, échu ou rétracté, tout reste archivé.",
+        ],
+      },
+    ],
+  },
+  {
     href: "/admin/devis",
     titre: "Devis",
     date: "30 juillet 2026",

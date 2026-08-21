@@ -1,0 +1,554 @@
+// Mandat de vente imprimable, en 16 articles : le modèle validé le 20 août
+// 2026, généré avec les valeurs de la fiche. Rendu papier A4, noir sur blanc,
+// trois feuilles paginées à la main comme le modèle d'origine, bordereau de
+// rétractation détachable en dernière page.
+//
+// Ce papier engage la société : chaque clause chiffrée (commission, plancher,
+// plafond, indemnité forfaitaire) vient de src/lib/mandats.ts, jamais d'un
+// nombre posé ici en dur. Les seuls choix qui varient d'un mandat à l'autre
+// sont ceux de la fiche : formule d'honoraires, garde, mode de signature,
+// exécution immédiate.
+import { formatNumber } from "@/lib/format";
+import { formatEuroCents } from "@/lib/comptes";
+import { formatDateFr } from "@/lib/devis";
+import { CT_STATUS_LABEL, isCtStatus } from "@/lib/reprises";
+import {
+  COMMISSION_TAUX_POURCENT, COMMISSION_MIN_CENTS, COMMISSION_PLAFOND_CENTS,
+  INDEMNITE_FORFAITAIRE_CENTS, MEDIATEUR, MANDATAIRE_IDENTITE,
+  commissionEstimee, echeanceMandat, mandatVehiculeLabel,
+} from "@/lib/mandats";
+
+/** Adresse de l'émetteur sur une ligne, sans la mention du pays. */
+function adresseLigne(address: string): string {
+  return address
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l !== "" && l.toLowerCase() !== "france")
+    .join(", ");
+}
+
+export type PrintMandat = {
+  reference: string;
+  createdOn: string;
+  ownerName: string;
+  ownerBirthDate: string;
+  ownerAddress: string;
+  ownerEmail: string;
+  ownerPhone: string;
+  ownerIdNumber: string;
+  rcPolicy: string;
+  rcInsurer: string;
+  make: string;
+  model: string;
+  version: string;
+  power: string;
+  plate: string;
+  vin: string;
+  firstRegDate: string;
+  mileageKm: number;
+  fuel: string;
+  color: string;
+  keys: number;
+  ctDate: string;
+  ctStatus: string;
+  lastServiceKm: string;
+  disclosures: string;
+  priceCents: number;
+  floorCents: number;
+  feeFormula: string;
+  packCents: number;
+  // Recherche et import : le cahier des charges et le forfait convenu.
+  searchSpec: string;
+  budgetCents: number;
+  mileageMaxKm: number;
+  regMinYear: number;
+  listingUrl: string;
+  countryOrigin: string;
+  feeCents: number;
+  startDate: string;
+  durationDays: number;
+  custody: string;
+  custodyDate: string;
+  signMode: string;
+  immediateExecution: boolean;
+  signPlace: string;
+  signedOn: string;
+  // Signature en ligne : le cachet remplace la signature manuscrite du Vendeur.
+  signerName: string;
+  signedAt: string; // horodatage ISO, vide si signé sur papier
+  signedIp: string;
+};
+
+export type Emetteur = {
+  name: string;
+  address: string;
+  representative: string;
+  email: string;
+  phone: string;
+  siret: string;
+  tva: string;
+};
+
+const SHEET: React.CSSProperties = {
+  width: "210mm",
+  minHeight: "297mm",
+  padding: "0 0 8mm",
+  backgroundColor: "#fff",
+  color: "#111",
+  fontSize: "8.8pt",
+  lineHeight: 1.45,
+  margin: "0 auto",
+  display: "flex",
+  flexDirection: "column",
+};
+
+const BODY: React.CSSProperties = { padding: "5mm 14mm 0", flex: 1 };
+
+// Un trait d'écriture : la valeur si elle existe, une ligne à compléter sinon.
+function ligne(valeur: string): string {
+  return valeur.trim() !== "" ? valeur : "________________";
+}
+
+/* ── Bandeau bleu nuit, repris de la charte des documents ── */
+function Bandeau({ emetteur, page }: { emetteur: Emetteur; page: number }) {
+  return (
+    <div
+      style={{
+        backgroundColor: "#0A1628",
+        color: "#FFFFFF",
+        padding: page === 1 ? "7mm 14mm" : "4.5mm 14mm",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: page === 1 ? "12pt" : "9.5pt", fontWeight: 600, letterSpacing: "0.24em", textTransform: "uppercase" }}>
+          {emetteur.name.replace(/^SASU\s+/i, "")}
+        </div>
+      </div>
+      <div style={{ fontSize: "7pt", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9FB3D4", textAlign: "right" }}>
+        Mandat de vente — Revente sur mesure
+      </div>
+    </div>
+  );
+}
+
+/* ── Pied de page : identité + paraphes, sur chaque feuille ── */
+function Pied({ emetteur, page }: { emetteur: Emetteur; page: number }) {
+  const adresse = adresseLigne(emetteur.address);
+  return (
+    <div
+      style={{
+        margin: "5mm 14mm 0",
+        paddingTop: "2mm",
+        borderTop: "1px solid #DDD",
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 12,
+        fontSize: "6.8pt",
+        color: "#777",
+      }}
+    >
+      <span>
+        {emetteur.name} · {adresse}
+        {emetteur.siret ? ` · SIRET ${emetteur.siret}` : ""}
+        {emetteur.tva ? ` · TVA ${emetteur.tva}` : ""}
+      </span>
+      <span style={{ whiteSpace: "nowrap" }}>Page {page} / 4 — paraphes : ______ / ______</span>
+    </div>
+  );
+}
+
+/* ── Titre d'article ── */
+function Art({ n, titre, children }: { n: number; titre: string; children: React.ReactNode }) {
+  return (
+    <div className="mandat-avoid-break" style={{ marginTop: "3.6mm" }}>
+      <h2 style={{ fontSize: "8.8pt", fontWeight: 700, margin: "0 0 1.2mm", letterSpacing: "0.02em" }}>
+        ARTICLE {n} — {titre.toUpperCase()}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function P({ children }: { children: React.ReactNode }) {
+  return <p style={{ margin: "0 0 1.6mm", textAlign: "justify" }}>{children}</p>;
+}
+
+/* ── Grille de champs à la manière du modèle : libellé gris, valeur soulignée ── */
+function Champs({ items }: { items: { label: string; value: string; span?: number }[] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", columnGap: "5mm", rowGap: "1.6mm", margin: "1mm 0 1.6mm" }}>
+      {items.map((c) => (
+        <div key={c.label} style={{ gridColumn: `span ${c.span ?? 2}` }}>
+          <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>{c.label}</div>
+          <div style={{ borderBottom: "1px solid #BBB", padding: "0.4mm 0 0.6mm", fontWeight: 600, minHeight: "4mm" }}>
+            {c.value.trim() !== "" ? c.value : " "}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Case à cocher contractuelle, imprimée cochée ou vide selon la fiche ── */
+function CocheDoc({ checked, children }: { checked: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className="mandat-avoid-break"
+      style={{
+        display: "flex",
+        gap: "2.4mm",
+        alignItems: "flex-start",
+        border: "1px solid #C9D2E2",
+        backgroundColor: checked ? "#EFF4FC" : "#FFFFFF",
+        padding: "1.8mm 2.6mm",
+        margin: "0 0 1.6mm",
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          width: "3.4mm",
+          height: "3.4mm",
+          border: "1.2px solid #111",
+          flexShrink: 0,
+          marginTop: "0.5mm",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "7.5pt",
+          fontWeight: 700,
+          lineHeight: 1,
+        }}
+      >
+        {checked ? "✕" : ""}
+      </span>
+      <span style={{ textAlign: "justify" }}>{children}</span>
+    </div>
+  );
+}
+
+function Signatures({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
+  // Signé en ligne : le cachet horodaté tient lieu de signature manuscrite,
+  // avec le nom tapé, l'instant précis et l'adresse d'origine.
+  const enLigne = m.signedAt !== "" && m.signerName !== "";
+  const quand = enLigne
+    ? new Date(m.signedAt).toLocaleString("fr-FR", {
+        day: "numeric", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
+      })
+    : "";
+  return (
+    <div className="mandat-avoid-break" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5mm", marginTop: "3mm" }}>
+      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
+        <div style={{ fontWeight: 700 }}>Le Vendeur</div>
+        {enLigne ? (
+          <div style={{ fontSize: "7.6pt", marginTop: "1mm", lineHeight: 1.55 }}>
+            <div style={{ fontSize: "9.5pt", fontWeight: 700 }}>{m.signerName}</div>
+            <div>Signé en ligne le {quand}</div>
+            {m.signedIp !== "" && <div style={{ color: "#666" }}>Adresse IP : {m.signedIp}</div>}
+            <div style={{ color: "#666" }}>Mention «&nbsp;Lu et approuvé, bon pour mandat&nbsp;» validée en ligne</div>
+          </div>
+        ) : (
+          <div style={{ fontSize: "7.2pt", color: "#666" }}>
+            Signature précédée de la mention manuscrite «&nbsp;Lu et approuvé, bon pour mandat&nbsp;»
+          </div>
+        )}
+      </div>
+      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
+        <div style={{ fontWeight: 700 }}>Le Mandataire</div>
+        <div style={{ fontSize: "7.2pt", color: "#666" }}>
+          {emetteur.name} — {emetteur.representative}, président
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function MandatDocument({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
+  const e = echeanceMandat(m.startDate, m.durationDays, m.startDate || m.createdOn);
+  const commission = commissionEstimee(m.priceCents);
+  const vehicule = mandatVehiculeLabel(m);
+  const indemnite = formatEuroCents(INDEMNITE_FORFAITAIRE_CENTS);
+  const aDomicile = m.signMode !== "distance";
+
+  const feuille = (page: number, children: React.ReactNode) => (
+    <div key={page} className="mandat-sheet" style={SHEET}>
+      <Bandeau emetteur={emetteur} page={page} />
+      <div style={BODY}>{children}</div>
+      <Pied emetteur={emetteur} page={page} />
+    </div>
+  );
+
+  return (
+    <div className="mandat-screen-bg" style={{ backgroundColor: "#0A1628", padding: "24px 0", display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* ── Feuille 1 : parties, véhicule, prix, honoraires, durée ── */}
+      {feuille(1, (
+        <>
+          <div style={{ textAlign: "center", margin: "3mm 0 1mm" }}>
+            <h1 style={{ fontSize: "15pt", fontWeight: 800, letterSpacing: "0.04em", margin: 0 }}>MANDAT DE VENTE</h1>
+            <div style={{ color: "#555", fontSize: "8pt", marginTop: "0.8mm" }}>
+              Revente sur mesure — mandat d’entremise sans pouvoir de conclure ni d’encaisser
+            </div>
+          </div>
+          <Champs items={[
+            { label: "Mandat n°", value: m.reference, span: 3 },
+            { label: "Établi le", value: m.createdOn ? formatDateFr(m.createdOn) : "", span: 3 },
+          ]} />
+
+          <Art n={1} titre="Les parties">
+            <P><strong>Le mandant</strong> — ci-après «&nbsp;le Vendeur&nbsp;»</P>
+            <Champs items={[
+              { label: "Nom et prénom", value: m.ownerName, span: 4 },
+              { label: "Né(e) le", value: m.ownerBirthDate ? formatDateFr(m.ownerBirthDate) : "", span: 2 },
+              { label: "Adresse complète", value: m.ownerAddress, span: 6 },
+              { label: "Téléphone", value: m.ownerPhone, span: 2 },
+              { label: "Courriel", value: m.ownerEmail, span: 2 },
+              { label: "Pièce d’identité n°", value: m.ownerIdNumber, span: 2 },
+            ]} />
+            <P>
+              <strong>Le mandataire</strong> — {MANDATAIRE_IDENTITE}{" "}
+              {`Assurance de responsabilité civile professionnelle : police n° ${ligne(m.rcPolicy)}, souscrite auprès de ${ligne(m.rcInsurer)}.`}
+            </P>
+          </Art>
+
+          <Art n={2} titre="Objet du mandat">
+            <P>
+              {`Le Vendeur confie au mandataire, qui l’accepte, un mandat d’entremise en vue de la vente du véhicule désigné à l’article 3. Le mandataire agit en qualité d’intermédiaire : `}
+              <strong>il n’est ni propriétaire ni acquéreur du véhicule, n’a pas le pouvoir de conclure la vente au nom du Vendeur, et ne reçoit aucun fonds pour le compte de celui-ci.</strong>
+              {` La vente est conclue directement entre le Vendeur et l’acquéreur, et le prix est réglé directement au Vendeur dans les conditions de l’article 10.`}
+            </P>
+          </Art>
+
+          <Art n={3} titre="Désignation du véhicule">
+            <Champs items={[
+              { label: "Marque", value: m.make, span: 2 },
+              { label: "Modèle et version", value: [m.model, m.version].filter(Boolean).join(" "), span: 2 },
+              { label: "Puissance", value: m.power, span: 2 },
+              { label: "Numéro d’immatriculation", value: m.plate, span: 2 },
+              { label: "Numéro VIN", value: m.vin, span: 2 },
+              { label: "1re mise en circulation", value: m.firstRegDate ? formatDateFr(m.firstRegDate) : "", span: 2 },
+              { label: "Kilométrage relevé ce jour", value: m.mileageKm > 0 ? `${formatNumber(m.mileageKm)} km` : "", span: 2 },
+              { label: "Énergie", value: m.fuel, span: 1 },
+              { label: "Couleur", value: m.color, span: 1 },
+              { label: "Nombre de clés", value: m.keys > 0 ? String(m.keys) : "", span: 2 },
+              { label: "Dernier contrôle technique du", value: m.ctDate ? formatDateFr(m.ctDate) : "", span: 2 },
+              { label: "Résultat", value: isCtStatus(m.ctStatus) ? CT_STATUS_LABEL[m.ctStatus] : "", span: 2 },
+              { label: "Dernier entretien à (km)", value: m.lastServiceKm, span: 2 },
+            ]} />
+            <P>
+              <strong>Déclarations du Vendeur.</strong>
+              {` Le Vendeur déclare être le seul propriétaire du véhicule, celui-ci étant libre de tout gage, opposition, location avec option d’achat ou crédit en cours. Il certifie l’exactitude du kilométrage porté ci-dessus, déclare n’avoir connaissance d’aucun sinistre ni d’aucune avarie non mentionnés, et remet au mandataire l’ensemble des documents énumérés à l’article 12. Toute inexactitude engage sa seule responsabilité.`}
+            </P>
+            <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>
+              Sinistres, réparations ou particularités déclarés par le Vendeur
+            </div>
+            <div style={{ borderBottom: "1px solid #BBB", minHeight: "8mm", padding: "0.6mm 0", whiteSpace: "pre-line" }}>
+              {m.disclosures}
+            </div>
+          </Art>
+
+          <Art n={4} titre="Prix de vente et prix plancher">
+            <Champs items={[
+              { label: "Prix de vente affiché à l’annonce (€ TTC)", value: m.priceCents > 0 ? formatEuroCents(m.priceCents) : "", span: 3 },
+              { label: "Prix plancher net vendeur (€)", value: m.floorCents > 0 ? formatEuroCents(m.floorCents) : "", span: 3 },
+            ]} />
+            <P>
+              {`Le `}<strong>prix plancher net vendeur</strong>{` est le montant que le Vendeur percevra au minimum. Le mandataire ne peut consentir aucune remise conduisant à un montant inférieur sans l’accord écrit préalable du Vendeur. Toute modification du prix affiché fait l’objet d’un avenant signé des deux parties.`}
+            </P>
+          </Art>
+
+        </>
+      ))}
+
+      {/* ── Feuille 2 : rémunération, durée, vie du mandat ── */}
+      {feuille(2, (
+        <>
+          <Art n={5} titre="Rémunération du mandataire">
+            <P>{`La rémunération du mandataire n’est due qu’en cas de vente effective du véhicule. Les parties retiennent la formule suivante :`}</P>
+            <CocheDoc checked={m.feeFormula === "acquereur"}>
+              <strong>Formule A — frais à la charge du seul acquéreur.</strong>
+              {` Le Vendeur ne verse aucune rémunération au mandataire. L’acquéreur règle directement au mandataire les frais d’intermédiation correspondant au pack de livraison qu’il retient, soit un montant de ${m.packCents > 0 ? formatEuroCents(m.packCents) : "__________ €"} TTC.`}
+            </CocheDoc>
+            <CocheDoc checked={m.feeFormula === "vendeur"}>
+              <strong>Formule B — commission à la charge du Vendeur.</strong>
+              {` Le Vendeur verse au mandataire une commission de ${COMMISSION_TAUX_POURCENT} % du prix de vente réalisé, avec un minimum de ${formatEuroCents(COMMISSION_MIN_CENTS)} TTC et un plafond de ${formatEuroCents(COMMISSION_PLAFOND_CENTS)} TTC, soit un montant estimé de ${m.feeFormula === "vendeur" && commission > 0 ? formatEuroCents(commission) : "__________ €"} TTC. L’acquéreur règle en outre le pack de livraison qu’il retient.`}
+            </CocheDoc>
+            <P>
+              {`Hors les cas prévus aux articles 7 et 8, aucune somme n’est due par le Vendeur si le véhicule n’est pas vendu, quelle qu’en soit la raison et quelle que soit la durée de mise en vente. Les frais de préparation, de reportage photographique et de diffusion sont intégralement pris en charge par le mandataire.`}
+            </P>
+          </Art>
+
+          <Art n={6} titre="Durée et exclusivité">
+            <Champs items={[
+              { label: "Le mandat prend effet le", value: m.startDate ? formatDateFr(m.startDate) : "", span: 3 },
+              { label: "Et expire le", value: e ? formatDateFr(e.echeance) : "", span: 3 },
+            ]} />
+            <P>
+              {`Le mandat est consenti pour une durée de ${m.durationDays} jours à compter de sa date d’effet, renouvelable par accord écrit des parties. Il est conclu à titre `}
+              <strong>exclusif</strong>
+              {` : pendant toute sa durée, le Vendeur s’interdit de confier le véhicule à un autre professionnel et de diffuser toute annonce le concernant, sur quelque support que ce soit. La vente directe reste possible dans le seul cadre de l’article 7.`}
+            </P>
+          </Art>
+          <Art n={7} titre="Faculté de vente directe par le Vendeur">
+            <P>
+              {`Le Vendeur conserve la faculté de vendre lui-même son véhicule à un acquéreur qui ne lui a pas été présenté par le mandataire. Dans ce cas, `}
+              <strong>aucune commission n’est due</strong>
+              {` ; seule une indemnité forfaitaire de ${indemnite} TTC est versée au mandataire au titre des frais de préparation, de reportage et de diffusion effectivement engagés. Le Vendeur informe le mandataire de la vente dans les quarante-huit heures.`}
+            </P>
+          </Art>
+
+          <Art n={8} titre="Retrait du véhicule en cours de mandat">
+            <P>
+              {`En cas de retrait du véhicule de la vente par le Vendeur avant l’expiration du mandat, pour quelque motif que ce soit, une indemnité forfaitaire de ${indemnite} TTC est due au mandataire au même titre. Cette indemnité n’est pas due lorsque le retrait résulte d’un cas de force majeure ou de l’exercice du droit de rétractation prévu à l’article 14.`}
+            </P>
+          </Art>
+
+          <Art n={9} titre="Acquéreurs présentés — clause de survie">
+            <P>
+              {`La rémunération prévue à l’article 5 reste due si la vente intervient dans les six (6) mois suivant l’expiration du mandat au profit d’un acquéreur que le mandataire a présenté au Vendeur pendant sa durée. Est réputé présenté tout acquéreur ayant visité ou essayé le véhicule, ou ayant formulé une offre, par l’intermédiaire du mandataire. La `}
+              <strong>liste nominative des acquéreurs présentés</strong>
+              {` est remise au Vendeur à l’expiration du mandat ; à défaut de remise, la présente clause est inopposable au Vendeur.`}
+            </P>
+          </Art>
+
+        </>
+      ))}
+
+      {/* ── Feuille 3 : règlement, prestations, garde, rétractation ── */}
+      {feuille(3, (
+        <>
+          <Art n={10} titre="Modalités de règlement de la vente">
+            <P>
+              {`Le règlement s’opère par `}
+              <strong>deux virements distincts émis par l’acquéreur avant la remise des clés</strong>
+              {` : le prix net vendeur sur le compte du Vendeur, et les frais d’intermédiation sur le compte du mandataire. Le montant total de la cession figure en clair sur l’acte de vente. Le mandataire ne détient à aucun moment les fonds du Vendeur. Aucune clé, aucun document ni aucune remise du véhicule n’intervient avant réception effective des deux virements. À la demande de l’une ou l’autre des parties, la transaction peut être placée sous séquestre auprès d’un tiers de confiance, aux frais du demandeur.`}
+            </P>
+          </Art>
+
+          <Art n={11} titre="Prestations du mandataire">
+            <P>
+              {`Le mandataire s’engage à réaliser, à ses frais : l’estimation argumentée du véhicule et la définition de la stratégie de prix ; la préparation esthétique intérieure et extérieure ; le reportage photographique ; la constitution du dossier historique ; la rédaction et la diffusion de l’annonce sur les principaux supports ; la réception et la qualification de l’ensemble des contacts ; l’organisation et l’accompagnement des visites et des essais ; la vérification de l’identité et de la solvabilité de l’acquéreur ; la rédaction des documents de cession et la déclaration en ligne. Il rend compte au Vendeur de l’avancement de la mise en vente au moins une fois par mois.`}
+            </P>
+          </Art>
+
+          <Art n={12} titre="Garde du véhicule, documents et essais">
+            <P><strong>Garde du véhicule pendant le mandat :</strong></P>
+            <CocheDoc checked={m.custody !== "mandataire"}>
+              {`Le véhicule demeure en la possession du Vendeur, qui en conserve la garde et l’assurance.`}
+            </CocheDoc>
+            <CocheDoc checked={m.custody === "mandataire"}>
+              {`Le véhicule est confié au mandataire à compter du ${m.custody === "mandataire" && m.custodyDate ? formatDateFr(m.custodyDate) : "............................"} Un état des lieux photographique contradictoire est établi à la remise et à la restitution.`}
+            </CocheDoc>
+            <P>
+              <strong>Documents remis par le Vendeur :</strong>
+              {` certificat d’immatriculation, contrôle technique de moins de six mois, carnet d’entretien, factures d’entretien, notice, et l’intégralité des clés et télécommandes. Le Vendeur informe sans délai le mandataire de tout événement affectant le véhicule ou son droit de propriété.`}
+            </P>
+            <P>
+              <strong>Essais.</strong>
+              {` Aucun essai n’a lieu hors la présence du mandataire. L’identité et le permis de conduire de tout essayeur sont vérifiés et conservés. L’itinéraire est défini préalablement. Les essais sont réalisés sous couvert de l’assurance du véhicule et de la responsabilité civile professionnelle du mandataire, dans les limites et franchises des polices en vigueur.`}
+            </P>
+          </Art>
+
+          <Art n={13} titre="Responsabilité et obligation d'information">
+            <P>
+              {`Le mandataire est tenu d’une obligation de moyens. Il ne garantit ni la vente du véhicule, ni son prix, ni son délai de commercialisation. Le Vendeur demeure seul tenu, à l’égard de l’acquéreur, de la garantie des vices cachés et de l’obligation d’information sur l’état réel du véhicule. Le mandataire porte à la connaissance de l’acquéreur l’ensemble des informations que le Vendeur lui a communiquées, et l’informe de ce que la vente est conclue avec un particulier.`}
+            </P>
+          </Art>
+          <Art n={14} titre="Droit de rétractation">
+            <div
+              className="mandat-avoid-break"
+              style={{
+                borderLeft: "2.5px solid #0A1628",
+                backgroundColor: "#F2F5FB",
+                padding: "2mm 3mm",
+                marginBottom: "1.6mm",
+                WebkitPrintColorAdjust: "exact",
+                printColorAdjust: "exact",
+              }}
+            >
+              <P>
+                <strong>
+                  {aDomicile
+                    ? "Le présent mandat étant conclu hors établissement, le Vendeur dispose d’un délai de quatorze (14) jours à compter de sa signature pour se rétracter, sans avoir à motiver sa décision ni à supporter de frais."
+                    : "Le présent mandat étant conclu à distance, le Vendeur dispose d’un délai de quatorze (14) jours à compter de sa signature pour se rétracter, sans avoir à motiver sa décision ni à supporter de frais."}
+                </strong>
+              </P>
+              <P>
+                {`Pour exercer ce droit, il notifie sa décision au moyen du bordereau détachable joint au présent mandat, ou par toute déclaration dénuée d’ambiguïté adressée à ${emetteur.name}, ${adresseLigne(emetteur.address)}${emetteur.email ? `, ou à ${emetteur.email}` : ""}.`}
+              </P>
+              {aDomicile && (
+                <P>
+                  {`Conformément à l’article L. 221-10 du code de la consommation, aucun paiement ne peut être exigé du Vendeur avant l’expiration d’un délai de sept jours à compter de la signature.`}
+                </P>
+              )}
+            </div>
+            <CocheDoc checked={m.immediateExecution}>
+              {`Le Vendeur demande expressément l’exécution du mandat avant la fin du délai de rétractation. Il reconnaît qu’en cas de rétractation postérieure, il devra régler le montant des prestations effectivement fournies au prorata, dans la limite de ${indemnite} TTC, et que si la vente du véhicule est conclue avant la fin du délai, le mandat est alors pleinement exécuté et il renonce expressément à son droit de rétractation (article L. 221-28, 1°, du code de la consommation).`}
+            </CocheDoc>
+          </Art>
+
+        </>
+      ))}
+
+      {/* ── Feuille 4 : données, litiges, signatures, bordereau détachable ── */}
+      {feuille(4, (
+        <>
+          <Art n={15} titre="Données personnelles">
+            <P>
+              {`Les données collectées sont traitées par ${emetteur.name} aux seules fins d’exécution du présent mandat et conservées trois ans après son terme. Le Vendeur dispose d’un droit d’accès, de rectification, d’effacement et d’opposition${emetteur.email ? `, exerçable à ${emetteur.email}` : ""}, ainsi que du droit d’introduire une réclamation auprès de la CNIL.`}
+            </P>
+          </Art>
+
+          <Art n={16} titre="Réclamations, médiation et litiges">
+            <P>
+              {`Toute réclamation est adressée à ${emetteur.name}, ${adresseLigne(emetteur.address)}. À défaut de solution amiable, le Vendeur peut recourir gratuitement au médiateur de la consommation dont relève le mandataire : ${MEDIATEUR.nom}, ${MEDIATEUR.adresse} — ${MEDIATEUR.site}. Le présent mandat est soumis au droit français.`}
+            </P>
+          </Art>
+
+          <P>
+            {`Fait en deux exemplaires originaux, dont un remis au Vendeur au moment de la signature, accompagné du bordereau de rétractation.`}
+          </P>
+          <Champs items={[
+            { label: "À", value: m.signPlace, span: 3 },
+            { label: "Le", value: m.signedOn ? formatDateFr(m.signedOn) : "", span: 3 },
+          ]} />
+
+          <Signatures m={m} emetteur={emetteur} />
+
+          <div style={{ margin: "5mm 0 2mm", borderTop: "1.5px dashed #999", position: "relative" }}>
+            <span style={{ position: "absolute", top: "-2.6mm", left: 0, backgroundColor: "#fff", paddingRight: "2mm", fontSize: "7pt", color: "#777" }}>✂</span>
+          </div>
+
+          <div className="mandat-avoid-break">
+            <h2 style={{ fontSize: "10pt", fontWeight: 800, letterSpacing: "0.04em", margin: "2mm 0 1mm" }}>BORDEREAU DE RÉTRACTATION</h2>
+            <P>
+              <span style={{ color: "#555", fontSize: "7.6pt" }}>
+                {`À compléter et renvoyer uniquement si vous souhaitez vous rétracter du mandat, dans un délai de quatorze jours à compter de sa signature.`}
+              </span>
+            </P>
+            <P>
+              {`À l’attention de : ${emetteur.name}, ${adresseLigne(emetteur.address)}${emetteur.email ? ` — ${emetteur.email}` : ""}`}
+            </P>
+            <P>
+              {`Je vous notifie par la présente ma rétractation du mandat de vente n° ${m.reference} signé le __________ portant sur le véhicule ${vehicule}${m.plate ? ` immatriculé ${m.plate}` : ""}.`}
+            </P>
+            <Champs items={[
+              { label: "Nom et prénom du Vendeur", value: "", span: 4 },
+              { label: "Date", value: "", span: 2 },
+              { label: "Adresse", value: "", span: 6 },
+              { label: "Signature", value: "", span: 3 },
+            ]} />
+          </div>
+        </>
+      ))}
+    </div>
+  );
+}

@@ -1,0 +1,416 @@
+// Mandat de recherche imprimable, en 12 articles : la recherche personnalisée
+// du site, contractualisée. Trois feuilles A4 paginées à la main, bordereau de
+// rétractation détachable en dernière page, mêmes conventions que le mandat de
+// vente : chiffres tirés de src/lib/mandats.ts, jamais posés ici en dur.
+//
+// Le contrat suit le modèle d'entremise validé le 20 août 2026 : intermédiaire
+// sans pouvoir de conclure ni d'encaisser, honoraires dus uniquement au succès
+// (grille arbitrée le même jour), exclusivité avec clause de survie de six
+// mois adossée à une liste nominative.
+import { formatNumber } from "@/lib/format";
+import { formatEuroCents } from "@/lib/comptes";
+import { formatDateFr } from "@/lib/devis";
+import {
+  INDEMNITE_FORFAITAIRE_CENTS, MEDIATEUR, MANDATAIRE_IDENTITE,
+  echeanceMandat,
+} from "@/lib/mandats";
+import type { PrintMandat, Emetteur } from "./MandatDocument";
+
+const SHEET: React.CSSProperties = {
+  width: "210mm",
+  minHeight: "297mm",
+  padding: "0 0 8mm",
+  backgroundColor: "#fff",
+  color: "#111",
+  fontSize: "8.8pt",
+  lineHeight: 1.45,
+  margin: "0 auto",
+  display: "flex",
+  flexDirection: "column",
+};
+
+const BODY: React.CSSProperties = { padding: "5mm 14mm 0", flex: 1 };
+
+function ligne(valeur: string): string {
+  return valeur.trim() !== "" ? valeur : "________________";
+}
+
+/** Adresse de l'émetteur sur une ligne, sans la mention du pays. */
+function adresseLigne(address: string): string {
+  return address
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l !== "" && l.toLowerCase() !== "france")
+    .join(", ");
+}
+
+function Bandeau({ emetteur, page }: { emetteur: Emetteur; page: number }) {
+  return (
+    <div
+      style={{
+        backgroundColor: "#0A1628",
+        color: "#FFFFFF",
+        padding: page === 1 ? "7mm 14mm" : "4.5mm 14mm",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
+      }}
+    >
+      <div style={{ fontSize: page === 1 ? "12pt" : "9.5pt", fontWeight: 600, letterSpacing: "0.24em", textTransform: "uppercase" }}>
+        {emetteur.name.replace(/^SASU\s+/i, "")}
+      </div>
+      <div style={{ fontSize: "7pt", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9FB3D4", textAlign: "right" }}>
+        Mandat de recherche — Recherche personnalisée
+      </div>
+    </div>
+  );
+}
+
+function Pied({ emetteur, page }: { emetteur: Emetteur; page: number }) {
+  return (
+    <div
+      style={{
+        margin: "5mm 14mm 0",
+        paddingTop: "2mm",
+        borderTop: "1px solid #DDD",
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 12,
+        fontSize: "6.8pt",
+        color: "#777",
+      }}
+    >
+      <span>
+        {emetteur.name} · {adresseLigne(emetteur.address)}
+        {emetteur.siret ? ` · SIRET ${emetteur.siret}` : ""}
+        {emetteur.tva ? ` · TVA ${emetteur.tva}` : ""}
+      </span>
+      <span style={{ whiteSpace: "nowrap" }}>Page {page} / 3 — paraphes : ______ / ______</span>
+    </div>
+  );
+}
+
+function Art({ n, titre, children }: { n: number; titre: string; children: React.ReactNode }) {
+  return (
+    <div className="mandat-avoid-break" style={{ marginTop: "3.6mm" }}>
+      <h2 style={{ fontSize: "8.8pt", fontWeight: 700, margin: "0 0 1.2mm", letterSpacing: "0.02em" }}>
+        ARTICLE {n} — {titre.toUpperCase()}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function P({ children }: { children: React.ReactNode }) {
+  return <p style={{ margin: "0 0 1.6mm", textAlign: "justify" }}>{children}</p>;
+}
+
+function Champs({ items }: { items: { label: string; value: string; span?: number }[] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", columnGap: "5mm", rowGap: "1.6mm", margin: "1mm 0 1.6mm" }}>
+      {items.map((c) => (
+        <div key={c.label} style={{ gridColumn: `span ${c.span ?? 2}` }}>
+          <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>{c.label}</div>
+          <div style={{ borderBottom: "1px solid #BBB", padding: "0.4mm 0 0.6mm", fontWeight: 600, minHeight: "4mm" }}>
+            {c.value.trim() !== "" ? c.value : " "}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CocheDoc({ checked, children }: { checked: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className="mandat-avoid-break"
+      style={{
+        display: "flex",
+        gap: "2.4mm",
+        alignItems: "flex-start",
+        border: "1px solid #C9D2E2",
+        backgroundColor: checked ? "#EFF4FC" : "#FFFFFF",
+        padding: "1.8mm 2.6mm",
+        margin: "0 0 1.6mm",
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          width: "3.4mm",
+          height: "3.4mm",
+          border: "1.2px solid #111",
+          flexShrink: 0,
+          marginTop: "0.5mm",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "7.5pt",
+          fontWeight: 700,
+          lineHeight: 1,
+        }}
+      >
+        {checked ? "✕" : ""}
+      </span>
+      <span style={{ textAlign: "justify" }}>{children}</span>
+    </div>
+  );
+}
+
+function Signatures({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
+  const enLigne = m.signedAt !== "" && m.signerName !== "";
+  const quand = enLigne
+    ? new Date(m.signedAt).toLocaleString("fr-FR", {
+        day: "numeric", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
+      })
+    : "";
+  return (
+    <div className="mandat-avoid-break" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5mm", marginTop: "3mm" }}>
+      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
+        <div style={{ fontWeight: 700 }}>Le Client</div>
+        {enLigne ? (
+          <div style={{ fontSize: "7.6pt", marginTop: "1mm", lineHeight: 1.55 }}>
+            <div style={{ fontSize: "9.5pt", fontWeight: 700 }}>{m.signerName}</div>
+            <div>Signé en ligne le {quand}</div>
+            {m.signedIp !== "" && <div style={{ color: "#666" }}>Adresse IP : {m.signedIp}</div>}
+            <div style={{ color: "#666" }}>Mention «&nbsp;Lu et approuvé, bon pour mandat&nbsp;» validée en ligne</div>
+          </div>
+        ) : (
+          <div style={{ fontSize: "7.2pt", color: "#666" }}>
+            Signature précédée de la mention manuscrite «&nbsp;Lu et approuvé, bon pour mandat&nbsp;»
+          </div>
+        )}
+      </div>
+      <div style={{ border: "1px solid #BBB", minHeight: "30mm", padding: "2mm 2.6mm" }}>
+        <div style={{ fontWeight: 700 }}>Le Mandataire</div>
+        <div style={{ fontSize: "7.2pt", color: "#666" }}>
+          {emetteur.name} — {emetteur.representative}, président
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function MandatDocumentRecherche({ m, emetteur }: { m: PrintMandat; emetteur: Emetteur }) {
+  const e = echeanceMandat(m.startDate, m.durationDays, m.startDate || m.createdOn);
+  const indemnite = formatEuroCents(INDEMNITE_FORFAITAIRE_CENTS);
+  const aDomicile = m.signMode !== "distance";
+  const cible = [m.make, m.model, m.version].filter((s) => s.trim() !== "").join(" ");
+
+  const feuille = (page: number, children: React.ReactNode) => (
+    <div key={page} className="mandat-sheet" style={SHEET}>
+      <Bandeau emetteur={emetteur} page={page} />
+      <div style={BODY}>{children}</div>
+      <Pied emetteur={emetteur} page={page} />
+    </div>
+  );
+
+  return (
+    <div className="mandat-screen-bg" style={{ backgroundColor: "#0A1628", padding: "24px 0", display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* ── Feuille 1 : parties, objet, cahier des charges, honoraires ── */}
+      {feuille(1, (
+        <>
+          <div style={{ textAlign: "center", margin: "3mm 0 1mm" }}>
+            <h1 style={{ fontSize: "15pt", fontWeight: 800, letterSpacing: "0.04em", margin: 0 }}>MANDAT DE RECHERCHE</h1>
+            <div style={{ color: "#555", fontSize: "8pt", marginTop: "0.8mm" }}>
+              Recherche personnalisée — mandat d’entremise sans pouvoir de conclure ni d’encaisser
+            </div>
+          </div>
+          <Champs items={[
+            { label: "Mandat n°", value: m.reference, span: 3 },
+            { label: "Établi le", value: m.createdOn ? formatDateFr(m.createdOn) : "", span: 3 },
+          ]} />
+
+          <Art n={1} titre="Les parties">
+            <P><strong>Le mandant</strong> — ci-après «&nbsp;le Client&nbsp;»</P>
+            <Champs items={[
+              { label: "Nom et prénom", value: m.ownerName, span: 4 },
+              { label: "Né(e) le", value: m.ownerBirthDate ? formatDateFr(m.ownerBirthDate) : "", span: 2 },
+              { label: "Adresse complète", value: m.ownerAddress, span: 6 },
+              { label: "Téléphone", value: m.ownerPhone, span: 2 },
+              { label: "Courriel", value: m.ownerEmail, span: 2 },
+              { label: "Pièce d’identité n°", value: m.ownerIdNumber, span: 2 },
+            ]} />
+            <P>
+              <strong>Le mandataire</strong> — {MANDATAIRE_IDENTITE}{" "}
+              {`Assurance de responsabilité civile professionnelle : police n° ${ligne(m.rcPolicy)}, souscrite auprès de ${ligne(m.rcInsurer)}.`}
+            </P>
+          </Art>
+
+          <Art n={2} titre="Objet du mandat">
+            <P>
+              {`Le Client confie au mandataire, qui l’accepte, un mandat d’entremise en vue de la recherche et de la négociation d’un véhicule répondant au cahier des charges de l’article 3, en France ou dans l’Union européenne. Le mandataire agit en qualité d’intermédiaire : `}
+              <strong>il n’est ni vendeur ni acquéreur du véhicule, n’a pas le pouvoir de conclure l’achat au nom du Client, et ne reçoit aucun fonds pour le compte de celui-ci.</strong>
+              {` L’achat est conclu directement entre le Client et le vendeur du véhicule, et le prix est réglé directement par le Client à ce vendeur.`}
+            </P>
+          </Art>
+
+          <Art n={3} titre="Le cahier des charges">
+            <Champs items={[
+              { label: "Marque souhaitée", value: m.make, span: 2 },
+              { label: "Modèle", value: m.model, span: 2 },
+              { label: "Version, finition", value: m.version, span: 2 },
+              { label: "Énergie", value: m.fuel, span: 2 },
+              { label: "Budget d’achat maximal (€ TTC)", value: m.budgetCents > 0 ? formatEuroCents(m.budgetCents) : "", span: 2 },
+              { label: "Kilométrage plafond", value: m.mileageMaxKm > 0 ? `${formatNumber(m.mileageMaxKm)} km` : "", span: 2 },
+              { label: "1re mise en circulation à partir de", value: m.regMinYear > 0 ? String(m.regMinYear) : "", span: 3 },
+            ]} />
+            <div style={{ fontSize: "6.6pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>
+              Critères libres convenus avec le Client
+            </div>
+            <div style={{ borderBottom: "1px solid #BBB", minHeight: "8mm", padding: "0.6mm 0", whiteSpace: "pre-line", marginBottom: "1.6mm" }}>
+              {m.searchSpec}
+            </div>
+            <P>
+              {`Le budget s’entend toutes taxes comprises, frais de mise à disposition inclus. Toute proposition qui le dépasse, et toute modification du cahier des charges, demandent l’accord écrit du Client.`}
+            </P>
+          </Art>
+
+          <Art n={4} titre="Honoraires — dus uniquement au succès">
+            <P>
+              {`Les honoraires du mandataire sont convenus à la somme forfaitaire de `}
+              <strong>{m.feeCents > 0 ? `${formatEuroCents(m.feeCents)} TTC` : "__________ € TTC"}</strong>
+              {`. Ils sont dus au jour où le Client conclut l’achat d’un véhicule présenté par le mandataire, et sont réglés au plus tard à la livraison. `}
+              <strong>Sans véhicule trouvé et acheté, aucune somme n’est due</strong>
+              {`, quelle que soit la durée de la recherche. Aucun acompte n’est demandé à la signature ; les frais engagés pour la recherche restent à la charge du mandataire.`}
+            </P>
+          </Art>
+        </>
+      ))}
+
+      {/* ── Feuille 2 : durée, survie, prestations, obligations, rétractation ── */}
+      {feuille(2, (
+        <>
+          <Art n={5} titre="Durée et exclusivité">
+            <Champs items={[
+              { label: "Le mandat prend effet le", value: m.startDate ? formatDateFr(m.startDate) : "", span: 3 },
+              { label: "Et expire le", value: e ? formatDateFr(e.echeance) : "", span: 3 },
+            ]} />
+            <P>
+              {`Le mandat est consenti pour une durée de ${m.durationDays} jours à compter de sa date d’effet, renouvelable par accord écrit des parties. Il est conclu à titre `}
+              <strong>exclusif</strong>
+              {` : pendant toute sa durée, le Client s’interdit de confier la même recherche à un autre professionnel. Il conserve la faculté d’acheter par lui-même un véhicule trouvé par ses propres moyens, sans honoraires ; il en informe le mandataire dans les quarante-huit heures.`}
+            </P>
+          </Art>
+
+          <Art n={6} titre="Véhicules présentés — clause de survie">
+            <P>
+              {`Les honoraires de l’article 4 restent dus si le Client achète, dans les six (6) mois suivant l’expiration du mandat, un véhicule que le mandataire lui a présenté pendant sa durée. La `}
+              <strong>liste nominative des véhicules présentés</strong>
+              {` (marque, modèle, numéro de série ou immatriculation) est remise au Client à l’expiration du mandat ; à défaut de remise, la présente clause lui est inopposable.`}
+            </P>
+          </Art>
+
+          <Art n={7} titre="Prestations du mandataire">
+            <P>
+              {`Le mandataire s’engage à réaliser, à ses frais : la recherche sur le marché français et européen ; la présentation d’une sélection commentée sous quinze jours ouvrés ; la vérification, pour tout véhicule proposé, de l’historique accessible, du kilométrage et du vendeur ; la négociation du prix et des conditions ; l’accompagnement du Client jusqu’à la signature du contrat de vente édité par le vendeur. Il rend compte au Client de l’avancement de la recherche au moins tous les quinze jours.`}
+            </P>
+          </Art>
+
+          <Art n={8} titre="Obligations du Client">
+            <P>
+              {`Le Client garantit la sincérité de son besoin et la disponibilité de son budget. Il répond aux propositions du mandataire dans un délai de cinq jours ouvrés. Pendant le mandat et la période de l’article 6, il traite avec les vendeurs présentés par l’intermédiaire du mandataire.`}
+            </P>
+          </Art>
+
+          <Art n={9} titre="Responsabilité">
+            <P>
+              {`Le mandataire est tenu d’une obligation de moyens. Il ne garantit ni la découverte d’un véhicule conforme, ni un prix, ni un délai. Le vendeur du véhicule demeure seul tenu des garanties attachées à la vente : garantie légale de conformité s’il est professionnel, garantie des vices cachés. Le mandataire porte à la connaissance du Client l’ensemble des informations recueillies sur le véhicule et son vendeur.`}
+            </P>
+          </Art>
+
+          <Art n={10} titre="Droit de rétractation">
+            <div
+              className="mandat-avoid-break"
+              style={{
+                borderLeft: "2.5px solid #0A1628",
+                backgroundColor: "#F2F5FB",
+                padding: "2mm 3mm",
+                marginBottom: "1.6mm",
+                WebkitPrintColorAdjust: "exact",
+                printColorAdjust: "exact",
+              }}
+            >
+              <P>
+                <strong>
+                  {aDomicile
+                    ? "Le présent mandat étant conclu hors établissement, le Client dispose d’un délai de quatorze (14) jours à compter de sa signature pour se rétracter, sans avoir à motiver sa décision ni à supporter de frais."
+                    : "Le présent mandat étant conclu à distance, le Client dispose d’un délai de quatorze (14) jours à compter de sa signature pour se rétracter, sans avoir à motiver sa décision ni à supporter de frais."}
+                </strong>
+              </P>
+              <P>
+                {`Pour exercer ce droit, il notifie sa décision au moyen du bordereau détachable joint au présent mandat, ou par toute déclaration dénuée d’ambiguïté adressée à ${emetteur.name}, ${adresseLigne(emetteur.address)}${emetteur.email ? `, ou à ${emetteur.email}` : ""}.`}
+              </P>
+              {aDomicile && (
+                <P>
+                  {`Conformément à l’article L. 221-10 du code de la consommation, aucun paiement ne peut être exigé du Client avant l’expiration d’un délai de sept jours à compter de la signature.`}
+                </P>
+              )}
+            </div>
+            <CocheDoc checked={m.immediateExecution}>
+              {`Le Client demande expressément l’exécution du mandat avant la fin du délai de rétractation. Il reconnaît qu’en cas de rétractation postérieure, il devra régler le montant des prestations effectivement fournies au prorata, dans la limite de ${indemnite} TTC, et que si l’achat du véhicule est conclu avant la fin du délai, le mandat est alors pleinement exécuté et il renonce expressément à son droit de rétractation (article L. 221-28, 1°, du code de la consommation).`}
+            </CocheDoc>
+          </Art>
+        </>
+      ))}
+
+      {/* ── Feuille 3 : données, litiges, signatures, bordereau détachable ── */}
+      {feuille(3, (
+        <>
+          <Art n={11} titre="Données personnelles">
+            <P>
+              {`Les données collectées sont traitées par ${emetteur.name} aux seules fins d’exécution du présent mandat et conservées trois ans après son terme. Le Client dispose d’un droit d’accès, de rectification, d’effacement et d’opposition${emetteur.email ? `, exerçable à ${emetteur.email}` : ""}, ainsi que du droit d’introduire une réclamation auprès de la CNIL.`}
+            </P>
+          </Art>
+
+          <Art n={12} titre="Réclamations, médiation et litiges">
+            <P>
+              {`Toute réclamation est adressée à ${emetteur.name}, ${adresseLigne(emetteur.address)}. À défaut de solution amiable, le Client peut recourir gratuitement au médiateur de la consommation dont relève le mandataire : ${MEDIATEUR.nom}, ${MEDIATEUR.adresse} — ${MEDIATEUR.site}. Le présent mandat est soumis au droit français.`}
+            </P>
+          </Art>
+
+          <P>
+            {`Fait en deux exemplaires originaux, dont un remis au Client au moment de la signature, accompagné du bordereau de rétractation.`}
+          </P>
+          <Champs items={[
+            { label: "À", value: m.signPlace, span: 3 },
+            { label: "Le", value: m.signedOn ? formatDateFr(m.signedOn) : "", span: 3 },
+          ]} />
+
+          <Signatures m={m} emetteur={emetteur} />
+
+          <div style={{ margin: "5mm 0 2mm", borderTop: "1.5px dashed #999", position: "relative" }}>
+            <span style={{ position: "absolute", top: "-2.6mm", left: 0, backgroundColor: "#fff", paddingRight: "2mm", fontSize: "7pt", color: "#777" }}>✂</span>
+          </div>
+
+          <div className="mandat-avoid-break">
+            <h2 style={{ fontSize: "10pt", fontWeight: 800, letterSpacing: "0.04em", margin: "2mm 0 1mm" }}>BORDEREAU DE RÉTRACTATION</h2>
+            <P>
+              <span style={{ color: "#555", fontSize: "7.6pt" }}>
+                {`À compléter et renvoyer uniquement si vous souhaitez vous rétracter du mandat, dans un délai de quatorze jours à compter de sa signature.`}
+              </span>
+            </P>
+            <P>
+              {`À l’attention de : ${emetteur.name}, ${adresseLigne(emetteur.address)}${emetteur.email ? ` — ${emetteur.email}` : ""}`}
+            </P>
+            <P>
+              {`Je vous notifie par la présente ma rétractation du mandat de recherche n° ${m.reference} signé le __________${cible ? `, portant sur la recherche d’un véhicule ${cible}` : ""}.`}
+            </P>
+            <Champs items={[
+              { label: "Nom et prénom du Client", value: "", span: 4 },
+              { label: "Date", value: "", span: 2 },
+              { label: "Adresse", value: "", span: 6 },
+              { label: "Signature", value: "", span: 3 },
+            ]} />
+          </div>
+        </>
+      ))}
+    </div>
+  );
+}

@@ -692,6 +692,138 @@ model RepriseEvent {
   @@index([repriseId])
 }
 
+// Mandats : contrats de mission signés avec un client.
+//
+// Lot 1 : le mandat de vente (« Revente sur mesure »), généré depuis le modèle
+// en 16 articles validé le 20 août 2026. Les types recherche et import
+// arrivent aux lots suivants ; la colonne `type` les attend déjà.
+//
+// Mêmes conventions que les reprises : données du mandant et du véhicule
+// RECOPIÉES et figées (le contrat est la photographie du jour de la
+// signature), colonnes de rattachement NUES sans relation Prisma (l'effacement
+// RGPD laisse le contrat en place, anonymisé), montants en centimes, dates
+// métier en chaînes YYYY-MM-DD.
+model Mandat {
+  id        String @id @default(cuid())
+  reference String @unique               // « MV-2026-001 », remise à 1 chaque année
+  type      String @default("vente")     // vente | recherche | import (lots suivants)
+  status    String @default("brouillon") // brouillon | signe | vendu | retire | sans_suite | retracte
+
+  // Rattachements
+  clientId  String?
+  leadId    String?
+  vehicleId String?
+
+  // Le mandant (article 1), figé
+  ownerName      String @default("")
+  ownerBirthDate String @default("")     // né(e) le, YYYY-MM-DD
+  ownerAddress   String @default("")
+  ownerEmail     String @default("")
+  ownerPhone     String @default("")
+  ownerIdNumber  String @default("")     // n° de la pièce d'identité présentée
+
+  // Assurance RC professionnelle du mandataire, imprimée à l'article 1
+  rcPolicy  String @default("")
+  rcInsurer String @default("")
+
+  // Le véhicule (article 3), figé au jour du mandat
+  make          String @default("")
+  model         String @default("")
+  version       String @default("")
+  power         String @default("")      // puissance, texte libre (« 200 ch »)
+  plate         String @default("")
+  vin           String @default("")
+  firstRegDate  String @default("")      // 1re mise en circulation YYYY-MM-DD
+  mileageKm     Int    @default(0)       // relevé le jour du mandat
+  fuel          String @default("Essence")
+  color         String @default("")
+  keys          Int    @default(0)
+  ctDate        String @default("")      // dernier contrôle technique YYYY-MM-DD
+  ctStatus      String @default("")      // favorable | contre_visite | absent
+  lastServiceKm String @default("")      // dernier entretien à (km), texte libre
+  disclosures   String @default("")      // sinistres et particularités déclarés
+
+  // Prix et honoraires (articles 4 et 5)
+  priceCents Int    @default(0)          // prix affiché à l'annonce, TTC
+  floorCents Int    @default(0)          // prix plancher net vendeur
+  feeFormula String @default("acquereur") // acquereur (formule A) | vendeur (formule B)
+  packCents  Int    @default(0)          // formule A : pack de livraison réglé par l'acquéreur
+
+  // Recherche et import : le cahier des charges et le forfait convenu.
+  // Les colonnes véhicule ci-dessus portent alors la CIBLE (marque, modèle
+  // souhaités), précisée au fil de la mission.
+  searchSpec     String  @default("")    // critères libres du cahier des charges
+  budgetCents    Int     @default(0)     // budget d'achat maximal, TTC
+  mileageMaxKm   Int     @default(0)     // kilométrage plafond accepté
+  regMinYear     Int     @default(0)     // 1re mise en circulation à partir de (année)
+  listingUrl     String  @default("")    // annonce repérée par le client (import)
+  countryOrigin  String  @default("")    // pays d'achat visé (import)
+  feeCents       Int     @default(0)     // honoraires convenus TTC, dus au succès
+  registrationId String?                 // dossier d'immatriculation ouvert à l'import
+
+  // Durée (article 6)
+  startDate    String @default("")       // date d'effet YYYY-MM-DD
+  durationDays Int    @default(60)
+
+  // Garde du véhicule (article 12)
+  custody     String @default("vendeur") // vendeur | mandataire
+  custodyDate String @default("")        // remise au mandataire, YYYY-MM-DD
+
+  // Signature (article 14 et suivants). Le mode pilote la qualification
+  // légale imprimée : hors établissement (domicile) ou à distance.
+  signMode           String  @default("domicile") // domicile | distance
+  immediateExecution Boolean @default(false)      // exécution demandée avant la fin du délai
+  signPlace          String  @default("")         // « Fait à »
+  signedOn           String  @default("")         // jour de la signature YYYY-MM-DD
+
+  // Envoi, lecture et signature en ligne : mêmes conventions que Quote
+  // (horodatages ISO en chaînes, jeton stable d'un envoi à l'autre).
+  sentAt        String  @default("")  // horodatage ISO de l'envoi au client
+  firstViewedAt String  @default("")  // première ouverture du lien par le client
+  viewCount     Int     @default(0)
+  publicToken   String? @unique       // jeton du lien public de lecture et signature
+  signerName    String  @default("")
+  signedAt      String  @default("")  // horodatage ISO de la signature en ligne
+  signedIp      String  @default("")
+
+  // Issue
+  decidedOn      String @default("")     // jour de la conclusion YYYY-MM-DD
+  soldOn         String @default("")     // jour de la vente YYYY-MM-DD
+  soldPriceCents Int    @default(0)      // prix de vente réalisé
+  feeFinalCents  Int    @default(0)      // rémunération réellement facturée
+  outcomeNote    String @default("")
+
+  documents String   @default("[]")      // JSON [{ label, url, uploadedAt }]
+  notes     String   @default("")
+  author    String   @default("")        // signature du créateur, posée côté serveur
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events MandatEvent[]
+
+  @@index([status])
+  @@index([type])
+  @@index([clientId])
+  @@index([vehicleId])
+  @@index([startDate])
+}
+
+// Journal d'un mandat : signature, changements de statut, notes, pièces.
+// Un contrat se relit des mois plus tard : chaque geste laisse une trace
+// datée et signée, c'est aussi le début de la reddition de comptes.
+model MandatEvent {
+  id        String   @id @default(cuid())
+  mandatId  String
+  type      String   @default("note")    // creation | statut | note | document
+  content   String   @default("")
+  author    String   @default("")
+  createdAt DateTime @default(now())
+
+  mandat Mandat @relation(fields: [mandatId], references: [id], onDelete: Cascade)
+
+  @@index([mandatId])
+}
+
 // Visites du site public : une ligne par page affichée.
 //
 // Aucune relation vers Client ni Lead : le carnet clients et l'audience restent
