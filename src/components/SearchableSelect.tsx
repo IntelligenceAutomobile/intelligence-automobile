@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { normalizeLabel } from "@/lib/vehicle-catalog";
 
@@ -30,6 +30,8 @@ export default function SearchableSelect({
   noResultLabel,
   variant = "bar",
   allowCustom = true,
+  triggerClassName,
+  triggerStyle,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -43,14 +45,33 @@ export default function SearchableSelect({
   /** Reçoit le texte saisi, ex. `(q) => \`Utiliser « ${q} »\``. */
   customRowLabel: (query: string) => string;
   noResultLabel: string;
-  /** `bar` : panneau flottant (barre de filtres desktop). `block` : panneau en flux (bottom sheet mobile). */
-  variant?: "bar" | "block";
+  /**
+   * `bar` : panneau flottant (barre de filtres desktop).
+   * `block` : panneau en flux (bottom sheet mobile).
+   * `champ` : champ de formulaire — panneau flottant, habillage donné par
+   * l'écran appelant, pour que le menu ait l'allure des champs qui l'entourent.
+   */
+  variant?: "bar" | "block" | "champ";
   allowCustom?: boolean;
+  /** Habillage du déclencheur en variante `champ`. */
+  triggerClassName?: string;
+  triggerStyle?: CSSProperties;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
-  const [anchor, setAnchor] = useState<{ top: number; left: number; width: number } | null>(null);
+  /**
+   * Où poser le panneau flottant. `top` ou `bottom` selon le côté choisi :
+   * ancré par le bas, le panneau grandit vers le haut.
+   */
+  const [anchor, setAnchor] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    width: number;
+    /** Place disponible du côté retenu, pour borner la liste. */
+    maxHeight: number;
+  } | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -59,6 +80,10 @@ export default function SearchableSelect({
   const listRef = useRef<HTMLDivElement>(null);
 
   const isBar = variant === "bar";
+  const isChamp = variant === "champ";
+  // Le panneau flotte dans un portail sauf en variante `block`, où il reste en
+  // flux pour que le bottom sheet mobile le fasse défiler avec le reste.
+  const flottant = variant !== "block";
   const trimmed = query.trim();
   const needle = normalizeLabel(trimmed);
 
@@ -124,15 +149,25 @@ export default function SearchableSelect({
   // qui sert de bloc conteneur aux descendants fixes. Le panneau part donc dans
   // un portail sur `body`, ancré aux coordonnées écran du déclencheur.
   useLayoutEffect(() => {
-    if (!open || !isBar) return;
+    if (!open || !flottant) return;
     const measure = () => {
       const r = triggerRef.current?.getBoundingClientRect();
       if (!r) return;
       const width = Math.max(r.width, 260);
+      const marge = 12;
+      const dessous = window.innerHeight - r.bottom - marge;
+      const dessus = r.top - marge;
+      // Un champ situé en bas de fenêtre ouvrait son panneau dans le vide :
+      // il s'ouvre vers le haut dès que le bas manque de place et que le haut
+      // en offre davantage.
+      const versLeHaut = dessous < 240 && dessus > dessous;
       setAnchor({
-        top: r.bottom + 4,
-        left: Math.max(12, Math.min(r.left, window.innerWidth - width - 12)),
+        ...(versLeHaut
+          ? { bottom: window.innerHeight - r.top + 4 }
+          : { top: r.bottom + 4 }),
+        left: Math.max(marge, Math.min(r.left, window.innerWidth - width - marge)),
         width,
+        maxHeight: Math.max(180, (versLeHaut ? dessus : dessous) - 8),
       });
     };
     measure();
@@ -142,7 +177,7 @@ export default function SearchableSelect({
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [open, isBar]);
+  }, [open, flottant]);
 
   // Fermeture au clic extérieur.
   useEffect(() => {
@@ -198,12 +233,14 @@ export default function SearchableSelect({
   const panel = (
     <div
       ref={panelRef}
-      className={isBar ? "fixed z-50" : "relative mt-1 w-full"}
+      className={flottant ? "fixed z-50" : "relative mt-1 w-full"}
       style={{
-        ...(isBar && anchor ? { top: anchor.top, left: anchor.left, width: anchor.width } : null),
+        ...(flottant && anchor
+          ? { top: anchor.top, bottom: anchor.bottom, left: anchor.left, width: anchor.width }
+          : null),
         backgroundColor: "#0A1628",
         border: "1px solid #1B3055",
-        boxShadow: isBar ? "0 18px 40px rgba(4,11,22,0.55)" : "none",
+        boxShadow: flottant ? "0 18px 40px rgba(4,11,22,0.55)" : "none",
       }}
     >
       <div className="p-2" style={{ borderBottom: "1px solid #14243d" }}>
@@ -226,7 +263,12 @@ export default function SearchableSelect({
         />
       </div>
 
-      <div ref={listRef} role="listbox" className="overflow-y-auto" style={{ maxHeight: "260px" }}>
+      <div
+        ref={listRef}
+        role="listbox"
+        className="overflow-y-auto"
+        style={{ maxHeight: flottant && anchor ? Math.max(120, anchor.maxHeight - 58) : 260 }}
+      >
         {items.map((item) =>
           item.kind === "header" ? (
             <div
@@ -273,15 +315,28 @@ export default function SearchableSelect({
         className={
           isBar
             ? "flex items-center gap-2.5 text-[11px] tracking-[0.25em] uppercase outline-none cursor-pointer transition-all duration-200 hover:opacity-80 px-5 py-3"
-            : "flex items-center justify-between gap-2 w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer text-left"
+            : isChamp
+              ? triggerClassName ??
+                "flex items-center justify-between gap-2 w-full text-sm px-4 py-3 outline-none cursor-pointer text-left"
+              : "flex items-center justify-between gap-2 w-full text-[13px] px-4 py-3.5 outline-none cursor-pointer text-left"
         }
-        style={{
-          backgroundColor: "rgba(107,159,238,0.04)",
-          border: `1px solid ${open ? "rgba(107,159,238,0.45)" : "rgba(107,159,238,0.2)"}`,
-          color: value ? "#F0F5FF" : "#C8D8EE",
-        }}
+        style={
+          isChamp && triggerStyle
+            ? // Le champ prend l'habillage de son écran ; seule la bordure
+              // réagit à l'ouverture, comme un champ prend le focus.
+              { ...triggerStyle, borderColor: open ? "#6B9FEE" : triggerStyle.borderColor }
+            : {
+                backgroundColor: "rgba(107,159,238,0.04)",
+                border: `1px solid ${open ? "rgba(107,159,238,0.45)" : "rgba(107,159,238,0.2)"}`,
+                color: value ? "#F0F5FF" : "#C8D8EE",
+              }
+        }
       >
-        <span className="truncate">{selectedLabel || placeholder}</span>
+        {/* Le champ vide affiche son invite en gris, comme un champ de saisie
+            affiche son placeholder. */}
+        <span className="truncate" style={isChamp && !value ? { color: "#9FB3D4" } : undefined}>
+          {selectedLabel || placeholder}
+        </span>
         <svg
           width="10" height="10" viewBox="0 0 14 14" fill="none"
           className="flex-shrink-0 transition-transform duration-200"
@@ -294,7 +349,7 @@ export default function SearchableSelect({
       {/* ── Panneau ── */}
       {/* `bar` : dans un portail, pour échapper au `backdrop-filter` de la barre.
           `block` : en flux, pour que le bottom sheet mobile le fasse défiler. */}
-      {open && (isBar ? anchor && createPortal(panel, document.body) : panel)}
+      {open && (flottant ? anchor && createPortal(panel, document.body) : panel)}
     </div>
   );
 }

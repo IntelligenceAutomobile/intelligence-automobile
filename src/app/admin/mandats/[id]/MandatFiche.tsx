@@ -37,6 +37,8 @@ import {
 import type { MandatForm } from "@/lib/mandat-form";
 import type { ListesMandat } from "@/lib/mandat-listes";
 import { normalizeLabel } from "@/lib/vehicle-catalog";
+import SearchableSelect from "@/components/SearchableSelect";
+import DocAdapte from "./imprimer/DocAdapte";
 import {
   T, TONE, PageHeader, SectionCard, fieldStyle, labelClass,
   btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle,
@@ -110,38 +112,44 @@ const inputClass = "px-4 py-3 text-sm outline-none w-full focus:border-[#6B9FEE]
 const selectClass = "px-4 py-3 text-sm outline-none w-full cursor-pointer focus:border-[#6B9FEE]";
 
 /* ── Champ à liste ouverte ──
-   Un champ de saisie ordinaire, doublé d'un menu des valeurs déjà utilisées
-   dans la maison : on choisit dans la liste, ou on tape autre chose. Les
-   marques, modèles, couleurs et pays reviennent d'un mandat à l'autre, les
-   retaper en entier à chaque fois était du temps perdu. */
+   Un vrai menu déroulant des valeurs déjà utilisées dans la maison : on ouvre,
+   on fait défiler, on choisit. Une ligne de recherche filtre la liste dès la
+   première lettre, et une valeur absente de la liste se saisit quand même,
+   par la ligne « Utiliser … » qui apparaît sous la recherche.
+
+   Les marques, modèles, couleurs et pays reviennent d'un mandat à l'autre :
+   les retaper en entier à chaque fois était du temps perdu. C'est le même
+   composant que le filtre des véhicules du site public. */
 function ChampListe({
-  liste, options, value, onChange, placeholder, mono = false,
+  options, value, onChange, placeholder, groupe,
 }: {
-  /** Identifiant du menu, unique dans la page. */
-  liste: string;
   options: string[];
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  mono?: boolean;
+  /** Titre de la section dans le menu, ex. « Modèles Renault ». */
+  groupe: string;
 }) {
+  // L'appelant passe des libellés bruts ; le menu attend des couples.
+  const groups = useMemo(
+    () => (options.length > 0 ? [{ label: groupe, options: options.map((o) => ({ value: o, label: o })) }] : []),
+    [options, groupe],
+  );
   return (
-    <>
-      <input
-        list={options.length > 0 ? liste : undefined}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={mono ? `${inputClass} font-mono` : inputClass}
-        style={fieldStyle}
-        autoComplete="off"
-      />
-      {options.length > 0 && (
-        <datalist id={liste}>
-          {options.map((o) => <option key={o} value={o} />)}
-        </datalist>
-      )}
-    </>
+    <SearchableSelect
+      value={value}
+      onChange={onChange}
+      groups={groups}
+      placeholder={placeholder ?? "Choisir ou saisir"}
+      clearLabel="Laisser vide"
+      searchPlaceholder="Chercher ou saisir…"
+      customGroupLabel="Saisie libre"
+      customRowLabel={(q) => `Utiliser « ${q} »`}
+      noResultLabel="Rien de connu sous ce nom. Tapez la valeur, elle sera reprise telle quelle."
+      variant="champ"
+      triggerClassName={`${selectClass} flex items-center justify-between gap-2 text-left`}
+      triggerStyle={fieldStyle}
+    />
   );
 }
 
@@ -312,6 +320,19 @@ export default function MandatFiche({
     if (marque === "") return L.modeles;
     return L.modelesParMarque[marque] ?? [];
   }, [L, f.make]);
+  // Le titre de la section dit de quelle marque viennent les modèles listés.
+  const groupeModeles = f.make.trim() === "" ? "Modèles déjà saisis" : `Modèles ${f.make.trim()}`;
+
+  // Échap referme l'aperçu en grand : c'est le geste attendu devant une
+  // fenêtre qui recouvre la page, et le seul possible au clavier.
+  useEffect(() => {
+    if (!pleinEcran) return;
+    const auClavier = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPleinEcran(false);
+    };
+    document.addEventListener("keydown", auClavier);
+    return () => document.removeEventListener("keydown", auClavier);
+  }, [pleinEcran]);
 
   /** Reprend une fiche du carnet clients : le mandant se remplit tout seul. */
   function reprendreClient(id: string) {
@@ -814,6 +835,21 @@ export default function MandatFiche({
                 {apercu ? "Masquer l'aperçu" : "Aperçu"}
               </button>
             </span>
+            {/* Sous 1400 px, la colonne d'aperçu tiendrait au prix de champs
+                serrés. Le contrat s'ouvre donc par-dessus la page, à l'échelle
+                de l'écran, et se referme d'Échap ou d'un clic à côté. */}
+            <span className="block min-[1400px]:hidden">
+              <button
+                type="button"
+                onClick={() => setPleinEcran(true)}
+                className={btnGhostClass}
+                style={btnGhostStyle}
+                title="Le document tel qu'il s'imprimera, mis à jour à la frappe"
+              >
+                <Maximize2 size={14} />
+                Aperçu
+              </button>
+            </span>
             {mode === "fiche" && (
               <Link href={`/admin/mandats/${mandat.id}/imprimer`} className={btnGhostClass} style={btnGhostStyle}>
                 <Printer size={14} />
@@ -965,15 +1001,15 @@ export default function MandatFiche({
                 <input type="date" value={f.firstRegDate} onChange={(e) => set("firstRegDate", e.target.value)} className={inputClass} style={fieldStyle} />
               </Field>
               <Field label="Marque *">
-                <ChampListe liste="l-marque" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, BMW…" />
+                <ChampListe groupe="Marques" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, BMW…" />
               </Field>
               <Field label="Modèle *">
-                <ChampListe liste="l-modele" options={modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="TT" />
+                <ChampListe groupe={groupeModeles} options={modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="TT" />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Version">
-                <ChampListe liste="l-version" options={L.versions} value={f.version} onChange={(v) => set("version", v)} placeholder="2.0 TFSI 200 S-Line" />
+                <ChampListe groupe="Versions déjà saisies" options={L.versions} value={f.version} onChange={(v) => set("version", v)} placeholder="2.0 TFSI 200 S-Line" />
               </Field>
               <Field label="Puissance">
                 <input value={f.power} onChange={(e) => set("power", e.target.value)} placeholder="200 ch" className={inputClass} style={fieldStyle} />
@@ -990,7 +1026,7 @@ export default function MandatFiche({
                 </select>
               </Field>
               <Field label="Couleur">
-                <ChampListe liste="l-couleur" options={L.couleurs} value={f.color} onChange={(v) => set("color", v)} placeholder="Gris Daytona" />
+                <ChampListe groupe="Couleurs déjà saisies" options={L.couleurs} value={f.color} onChange={(v) => set("color", v)} placeholder="Gris Daytona" />
               </Field>
               <Field label="Clés remises ou présentées">
                 <input inputMode="numeric" value={f.keys} onChange={(e) => set("keys", e.target.value)} placeholder="2" className={inputClass} style={fieldStyle} />
@@ -1034,13 +1070,13 @@ export default function MandatFiche({
             <SectionCard title="Le cahier des charges — article 3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Marque souhaitée">
-                  <ChampListe liste="l-marque-cible" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, Porsche…" />
+                  <ChampListe groupe="Marques" options={L.marques} value={f.make} onChange={(v) => set("make", v)} placeholder="Audi, Porsche…" />
                 </Field>
                 <Field label="Modèle">
-                  <ChampListe liste="l-modele-cible" options={modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="Macan" />
+                  <ChampListe groupe={groupeModeles} options={modeles} value={f.model} onChange={(v) => set("model", v)} placeholder="Macan" />
                 </Field>
                 <Field label="Version, finition">
-                  <ChampListe liste="l-version-cible" options={L.versions} value={f.version} onChange={(v) => set("version", v)} placeholder="S 3.0 V6, toit pano…" />
+                  <ChampListe groupe="Versions déjà saisies" options={L.versions} value={f.version} onChange={(v) => set("version", v)} placeholder="S 3.0 V6, toit pano…" />
                 </Field>
                 <Field label="Énergie">
                   <select value={f.fuel} onChange={(e) => set("fuel", e.target.value)} className={selectClass} style={fieldStyle}>
@@ -1058,7 +1094,7 @@ export default function MandatFiche({
                 </Field>
                 {estImport && (
                   <Field label="Pays d'achat visé">
-                    <ChampListe liste="l-pays" options={L.pays} value={f.countryOrigin} onChange={(v) => set("countryOrigin", v)} placeholder="Allemagne" />
+                    <ChampListe groupe="Pays d'achat" options={L.pays} value={f.countryOrigin} onChange={(v) => set("countryOrigin", v)} placeholder="Allemagne" />
                   </Field>
                 )}
               </div>
@@ -1103,7 +1139,7 @@ export default function MandatFiche({
                   <input inputMode="numeric" value={f.mileageKm} onChange={(e) => set("mileageKm", e.target.value)} className={inputClass} style={fieldStyle} />
                 </Field>
                 <Field label="Couleur">
-                  <ChampListe liste="l-couleur-retenu" options={L.couleurs} value={f.color} onChange={(v) => set("color", v)} />
+                  <ChampListe groupe="Couleurs déjà saisies" options={L.couleurs} value={f.color} onChange={(v) => set("color", v)} />
                 </Field>
                 <Field label="Puissance">
                   <input value={f.power} onChange={(e) => set("power", e.target.value)} placeholder="354 ch" className={inputClass} style={fieldStyle} />
@@ -1318,7 +1354,7 @@ export default function MandatFiche({
             )}
             <div className="grid grid-cols-2 gap-4">
               <Field label="Fait à">
-                <ChampListe liste="l-lieu" options={L.lieux} value={f.signPlace} onChange={(v) => set("signPlace", v)} placeholder="Paris" />
+                <ChampListe groupe="Villes de signature" options={L.lieux} value={f.signPlace} onChange={(v) => set("signPlace", v)} placeholder="Paris" />
               </Field>
               <Field label="Signé le">
                 <input type="date" value={f.signedOn} onChange={(e) => set("signedOn", e.target.value)} className={inputClass} style={fieldStyle} />
@@ -1335,7 +1371,7 @@ export default function MandatFiche({
                   <input value={f.rcPolicy} onChange={(e) => set("rcPolicy", e.target.value)} className={inputClass} style={fieldStyle} />
                 </Field>
                 <Field label="RC pro — assureur">
-                  <ChampListe liste="l-assureur" options={L.assureurs} value={f.rcInsurer} onChange={(v) => set("rcInsurer", v)} />
+                  <ChampListe groupe="Assureurs" options={L.assureurs} value={f.rcInsurer} onChange={(v) => set("rcInsurer", v)} />
                 </Field>
               </div>
             </div>
@@ -1740,11 +1776,16 @@ export default function MandatFiche({
           >
             <X size={16} />
           </button>
+          {/* Le contrat se met à l'échelle de la fenêtre : sur un portable de
+              13 pouces comme sur un téléphone, la feuille entière tient dans
+              la largeur au lieu d'être coupée à droite. */}
           <div
-            style={{ width: A4_W, maxWidth: "100%", margin: "0 auto" }}
+            style={{ maxWidth: 1100, margin: "0 auto", padding: "56px 16px 32px" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Doc m={documentApercu} emetteur={EMETTEUR} />
+            <DocAdapte>
+              <Doc m={documentApercu} emetteur={EMETTEUR} />
+            </DocAdapte>
           </div>
         </div>
       )}
