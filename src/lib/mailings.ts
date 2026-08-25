@@ -11,7 +11,10 @@ import { escapeHtml } from "./html";
 export type MailingBlock =
   | { type: "paragraphe"; text: string }
   | { type: "puces"; items: string[] }
-  | { type: "bouton"; label: string; url: string };
+  | { type: "bouton"; label: string; url: string }
+  // Message d'origine cité dans une réponse : rendu en gris, filet à gauche,
+  // comme le veut l'usage des messageries.
+  | { type: "citation"; text: string };
 
 export type MailingContent = {
   /** Objet du message. */
@@ -70,6 +73,12 @@ function bouton(label: string, url: string): string {
   return `<tr><td class="ia-pad" align="left" style="padding:22px 32px 0;"><table role="presentation" class="ia-btn" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td align="center" bgcolor="#6B9FEE" style="background-color:#6B9FEE;background-image:linear-gradient(#6B9FEE,#6B9FEE);"><a href="${escapeHtml(url)}" style="display:inline-block;padding:15px 28px;color:#070F1E;font-size:13px;line-height:16px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;">${escapeHtml(label)}</a></td></tr></table></td></tr>`;
 }
 
+function citation(text: string): string {
+  // Les retours à la ligne du message d'origine sont conservés tels quels.
+  const corps = escapeHtml(text).replace(/\r?\n/g, "<br>");
+  return `<tr><td class="ia-pad" style="padding:22px 32px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td width="3" bgcolor="#1B3055" style="background-color:#1B3055;background-image:linear-gradient(#1B3055,#1B3055);font-size:0;line-height:0;">&nbsp;</td><td style="padding:2px 0 2px 14px;color:#7C92B5;font-size:13px;line-height:21px;">${corps}</td></tr></table></td></tr>`;
+}
+
 function signature(note: string): string {
   const extra = note.trim()
     ? `<p style="margin:0 0 14px;color:#7C92B5;font-size:11px;line-height:18px;">${riche(note)}</p>`
@@ -103,6 +112,7 @@ export function renderMailing(c: MailingContent): string {
         const items = b.items.map((s) => s.trim()).filter(Boolean);
         return items.length ? puces(items) : "";
       }
+      if (b.type === "citation") return b.text.trim() ? citation(b.text) : "";
       return b.label.trim() && b.url.trim() ? bouton(b.label, b.url) : "";
     })
     .join("");

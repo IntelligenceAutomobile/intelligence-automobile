@@ -53,7 +53,9 @@ export async function createLeadFromSite(input: {
   /** Marqueur d'origine du visiteur (?src=), tel que la mesure l'enregistre.
    *  C'est lui qui rattachera plus tard un contact au portail qui l'a amené. */
   srcMarker?: string;
-}) {
+  /** Signataire du premier événement du lead. « Site web » par défaut. */
+  author?: string;
+}): Promise<{ clientId: string }> {
   const email = normaliserEmail(input.email);
   const phone = input.phone?.trim() ?? "";
 
@@ -87,9 +89,11 @@ export async function createLeadFromSite(input: {
         create: {
           type: "creation",
           content: (input.message ?? "").trim().slice(0, 2000) || "Lead entrant du site",
-          author: "Site web",
+          author: input.author?.trim() || "Site web",
         },
       },
     },
   });
+
+  return { clientId: client.id };
 }

@@ -26,6 +26,7 @@ function lireBlocs(raw: unknown): MailingBlock[] {
       const items = (b as { items?: unknown }).items;
       return [{ type: "puces", items: Array.isArray(items) ? items.slice(0, 12).map((i) => texte(i, 600)) : [] }];
     }
+    if (type === "citation") return [{ type: "citation", text: texte((b as { text?: unknown }).text, 12_000) }];
     if (type === "bouton") {
       const url = texte((b as { url?: unknown }).url, 500).trim();
       // Seul un lien web part dans un bouton : tout autre schéma est écarté.
@@ -33,6 +34,29 @@ function lireBlocs(raw: unknown): MailingBlock[] {
       return [{ type: "bouton", label: texte((b as { label?: unknown }).label, 80), url }];
     }
     return [];
+  });
+}
+
+// Adresses en copie : une saisie libre se sépare comme son auteur l'entend.
+function lireAdresses(v: unknown): string[] {
+  return texte(v, 600)
+    .split(/[,;\s]+/)
+    .map((a) => a.trim())
+    .filter(Boolean)
+    .slice(0, 10);
+}
+
+// Une pièce jointe part par son adresse sur NOTRE stockage de fichiers, et lui
+// seul : le service d'envoi refuse ainsi d'aller chercher un fichier ailleurs.
+const PIECE_AUTORISEE = /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\/messagerie\//i;
+
+function lirePieces(raw: unknown): { filename: string; path: string }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 8).flatMap((p) => {
+    const url = texte((p as { url?: unknown })?.url, 500).trim();
+    const filename = texte((p as { filename?: unknown })?.filename, 150).trim() || "piece-jointe";
+    if (!PIECE_AUTORISEE.test(url)) return [];
+    return [{ filename, path: url }];
   });
 }
 
@@ -47,6 +71,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const to = texte(body.to, 200).trim();
+    const cc = lireAdresses(body.cc);
+    const cci = lireAdresses(body.cci);
+    const pieces = lirePieces(body.pieces);
     const content: MailingContent = {
       subject: texte(body.subject, 200).trim(),
       preheader: texte(body.preheader, 300),
@@ -64,25 +91,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Liste rouge, adresse illisible ou service d'envoi absent : refus net
-    // avant l'envoi, avec le motif exact.
-    const refus = await refusEnvoi(to);
+    // avant l'envoi, avec le motif exact. Les copies sont jugées avec.
+    const tous = [to, ...cc, ...cci];
+    const refus = await refusEnvoi(tous);
     if (refus) {
-      const rouge = blockedByRedList(to, process.env, await ajoutsListeRouge(true)).length > 0;
+      const rouges = blockedByRedList(tous, process.env, await ajoutsListeRouge(true));
       return NextResponse.json(
         {
-          error: rouge
-            ? `${to} est en liste rouge : aucun message ne part vers ce destinataire.`
+          error: rouges.length > 0
+            ? `${rouges.join(", ")} est en liste rouge : aucun message ne part vers ce destinataire.`
             : `Envoi impossible : ${refus}.`,
         },
-        { status: rouge ? 409 : 503 },
+        { status: rouges.length > 0 ? 409 : 503 },
       );
     }
 
     const envoi = await sendMail({
       to,
+      cc,
+      bcc: cci,
       replyTo: COMPANY.email || undefined,
       subject: content.subject,
       html: renderMailing(content),
+      attachments: pieces,
       origin: "mailing",
     });
 

@@ -20,6 +20,10 @@ export const DOC_PREFIX = "documents/";
 // relit, et parce que ces clichés partent d'un téléphone, souvent lourds.
 export const REPRISE_PREFIX = "reprises/";
 
+// Pièces jointes des messages composés dans /admin/messagerie : documents et
+// images qui partent en pièce jointe d'un email.
+export const MESSAGERIE_PREFIX = "messagerie/";
+
 // Bibliothèque des visuels composés (/admin/visuels). Le dossier garde deux
 // fichiers par visuel : la photo d'origine, souvent un cliché plein format sorti
 // d'un appareil, et le rendu composé. D'où une limite plus haute qu'ailleurs.
@@ -74,6 +78,10 @@ export function uploadRule(pathname: string, isAdmin: boolean): UploadRule | nul
   // les photos du véhicule restent strictement des images.
   if (path.startsWith(DOC_PREFIX)) {
     return { allowedContentTypes: [...IMAGE_TYPES, ...DOC_TYPES], maximumSizeInBytes: 25 * MB };
+  }
+  if (path.startsWith(MESSAGERIE_PREFIX)) {
+    // Deux pièces jointes du même nom gardent chacune la sienne.
+    return { allowedContentTypes: [...IMAGE_TYPES, ...DOC_TYPES], maximumSizeInBytes: 20 * MB, addRandomSuffix: true };
   }
   if (path.startsWith(REPRISE_PREFIX)) {
     return { allowedContentTypes: IMAGE_TYPES, maximumSizeInBytes: 15 * MB };

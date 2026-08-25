@@ -16,12 +16,16 @@ export type MessageResume = {
   date: string;
   /** Déjà ouvert dans la boîte (webmail, téléphone…). */
   seen: boolean;
+  /** Première ligne du message, pour la liste. */
+  extrait: string;
 };
 
 export type MessageComplet = MessageResume & {
   to: string;
   /** Corps prêt à afficher dans un cadre isolé. */
   html: string;
+  /** Texte brut du message, pour la citation dans une réponse. */
+  text: string;
   attachments: { filename: string; size: number }[];
 };
 
@@ -65,6 +69,79 @@ function texteAdresse(a: { name?: string; address?: string }[] | undefined): { n
   return { name: (p?.name ?? "").trim(), address: (p?.address ?? "").trim() };
 }
 
+// ── Extraits ────────────────────────────────────────────────────────────────
+// La liste montre la première ligne de chaque message, comme les messageries.
+// Le corps texte est récupéré en un aller-retour groupé, puis décodé ici.
+
+type PartieTexte = { part: string; encoding: string; charset: string; html: boolean; size: number };
+
+type NoeudStructure = {
+  type?: string;
+  part?: string;
+  encoding?: string;
+  size?: number;
+  parameters?: Record<string, string>;
+  childNodes?: NoeudStructure[];
+};
+
+// Trouve la partie texte d'un message : le texte brut de préférence, le HTML à
+// défaut (certains expéditeurs n'envoient que lui).
+function trouvePartieTexte(node: NoeudStructure | undefined): PartieTexte | null {
+  if (!node) return null;
+  if (node.childNodes?.length) {
+    let enHtml: PartieTexte | null = null;
+    for (const enfant of node.childNodes) {
+      const r = trouvePartieTexte(enfant);
+      if (r) {
+        if (!r.html) return r;
+        enHtml = enHtml ?? r;
+      }
+    }
+    return enHtml;
+  }
+  const t = (node.type ?? "").toLowerCase();
+  if (t !== "text/plain" && t !== "text/html") return null;
+  return {
+    part: node.part || "1",
+    encoding: (node.encoding ?? "").toLowerCase(),
+    charset: (node.parameters?.charset ?? "utf-8").toLowerCase(),
+    html: t === "text/html",
+    size: node.size ?? 0,
+  };
+}
+
+function decodePartie(brut: Buffer, p: PartieTexte): string {
+  let octets: Buffer = brut;
+  if (p.encoding === "base64") {
+    octets = Buffer.from(brut.toString("ascii"), "base64");
+  } else if (p.encoding === "quoted-printable") {
+    const s = brut
+      .toString("ascii")
+      .replace(/=\r?\n/g, "")
+      .replace(/=([0-9A-Fa-f]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)));
+    octets = Buffer.from(s, "latin1");
+  }
+  const latin = /iso-8859|windows-125/.test(p.charset);
+  return octets.toString(latin ? "latin1" : "utf8");
+}
+
+function versExtrait(texte: string, html: boolean): string {
+  let t = texte;
+  if (html) {
+    t = t
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&#39;|&apos;/gi, "'")
+      .replace(/&quot;/gi, '"');
+  }
+  return t.replace(/\s+/g, " ").trim().slice(0, 140);
+}
+
 /** Les derniers messages de la boîte, du plus récent au plus ancien. */
 export async function listeMessages(limit = 50): Promise<MessageResume[]> {
   const c = config();
@@ -75,7 +152,8 @@ export async function listeMessages(limit = 50): Promise<MessageResume[]> {
     if (boite.exists === 0) return [];
     const depart = Math.max(1, boite.exists - limit + 1);
     const messages: MessageResume[] = [];
-    for await (const msg of client.fetch(`${depart}:*`, { envelope: true, flags: true, uid: true })) {
+    const parties = new Map<number, PartieTexte>();
+    for await (const msg of client.fetch(`${depart}:*`, { envelope: true, flags: true, uid: true, bodyStructure: true })) {
       const from = texteAdresse(msg.envelope?.from);
       messages.push({
         uid: msg.uid,
@@ -84,8 +162,36 @@ export async function listeMessages(limit = 50): Promise<MessageResume[]> {
         subject: (msg.envelope?.subject ?? "").trim() || "(sans objet)",
         date: msg.envelope?.date ? new Date(msg.envelope.date).toISOString() : "",
         seen: msg.flags?.has("\\Seen") ?? false,
+        extrait: "",
       });
+      // Les pièces jointes volumineuses restent au port : au-delà de 128 Ko,
+      // le message s'affiche sans extrait plutôt que de ralentir la liste.
+      const p = trouvePartieTexte(msg.bodyStructure as NoeudStructure | undefined);
+      if (p && p.size <= 131_072) parties.set(msg.uid, p);
     }
+
+    // Un aller-retour par numéro de partie distinct (en pratique un ou deux) :
+    // les corps arrivent groupés au lieu d'une requête par message.
+    const groupes = new Map<string, number[]>();
+    for (const [uid, p] of parties) {
+      const liste = groupes.get(p.part) ?? [];
+      liste.push(uid);
+      groupes.set(p.part, liste);
+    }
+    const extraits = new Map<number, string>();
+    for (const [part, uids] of groupes) {
+      try {
+        for await (const msg of client.fetch(uids.join(","), { uid: true, bodyParts: [part] }, { uid: true })) {
+          const p = parties.get(msg.uid);
+          const brut = msg.bodyParts?.get(part) ?? msg.bodyParts?.values().next().value;
+          if (p && brut) extraits.set(msg.uid, versExtrait(decodePartie(brut, p), p.html));
+        }
+      } catch {
+        /* une partie illisible prive d'extrait, jamais de liste */
+      }
+    }
+    for (const m of messages) m.extrait = extraits.get(m.uid) ?? "";
+
     messages.sort((a, b) => b.date.localeCompare(a.date));
     return messages;
   } finally {
@@ -97,6 +203,33 @@ function adressesEnTexte(a: AddressObject | AddressObject[] | undefined): string
   if (!a) return "";
   const liste = Array.isArray(a) ? a : [a];
   return liste.map((x) => x.text).filter(Boolean).join(", ");
+}
+
+export type PieceJointe = { filename: string; contentType: string; content: Buffer };
+
+/**
+ * Une pièce jointe d'un message, par sa position dans la liste affichée.
+ * Null quand le message ou la pièce a disparu de la boîte.
+ */
+export async function pieceJointe(uid: number, index: number): Promise<PieceJointe | null> {
+  const c = config();
+  if (!c) throw new Error("Boîte de réception non configurée sur ce serveur.");
+  const client = await connexion(c);
+  try {
+    await client.mailboxOpen("INBOX", { readOnly: true });
+    const msg = await client.fetchOne(String(uid), { source: true }, { uid: true });
+    if (!msg || !msg.source) return null;
+    const parsed = await simpleParser(msg.source);
+    const piece = (parsed.attachments ?? [])[index];
+    if (!piece?.content) return null;
+    return {
+      filename: piece.filename ?? `piece-jointe-${index + 1}`,
+      contentType: piece.contentType ?? "application/octet-stream",
+      content: piece.content,
+    };
+  } finally {
+    await client.logout().catch(() => {});
+  }
 }
 
 /** Un message complet, corps compris. Null si l'uid a disparu de la boîte. */
@@ -126,8 +259,10 @@ export async function lireMessage(uid: number): Promise<MessageComplet | null> {
       subject: (msg.envelope?.subject ?? "").trim() || "(sans objet)",
       date: msg.envelope?.date ? new Date(msg.envelope.date).toISOString() : "",
       seen: msg.flags?.has("\\Seen") ?? false,
+      extrait: "",
       to: adressesEnTexte(parsed.to),
       html,
+      text: (parsed.text ?? "").trim(),
       attachments: (parsed.attachments ?? []).map((a) => ({
         filename: a.filename ?? "pièce jointe",
         size: a.size ?? 0,

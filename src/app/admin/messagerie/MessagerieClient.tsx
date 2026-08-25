@@ -4,12 +4,14 @@
 // en une seule page, agencée comme un client mail. Colonne de gauche : les
 // vues. Milieu : la liste. Droite : la lecture, ou la composition avec son
 // aperçu en direct.
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { upload } from "@vercel/blob/client";
 import {
-  ArrowLeft, Ban, Briefcase, CheckCircle2, Inbox, KeyRound, LayoutTemplate, List, Loader2, Lock,
-  Mail, MailOpen, Minus, Monitor, Paperclip, PenLine, Plus, RefreshCw, Reply, RotateCcw, Search,
-  Send, Settings2, ShieldCheck, Smartphone, SquareArrowOutUpRight, Tags, Trash2, XCircle,
+  ArrowLeft, Ban, Briefcase, CheckCircle2, ChevronDown, ChevronUp, Forward, Inbox, KeyRound,
+  LayoutTemplate, List, Loader2, Lock, Minus, Monitor, Paperclip, PenLine, Plus, RefreshCw, Reply,
+  RotateCcw, Search, Send, Settings2, ShieldCheck, SlidersHorizontal, Smartphone,
+  SquareArrowOutUpRight, Tags, Trash2, UserPlus, X, XCircle,
 } from "lucide-react";
 import { T, Tag, AdminPage, fieldStyle, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle, type Tone } from "../ui";
 import { useToast } from "../toast";
@@ -80,6 +82,55 @@ function tailleLisible(octets: number): string {
   return `${octets} o`;
 }
 
+// Jour civil de Paris d'un horodatage, pour comparer « aujourd'hui » et « hier ».
+function jourParis(d: Date): string {
+  return new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+// Date courte de la liste, comme les messageries : l'heure aujourd'hui, le
+// jour et le mois cette année, la date complète au-delà.
+function dateListe(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+  if (jourParis(d) === jourParis(now)) {
+    return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).format(d);
+  }
+  if (d.getFullYear() === now.getFullYear()) {
+    return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "short" }).format(d);
+  }
+  return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+}
+
+// Intitulé du groupe de jours dans la liste : Aujourd'hui, Hier, puis la date.
+function libelleJour(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "Plus ancien";
+  const jour = jourParis(d);
+  const now = new Date();
+  if (jour === jourParis(now)) return "Aujourd'hui";
+  if (jour === jourParis(new Date(now.getTime() - 86_400_000))) return "Hier";
+  const opts: Intl.DateTimeFormatOptions =
+    d.getFullYear() === now.getFullYear()
+      ? { timeZone: "Europe/Paris", weekday: "long", day: "numeric", month: "long" }
+      : { timeZone: "Europe/Paris", day: "numeric", month: "long", year: "numeric" };
+  return new Intl.DateTimeFormat("fr-FR", opts).format(d);
+}
+
+// Initiales et couleur stable d'un expéditeur, pour l'avatar de la liste.
+function initiales(nom: string, adresse: string): string {
+  const base = (nom || adresse).trim();
+  const mots = base.split(/[\s.@_-]+/).filter(Boolean);
+  if (mots.length >= 2) return (mots[0][0] + mots[1][0]).toUpperCase();
+  return base.slice(0, 2).toUpperCase() || "?";
+}
+
+function couleurAvatar(adresse: string): { bg: string; fg: string } {
+  let h = 0;
+  for (let i = 0; i < adresse.length; i++) h = (h * 31 + adresse.charCodeAt(i)) % 360;
+  return { bg: `hsl(${h}, 42%, 26%)`, fg: `hsl(${h}, 70%, 82%)` };
+}
+
 export default function MessagerieClient({
   mode,
   hasKey,
@@ -134,6 +185,25 @@ export default function MessagerieClient({
   const [viewport, setViewport] = useState<"bureau" | "telephone">("bureau");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  // Champs avancés de la composition (aperçu, titre, mentions) : repliés pour
+  // un message simple, dépliés quand un modèle les a remplis.
+  const [avance, setAvance] = useState(false);
+  // Copies visibles et cachées.
+  const [cc, setCc] = useState("");
+  const [cci, setCci] = useState("");
+  const [montreCopies, setMontreCopies] = useState(false);
+  // Pièces jointes de la composition : déposées sur le stockage du site dès
+  // leur choix, envoyées par leur adresse.
+  const [pieces, setPieces] = useState<{ nom: string; taille: number; url: string; enCours: boolean }[]>([]);
+  const fichierRef = useRef<HTMLInputElement | null>(null);
+  // Message entamé : quitter la composition demande confirmation.
+  const [dirty, setDirty] = useState(false);
+  const [gardeOuverte, setGardeOuverte] = useState(false);
+  const actionGardee = useRef<(() => void) | null>(null);
+  const [leadBusy, setLeadBusy] = useState(false);
+  const rechercheRef = useRef<HTMLInputElement | null>(null);
+  // Uids déjà vus, pour annoncer les seuls messages réellement nouveaux.
+  const uidsConnus = useRef<Set<number>>(new Set());
 
   // ── Liste rouge ──
   const [valueBlock, setValueBlock] = useState("");
@@ -151,8 +221,10 @@ export default function MessagerieClient({
       const res = await fetch("/api/admin/reception");
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error);
-      setMessages(j.messages as MessageRecu[]);
+      const recus = j.messages as MessageRecu[];
+      setMessages(recus);
       setErreur("");
+      uidsConnus.current = new Set(recus.map((m) => m.uid));
     } catch (e) {
       setErreur(e instanceof Error && e.message ? e.message : "La boîte ne répond pas.");
       setMessages([]);
@@ -160,6 +232,34 @@ export default function MessagerieClient({
       setChargeListe(false);
     }
   }, []);
+
+  // Rafraîchissement discret : la boîte se relit toute seule quand l'onglet
+  // est visible, et annonce les seuls messages nouveaux.
+  const veille = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/reception");
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) return;
+      const recus = j.messages as MessageRecu[];
+      const nouveaux = recus.filter((m) => !uidsConnus.current.has(m.uid) && !m.seen).length;
+      uidsConnus.current = new Set(recus.map((m) => m.uid));
+      setMessages(recus);
+      setErreur("");
+      if (nouveaux > 0) {
+        toast.info(nouveaux === 1 ? "1 nouveau message dans la boîte." : `${nouveaux} nouveaux messages dans la boîte.`);
+      }
+    } catch {
+      /* la prochaine passe retentera : la veille reste silencieuse */
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (!configuree) return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") veille();
+    }, 75_000);
+    return () => clearInterval(id);
+  }, [configuree, veille]);
 
   function rafraichir() {
     setChargeListe(true);
@@ -188,28 +288,99 @@ export default function MessagerieClient({
     }
   }
 
+  // ── Garde-fou du brouillon ──
+  // Un message entamé se quitte après confirmation : l'action voulue attend
+  // que l'utilisateur tranche.
+  function protege(fn: () => void) {
+    if (compose && dirty) {
+      actionGardee.current = fn;
+      setGardeOuverte(true);
+    } else {
+      fn();
+    }
+  }
+
+  useEffect(() => {
+    if (!compose || !dirty) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [compose, dirty]);
+
+  function fermeComposition() {
+    setCompose(null);
+    setDirty(false);
+    setCc("");
+    setCci("");
+    setMontreCopies(false);
+    setPieces([]);
+  }
+
   // ── Composition ──
+  function ouvreComposition(modeleId: string | null, content: MailingContent, toInitial?: string) {
+    setCompose({ modeleId, content });
+    setAvance(modeleId !== null);
+    setDirty(false);
+    setCc("");
+    setCci("");
+    setMontreCopies(false);
+    setPieces([]);
+    if (toInitial !== undefined) setTo(toInitial);
+  }
+
   function nouveauMessage(modeleId: string | null, prefill?: { to?: string; subject?: string }) {
     const base = modeleId ? MAILING_TEMPLATES.find((t) => t.id === modeleId)?.content : MAILING_VIERGE;
     if (!base) return;
     const content = copie(base);
     if (prefill?.subject) content.subject = prefill.subject;
-    setCompose({ modeleId, content });
-    if (prefill?.to !== undefined) setTo(prefill.to);
+    ouvreComposition(modeleId, content, prefill?.to);
+  }
+
+  // En-tête de citation d'un message : « Le …, X a écrit : ».
+  function enTeteCitation(m: MessageComplet): string {
+    const quand = new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(m.date));
+    const qui = m.fromName ? `${m.fromName} <${m.fromAddress}>` : m.fromAddress;
+    return `Le ${quand}, ${qui} a écrit :`;
   }
 
   function repondre(m: MessageComplet) {
-    nouveauMessage(null, {
-      to: m.fromAddress,
-      subject: m.subject.toLowerCase().startsWith("re") ? m.subject : `Re : ${m.subject}`,
-    });
+    const content = copie(MAILING_VIERGE);
+    content.subject = m.subject.toLowerCase().startsWith("re") ? m.subject : `Re : ${m.subject}`;
+    // Le message d'origine part cité sous la réponse, comme le veut l'usage :
+    // le destinataire garde le fil de la conversation.
+    if (m.text) {
+      content.blocks = [...content.blocks, { type: "citation", text: `${enTeteCitation(m)}\n\n${m.text.slice(0, 8000)}` }];
+    }
+    ouvreComposition(null, content, m.fromAddress);
+  }
+
+  function transferer(m: MessageComplet) {
+    const content = copie(MAILING_VIERGE);
+    content.subject = m.subject.toLowerCase().startsWith("tr") ? m.subject : `Tr : ${m.subject}`;
+    content.blocks = [
+      { type: "paragraphe", text: "Bonjour," },
+      { type: "paragraphe", text: "" },
+      { type: "citation", text: `${enTeteCitation(m)}\n\n${(m.text || "(message sans version texte)").slice(0, 8000)}` },
+    ];
+    ouvreComposition(null, content, "");
   }
 
   function pose(patch: Partial<MailingContent>) {
+    setDirty(true);
     setCompose((c) => (c ? { ...c, content: { ...c.content, ...patch } } : c));
   }
 
   function poseBloc(i: number, patch: Record<string, unknown>) {
+    setDirty(true);
     setCompose((c) =>
       c
         ? { ...c, content: { ...c.content, blocks: c.content.blocks.map((b, j) => (j === i ? ({ ...b, ...patch } as typeof b) : b)) } }
@@ -218,6 +389,7 @@ export default function MessagerieClient({
   }
 
   function retireBloc(i: number) {
+    setDirty(true);
     setCompose((c) => (c ? { ...c, content: { ...c.content, blocks: c.content.blocks.filter((_, j) => j !== i) } } : c));
   }
 
@@ -228,7 +400,38 @@ export default function MessagerieClient({
         : type === "puces"
           ? { type: "puces", items: [""] }
           : { type: "bouton", label: "Découvrir", url: "https://intelligenceautomobile.fr" };
+    setDirty(true);
     setCompose((c) => (c ? { ...c, content: { ...c.content, blocks: [...c.content.blocks, neuf] } } : c));
+  }
+
+  // ── Pièces jointes de la composition ──
+  async function joindre(files: FileList | null) {
+    if (!files) return;
+    for (const f of Array.from(files)) {
+      if (pieces.length >= 8) {
+        toast.error("8 pièces jointes au plus par message.");
+        break;
+      }
+      if (f.size > 20 * 1024 * 1024) {
+        toast.error(`${f.name} dépasse 20 Mo : ce fichier reste sur place.`);
+        continue;
+      }
+      const nom = f.name;
+      setPieces((p) => [...p, { nom, taille: f.size, url: "", enCours: true }]);
+      setDirty(true);
+      try {
+        const blob = await upload(`messagerie/${nom}`, f, { access: "public", handleUploadUrl: "/api/upload" });
+        setPieces((p) => p.map((x) => (x.nom === nom && x.enCours ? { ...x, url: blob.url, enCours: false } : x)));
+      } catch {
+        setPieces((p) => p.filter((x) => !(x.nom === nom && x.enCours)));
+        toast.error(`L'envoi de ${nom} a échoué.`);
+      }
+    }
+    if (fichierRef.current) fichierRef.current.value = "";
+  }
+
+  function retirePiece(i: number) {
+    setPieces((p) => p.filter((_, j) => j !== i));
   }
 
   async function envoyer() {
@@ -238,17 +441,48 @@ export default function MessagerieClient({
       const res = await fetch("/api/admin/mailings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, ...compose.content }),
+        body: JSON.stringify({
+          to,
+          cc,
+          cci,
+          pieces: pieces.filter((p) => p.url).map((p) => ({ filename: p.nom, url: p.url })),
+          ...compose.content,
+        }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error);
       toast.success(`Message envoyé à ${to}. Il rejoint la vue Envoyés au prochain rechargement.`);
-      setCompose(null);
+      fermeComposition();
       setTo("");
     } catch (e) {
       toast.error(e instanceof Error && e.message ? e.message : "L'envoi a échoué.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  // ── Créer un lead depuis un message reçu ──
+  async function creerLead(m: MessageComplet) {
+    if (leadBusy) return;
+    setLeadBusy(true);
+    try {
+      const res = await fetch("/api/admin/messagerie/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: m.fromName, email: m.fromAddress, subject: m.subject, message: m.text.slice(0, 2000) }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error);
+      const chip: ContactChip = { id: j.clientId as string, name: m.fromName || m.fromAddress, type: "lead" };
+      // La pastille apparaît aussitôt, sur tous les messages du même expéditeur.
+      setMessages((prev) =>
+        prev ? prev.map((x) => (x.fromAddress.toLowerCase() === m.fromAddress.toLowerCase() ? { ...x, contact: chip } : x)) : prev,
+      );
+      toast.success(`${chip.name} est entré au CRM : fiche client et lead créés.`);
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : "La création du lead a échoué.");
+    } finally {
+      setLeadBusy(false);
     }
   }
 
@@ -307,6 +541,48 @@ export default function MessagerieClient({
   const nonLus = (messages ?? []).filter((m) => !m.seen).length;
   const totalBloque = fixedEntries.length + envEntries.length + blocksLocaux.length;
 
+  // ── Navigation clavier et boutons précédent / suivant ──
+  const indexOuvert = ouvertRecu ? recusFiltres.findIndex((m) => m.uid === ouvertRecu.uid) : -1;
+
+  function ouvreVoisin(delta: number) {
+    if (recusFiltres.length === 0 || uidEnCours !== null) return;
+    const i =
+      indexOuvert === -1
+        ? delta > 0
+          ? 0
+          : recusFiltres.length - 1
+        : Math.min(recusFiltres.length - 1, Math.max(0, indexOuvert + delta));
+    const cible = recusFiltres[i];
+    if (cible && cible.uid !== ouvertRecu?.uid) ouvreRecu(cible);
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (compose || vue !== "reception") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      if (e.key === "ArrowDown" || e.key === "j") {
+        e.preventDefault();
+        ouvreVoisin(1);
+      } else if (e.key === "ArrowUp" || e.key === "k") {
+        e.preventDefault();
+        ouvreVoisin(-1);
+      } else if ((e.key === "r" || e.key === "R") && ouvertRecu) {
+        e.preventDefault();
+        repondre(ouvertRecu);
+      } else if (e.key === "c" || e.key === "C") {
+        e.preventDefault();
+        nouveauMessage(null, { to: "" });
+      } else if (e.key === "/") {
+        e.preventDefault();
+        rechercheRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   const modeleCourant = modeleSel === "vierge" ? null : MAILING_TEMPLATES.find((t) => t.id === modeleSel) ?? null;
   const apercuModele = useMemo(
     () => renderMailing(modeleCourant ? modeleCourant.content : MAILING_VIERGE),
@@ -319,7 +595,7 @@ export default function MessagerieClient({
     <div className="flex lg:flex-col gap-2 lg:gap-1 flex-wrap lg:w-[210px] flex-shrink-0">
       <button
         type="button"
-        onClick={() => nouveauMessage(null, { to: "" })}
+        onClick={() => protege(() => nouveauMessage(null, { to: "" }))}
         className={`${btnPrimaryClass} lg:w-full lg:justify-center lg:mb-4`}
         style={btnPrimaryStyle}
       >
@@ -337,11 +613,13 @@ export default function MessagerieClient({
         <button
           key={v}
           type="button"
-          onClick={() => {
-            setVue(v);
-            setCompose(null);
-            setRecherche("");
-          }}
+          onClick={() =>
+            protege(() => {
+              setVue(v);
+              fermeComposition();
+              setRecherche("");
+            })
+          }
           aria-pressed={vue === v && !compose}
           className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-left"
           style={
@@ -404,6 +682,7 @@ export default function MessagerieClient({
     <div className="relative mb-3">
       <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: T.muted }} />
       <input
+        ref={rechercheRef}
         value={recherche}
         onChange={(e) => setRecherche(e.target.value)}
         placeholder={vue === "envoyes" ? "Rechercher un envoi…" : "Rechercher un message…"}
@@ -448,48 +727,77 @@ export default function MessagerieClient({
         ) : (
           recusFiltres.map((m, i) => {
             const actif = ouvertRecu?.uid === m.uid;
+            const groupe = libelleJour(m.date);
+            const entete = i === 0 || libelleJour(recusFiltres[i - 1].date) !== groupe;
+            const av = couleurAvatar(m.fromAddress || m.fromName || "?");
             return (
-              <button
-                key={m.uid}
-                type="button"
-                onClick={() => ouvreRecu(m)}
-                className="w-full text-left px-3.5 py-3 block"
-                style={{
-                  borderTop: i === 0 ? "none" : `1px solid ${T.border}`,
-                  backgroundColor: actif ? T.surface : "transparent",
-                }}
-              >
-                <span className="flex items-center gap-2 min-w-0">
-                  {uidEnCours === m.uid ? (
-                    <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: T.accent }} />
-                  ) : m.seen ? (
-                    <MailOpen size={13} className="flex-shrink-0" style={{ color: T.muted }} />
-                  ) : (
-                    <Mail size={13} className="flex-shrink-0" style={{ color: T.accent }} />
-                  )}
-                  <span className="text-[13px] truncate min-w-0" style={{ color: T.text, fontWeight: m.seen ? 400 : 700 }}>
-                    {m.fromName || m.fromAddress || "(expéditeur inconnu)"}
-                  </span>
-                  {m.contact && (
+              <div key={m.uid}>
+                {entete && (
+                  <div
+                    className="px-3.5 pt-2.5 pb-1.5 text-[10px] tracking-[0.16em] uppercase"
+                    style={{ color: T.muted, borderTop: i === 0 ? "none" : `1px solid ${T.border}`, backgroundColor: "rgba(255,255,255,0.015)" }}
+                  >
+                    {groupe}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => ouvreRecu(m)}
+                  className="w-full text-left px-3.5 py-2.5 block"
+                  style={{
+                    borderTop: entete ? `1px solid ${T.border}` : `1px solid ${T.border}22`,
+                    backgroundColor: actif ? T.surface : "transparent",
+                  }}
+                >
+                  <span className="flex items-center gap-2.5 min-w-0">
                     <span
-                      className="text-[9px] tracking-[0.08em] uppercase px-1.5 py-0.5 flex-shrink-0 font-semibold"
-                      style={{ border: `1px solid ${T.accent}`, color: T.accent }}
+                      className="relative inline-flex items-center justify-center w-[30px] h-[30px] rounded-full flex-shrink-0 text-[11px] font-bold"
+                      style={{ backgroundColor: av.bg, color: av.fg }}
                     >
-                      {CONTACT_LABEL[m.contact.type]}
+                      {uidEnCours === m.uid ? (
+                        <Loader2 size={13} className="animate-spin" style={{ color: T.accent }} />
+                      ) : (
+                        initiales(m.fromName, m.fromAddress)
+                      )}
+                      {!m.seen && (
+                        <span
+                          className="absolute -top-0.5 -right-0.5 w-[9px] h-[9px] rounded-full"
+                          style={{ backgroundColor: T.accent, border: `2px solid ${T.bg}` }}
+                        />
+                      )}
                     </span>
-                  )}
-                  <span className="text-[11px] ml-auto whitespace-nowrap flex-shrink-0" style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}>
-                    {stamp(m.date)}
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className="text-[13px] truncate min-w-0" style={{ color: T.text, fontWeight: m.seen ? 400 : 700 }}>
+                          {m.fromName || m.fromAddress || "(expéditeur inconnu)"}
+                        </span>
+                        {m.contact && (
+                          <span
+                            className="text-[9px] tracking-[0.08em] uppercase px-1.5 py-0.5 flex-shrink-0 font-semibold"
+                            style={{ border: `1px solid ${T.accent}`, color: T.accent }}
+                          >
+                            {CONTACT_LABEL[m.contact.type]}
+                          </span>
+                        )}
+                        <span className="text-[11px] ml-auto whitespace-nowrap flex-shrink-0" style={{ color: m.seen ? T.muted : T.accent, fontVariantNumeric: "tabular-nums", fontWeight: m.seen ? 400 : 600 }}>
+                          {dateListe(m.date)}
+                        </span>
+                      </span>
+                      <span className="block text-[12px] truncate mt-0.5">
+                        <span style={{ color: m.seen ? T.textDim : T.text, fontWeight: m.seen ? 400 : 600 }}>{m.subject}</span>
+                        {m.extrait && <span style={{ color: T.muted }}> — {m.extrait}</span>}
+                      </span>
+                    </span>
                   </span>
-                </span>
-                <span className="block text-[12px] truncate mt-0.5 pl-[21px]" style={{ color: m.seen ? T.muted : T.textDim, fontWeight: m.seen ? 400 : 600 }}>
-                  {m.subject}
-                </span>
-              </button>
+                </button>
+              </div>
             );
           })
         )}
       </div>
+      <p className="hidden lg:block text-[10px] mt-2" style={{ color: T.muted }}>
+        Clavier : ↑ ↓ parcourir · R répondre · C nouveau message · / rechercher
+      </p>
     </div>
   );
 
@@ -502,7 +810,7 @@ export default function MessagerieClient({
     <div style={{ border: `1px solid ${T.border}` }}>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${T.border}`, backgroundColor: T.surface }}>
         <div className="flex flex-wrap items-start gap-3">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-[240px] flex-1">
             <h2 className="text-[15px] font-semibold mb-1" style={{ color: T.text }}>{ouvertRecu.subject}</h2>
             <p className="text-[12px] flex flex-wrap items-center gap-x-2 gap-y-1" style={{ color: T.textDim }}>
               <span>
@@ -511,38 +819,87 @@ export default function MessagerieClient({
               </span>
               {(() => {
                 const chip = messages?.find((m) => m.uid === ouvertRecu.uid)?.contact;
-                return chip ? (
-                  <Link
-                    href={`/admin/clients/${chip.id}`}
-                    className="text-[9px] tracking-[0.08em] uppercase px-1.5 py-0.5 font-semibold"
-                    style={{ border: `1px solid ${T.accent}`, color: T.accent }}
-                    title={`Ouvrir la fiche de ${chip.name}`}
+                if (chip) {
+                  return (
+                    <Link
+                      href={`/admin/clients/${chip.id}`}
+                      className="text-[9px] tracking-[0.08em] uppercase px-1.5 py-0.5 font-semibold"
+                      style={{ border: `1px solid ${T.accent}`, color: T.accent }}
+                      title={`Ouvrir la fiche de ${chip.name}`}
+                    >
+                      {CONTACT_LABEL[chip.type]} · {chip.name}
+                    </Link>
+                  );
+                }
+                // Expéditeur inconnu du CRM : il y entre en un clic, fiche et
+                // lead préremplis avec ce message.
+                return (
+                  <button
+                    type="button"
+                    onClick={() => creerLead(ouvertRecu)}
+                    disabled={leadBusy}
+                    className="inline-flex items-center gap-1 text-[9px] tracking-[0.08em] uppercase px-1.5 py-0.5 font-semibold whitespace-nowrap disabled:opacity-50"
+                    style={{ border: `1px dashed ${T.muted}`, color: T.textDim }}
+                    title="Créer la fiche client et le lead à partir de ce message"
                   >
-                    {CONTACT_LABEL[chip.type]} · {chip.name}
-                  </Link>
-                ) : null;
+                    {leadBusy ? <Loader2 size={10} className="animate-spin" /> : <UserPlus size={10} />}
+                    Créer le lead
+                  </button>
+                );
               })()}
               <span style={{ color: T.muted }}>{stamp(ouvertRecu.date)}</span>
             </p>
           </div>
-          <button type="button" onClick={() => repondre(ouvertRecu)} className={btnPrimaryClass} style={btnPrimaryStyle}>
-            <Reply size={13} />
-            Répondre
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-[11px] whitespace-nowrap" style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}>
+              {indexOuvert === -1 ? "" : `${indexOuvert + 1} / ${recusFiltres.length}`}
+            </span>
+            <button
+              type="button"
+              onClick={() => ouvreVoisin(-1)}
+              disabled={indexOuvert <= 0 || uidEnCours !== null}
+              title="Message précédent (↑)"
+              aria-label="Message précédent"
+              className="inline-flex items-center justify-center w-8 h-8 disabled:opacity-30"
+              style={{ border: `1px solid ${T.border}`, color: T.textDim }}
+            >
+              <ChevronUp size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={() => ouvreVoisin(1)}
+              disabled={indexOuvert === -1 || indexOuvert >= recusFiltres.length - 1 || uidEnCours !== null}
+              title="Message suivant (↓)"
+              aria-label="Message suivant"
+              className="inline-flex items-center justify-center w-8 h-8 disabled:opacity-30"
+              style={{ border: `1px solid ${T.border}`, color: T.textDim }}
+            >
+              <ChevronDown size={14} />
+            </button>
+            <button type="button" onClick={() => protege(() => transferer(ouvertRecu))} className={btnGhostClass} style={btnGhostStyle}>
+              <Forward size={13} />
+              Transférer
+            </button>
+            <button type="button" onClick={() => protege(() => repondre(ouvertRecu))} className={btnPrimaryClass} style={btnPrimaryStyle}>
+              <Reply size={13} />
+              Répondre
+            </button>
+          </div>
         </div>
         {ouvertRecu.attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {ouvertRecu.attachments.map((a, i) => (
-              <Tag key={i} tone="muted">
-                <span className="inline-flex items-center gap-1.5">
-                  <Paperclip size={11} />
-                  {a.filename} · {tailleLisible(a.size)}
-                </span>
-              </Tag>
+              <a
+                key={i}
+                href={`/api/admin/reception/${ouvertRecu.uid}/piece/${i}`}
+                className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1.5"
+                style={{ border: `1px solid ${T.border}`, color: T.textDim, backgroundColor: T.bg }}
+                title={`Télécharger ${a.filename}`}
+              >
+                <Paperclip size={11} style={{ color: T.accent }} />
+                {a.filename} · {tailleLisible(a.size)}
+              </a>
             ))}
-            <span className="text-[11px] self-center" style={{ color: T.muted }}>
-              Les pièces jointes se téléchargent depuis le webmail IONOS.
-            </span>
           </div>
         )}
       </div>
@@ -814,7 +1171,7 @@ export default function MessagerieClient({
   const composition = compose && (
     <div className="ia-anim lg:col-span-2 min-w-0">
       <div className="flex flex-wrap items-center gap-3 mb-5">
-        <button type="button" onClick={() => setCompose(null)} className={btnGhostClass} style={btnGhostStyle}>
+        <button type="button" onClick={() => protege(fermeComposition)} className={btnGhostClass} style={btnGhostStyle}>
           <ArrowLeft size={13} />
           Messagerie
         </button>
@@ -823,10 +1180,15 @@ export default function MessagerieClient({
         </h2>
         <button
           type="button"
-          onClick={() => {
-            const base = compose.modeleId ? MAILING_TEMPLATES.find((t) => t.id === compose.modeleId)?.content : MAILING_VIERGE;
-            if (base) setCompose({ modeleId: compose.modeleId, content: copie(base) });
-          }}
+          onClick={() =>
+            protege(() => {
+              const base = compose.modeleId ? MAILING_TEMPLATES.find((t) => t.id === compose.modeleId)?.content : MAILING_VIERGE;
+              if (base) {
+                setCompose({ modeleId: compose.modeleId, content: copie(base) });
+                setDirty(false);
+              }
+            })
+          }
           title="Vos modifications sont remplacées par le texte de départ."
           className={`${btnGhostClass} ml-auto`}
           style={btnGhostStyle}
@@ -839,27 +1201,79 @@ export default function MessagerieClient({
       <div className="grid gap-8 lg:grid-cols-2 items-start">
         <div className="flex flex-col gap-5 min-w-0">
           <div>
-            <span className={label} style={{ color: T.muted }}>À</span>
-            <input value={to} onChange={(e) => setTo(e.target.value)} placeholder="prenom.nom@exemple.fr" type="email" className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
+            <span className={`${label} flex items-center justify-between`} style={{ color: T.muted }}>
+              À
+              <button
+                type="button"
+                onClick={() => setMontreCopies((v) => !v)}
+                aria-expanded={montreCopies}
+                className="text-[10px] tracking-[0.14em] uppercase"
+                style={{ color: montreCopies ? T.accent : T.muted }}
+              >
+                Cc / Cci
+              </button>
+            </span>
+            <input
+              value={to}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setDirty(true);
+              }}
+              placeholder="prenom.nom@exemple.fr"
+              type="email"
+              className="w-full text-sm px-3 py-2.5"
+              style={fieldStyle}
+            />
           </div>
+          {montreCopies && (
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <span className={label} style={{ color: T.muted }}>Cc (copie visible · virgules entre les adresses)</span>
+                <input value={cc} onChange={(e) => { setCc(e.target.value); setDirty(true); }} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
+              </div>
+              <div>
+                <span className={label} style={{ color: T.muted }}>Cci (copie cachée)</span>
+                <input value={cci} onChange={(e) => { setCci(e.target.value); setDirty(true); }} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
+              </div>
+            </div>
+          )}
           <div>
             <span className={label} style={{ color: T.muted }}>Objet</span>
             <input value={compose.content.subject} onChange={(e) => pose({ subject: e.target.value })} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
           </div>
-          <div>
-            <span className={label} style={{ color: T.muted }}>Ligne d&apos;aperçu (boîte de réception · optionnelle)</span>
-            <input value={compose.content.preheader} onChange={(e) => pose({ preheader: e.target.value })} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-              <span className={label} style={{ color: T.muted }}>Petite ligne au-dessus du titre (optionnelle)</span>
-              <input value={compose.content.kicker} onChange={(e) => pose({ kicker: e.target.value })} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
-            </div>
-            <div>
-              <span className={label} style={{ color: T.muted }}>Titre du message (optionnel)</span>
-              <input value={compose.content.titre} onChange={(e) => pose({ titre: e.target.value })} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
-            </div>
-          </div>
+
+          {/* Un message simple s'écrit avec À, Objet, texte : le reste attend
+              derrière « Options avancées ». */}
+          <button
+            type="button"
+            onClick={() => setAvance((a) => !a)}
+            aria-expanded={avance}
+            className="inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase self-start"
+            style={{ color: T.muted }}
+          >
+            <SlidersHorizontal size={12} />
+            Options avancées : aperçu, titre, mentions
+            {avance ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+
+          {avance && (
+            <>
+              <div>
+                <span className={label} style={{ color: T.muted }}>Ligne d&apos;aperçu (boîte de réception · optionnelle)</span>
+                <input value={compose.content.preheader} onChange={(e) => pose({ preheader: e.target.value })} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <span className={label} style={{ color: T.muted }}>Petite ligne au-dessus du titre (optionnelle)</span>
+                  <input value={compose.content.kicker} onChange={(e) => pose({ kicker: e.target.value })} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
+                </div>
+                <div>
+                  <span className={label} style={{ color: T.muted }}>Titre du message (optionnel)</span>
+                  <input value={compose.content.titre} onChange={(e) => pose({ titre: e.target.value })} className="w-full text-sm px-3 py-2.5" style={fieldStyle} />
+                </div>
+              </div>
+            </>
+          )}
 
           {compose.content.blocks.map((b, i) => {
             const retirer = (
@@ -908,6 +1322,23 @@ export default function MessagerieClient({
                 </div>
               );
             }
+            if (b.type === "citation") {
+              return (
+                <div key={i}>
+                  <span className={`${label} flex items-center justify-between`} style={{ color: T.muted }}>
+                    Message d&apos;origine (cité en gris dans la réponse)
+                    {retirer}
+                  </span>
+                  <textarea
+                    value={b.text}
+                    onChange={(e) => poseBloc(i, { text: e.target.value })}
+                    rows={Math.min(9, Math.max(3, b.text.split("\n").length))}
+                    className="w-full text-[12px] px-3 py-2.5 resize-y"
+                    style={{ ...fieldStyle, color: T.muted, borderLeft: `3px solid ${T.border}` }}
+                  />
+                </div>
+              );
+            }
             return (
               <div key={i}>
                 <span className={`${label} flex items-center justify-between`} style={{ color: T.muted }}>
@@ -933,16 +1364,49 @@ export default function MessagerieClient({
             <button type="button" onClick={() => ajouteBloc("bouton")} className={btnGhostClass} style={btnGhostStyle}>
               <SquareArrowOutUpRight size={12} /> Bouton
             </button>
+            <button type="button" onClick={() => fichierRef.current?.click()} className={btnGhostClass} style={btnGhostStyle}>
+              <Paperclip size={12} /> Pièce jointe
+            </button>
+            <input ref={fichierRef} type="file" multiple className="hidden" onChange={(e) => joindre(e.target.files)} />
           </div>
 
-          <div>
-            <span className={label} style={{ color: T.muted }}>Ligne grise sous la signature (optionnelle)</span>
-            <textarea value={compose.content.signatureNote} onChange={(e) => pose({ signatureNote: e.target.value })} rows={2} className="w-full text-sm px-3 py-2.5 resize-y" style={fieldStyle} />
-          </div>
-          <div>
-            <span className={label} style={{ color: T.muted }}>Pied de page : « Vous recevez ce message… »</span>
-            <textarea value={compose.content.motif} onChange={(e) => pose({ motif: e.target.value })} rows={2} className="w-full text-sm px-3 py-2.5 resize-y" style={fieldStyle} />
-          </div>
+          {pieces.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {pieces.map((p, i) => (
+                <span
+                  key={`${p.nom}-${i}`}
+                  className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1.5"
+                  style={{ border: `1px solid ${T.border}`, color: T.textDim, backgroundColor: T.surface }}
+                >
+                  {p.enCours ? <Loader2 size={11} className="animate-spin" style={{ color: T.accent }} /> : <Paperclip size={11} style={{ color: T.accent }} />}
+                  {p.nom} · {tailleLisible(p.taille)}
+                  <button
+                    type="button"
+                    onClick={() => retirePiece(i)}
+                    title={`Retirer ${p.nom}`}
+                    aria-label={`Retirer ${p.nom}`}
+                    className="inline-flex"
+                    style={{ color: T.muted }}
+                  >
+                    <X size={11} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {avance && (
+            <>
+              <div>
+                <span className={label} style={{ color: T.muted }}>Ligne grise sous la signature (optionnelle)</span>
+                <textarea value={compose.content.signatureNote} onChange={(e) => pose({ signatureNote: e.target.value })} rows={2} className="w-full text-sm px-3 py-2.5 resize-y" style={fieldStyle} />
+              </div>
+              <div>
+                <span className={label} style={{ color: T.muted }}>Pied de page : « Vous recevez ce message… »</span>
+                <textarea value={compose.content.motif} onChange={(e) => pose({ motif: e.target.value })} rows={2} className="w-full text-sm px-3 py-2.5 resize-y" style={fieldStyle} />
+              </div>
+            </>
+          )}
 
           <div className="p-4" style={{ backgroundColor: T.surface, border: `1px solid ${T.border}` }}>
             <div className="flex flex-wrap items-center gap-3">
@@ -960,6 +1424,7 @@ export default function MessagerieClient({
                   busy ||
                   to.trim().length <= 3 ||
                   compose.content.subject.trim().length === 0 ||
+                  pieces.some((p) => p.enCours) ||
                   !compose.content.blocks.some(
                     (b) => (b.type === "paragraphe" && b.text.trim()) || (b.type === "puces" && b.items.some((x) => x.trim())),
                   )
@@ -1098,6 +1563,24 @@ export default function MessagerieClient({
           envoyer();
         }}
         onCancel={() => setConfirming(false)}
+      />
+
+      <ConfirmDialog
+        open={gardeOuverte}
+        title="Abandonner le message en cours ?"
+        description="Le texte saisi dans la composition sera perdu."
+        confirmLabel="Abandonner"
+        onConfirm={() => {
+          setGardeOuverte(false);
+          setDirty(false);
+          const fn = actionGardee.current;
+          actionGardee.current = null;
+          fn?.();
+        }}
+        onCancel={() => {
+          setGardeOuverte(false);
+          actionGardee.current = null;
+        }}
       />
 
       <ConfirmDialog

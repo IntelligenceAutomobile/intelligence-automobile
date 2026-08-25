@@ -287,28 +287,44 @@ export async function journaliseRefus(entry: {
  */
 export async function sendMail(opts: {
   to: string | string[];
+  /** Copies visibles et cachées : la liste rouge s'applique à elles aussi. */
+  cc?: string | string[];
+  bcc?: string | string[];
   subject: string;
   html: string;
   replyTo?: string;
   from?: string;
+  /**
+   * Pièces jointes : le service d'envoi télécharge chaque fichier depuis son
+   * adresse (`path`), déjà déposé sur le stockage de fichiers du site.
+   */
+  attachments?: { filename: string; path: string }[];
   /** Provenance, pour le journal : « relance », « envoi-devis », « contact »… */
   origin?: string;
 }): Promise<MailResult> {
   const to = recipients(opts.to);
+  const cc = recipients(opts.cc ?? []);
+  const bcc = recipients(opts.bcc ?? []);
   if (to.length === 0) return { sent: false, blocked: true, reason: "aucun destinataire" };
 
-  const reason = blockReason(to, process.env, await ajoutsListeRouge(true));
+  // La liste rouge et le mode atelier jugent TOUS les destinataires : une
+  // adresse bloquée en copie cachée retient le message entier.
+  const tous = [...to, ...cc, ...bcc];
+  // Journal : les copies restent lisibles comme telles.
+  const auJournal = [...to, ...cc.map((a) => `cc:${a}`), ...bcc.map((a) => `cci:${a}`)];
+
+  const reason = blockReason(tous, process.env, await ajoutsListeRouge(true));
   if (reason) {
-    console.log(`[email retenu] « ${opts.subject} » → ${to.join(", ")} · ${reason}`);
-    await journalise({ to, subject: opts.subject, outcome: "retenu", reason, origin: opts.origin });
+    console.log(`[email retenu] « ${opts.subject} » → ${auJournal.join(", ")} · ${reason}`);
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "retenu", reason, origin: opts.origin });
     return { sent: false, blocked: true, reason };
   }
 
   const r = resendClient();
   if (!r) {
     const sansCle = "aucune clé d'envoi configurée sur ce serveur";
-    console.log(`[email simulé] « ${opts.subject} » → ${to.join(", ")} · ${sansCle}`);
-    await journalise({ to, subject: opts.subject, outcome: "retenu", reason: sansCle, origin: opts.origin });
+    console.log(`[email simulé] « ${opts.subject} » → ${auJournal.join(", ")} · ${sansCle}`);
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "retenu", reason: sansCle, origin: opts.origin });
     return { sent: false, blocked: true, reason: sansCle };
   }
 
@@ -320,20 +336,26 @@ export async function sendMail(opts: {
     const { data, error } = await r.emails.send({
       from: opts.from ?? MAIL_FROM,
       to: to.map(adresseSeule),
+      cc: cc.length > 0 ? cc.map(adresseSeule) : undefined,
+      bcc: bcc.length > 0 ? bcc.map(adresseSeule) : undefined,
       replyTo: opts.replyTo || undefined,
       subject: opts.subject,
       html: opts.html,
+      attachments:
+        opts.attachments && opts.attachments.length > 0
+          ? opts.attachments.slice(0, 10).map((a) => ({ filename: a.filename, path: a.path }))
+          : undefined,
     });
     if (error) {
       const motif = error.message ?? "raison inconnue";
-      await journalise({ to, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
+      await journalise({ to: auJournal, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
       return { sent: false, blocked: false, error: motif };
     }
-    await journalise({ to, subject: opts.subject, outcome: "envoye", origin: opts.origin, messageId: data?.id });
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "envoye", origin: opts.origin, messageId: data?.id });
     return { sent: true, blocked: false, id: data?.id };
   } catch (e) {
     const motif = e instanceof Error ? e.message : "envoi impossible";
-    await journalise({ to, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
     return { sent: false, blocked: false, error: motif };
   }
 }

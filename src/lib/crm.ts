@@ -51,7 +51,7 @@ export const STAGE_TONE: Record<Stage, "accent" | "warning" | "success" | "dange
   perdu: "muted",
 };
 
-export const SOURCES = ["site-contact", "reservation", "dossier", "recherche-perso", "aide-vente", "reprise", "manuel", "telephone", "autre"] as const;
+export const SOURCES = ["site-contact", "reservation", "dossier", "recherche-perso", "aide-vente", "reprise", "manuel", "telephone", "email", "autre"] as const;
 export type Source = (typeof SOURCES)[number];
 
 export const SOURCE_LABEL: Record<Source, string> = {
@@ -63,6 +63,7 @@ export const SOURCE_LABEL: Record<Source, string> = {
   reprise: "Reprise / estimation",
   manuel: "Saisie manuelle",
   telephone: "Téléphone",
+  email: "Email reçu",
   autre: "Autre",
 };
 
