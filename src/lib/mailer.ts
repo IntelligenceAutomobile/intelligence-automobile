@@ -235,6 +235,10 @@ export async function refusEnvoi(to: string | string[]): Promise<string | null> 
 // Journal de tous les emails du site : ce qui est parti, ce qui a été retenu,
 // ce que le service a refusé. « Est-ce que le message est parti ? » se lisait
 // nulle part.
+// Un message conservé au journal reste relisible depuis la Messagerie ; au-delà
+// de cette taille, le corps est tronqué plutôt que d'alourdir la base.
+const CORPS_MAX = 200_000;
+
 async function journalise(entry: {
   to: string[];
   subject: string;
@@ -242,6 +246,8 @@ async function journalise(entry: {
   reason?: string;
   origin?: string;
   messageId?: string;
+  body?: string;
+  payload?: string;
 }): Promise<void> {
   try {
     const { prisma } = await import("./prisma");
@@ -254,6 +260,8 @@ async function journalise(entry: {
         origin: (entry.origin ?? "").slice(0, 60),
         messageId: entry.messageId ?? "",
         mode: mailMode(),
+        body: (entry.body ?? "").slice(0, CORPS_MAX),
+        payload: (entry.payload ?? "").slice(0, CORPS_MAX),
       },
     });
   } catch {
@@ -301,6 +309,11 @@ export async function sendMail(opts: {
   attachments?: { filename: string; path: string }[];
   /** Provenance, pour le journal : « relance », « envoi-devis », « contact »… */
   origin?: string;
+  /**
+   * Forme éditable du message (blocs JSON de la Messagerie), conservée au
+   * journal pour rouvrir l'envoi en composition.
+   */
+  payload?: string;
 }): Promise<MailResult> {
   const to = recipients(opts.to);
   const cc = recipients(opts.cc ?? []);
@@ -313,10 +326,13 @@ export async function sendMail(opts: {
   // Journal : les copies restent lisibles comme telles.
   const auJournal = [...to, ...cc.map((a) => `cc:${a}`), ...bcc.map((a) => `cci:${a}`)];
 
+  // Le journal garde le message tel qu'il est parti (ou aurait dû partir).
+  const memoire = { body: opts.html, payload: opts.payload };
+
   const reason = blockReason(tous, process.env, await ajoutsListeRouge(true));
   if (reason) {
     console.log(`[email retenu] « ${opts.subject} » → ${auJournal.join(", ")} · ${reason}`);
-    await journalise({ to: auJournal, subject: opts.subject, outcome: "retenu", reason, origin: opts.origin });
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "retenu", reason, origin: opts.origin, ...memoire });
     return { sent: false, blocked: true, reason };
   }
 
@@ -324,7 +340,7 @@ export async function sendMail(opts: {
   if (!r) {
     const sansCle = "aucune clé d'envoi configurée sur ce serveur";
     console.log(`[email simulé] « ${opts.subject} » → ${auJournal.join(", ")} · ${sansCle}`);
-    await journalise({ to: auJournal, subject: opts.subject, outcome: "retenu", reason: sansCle, origin: opts.origin });
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "retenu", reason: sansCle, origin: opts.origin, ...memoire });
     return { sent: false, blocked: true, reason: sansCle };
   }
 
@@ -348,14 +364,14 @@ export async function sendMail(opts: {
     });
     if (error) {
       const motif = error.message ?? "raison inconnue";
-      await journalise({ to: auJournal, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
+      await journalise({ to: auJournal, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin, ...memoire });
       return { sent: false, blocked: false, error: motif };
     }
-    await journalise({ to: auJournal, subject: opts.subject, outcome: "envoye", origin: opts.origin, messageId: data?.id });
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "envoye", origin: opts.origin, messageId: data?.id, ...memoire });
     return { sent: true, blocked: false, id: data?.id };
   } catch (e) {
     const motif = e instanceof Error ? e.message : "envoi impossible";
-    await journalise({ to: auJournal, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin });
+    await journalise({ to: auJournal, subject: opts.subject, outcome: "refuse", reason: motif, origin: opts.origin, ...memoire });
     return { sent: false, blocked: false, error: motif };
   }
 }

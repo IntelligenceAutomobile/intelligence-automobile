@@ -259,7 +259,23 @@ model EmailLog {
   mode       String   @default("") // live | atelier
   createdAt  DateTime @default(now())
 
+  // Mémoire des envois : le message tel qu'il est parti, pour le relire depuis
+  // la Messagerie, et sa forme éditable (blocs JSON) pour le rouvrir en
+  // composition quand il vient de là.
+  body       String   @default("")
+  payload    String   @default("")
+
+  // Retours du service d'envoi (webhooks Resend) : ce que le message est
+  // devenu une fois parti. Dates ISO, vides tant que rien n'est arrivé.
+  deliveredAt  String @default("")
+  openedAt     String @default("")
+  clickedAt    String @default("")
+  bouncedAt    String @default("")
+  complainedAt String @default("")
+  bounceReason String @default("")
+
   @@index([createdAt])
+  @@index([messageId])
 }
 
 // ── CRM : clients et opportunités de vente ──

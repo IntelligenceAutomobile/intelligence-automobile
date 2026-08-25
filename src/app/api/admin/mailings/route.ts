@@ -115,6 +115,8 @@ export async function POST(req: NextRequest) {
       html: renderMailing(content),
       attachments: pieces,
       origin: "mailing",
+      // La forme éditable part au journal : l'envoi se rouvre en composition.
+      payload: JSON.stringify(content),
     });
 
     if (envoi.sent === false) {

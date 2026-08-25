@@ -28,7 +28,95 @@ export type EnvoiEntry = {
   origin: string;
   mode: string;
   at: string;
+  /** Mémoire des envois : le message tel qu'il est parti, et sa forme éditable. */
+  body: string;
+  payload: string;
+  /** Retours du service d'envoi, dates ISO ou vides. */
+  deliveredAt: string;
+  openedAt: string;
+  clickedAt: string;
+  bouncedAt: string;
+  complainedAt: string;
+  bounceReason: string;
 };
+
+// État de remise d'un envoi, du plus décisif au plus neutre.
+function etatRemise(e: EnvoiEntry): string {
+  if (e.outcome === "retenu") return "retenu";
+  if (e.outcome === "refuse") return "refusé";
+  if (e.complainedAt) return "plainte";
+  if (e.bouncedAt) return "injoignable";
+  if (e.clickedAt) return "cliqué";
+  if (e.openedAt) return "ouvert";
+  if (e.deliveredAt) return "remis";
+  return "envoyé";
+}
+
+const REMISE_TONE: Record<string, Tone> = {
+  plainte: "danger",
+  injoignable: "danger",
+  cliqué: "success",
+  ouvert: "success",
+  remis: "accent",
+  envoyé: "muted",
+  retenu: "warning",
+  refusé: "danger",
+};
+
+// ── Conversations ──
+// Les messages qui se répondent forment un fil : même objet (débarrassé de ses
+// « Re : », « Tr : »…) et même correspondant. Les envois du site vers ce
+// correspondant, sur le même objet, s'y glissent à leur date.
+type ElementFil = { sens: "recu"; m: MessageRecu } | { sens: "envoye"; e: EnvoiEntry };
+type Fil = { cle: string; tete: MessageRecu; elements: ElementFil[] };
+
+function sujetNorm(s: string): string {
+  let t = s.trim().toLowerCase();
+  let avant: string;
+  do {
+    avant = t;
+    t = t.replace(/^(re|tr|fw|fwd|aw|wg|sv|vs|rif|r)\s*:\s*/i, "").replace(/^\[[^\]]*\]\s*/, "").trim();
+  } while (t !== avant);
+  return t.replace(/\s+/g, " ") || "(sans objet)";
+}
+
+// Adresses d'un champ « destinataires » du journal (« a@b.fr, cc:x@y.fr »).
+function adressesDe(recipients: string): string[] {
+  return recipients
+    .split(",")
+    .map((r) => r.trim().replace(/^(cc|cci):/i, "").toLowerCase())
+    .filter((r) => r.includes("@"));
+}
+
+function dateDe(el: ElementFil): string {
+  return el.sens === "recu" ? el.m.date : el.e.at;
+}
+
+function construireFils(messages: MessageRecu[], envois: EnvoiEntry[]): Fil[] {
+  const parCle = new Map<string, Fil>();
+  for (const m of messages) {
+    const cle = `${sujetNorm(m.subject)}|${m.fromAddress.toLowerCase()}`;
+    const fil = parCle.get(cle);
+    if (fil) {
+      fil.elements.push({ sens: "recu", m });
+      if (m.date > fil.tete.date) fil.tete = m;
+    } else {
+      parCle.set(cle, { cle, tete: m, elements: [{ sens: "recu", m }] });
+    }
+  }
+  for (const e of envois) {
+    if (e.outcome !== "envoye") continue;
+    const sujet = sujetNorm(e.subject);
+    for (const a of adressesDe(e.recipients)) {
+      const fil = parCle.get(`${sujet}|${a}`);
+      if (fil) {
+        fil.elements.push({ sens: "envoye", e });
+        break;
+      }
+    }
+  }
+  return [...parCle.values()].sort((a, b) => b.tete.date.localeCompare(a.tete.date));
+}
 
 export type BlockEntry = { id: string; value: string; reason: string; author: string; at: string };
 
@@ -135,6 +223,7 @@ export default function MessagerieClient({
   mode,
   hasKey,
   configuree,
+  webhook,
   envois,
   fixedEntries,
   envEntries,
@@ -142,10 +231,14 @@ export default function MessagerieClient({
   initialTo = "",
   initialSubject = "",
   initialVue = "reception",
+  initialOuvrir = 0,
+  initialEnvoi = "",
 }: {
   mode: string;
   hasKey: boolean;
   configuree: boolean;
+  /** Les retours du service d'envoi (remis, ouvert…) sont branchés. */
+  webhook: boolean;
   envois: EnvoiEntry[];
   fixedEntries: string[];
   envEntries: string[];
@@ -153,6 +246,9 @@ export default function MessagerieClient({
   initialTo?: string;
   initialSubject?: string;
   initialVue?: Vue;
+  /** Arrivée depuis une fiche client : message reçu à ouvrir (uid), ou envoi à revoir (id). */
+  initialOuvrir?: number;
+  initialEnvoi?: string;
 }) {
   const toast = useToast();
 
@@ -169,7 +265,13 @@ export default function MessagerieClient({
 
   // ── Envoyés ──
   const [filtreEnvoi, setFiltreEnvoi] = useState<"tous" | "envoye" | "retenu" | "refuse">("tous");
-  const [ouvertEnvoi, setOuvertEnvoi] = useState<EnvoiEntry | null>(null);
+  const [ouvertEnvoi, setOuvertEnvoi] = useState<EnvoiEntry | null>(
+    () => (initialEnvoi ? envois.find((e) => e.id === initialEnvoi) ?? null : null),
+  );
+  // Envois dépliés dans un fil de conversation.
+  const [envoisDeplies, setEnvoisDeplies] = useState<Set<string>>(new Set());
+  // Ouverture demandée par l'adresse (fiche client) : une seule fois.
+  const ouvrirFait = useRef(false);
 
   // ── Modèles ──
   const [modeleSel, setModeleSel] = useState<string>("vierge");
@@ -215,6 +317,24 @@ export default function MessagerieClient({
 
   const html = useMemo(() => (compose ? renderMailing(compose.content) : ""), [compose]);
 
+  // ── Boîte : lecture d'un message ──
+  const ouvreRecu = useCallback(
+    async (m: MessageRecu) => {
+      setUidEnCours(m.uid);
+      try {
+        const res = await fetch(`/api/admin/reception/${m.uid}`);
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error);
+        setOuvertRecu(j.message as MessageComplet);
+      } catch (e) {
+        toast.error(e instanceof Error && e.message ? e.message : "Ce message ne s'ouvre pas.");
+      } finally {
+        setUidEnCours(null);
+      }
+    },
+    [toast],
+  );
+
   // ── Boîte : chargement ──
   const poseListe = useCallback(async () => {
     try {
@@ -225,13 +345,19 @@ export default function MessagerieClient({
       setMessages(recus);
       setErreur("");
       uidsConnus.current = new Set(recus.map((m) => m.uid));
+      // Arrivée depuis une fiche client : le message demandé s'ouvre de lui-même.
+      if (initialOuvrir && !ouvrirFait.current) {
+        ouvrirFait.current = true;
+        const cible = recus.find((m) => m.uid === initialOuvrir);
+        if (cible) ouvreRecu(cible);
+      }
     } catch (e) {
       setErreur(e instanceof Error && e.message ? e.message : "La boîte ne répond pas.");
       setMessages([]);
     } finally {
       setChargeListe(false);
     }
-  }, []);
+  }, [initialOuvrir, ouvreRecu]);
 
   // Rafraîchissement discret : la boîte se relit toute seule quand l'onglet
   // est visible, et annonce les seuls messages nouveaux.
@@ -273,20 +399,6 @@ export default function MessagerieClient({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (configuree) poseListe();
   }, [configuree, poseListe]);
-
-  async function ouvreRecu(m: MessageRecu) {
-    setUidEnCours(m.uid);
-    try {
-      const res = await fetch(`/api/admin/reception/${m.uid}`);
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j.error);
-      setOuvertRecu(j.message as MessageComplet);
-    } catch (e) {
-      toast.error(e instanceof Error && e.message ? e.message : "Ce message ne s'ouvre pas.");
-    } finally {
-      setUidEnCours(null);
-    }
-  }
 
   // ── Garde-fou du brouillon ──
   // Un message entamé se quitte après confirmation : l'action voulue attend
@@ -461,6 +573,30 @@ export default function MessagerieClient({
     }
   }
 
+  // ── Rouvrir un envoi en composition ──
+  // Le journal garde la forme éditable des messages composés ici : un envoi
+  // se rouvre tel quel, vers le même destinataire, prêt à repartir ou à servir
+  // de base à un autre.
+  function rouvrirEnvoi(e: EnvoiEntry) {
+    try {
+      const c = JSON.parse(e.payload) as Partial<MailingContent>;
+      if (!c || !Array.isArray(c.blocks)) throw new Error();
+      const content: MailingContent = {
+        subject: String(c.subject ?? ""),
+        preheader: String(c.preheader ?? ""),
+        kicker: String(c.kicker ?? ""),
+        titre: String(c.titre ?? ""),
+        blocks: c.blocks as MailingBlock[],
+        signatureNote: String(c.signatureNote ?? ""),
+        motif: String(c.motif ?? ""),
+      };
+      ouvreComposition(null, content, adressesDe(e.recipients)[0] ?? "");
+      setAvance(Boolean(content.kicker || content.titre || content.preheader));
+    } catch {
+      toast.error("Cet envoi ne se rouvre pas : sa forme éditable est illisible.");
+    }
+  }
+
   // ── Créer un lead depuis un message reçu ──
   async function creerLead(m: MessageComplet) {
     if (leadBusy) return;
@@ -530,9 +666,20 @@ export default function MessagerieClient({
 
   // ── Filtres ──
   const q = recherche.trim().toLowerCase();
-  const recusFiltres = (messages ?? []).filter(
-    (m) => !q || m.fromName.toLowerCase().includes(q) || m.fromAddress.toLowerCase().includes(q) || m.subject.toLowerCase().includes(q),
+  const fils = useMemo(() => construireFils(messages ?? [], envois), [messages, envois]);
+  const filsFiltres = fils.filter(
+    (f) =>
+      !q ||
+      f.elements.some((el) =>
+        el.sens === "recu"
+          ? el.m.fromName.toLowerCase().includes(q) || el.m.fromAddress.toLowerCase().includes(q) || el.m.subject.toLowerCase().includes(q)
+          : el.e.subject.toLowerCase().includes(q),
+      ),
   );
+  const filsParTete = new Map(filsFiltres.map((f) => [f.tete.uid, f]));
+  // Têtes de fil : la liste, le clavier et précédent / suivant portent sur elles.
+  const recusFiltres = filsFiltres.map((f) => f.tete);
+  const filCourant = ouvertRecu ? fils.find((f) => f.elements.some((el) => el.sens === "recu" && el.m.uid === ouvertRecu.uid)) ?? null : null;
   const envoisFiltres = envois.filter(
     (l) =>
       (filtreEnvoi === "tous" || l.outcome === filtreEnvoi) &&
@@ -726,7 +873,9 @@ export default function MessagerieClient({
           </div>
         ) : (
           recusFiltres.map((m, i) => {
-            const actif = ouvertRecu?.uid === m.uid;
+            const fil = filsParTete.get(m.uid);
+            const nbFil = fil ? fil.elements.length : 1;
+            const actif = ouvertRecu !== null && (fil?.elements.some((el) => el.sens === "recu" && el.m.uid === ouvertRecu.uid) ?? false);
             const groupe = libelleJour(m.date);
             const entete = i === 0 || libelleJour(recusFiltres[i - 1].date) !== groupe;
             const av = couleurAvatar(m.fromAddress || m.fromName || "?");
@@ -771,6 +920,11 @@ export default function MessagerieClient({
                         <span className="text-[13px] truncate min-w-0" style={{ color: T.text, fontWeight: m.seen ? 400 : 700 }}>
                           {m.fromName || m.fromAddress || "(expéditeur inconnu)"}
                         </span>
+                        {nbFil > 1 && (
+                          <span className="text-[10px] flex-shrink-0 px-1.5 py-0.5" style={{ border: `1px solid ${T.border}`, color: T.muted, fontVariantNumeric: "tabular-nums" }} title={`${nbFil} messages dans cette conversation`}>
+                            {nbFil}
+                          </span>
+                        )}
                         {m.contact && (
                           <span
                             className="text-[9px] tracking-[0.08em] uppercase px-1.5 py-0.5 flex-shrink-0 font-semibold"
@@ -800,6 +954,104 @@ export default function MessagerieClient({
       </p>
     </div>
   );
+
+  // Corps de la lecture : le message seul, ou la conversation entière quand
+  // d'autres messages (reçus ou envoyés) partagent le même fil. Le message
+  // sélectionné est déplié, les autres se lisent d'un clic.
+  function rendFil(ouvert: MessageComplet) {
+    const elements = filCourant ? [...filCourant.elements].sort((a, b) => dateDe(a).localeCompare(dateDe(b))) : [];
+    if (elements.length <= 1) {
+      return (
+        <iframe
+          title={`Message : ${ouvert.subject}`}
+          srcDoc={ouvert.html}
+          sandbox=""
+          style={{ width: "100%", height: 540, border: 0, display: "block", backgroundColor: "#FFFFFF" }}
+        />
+      );
+    }
+    return (
+      <div>
+        {elements.map((el) => {
+          if (el.sens === "recu") {
+            const actif = el.m.uid === ouvert.uid;
+            const av = couleurAvatar(el.m.fromAddress || "?");
+            return (
+              <div key={`r-${el.m.uid}`} style={{ borderTop: `1px solid ${T.border}` }}>
+                <button
+                  type="button"
+                  onClick={() => { if (!actif) ouvreRecu(el.m); }}
+                  className="w-full text-left px-5 py-3 flex items-center gap-3"
+                  style={{ backgroundColor: actif ? T.surface : "transparent" }}
+                >
+                  <span className="inline-flex items-center justify-center w-[28px] h-[28px] rounded-full flex-shrink-0 text-[10px] font-bold" style={{ backgroundColor: av.bg, color: av.fg }}>
+                    {uidEnCours === el.m.uid ? <Loader2 size={12} className="animate-spin" style={{ color: T.accent }} /> : initiales(el.m.fromName, el.m.fromAddress)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-semibold truncate" style={{ color: T.text }}>{el.m.fromName || el.m.fromAddress}</span>
+                    {!actif && <span className="block text-[12px] truncate" style={{ color: T.muted }}>{el.m.extrait || el.m.subject}</span>}
+                  </span>
+                  <span className="text-[11px] whitespace-nowrap flex-shrink-0" style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}>{stamp(el.m.date)}</span>
+                </button>
+                {actif && (
+                  <iframe
+                    title={`Message : ${ouvert.subject}`}
+                    srcDoc={ouvert.html}
+                    sandbox=""
+                    style={{ width: "100%", height: 440, border: 0, display: "block", backgroundColor: "#FFFFFF" }}
+                  />
+                )}
+              </div>
+            );
+          }
+          const deplie = envoisDeplies.has(el.e.id);
+          const remise = etatRemise(el.e);
+          return (
+            <div key={`e-${el.e.id}`} style={{ borderTop: `1px solid ${T.border}` }}>
+              <button
+                type="button"
+                onClick={() =>
+                  setEnvoisDeplies((s) => {
+                    const n = new Set(s);
+                    if (n.has(el.e.id)) n.delete(el.e.id);
+                    else n.add(el.e.id);
+                    return n;
+                  })
+                }
+                className="w-full text-left px-5 py-3 flex items-center gap-3"
+              >
+                <span className="inline-flex items-center justify-center w-[28px] h-[28px] rounded-full flex-shrink-0 text-[10px] font-bold" style={{ backgroundColor: T.accent, color: T.bg }}>
+                  IA
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: T.text }}>
+                    Vous
+                    <Tag tone={REMISE_TONE[remise] ?? "muted"}>{remise}</Tag>
+                  </span>
+                  {!deplie && <span className="block text-[12px] truncate" style={{ color: T.muted }}>{el.e.subject}</span>}
+                </span>
+                <span className="text-[11px] whitespace-nowrap flex-shrink-0" style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}>{stamp(el.e.at)}</span>
+                {deplie ? <ChevronUp size={13} style={{ color: T.muted }} /> : <ChevronDown size={13} style={{ color: T.muted }} />}
+              </button>
+              {deplie &&
+                (el.e.body ? (
+                  <iframe
+                    title={`Envoi : ${el.e.subject}`}
+                    srcDoc={el.e.body}
+                    sandbox=""
+                    style={{ width: "100%", height: 440, border: 0, display: "block", backgroundColor: "#070F1E" }}
+                  />
+                ) : (
+                  <p className="px-5 pb-4 text-[12px]" style={{ color: T.muted }}>
+                    Cet envoi date d&apos;avant la mémoire des envois : seule sa trace est conservée.
+                  </p>
+                ))}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   const lectureReception = ouvertRecu === null ? (
     <div className="p-10 text-sm flex flex-col items-center gap-3" style={{ border: `1px solid ${T.border}`, color: T.muted }}>
@@ -848,6 +1100,9 @@ export default function MessagerieClient({
                 );
               })()}
               <span style={{ color: T.muted }}>{stamp(ouvertRecu.date)}</span>
+              {filCourant && filCourant.elements.length > 1 && (
+                <span style={{ color: T.muted }}>· conversation de {filCourant.elements.length} messages</span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -903,12 +1158,7 @@ export default function MessagerieClient({
           </div>
         )}
       </div>
-      <iframe
-        title={`Message : ${ouvertRecu.subject}`}
-        srcDoc={ouvertRecu.html}
-        sandbox=""
-        style={{ width: "100%", height: 540, border: 0, display: "block", backgroundColor: "#FFFFFF" }}
-      />
+      {rendFil(ouvertRecu)}
     </div>
   );
 
@@ -947,6 +1197,11 @@ export default function MessagerieClient({
                     style={{ color: o.tone === "success" ? T.success : o.tone === "danger" ? T.danger : T.warning }}
                   />
                   <span className="text-[13px] truncate min-w-0" style={{ color: T.text }}>{l.recipients}</span>
+                  {l.outcome === "envoye" && etatRemise(l) !== "envoyé" && (
+                    <span className="flex-shrink-0">
+                      <Tag tone={REMISE_TONE[etatRemise(l)] ?? "muted"}>{etatRemise(l)}</Tag>
+                    </span>
+                  )}
                   <span className="text-[11px] ml-auto whitespace-nowrap flex-shrink-0" style={{ color: T.muted, fontVariantNumeric: "tabular-nums" }}>
                     {stamp(l.at)}
                   </span>
@@ -996,10 +1251,50 @@ export default function MessagerieClient({
         )}
         <span style={{ color: T.muted }}>Mode</span>
         <span style={{ color: T.textDim }}>{ouvertEnvoi.mode === "live" ? "envoi réel" : "atelier"}</span>
+        {ouvertEnvoi.outcome === "envoye" && (
+          <>
+            <span style={{ color: T.muted }}>Parcours</span>
+            <span className="flex flex-wrap gap-x-3 gap-y-1" style={{ color: T.textDim }}>
+              {ouvertEnvoi.deliveredAt && <span>remis le {stamp(ouvertEnvoi.deliveredAt)}</span>}
+              {ouvertEnvoi.openedAt && <span style={{ color: T.success }}>ouvert le {stamp(ouvertEnvoi.openedAt)}</span>}
+              {ouvertEnvoi.clickedAt && <span style={{ color: T.success }}>lien cliqué le {stamp(ouvertEnvoi.clickedAt)}</span>}
+              {ouvertEnvoi.bouncedAt && (
+                <span style={{ color: T.danger }}>
+                  injoignable le {stamp(ouvertEnvoi.bouncedAt)}
+                  {ouvertEnvoi.bounceReason ? ` (${ouvertEnvoi.bounceReason})` : ""}
+                </span>
+              )}
+              {ouvertEnvoi.complainedAt && <span style={{ color: T.danger }}>signalé comme indésirable le {stamp(ouvertEnvoi.complainedAt)}</span>}
+              {!ouvertEnvoi.deliveredAt && !ouvertEnvoi.openedAt && !ouvertEnvoi.bouncedAt && !ouvertEnvoi.complainedAt && (
+                <span style={{ color: T.muted }}>
+                  {webhook ? "parti, aucun retour pour l'instant" : "les retours du service d'envoi sont à brancher (Réglages)"}
+                </span>
+              )}
+            </span>
+          </>
+        )}
       </div>
-      <p className="px-5 pb-4 text-[11px]" style={{ color: T.muted }}>
-        Le journal garde la trace de l&apos;envoi ; le contenu du message lui-même est conservé nulle part.
-      </p>
+      <div className="px-5 pb-4 flex flex-wrap items-center gap-2">
+        {ouvertEnvoi.payload && (
+          <button type="button" onClick={() => protege(() => rouvrirEnvoi(ouvertEnvoi))} className={btnGhostClass} style={btnGhostStyle}>
+            <PenLine size={12} />
+            Rouvrir en composition
+          </button>
+        )}
+        {!ouvertEnvoi.body && (
+          <span className="text-[11px]" style={{ color: T.muted }}>
+            Cet envoi date d&apos;avant la mémoire des envois : seule sa trace est conservée.
+          </span>
+        )}
+      </div>
+      {ouvertEnvoi.body && (
+        <iframe
+          title={`Envoi : ${ouvertEnvoi.subject}`}
+          srcDoc={ouvertEnvoi.body}
+          sandbox=""
+          style={{ width: "100%", height: 520, border: 0, display: "block", backgroundColor: "#070F1E", borderTop: `1px solid ${T.border}` }}
+        />
+      )}
     </div>
   );
 
@@ -1163,6 +1458,12 @@ export default function MessagerieClient({
             : "Mode atelier : tout message qui pourrait atteindre une vraie personne est retenu."}
         </p>
         <p>La boîte de réception est {configuree ? "reliée à IONOS (lecture seule)." : "en attente de ses accès IMAP."}</p>
+        <p>
+          Retours du service d&apos;envoi (remis, ouvert, injoignable, plainte) :{" "}
+          {webhook
+            ? "branchés. Une adresse injoignable ou une plainte rejoint la liste rouge d'elle-même."
+            : "à brancher. Dans Resend → Webhooks, ajoutez https://intelligenceautomobile.fr/api/webhooks/resend puis rangez le « Signing secret » dans RESEND_WEBHOOK_SECRET sur l'hébergeur."}
+        </p>
       </div>
     </div>
   );

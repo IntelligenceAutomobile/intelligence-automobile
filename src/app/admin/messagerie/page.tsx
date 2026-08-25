@@ -11,7 +11,7 @@ const VUES = ["reception", "envoyes", "modeles", "reglages"] as const;
 export default async function MessageriePage({
   searchParams,
 }: {
-  searchParams: Promise<{ a?: string; objet?: string; vue?: string }>;
+  searchParams: Promise<{ a?: string; objet?: string; vue?: string; ouvrir?: string; envoi?: string }>;
 }) {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
@@ -34,13 +34,21 @@ export default async function MessageriePage({
     .map((v) => v.trim().toLowerCase().replace(/^@/, "").replace(/\.$/, ""))
     .filter(Boolean);
 
-  const vue = (VUES as readonly string[]).includes(params.vue ?? "") ? (params.vue as (typeof VUES)[number]) : "reception";
+  // Arrivée depuis une fiche client : un envoi à revoir ouvre la vue Envoyés.
+  const envoi = (params.envoi ?? "").slice(0, 60);
+  const ouvrir = Number(params.ouvrir ?? "");
+  const vue = envoi
+    ? "envoyes"
+    : (VUES as readonly string[]).includes(params.vue ?? "")
+      ? (params.vue as (typeof VUES)[number])
+      : "reception";
 
   return (
     <MessagerieClient
       mode={mailMode()}
       hasKey={Boolean((process.env.RESEND_API_KEY ?? "").trim())}
       configuree={receptionConfiguree()}
+      webhook={Boolean((process.env.RESEND_WEBHOOK_SECRET ?? "").trim())}
       envois={logs.map<EnvoiEntry>((l) => ({
         id: l.id,
         recipients: l.recipients,
@@ -50,6 +58,14 @@ export default async function MessageriePage({
         origin: l.origin,
         mode: l.mode,
         at: l.createdAt.toISOString(),
+        body: l.body,
+        payload: l.payload,
+        deliveredAt: l.deliveredAt,
+        openedAt: l.openedAt,
+        clickedAt: l.clickedAt,
+        bouncedAt: l.bouncedAt,
+        complainedAt: l.complainedAt,
+        bounceReason: l.bounceReason,
       }))}
       fixedEntries={[...LISTE_ROUGE_FIXE]}
       envEntries={envEntries}
@@ -63,6 +79,8 @@ export default async function MessageriePage({
       initialTo={(params.a ?? "").slice(0, 200)}
       initialSubject={(params.objet ?? "").slice(0, 200)}
       initialVue={vue}
+      initialOuvrir={Number.isInteger(ouvrir) && ouvrir > 0 ? ouvrir : 0}
+      initialEnvoi={envoi}
     />
   );
 }

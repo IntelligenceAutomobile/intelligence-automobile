@@ -19,6 +19,7 @@ import { STATUS_LABEL, formatDateFr, type QuoteStatus } from "@/lib/devis";
 import { T, TONE, Tag, AdminPage, PageHeader, SectionCard, fieldStyle, labelClass, btnPrimaryClass, btnPrimaryStyle, btnGhostClass, btnGhostStyle } from "../../ui";
 import { useToast } from "../../toast";
 import { ConfirmDialog } from "../../confirm";
+import Echanges from "./Echanges";
 
 export type LeadEventRow = { id: string; type: string; content: string; author: string; createdAt: string };
 export type LeadFull = {
@@ -836,6 +837,8 @@ export default function ClientDetail({
               </ul>
             )}
           </SectionCard>
+
+          <Echanges clientId={client.id} email={client.email} />
 
           <SectionCard title="Avis clients">
             {avis.requestedAt || avis.outcome || avis.logs.length > 0 ? (

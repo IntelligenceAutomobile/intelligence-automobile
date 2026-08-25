@@ -205,6 +205,41 @@ function adressesEnTexte(a: AddressObject | AddressObject[] | undefined): string
   return liste.map((x) => x.text).filter(Boolean).join(", ");
 }
 
+/**
+ * Les messages reçus d'une adresse donnée, du plus récent au plus ancien :
+ * l'historique des échanges sur une fiche client.
+ */
+export async function messagesDe(adresse: string, limit = 20): Promise<MessageResume[]> {
+  const c = config();
+  if (!c) throw new Error("Boîte de réception non configurée sur ce serveur.");
+  const a = adresse.trim().toLowerCase();
+  if (!a.includes("@")) return [];
+  const client = await connexion(c);
+  try {
+    await client.mailboxOpen("INBOX", { readOnly: true });
+    const uids = await client.search({ from: a }, { uid: true });
+    if (!uids || uids.length === 0) return [];
+    const derniers = uids.slice(-limit);
+    const messages: MessageResume[] = [];
+    for await (const msg of client.fetch(derniers.join(","), { envelope: true, flags: true, uid: true }, { uid: true })) {
+      const from = texteAdresse(msg.envelope?.from);
+      messages.push({
+        uid: msg.uid,
+        fromName: from.name,
+        fromAddress: from.address,
+        subject: (msg.envelope?.subject ?? "").trim() || "(sans objet)",
+        date: msg.envelope?.date ? new Date(msg.envelope.date).toISOString() : "",
+        seen: msg.flags?.has("\\Seen") ?? false,
+        extrait: "",
+      });
+    }
+    messages.sort((x, y) => y.date.localeCompare(x.date));
+    return messages;
+  } finally {
+    await client.logout().catch(() => {});
+  }
+}
+
 export type PieceJointe = { filename: string; contentType: string; content: Buffer };
 
 /**
