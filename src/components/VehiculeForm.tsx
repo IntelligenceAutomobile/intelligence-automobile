@@ -721,6 +721,10 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
                 <input type="hidden" name="year" value={yearValue} />
                 <select
                   value={yearChoice}
+                  // Le formulaire se redessine à chaque saisie (sauvegarde du brouillon),
+                  // ce qui rembobinait ce menu piloté avant que « change » n'arrive.
+                  // On enregistre donc le choix dès « input », qui part en premier.
+                  onInput={(e) => setYearChoice((e.target as HTMLSelectElement).value)}
                   onChange={(e) => setYearChoice(e.target.value)}
                   className={fieldClass}
                   style={fieldStyle}
@@ -789,6 +793,8 @@ export default function VehiculeForm({ data }: { data?: VehiculeData }) {
                 <input type="hidden" name="origin" value={originValue} />
                 <select
                   value={originChoice}
+                  // Même piège que le menu Année : le choix se garde dès « input ».
+                  onInput={(e) => setOriginChoice((e.target as HTMLSelectElement).value)}
                   onChange={(e) => setOriginChoice(e.target.value)}
                   className={fieldClass}
                   style={fieldStyle}
