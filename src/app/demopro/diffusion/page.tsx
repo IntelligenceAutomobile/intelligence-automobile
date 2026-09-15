@@ -6,14 +6,14 @@
 import { FileCode2, CircleOff, Radio } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import {
-  PORTALS, controleDiffusion, daysOnline, digestAnnonce, etatPortail, FENETRE_ARRIVEES_JOURS,
-  type EtatPortail, type Portal,
+  PORTALS, controleDiffusion, daysOnline, digestAnnonce, etatPortail, mediane, moisParis,
+  FENETRE_ARRIVEES_JOURS, type EtatPortail, type Portal,
 } from "@/lib/diffusion";
 import { T, AdminPage, PageHeader, Tag, btnGhostClass, btnGhostStyle, firstImage } from "@/app/admin/ui";
 import { KpiTile } from "@/app/admin/charts";
 import {
-  BandeColonnes, ContenuCellule, LigneDiffusion, MentionArrivees, MentionPied,
-  actionLigneClass, celluleClass, libelleCellule, tonDe, type LigneVue,
+  BandeColonnes, ContenuCellule, LigneDiffusion, MentionArrivees, MentionPied, SynthesePortails,
+  actionLigneClass, celluleClass, libelleCellule, tonDe, type LigneVue, type PortailSynthese,
 } from "@/app/admin/diffusion/presentation";
 import { getDemoVehicles, getDemoListings, getDemoArrivees } from "@/lib/demo-data";
 import DemoActionButton from "../DemoActionButton";
@@ -86,6 +86,41 @@ export default async function DemoDiffusionPage() {
   const emplacements = lignes.length * PORTALS.length;
   const libres = emplacements - pris;
   const dansLeFlux = lignes.filter((l) => l.dansLeFlux).length;
+
+  // Synthèse par portail : contacts et coûts d'exemple, du même ordre que ce
+  // qu'un négociant à quatre portails constate. En production, les contacts
+  // viennent du marqueur d'origine et le coût se saisit sur la carte.
+  const contactsDemo: Record<Portal, number> = { leboncoin: 4, lacentrale: 2, autoscout24: 1, facebook: 0 };
+  const coutsDemo: Record<Portal, number | null> = {
+    lacentrale: 150_00,
+    leboncoin: 90_00,
+    autoscout24: 120_00,
+    facebook: null,
+  };
+  const mois = moisParis(new Date(maintenant));
+  const syntheses: PortailSynthese[] = PORTALS.map((p) => {
+    const anciennetes: number[] = [];
+    let enLignePortail = 0;
+    let arriveesPortail = 0;
+    for (const v of lignes) {
+      if (v.etats[p] !== "retire") {
+        enLignePortail++;
+        const l = parCle.get(`${v.id}:${p}`);
+        const jours = l?.publishedAt ? daysOnline(l.publishedAt, maintenant) : null;
+        if (jours !== null) anciennetes.push(jours);
+      }
+      arriveesPortail += v.arriveesParPortail[p] ?? 0;
+    }
+    return {
+      portal: p,
+      enLigne: enLignePortail,
+      medianeJours: mediane(anciennetes),
+      arrivees: arriveesPortail,
+      contacts: contactsDemo[p],
+      coutCents: coutsDemo[p],
+      mois,
+    };
+  });
 
   return (
     <AdminPage>
@@ -181,6 +216,8 @@ export default async function DemoDiffusionPage() {
           );
         })}
       </div>
+
+      <SynthesePortails syntheses={syntheses} />
 
       <MentionPied />
     </AdminPage>

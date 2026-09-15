@@ -78,6 +78,48 @@ export function daysOnline(publishedAt: Date | null, now: number): number | null
 /* Au-delà de ce seuil, une annonce se retravaille : photo, texte ou prix. */
 export const ANCIENNETE_ALERTE_JOURS = 60;
 
+/* Médiane entière : l'ancienneté « typique » d'un portail. La moyenne, elle,
+   se fait emporter par une seule annonce très ancienne. */
+export function mediane(valeurs: number[]): number | null {
+  if (valeurs.length === 0) return null;
+  const tri = [...valeurs].sort((a, b) => a - b);
+  const milieu = Math.floor(tri.length / 2);
+  return tri.length % 2 === 1 ? tri[milieu] : Math.round((tri[milieu - 1] + tri[milieu]) / 2);
+}
+
+/* Mois de Paris « YYYY-MM » : la clé du coût mensuel d'un portail. */
+export function moisParis(d: Date): string {
+  const parts = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(d);
+  const get = (t: string) => parts.find((x) => x.type === t)?.value ?? "";
+  return `${get("year")}-${get("month")}`;
+}
+
+/* ── Journal de diffusion ── */
+export const JOURNAL_ACTIONS = [
+  "mise_en_ligne",
+  "republication",
+  "retrait",
+  "remise_en_ligne",
+  "retrait_auto",
+  "suppression",
+  "refus",
+] as const;
+export type JournalAction = (typeof JOURNAL_ACTIONS)[number];
+
+export const JOURNAL_LABEL: Record<JournalAction, string> = {
+  mise_en_ligne: "Mise en ligne",
+  republication: "Republication",
+  retrait: "Retrait",
+  remise_en_ligne: "Remise en ligne",
+  retrait_auto: "Retrait automatique",
+  suppression: "Annonces effacées",
+  refus: "Diffusion refusée",
+};
+
 /* ── État d'un emplacement ──
    Quatre valeurs au lieu de deux. « À republier » se calcule en comparant ce
    qui a été publié à ce que la fiche dit AUJOURD'HUI. C'est l'état qui rend le

@@ -50,6 +50,20 @@ export type LigneVue = {
   dansLeFlux: boolean;
 };
 
+/** Ce que la synthèse d'un portail affiche : c'est ici que la décision
+ *  d'abonnement se prend, bien plus que devant des vues. */
+export type PortailSynthese = {
+  portal: Portal;
+  enLigne: number;
+  medianeJours: number | null;
+  arrivees: number;
+  contacts: number;
+  /** Coût du mois en centimes. null = jamais saisi. */
+  coutCents: number | null;
+  /** Mois de Paris YYYY-MM auquel le coût s'applique. */
+  mois: string;
+};
+
 /* Paliers calés sur la largeur du CADRE, jamais sur celle de la fenêtre : la
    barre latérale apparaît justement à 1 024 px et vole 232 px, si bien qu'un
    palier calé sur la fenêtre ajoutait une colonne au moment où la place
@@ -123,8 +137,10 @@ export function ContenuCellule({
   );
 }
 
-/* ── Bande d'en-tête : les quatre colonnes portent enfin un nom ── */
-export function BandeColonnes() {
+/* ── Bande d'en-tête : les quatre colonnes portent enfin un nom ──
+   Quand `onPortail` est fourni, chaque nom devient une commande : c'est par là
+   que se suspend un portail entier, le jour où un abonnement s'arrête. */
+export function BandeColonnes({ onPortail }: { onPortail?: (p: Portal) => void }) {
   return (
     <div
       className={`hidden @[760px]:grid items-center gap-x-3 px-4 py-2.5 ${COLONNES}`}
@@ -133,17 +149,36 @@ export function BandeColonnes() {
       <span className="text-[10px] tracking-[0.14em] uppercase" style={{ color: T.muted }}>
         Véhicule
       </span>
-      {PORTALS.map((p) => (
-        <span
-          key={p}
-          className="text-[10px] tracking-[0.14em] uppercase text-center truncate"
-          style={{ color: T.muted }}
-          title={PORTAL_MANUEL[p] ? `${PORTAL_LABEL[p]} · publication manuelle` : PORTAL_LABEL[p]}
-        >
-          <span className="@[900px]:hidden">{PORTAL_SHORT[p]}</span>
-          <span className="hidden @[900px]:inline">{PORTAL_COLONNE[p]}</span>
-        </span>
-      ))}
+      {PORTALS.map((p) => {
+        const contenu = (
+          <>
+            <span className="@[900px]:hidden">{PORTAL_SHORT[p]}</span>
+            <span className="hidden @[900px]:inline">{PORTAL_COLONNE[p]}</span>
+          </>
+        );
+        return onPortail ? (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onPortail(p)}
+            className="adm-act adm-btn-focus text-[10px] tracking-[0.14em] uppercase text-center truncate"
+            style={{ color: T.muted }}
+            aria-label={`Options du portail ${PORTAL_LABEL[p]}`}
+            title={`${PORTAL_LABEL[p]} · suspendre le portail`}
+          >
+            {contenu}
+          </button>
+        ) : (
+          <span
+            key={p}
+            className="text-[10px] tracking-[0.14em] uppercase text-center truncate"
+            style={{ color: T.muted }}
+            title={PORTAL_MANUEL[p] ? `${PORTAL_LABEL[p]} · publication manuelle` : PORTAL_LABEL[p]}
+          >
+            {contenu}
+          </span>
+        );
+      })}
       <span className="text-[10px] tracking-[0.14em] uppercase text-right whitespace-nowrap" style={{ color: T.muted }}>
         En ligne
       </span>
@@ -162,6 +197,7 @@ export function LigneDiffusion({
   cellules,
   action,
   actionNom,
+  selection,
 }: {
   vue: LigneVue;
   first: boolean;
@@ -171,6 +207,8 @@ export function LigneDiffusion({
   action: ReactNode;
   /** Action discrète posée contre le nom du véhicule (les liens tracés). */
   actionNom?: ReactNode;
+  /** Case de sélection, posée devant la vignette : les gestes groupés. */
+  selection?: ReactNode;
 }) {
   const ancien = vue.joursEnLigne !== null && vue.joursEnLigne >= ANCIENNETE_ALERTE_JOURS;
   const arriveesPortail = PORTALS.map((p) => ({ p, n: vue.arriveesParPortail[p] ?? 0 }))
@@ -196,6 +234,7 @@ export function LigneDiffusion({
       />
 
       <div className="col-span-2 @[760px]:col-span-1 flex items-center gap-3 min-w-0 relative z-[1] pointer-events-none">
+        {selection && <span className="pointer-events-auto flex-shrink-0">{selection}</span>}
         <Thumb src={vue.image} alt={`${vue.make} ${vue.model}`} w={56} h={42} />
         <div className="min-w-0">
           <div className="flex items-baseline gap-2 min-w-0">
@@ -281,7 +320,7 @@ export function LigneDiffusion({
 }
 
 /* ── Écrans vides : trois messages distincts, à la forme affirmative ── */
-export type FiltreVide = "tous" | "complet" | "a-completer" | "a-republier";
+export type FiltreVide = "tous" | "complet" | "a-completer" | "a-republier" | "recherche";
 
 export function EtatVide({ filtre, onReset }: { filtre: FiltreVide; onReset?: () => void }) {
   let icone = <Radio size={26} />;
@@ -314,6 +353,11 @@ export function EtatVide({ filtre, onReset }: { filtre: FiltreVide; onReset?: ()
     titre = "Vos annonces en ligne reflètent vos fiches.";
     aide = "Ce filtre s'allumera dès qu'une fiche bougera après sa mise en ligne.";
     action = bouton("Tout afficher");
+  } else if (filtre === "recherche") {
+    icone = <Search size={24} />;
+    titre = "Cette recherche vise un véhicule hors de la liste.";
+    aide = "La recherche porte sur la marque, le modèle et l'année.";
+    action = bouton("Effacer la recherche");
   }
 
   return (
@@ -326,6 +370,92 @@ export function EtatVide({ filtre, onReset }: { filtre: FiltreVide; onReset?: ()
         {aide}
       </p>
       {onReset || filtre === "tous" ? <div className="mt-2">{action}</div> : null}
+    </div>
+  );
+}
+
+/* ── Synthèse par portail ──
+   L'écran raisonne par véhicule, la décision d'abonnement se prend par
+   portail : quatre cartes répondent à « ce portail vaut-il son prix ? ».
+   `editeurCout` est fourni par le back-office (saisie du coût mensuel) ; la
+   démonstration s'en passe et affiche les valeurs telles quelles. */
+export function SynthesePortails({
+  syntheses,
+  editeurCout,
+}: {
+  syntheses: PortailSynthese[];
+  editeurCout?: (s: PortailSynthese) => ReactNode;
+}) {
+  return (
+    <div className="mt-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-3">
+        <h2 className="text-[11px] tracking-[0.16em] uppercase whitespace-nowrap" style={{ color: T.textDim }}>
+          Par portail
+        </h2>
+        <span className="text-[11px]" style={{ color: T.muted }}>
+          arrivées et contacts sur {FENETRE_ARRIVEES_JOURS} j · coût du mois en cours
+        </span>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {syntheses.map((s, i) => {
+          const coutParContact =
+            s.coutCents !== null && s.coutCents > 0 && s.contacts > 0
+              ? Math.round(s.coutCents / 100 / s.contacts)
+              : null;
+          return (
+            <div
+              key={s.portal}
+              className="adm-enter relative p-4 min-w-0 flex flex-col gap-2"
+              style={{
+                backgroundColor: T.surface,
+                border: `1px solid ${T.border}`,
+                animationDelay: `${80 + i * 70}ms`,
+              }}
+            >
+              <div className="adm-hairline" />
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] tracking-[0.14em] uppercase font-semibold" style={{ color: T.accent }}>
+                  {PORTAL_COLONNE[s.portal]}
+                </span>
+                {PORTAL_MANUEL[s.portal] && <Tag tone="muted">à la main</Tag>}
+              </div>
+
+              <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[12px]">
+                <dt style={{ color: T.muted }}>En ligne</dt>
+                <dd className="text-right tabular-nums" style={{ color: T.text }}>
+                  {formatNumber(s.enLigne)}
+                </dd>
+                <dt style={{ color: T.muted }}>Ancienneté médiane</dt>
+                <dd className="text-right tabular-nums" style={{ color: T.text }}>
+                  {s.medianeJours !== null ? `${formatNumber(s.medianeJours)} j` : "—"}
+                </dd>
+                <dt style={{ color: T.muted }}>Arrivées</dt>
+                <dd className="text-right tabular-nums" style={{ color: s.arrivees > 0 ? T.text : T.muted }}>
+                  {formatNumber(s.arrivees)}
+                </dd>
+                <dt style={{ color: T.muted }}>Contacts</dt>
+                <dd className="text-right tabular-nums" style={{ color: s.contacts > 0 ? T.text : T.muted }}>
+                  {formatNumber(s.contacts)}
+                </dd>
+                <dt style={{ color: T.muted }}>Coût du mois</dt>
+                <dd className="text-right tabular-nums" style={{ color: s.coutCents ? T.text : T.muted }}>
+                  {editeurCout ? (
+                    editeurCout(s)
+                  ) : s.coutCents !== null ? (
+                    `${formatNumber(Math.round(s.coutCents / 100))} €`
+                  ) : (
+                    "à saisir"
+                  )}
+                </dd>
+                <dt style={{ color: T.muted }}>Coût par contact</dt>
+                <dd className="text-right tabular-nums" style={{ color: coutParContact !== null ? T.warning : T.muted }}>
+                  {coutParContact !== null ? `${formatNumber(coutParContact)} €` : "—"}
+                </dd>
+              </dl>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

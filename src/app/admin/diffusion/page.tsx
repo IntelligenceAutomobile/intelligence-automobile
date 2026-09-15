@@ -4,11 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { parisDay } from "@/lib/vehicules";
 import {
   PORTALS, cheminFiche, controleDiffusion, daysOnline, digestAnnonce, etatPortail,
-  FENETRE_ARRIVEES_JOURS, type EtatPortail, type Portal,
+  mediane, moisParis, FENETRE_ARRIVEES_JOURS, type EtatPortail, type Portal,
 } from "@/lib/diffusion";
 import { adresseFluxPublic } from "@/lib/flux-xml";
 import { firstImage } from "../ui";
-import type { LigneVue } from "./presentation";
+import type { LigneVue, PortailSynthese } from "./presentation";
 import DiffusionClient from "./DiffusionClient";
 
 function compte(json: string): number {
@@ -20,9 +20,14 @@ function compte(json: string): number {
   }
 }
 
-export default async function DiffusionPage() {
+export default async function DiffusionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; filtre?: string }>;
+}) {
   const session = await requireAdmin();
   if (!session) redirect("/admin/login");
+  const params = await searchParams;
 
   const vehicles = await prisma.vehicle.findMany({
     where: { isPublished: true, status: { in: ["disponible", "reserve"] } },
@@ -30,20 +35,20 @@ export default async function DiffusionPage() {
   });
   const ids = vehicles.map((v) => v.id);
 
-  // Les annonces des seuls véhicules affichés. Sans ce filtre, toute la table
-  // traversait le réseau, y compris les lignes des voitures vendues, masquées
-  // ou supprimées, qui ne servent à rien ici.
-  //
-  // Les ARRIVÉES viennent de la mesure d'audience déjà en production : une
-  // visite qui ouvre une fiche depuis un lien marqué ?src=leboncoin. C'est du
-  // réel, là où l'écran affichait auparavant une formule.
+  // Les annonces des seuls véhicules affichés, les ARRIVÉES mesurées par le
+  // module Audience, les CONTACTS rattachés à un portail par le marqueur
+  // d'origine, et le COÛT du mois en cours. Quatre sources, une seule salve.
   const maintenant = new Date().getTime();
   const debut = new Date(maintenant - FENETRE_ARRIVEES_JOURS * 86_400_000);
-  const [listings, arrivees] = await Promise.all([
+  const mois = moisParis(new Date(maintenant));
+  const [listings, arrivees, contacts, couts] = await Promise.all([
     ids.length
       ? prisma.listing.findMany({
           where: { vehicleId: { in: ids } },
-          select: { vehicleId: true, portal: true, status: true, publishedAt: true, publishedDigest: true },
+          select: {
+            vehicleId: true, portal: true, status: true,
+            publishedAt: true, firstPublishedAt: true, publishedDigest: true,
+          },
         })
       : Promise.resolve([]),
     ids.length
@@ -57,6 +62,12 @@ export default async function DiffusionPage() {
           _count: { _all: true },
         })
       : Promise.resolve([]),
+    prisma.lead.groupBy({
+      by: ["srcMarker"],
+      where: { createdAt: { gte: debut }, srcMarker: { in: [...PORTALS] } },
+      _count: { _all: true },
+    }),
+    prisma.portalCost.findMany({ where: { month: mois } }),
   ]);
 
   const parCle = new Map(listings.map((l) => [`${l.vehicleId}:${l.portal}`, l]));
@@ -89,9 +100,11 @@ export default async function DiffusionPage() {
     const dates: number[] = [];
     for (const p of PORTALS) {
       const l = parCle.get(`${v.id}:${p}`);
-      const publishedAt = l?.publishedAt ?? null;
       etats[p] = etatPortail(l?.status, l?.publishedDigest ?? "", empreinte);
-      if (etats[p] !== "retire" && publishedAt) dates.push(publishedAt.getTime());
+      // L'ancienneté vraie : la PREMIÈRE mise en ligne, qui survit aux
+      // retraits et aux republications.
+      const origine = l?.firstPublishedAt ?? l?.publishedAt ?? null;
+      if (etats[p] !== "retire" && origine) dates.push(origine.getTime());
     }
 
     const mesure = parFiche.get(v.id);
@@ -125,5 +138,41 @@ export default async function DiffusionPage() {
     };
   });
 
-  return <DiffusionClient lignes={lignes} adresseFlux={adresseFluxPublic()} />;
+  // Synthèse par portail : c'est ici que la décision d'abonnement se prend.
+  const contactsParPortail = new Map(contacts.map((c) => [c.srcMarker, c._count._all]));
+  const coutParPortail = new Map(couts.map((c) => [c.portal, c.amountCents]));
+  const syntheses: PortailSynthese[] = PORTALS.map((p) => {
+    const anciennetes: number[] = [];
+    let enLigne = 0;
+    let arriveesPortail = 0;
+    for (const v of lignes) {
+      if (v.etats[p] !== "retire") {
+        enLigne++;
+        const l = parCle.get(`${v.id}:${p}`);
+        const origine = l?.firstPublishedAt ?? l?.publishedAt ?? null;
+        const jours = origine ? daysOnline(origine, maintenant) : null;
+        if (jours !== null) anciennetes.push(jours);
+      }
+      arriveesPortail += v.arriveesParPortail[p] ?? 0;
+    }
+    return {
+      portal: p,
+      enLigne,
+      medianeJours: mediane(anciennetes),
+      arrivees: arriveesPortail,
+      contacts: contactsParPortail.get(p) ?? 0,
+      coutCents: coutParPortail.has(p) ? coutParPortail.get(p)! : null,
+      mois,
+    };
+  });
+
+  return (
+    <DiffusionClient
+      lignes={lignes}
+      syntheses={syntheses}
+      adresseFlux={adresseFluxPublic()}
+      initialQ={typeof params.q === "string" ? params.q : ""}
+      initialFiltre={typeof params.filtre === "string" ? params.filtre : "tous"}
+    />
+  );
 }

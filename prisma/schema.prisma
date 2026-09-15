@@ -442,11 +442,49 @@ model Listing {
   // bougé depuis » sans se fier à la date de dernière écriture, qui bougeait
   // aussi pour un simple changement de statut.
   publishedDigest String @default("")
+
+  // Dates durables : la PREMIÈRE mise en ligne survit aux retraits et aux
+  // republications, c'est elle qui porte l'ancienneté vraie de l'annonce.
+  // publishedAt, elle, date la dernière mise en ligne (et l'empreinte).
+  firstPublishedAt DateTime?
+  removedAt        DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@unique([vehicleId, portal])
   @@index([vehicleId])
+}
+
+// Coût mensuel d'un portail : l'abonnement saisi une fois rend calculables le
+// coût par arrivée et le coût par contact, les deux chiffres qui justifient ou
+// arrêtent un abonnement.
+model PortalCost {
+  id          String   @id @default(cuid())
+  portal      String                       // lacentrale | leboncoin | autoscout24 | facebook
+  month       String                       // mois de Paris YYYY-MM
+  amountCents Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([portal, month])
+}
+
+// Journal de diffusion : chaque mise en ligne, retrait ou refus laisse une
+// trace datée. C'est lui qui répond à « pourquoi cette annonce est-elle hors
+// ligne ? » sans reconstituer la journée de mémoire.
+model DiffusionLog {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   String   @default("")          // « Audi TT 45 TFSI », figé au moment du geste
+  portal    String   @default("")          // vide = geste sur tous les portails
+  action    String                         // mise_en_ligne | retrait | remise_en_ligne | retrait_auto | suppression | refus
+  detail    String   @default("")
+  author    String   @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId, createdAt])
+  @@index([createdAt])
 }
 
 // Planning atelier : RDV clients, interventions véhicules, indisponibilités équipe.

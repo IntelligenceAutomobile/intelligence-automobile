@@ -47,11 +47,12 @@ export async function PATCH(
     // Vendu ou masqué : les annonces passent au repos du même geste. Sans cela,
     // la voiture quittait l'écran de diffusion en y laissant quatre portails
     // verts, hors d'atteinte de l'interface.
+    const auteur = decodeURIComponent(req.cookies.get("ia_collab_name")?.value ?? "");
     const retirees = quitteLaVitrine(
       data.status as string | undefined,
       data.isPublished as boolean | undefined,
     )
-      ? await retirerDesPortails(id)
+      ? await retirerDesPortails(id, auteur)
       : 0;
 
     return NextResponse.json({ ...vehicle, retirees, retraitMessage: recapRetrait(retirees) });
@@ -102,11 +103,12 @@ export async function PUT(
       },
     });
 
+    const auteur = decodeURIComponent(req.cookies.get("ia_collab_name")?.value ?? "");
     const retirees = quitteLaVitrine(
       body.status,
       body.isPublished !== undefined ? Boolean(body.isPublished) : undefined,
     )
-      ? await retirerDesPortails(id)
+      ? await retirerDesPortails(id, auteur)
       : 0;
 
     return NextResponse.json({ ...vehicle, retirees, retraitMessage: recapRetrait(retirees) });
@@ -127,7 +129,7 @@ export async function DELETE(
   try {
     // Les annonces partent avant la fiche : la table vit sans lien de parenté
     // déclaré, donc sans effacement en cascade.
-    await effacerAnnonces(id);
+    await effacerAnnonces(id, decodeURIComponent(_req.cookies.get("ia_collab_name")?.value ?? ""));
     await prisma.vehicle.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch {
