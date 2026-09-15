@@ -39,7 +39,13 @@ function cle(vehicleId: string, portal: Portal) {
   return `${vehicleId}:${portal}`;
 }
 
-export default function DiffusionClient({ lignes }: { lignes: LigneVue[] }) {
+export default function DiffusionClient({
+  lignes,
+  adresseFlux,
+}: {
+  lignes: LigneVue[];
+  adresseFlux: string | null;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [isPending, startTransition] = useTransition();
@@ -358,8 +364,9 @@ export default function DiffusionClient({ lignes }: { lignes: LigneVue[] }) {
               Télécharger le flux XML
             </a>
             <span className="text-[11px] leading-snug sm:text-right max-w-xs" style={{ color: T.muted }}>
-              {`Transmettez ce fichier à votre agrégateur, il publiera votre stock. ${formatNumber(dansLeFlux)} véhicule${dansLeFlux > 1 ? "s" : ""} à l'intérieur.`}
+              {`Fichier pour votre agrégateur, adresse pour un portail qui vient lire le flux lui-même. ${formatNumber(dansLeFlux)} véhicule${dansLeFlux > 1 ? "s" : ""} à l'intérieur.`}
             </span>
+            <AdresseFlux adresse={adresseFlux} />
           </div>
         }
       />
@@ -530,6 +537,58 @@ export default function DiffusionClient({ lignes }: { lignes: LigneVue[] }) {
         </div>
       )}
     </AdminPage>
+  );
+}
+
+/* ── Adresse publique du flux ──
+   Un portail partenaire (Annonces-Automobile, un agrégateur) vient lire le
+   flux lui-même à cette adresse, sans compte chez nous : la clé portée dans
+   l'adresse tient lieu de mot de passe. Le jour où il faut la renvoyer à un
+   autre portail, elle est ici. */
+function AdresseFlux({ adresse }: { adresse: string | null }) {
+  const toast = useToast();
+  const [copie, setCopie] = useState(false);
+
+  if (!adresse) {
+    return (
+      <span className="text-[11px] leading-snug sm:text-right max-w-xs" style={{ color: T.warning }}>
+        Adresse publique du flux à activer : posez la clé FLUX_CLE dans les réglages Vercel.
+      </span>
+    );
+  }
+  const lien = adresse;
+
+  async function copier() {
+    try {
+      await navigator.clipboard.writeText(lien);
+      setCopie(true);
+      toast.success("Adresse du flux copiée.");
+      setTimeout(() => setCopie(false), 2000);
+    } catch {
+      toast.error("La copie a échoué, sélectionnez l'adresse à la main.");
+    }
+  }
+
+  return (
+    <div
+      className="flex items-center gap-2 pl-3 min-w-0 w-full sm:w-80 max-w-full"
+      style={{ backgroundColor: T.float, border: `1px solid ${T.border}` }}
+      title={lien}
+    >
+      <Link2 size={12} className="flex-shrink-0" style={{ color: T.accent }} />
+      <code className="text-[11px] truncate flex-1 min-w-0" style={{ color: T.muted }}>
+        {lien}
+      </code>
+      <button
+        type="button"
+        onClick={copier}
+        aria-label="Copier l'adresse du flux"
+        className="adm-act adm-btn-focus inline-flex items-center justify-center min-h-[36px] w-9 flex-shrink-0"
+        style={{ color: copie ? T.success : T.muted }}
+      >
+        {copie ? <Check size={14} /> : <Copy size={14} />}
+      </button>
+    </div>
   );
 }
 

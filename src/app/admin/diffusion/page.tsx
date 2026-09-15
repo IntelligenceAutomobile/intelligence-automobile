@@ -6,6 +6,7 @@ import {
   PORTALS, cheminFiche, controleDiffusion, daysOnline, digestAnnonce, etatPortail,
   FENETRE_ARRIVEES_JOURS, type EtatPortail, type Portal,
 } from "@/lib/diffusion";
+import { adresseFluxPublic } from "@/lib/flux-xml";
 import { firstImage } from "../ui";
 import type { LigneVue } from "./presentation";
 import DiffusionClient from "./DiffusionClient";
@@ -124,5 +125,5 @@ export default async function DiffusionPage() {
     };
   });
 
-  return <DiffusionClient lignes={lignes} />;
+  return <DiffusionClient lignes={lignes} adresseFlux={adresseFluxPublic()} />;
 }
